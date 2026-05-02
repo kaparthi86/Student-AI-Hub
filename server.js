@@ -46,7 +46,7 @@ function betaBannerText() {
   const custom = String(process.env.BETA_MESSAGE || "").trim();
   if (custom) return custom;
   if (BETA_TESTING) {
-    return "Private beta  invite-only (about 20 testers). Data or features may reset; not the final product.";
+    return "Private beta - invite-only (about 20 testers). Data or features may reset; not the final product.";
   }
   return "";
 }
@@ -56,9 +56,25 @@ const upload = multer({
   limits: { fileSize: 12 * 1024 * 1024 },
 });
 
+const publicDir = path.join(__dirname, "public");
+const indexHtmlPath = path.join(publicDir, "index.html");
+
+if (!fs.existsSync(indexHtmlPath)) {
+  // eslint-disable-next-line no-console
+  console.error("FATAL: public/index.html is missing. Ensure the public/ folder is committed and deployed.");
+}
+
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(publicDir));
+
+/** Render + express.static: always wire `/` to the SPA shell (static may 404 before fallthrough in some cases). */
+app.get("/", (_req, res) => {
+  res.sendFile("index.html", { root: publicDir });
+});
+app.get("/index.html", (_req, res) => {
+  res.sendFile("index.html", { root: publicDir });
+});
 
 function buildPrompt(mode, userInput) {
   if (mode === "code") {
@@ -336,11 +352,21 @@ app.get("/api/health", (_req, res) => {
     hfChatUrl: HF_CHAT_URL,
     betaTesting: BETA_TESTING,
     betaMessage: betaBannerText(),
+    /** If false, the Git deploy is missing `public/index.html` (root URL will 404). */
+    indexHtmlDeployed: fs.existsSync(indexHtmlPath),
   });
 });
 
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+/**
+ * SPA fallback for GET/HEAD outside `/api/*` (e.g. future client routes). Uses sendFile `root`
+ * so paths resolve the same on Render as locally.
+ */
+app.use((req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (req.path.startsWith("/api")) return next();
+  res.sendFile("index.html", { root: publicDir }, (err) => {
+    if (err) next(err);
+  });
 });
 
 app.listen(PORT, () => {
