@@ -529,7 +529,7 @@ function appendBubble(container, role, text) {
 }
 
 /**
- * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then ÔøΩjumpÔøΩ).
+ * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then ùjumpù).
  */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
@@ -591,20 +591,39 @@ function startStreamingAssistantBubble(container) {
   };
 }
 
-/** OpenAI-compatible chat delta: `content` may be a string or a list of { type, text } parts. */
+/**
+ * OpenAI-compatible `choices[].delta`: `content` string or parts; some HF / reasoning models use
+ * `reasoning_content`, `text`, or `input_text` instead of (or before) `content`.
+ */
 function extractChatDeltaText(delta) {
   if (!delta || typeof delta !== "object") return "";
+  const bits = [];
+  const reasoning = delta.reasoning_content;
+  if (typeof reasoning === "string" && reasoning.length) bits.push(reasoning);
   const c = delta.content;
-  if (c === null || c === undefined) return "";
-  if (typeof c === "string") return c;
-  if (Array.isArray(c)) {
-    let out = "";
+  if (typeof c === "string" && c.length) bits.push(c);
+  else if (Array.isArray(c)) {
     for (const part of c) {
       if (!part || typeof part !== "object") continue;
-      if (part.type === "text" && typeof part.text === "string") out += part.text;
+      if (part.type === "text" && typeof part.text === "string") bits.push(part.text);
+      if (part.type === "input_text" && typeof part.text === "string") bits.push(part.text);
     }
-    return out;
   }
+  const legacy = delta.text;
+  if (typeof legacy === "string" && legacy.length) bits.push(legacy);
+  const inputText = delta.input_text;
+  if (typeof inputText === "string" && inputText.length) bits.push(inputText);
+  return bits.join("");
+}
+
+/** Some proxies put assistant text on `choices[].text` or `choices[].message` instead of `delta`. */
+function extractStreamChoiceText(choice) {
+  if (!choice || typeof choice !== "object") return "";
+  const fromDelta = extractChatDeltaText(choice.delta);
+  if (fromDelta.length) return fromDelta;
+  if (typeof choice.text === "string" && choice.text.length) return choice.text;
+  const msg = choice.message;
+  if (msg && typeof msg.content === "string" && msg.content.length) return msg.content;
   return "";
 }
 
@@ -614,7 +633,7 @@ function applyStreamDelta(json, full, onDelta) {
     const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
     throw new Error(msg);
   }
-  const piece = extractChatDeltaText(json.choices?.[0]?.delta);
+  const piece = extractStreamChoiceText(json.choices?.[0]);
   if (piece.length === 0) return full;
   const next = full + piece;
   onDelta(next);
@@ -738,7 +757,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       cancelAnimationFrame(rafId);
       rafId = 0;
     }
-    const finalText = String(fullOut || "").trim() || "(No text returned.)";
+    const finalText =
+      String(fullOut || "").trim() ||
+      "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render **HF_API_TOKEN**, **HF_MODEL** (Inference Providers routing suffix, e.g. `:fastest`), and **HF_CHAT_URL**; open `/api/health` to confirm `hfConfigured` is true.";
     streamUi.setStreamingText(finalText);
     streamUi.finalize(finalText);
 
