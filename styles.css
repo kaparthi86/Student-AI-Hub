@@ -19,13 +19,20 @@
   font-family: Outfit, Inter, system-ui, sans-serif;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: radial-gradient(circle at 20% 20%, #2b2f80 0%, transparent 35%),
     radial-gradient(circle at 80% 10%, #1d7ea8 0%, transparent 30%),
     linear-gradient(135deg, var(--bg), var(--bg2));
   color: var(--text);
+  overflow-x: clip;
 }
 
 .bg-glow {
@@ -55,7 +62,7 @@ body {
   padding: 28px 18px 40px;
 }
 
-/* Private beta / class testing (~20 people) ó copy from BETA_MESSAGE or default when BETA_TESTING=1 */
+/* Private beta / class testing (~20 people) ù copy from BETA_MESSAGE or default when BETA_TESTING=1 */
 .beta-banner {
   margin-bottom: 14px;
   padding: 10px 14px;
@@ -560,6 +567,7 @@ textarea {
 
 .msg.assistant {
   justify-content: flex-start;
+  align-items: stretch;
 }
 
 .bubble {
@@ -571,11 +579,18 @@ textarea {
 }
 
 .msg.user .bubble {
+  width: fit-content;
+  max-width: min(92%, 720px);
+  margin-left: auto;
   background: linear-gradient(120deg, rgba(122, 109, 255, 0.35), rgba(78, 181, 248, 0.22));
 }
 
+/* Assistant replies use full thread width (not a narrow ùpopupù strip). */
 .msg.assistant .bubble {
-  max-width: min(100%, 760px);
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   border-color: rgba(120, 200, 255, 0.28);
   background: rgba(255, 255, 255, 0.045);
 }
@@ -767,33 +782,151 @@ textarea {
   gap: 10px;
 }
 
+/* Phones / small tablets */
 @media (max-width: 640px) {
-  .search-bar {
+  .container {
+    padding-left: max(14px, env(safe-area-inset-left, 0px));
+    padding-right: max(14px, env(safe-area-inset-right, 0px));
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .beta-banner {
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .app-head-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #logoutBtn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 14px;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .tab {
+    min-height: 44px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .search-hero {
+    padding: 18px 0 4px;
+  }
+
+  .search-title {
+    font-size: 1.2rem;
+    line-height: 1.2;
+  }
+
+  /* Stack hero search: icon, field, CTA (avoids squashed 3-col on narrow screens) */
+  .search-bar:not(.compact) {
+    display: grid;
     grid-template-columns: 1fr;
     border-radius: 16px;
   }
 
-  .search-bar--branded .search-icon--logo {
+  .search-bar:not(.compact) .search-icon--logo,
+  .search-bar:not(.compact) .search-icon {
     width: 100%;
     min-width: 0;
+    min-height: 48px;
     padding: 10px 12px;
     border-right: none;
     border-bottom: 1px solid rgba(160, 182, 255, 0.22);
   }
 
-  .search-submit {
+  .search-bar:not(.compact) textarea {
+    min-height: 52px;
+    /* 16px+ stops iOS Safari from zooming the page on focus */
+    font-size: 16px;
+  }
+
+  .search-bar:not(.compact) .search-submit {
+    width: 100%;
+    min-height: 48px;
     border-left: none;
     border-top: 1px solid rgba(160, 182, 255, 0.28);
+    border-radius: 0 0 15px 15px;
+  }
+
+  .search-bar.compact {
+    grid-template-columns: 1fr;
+    border-radius: 16px;
   }
 
   .search-bar.compact textarea {
+    min-height: 48px;
+    font-size: 16px;
     border-radius: 15px 15px 0 0;
   }
 
   .search-bar.compact .search-submit {
+    border-left: none;
+    border-top: 1px solid rgba(160, 182, 255, 0.28);
     border-radius: 0 0 15px 15px;
     width: 100%;
     min-height: 48px;
+  }
+
+  .primary-btn,
+  .ghost-btn:not(.auth-head-placeholder) {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .starter-chip {
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+
+  .followup-bar {
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-thread,
+  .perplexity-thread,
+  .notebook-thread {
+    max-height: min(52dvh, 520px);
+    min-height: 220px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-thread {
+    padding: 10px;
+  }
+
+  .msg.assistant .bubble {
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .bubble-copy {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  .upload-row input[type="file"] {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .upload-row .primary-btn {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .brand-title {
@@ -803,6 +936,10 @@ textarea {
   .brand-kicker {
     font-size: 9px;
     letter-spacing: 0.1em;
+  }
+
+  .perplexity-panel {
+    min-height: 0;
   }
 }
 
