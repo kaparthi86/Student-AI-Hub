@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
+const { Readable } = require("node:stream");
 const multer = require("multer");
 
 const envPath = path.join(__dirname, ".env");
@@ -323,6 +324,81 @@ app.post("/api/chat", async (req, res) => {
 
     const history = normalizeChatMessages(req.body?.history);
     const messages = [{ role: "system", content: chatSystemBase(mode) }, ...history, { role: "user", content: lastMessage }];
+
+    const wantsStream = req.body?.stream === true;
+    if (wantsStream) {
+      let chatEndpoint;
+      try {
+        chatEndpoint = new URL(HF_CHAT_URL);
+      } catch {
+        return res.status(500).json({
+          error: `HF_CHAT_URL is not a valid URL. Value starts with: ${String(HF_CHAT_URL).slice(0, 48)}`,
+        });
+      }
+      if (chatEndpoint.protocol !== "http:" && chatEndpoint.protocol !== "https:") {
+        return res.status(500).json({ error: "HF_CHAT_URL must use http: or https:" });
+      }
+
+      const demoLine = () => {
+        const demo =
+          "Demo mode: add HF_API_TOKEN in .env next to server.js, then restart the server.";
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("X-Accel-Buffering", "no");
+        if (typeof res.flushHeaders === "function") res.flushHeaders();
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: demo } }] })}\n\n`);
+        res.write("data: [DONE]\n\n");
+        res.end();
+      };
+
+      if (!HF_API_TOKEN) {
+        demoLine();
+        return;
+      }
+
+      const hfRes = await fetch(chatEndpoint.href, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: HF_MODEL,
+          messages,
+          temperature: 0.55,
+          max_tokens: 720,
+          stream: true,
+        }),
+      });
+
+      if (!hfRes.ok) {
+        const errText = await hfRes.text();
+        const explained =
+          explainRouterModelError(hfRes.status, errText) || explainProviderPatternError(errText);
+        return res.status(502).json({
+          error: explained || `Model API failed: ${hfRes.status} ${errText.slice(0, 800)}`,
+        });
+      }
+
+      if (!hfRes.body) {
+        return res.status(502).json({ error: "Model API returned an empty response body." });
+      }
+
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Accel-Buffering", "no");
+      if (typeof res.flushHeaders === "function") res.flushHeaders();
+
+      const nodeReadable = Readable.fromWeb(hfRes.body);
+      res.on("close", () => {
+        nodeReadable.destroy();
+      });
+      nodeReadable.on("error", () => {
+        if (!res.writableEnded) res.end();
+      });
+      nodeReadable.pipe(res);
+      return;
+    }
 
     const output = await callChatCompletion(messages, { max_tokens: 720, temperature: 0.55 });
     return res.json({ output });
