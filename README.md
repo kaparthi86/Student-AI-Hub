@@ -20,7 +20,7 @@ Put `.env` in the **same folder as `server.js`** (`student-ai-mvp/.env`). The se
 Fill `.env`:
 
 - `HF_API_TOKEN` (optional for demo, required for real model output)
-- Optional: `HF_MODEL` (default: `google/gemma-2-2b-it:fastest`)
+- Optional: `HF_MODEL` (default in code: `deepseek-ai/DeepSeek-V4-Pro:fastest`)
 - Optional: `HF_CHAT_URL` (default: `https://router.huggingface.co/v1/chat/completions`)
 - Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (see below)
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` are optional for server; **frontend auth uses `public/config.js`**
@@ -62,13 +62,13 @@ Use a **single HTTPS URL** everyone shares (e.g. Render). That URL is your **tes
 ### What you do once (host)
 
 1. Push the project to **GitHub** (do not commit `.env`; set secrets in the host UI).
-2. Deploy (e.g. **Render → New → Blueprint**, pick `render.yaml`). The blueprint sets **`BETA_TESTING=1`** so the app shows a **private beta banner** (optional **`BETA_MESSAGE`** in Render **Environment** overrides the default text).
-3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE` (e.g. *"CS101 pilot — report bugs to you@school.edu"*).
-4. Copy the live URL, e.g. `https://student-ai-hub.onrender.com` — **that is the only link you send** (up to ~20 testers is fine on free tier for light use; first request after sleep may take ~30s).
+2. Deploy (e.g. **Render ? New ? Blueprint**, pick `render.yaml`). The blueprint sets **`BETA_TESTING=1`** so the app shows a **private beta banner** (optional **`BETA_MESSAGE`** in Render **Environment** overrides the default text).
+3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE` (e.g. *"CS101 pilot � report bugs to you@school.edu"*).
+4. Copy the live URL, e.g. `https://student-ai-hub.onrender.com` � **that is the only link you send** (up to ~20 testers is fine on free tier for light use; first request after sleep may take ~30s).
 
 ### Supabase + Google (required for login on that URL)
 
-In **Supabase → Authentication → URL configuration**:
+In **Supabase ? Authentication ? URL configuration**:
 
 - Set **Site URL** to your testing URL (or your school page that links to it).
 - Under **Redirect URLs**, add `https://YOUR-SERVICE.onrender.com` and `https://YOUR-SERVICE.onrender.com/**`.
@@ -86,7 +86,11 @@ In **Google Cloud Console** (OAuth client used by Supabase): add **Authorized Ja
 
 ### Checks
 
-- Open `https://YOUR-SERVICE.onrender.com/api/health` — `"hfConfigured": true` when the token is set; **`betaMessage`** is non-empty when beta mode is on.
+- Open `https://YOUR-SERVICE.onrender.com/api/health` � `"hfConfigured": true` when the token is set; **`betaMessage`** is non-empty when beta mode is on.
+- Confirm **`"indexHtmlDeployed": true`**. If it is **`false`**, the server cannot see `public/index.html` (you will see a startup log about a missing file, and `/` returns Not Found). Fix it by:
+  1. Locally: `git add public` then `git commit` and `git push` so GitHub contains `public/index.html`, `public/app.js`, `public/styles.css`, and `public/config.js`.
+  2. Render **Settings ? Root Directory**: leave **empty** unless the app really lives in a subfolder (then Root Directory must be that folder, and `public/` must be inside it).
+  3. Trigger **Manual Deploy** on Render after the push.
 - Confirm the amber **beta banner** appears at the top after load.
 
 ### Optional: tunnel instead of deploy

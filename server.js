@@ -27,10 +27,24 @@ function normalizeEnvString(s) {
 
 /**
  * Model id on the Hugging Face Hub (Inference Providers).
- * You can append a routing suffix, e.g. "org/model:fastest" or "org/model:groq"
+ * Router usually needs a provider suffix, e.g. "org/model:fastest" or "org/model:groq"
  * See: https://huggingface.co/docs/inference-providers/index
  */
-const HF_MODEL = normalizeEnvString(process.env.HF_MODEL) || "google/gemma-2-2b-it:fastest";
+function ensureInferenceRoutingSuffix(modelId) {
+  const m = String(modelId || "").trim();
+  if (!m || !m.includes("/")) return m;
+  const firstSlash = m.indexOf("/");
+  if (m.indexOf(":", firstSlash + 1) !== -1) return m;
+  return `${m}:fastest`;
+}
+
+const HF_MODEL_RAW =
+  normalizeEnvString(process.env.HF_MODEL) || "deepseek-ai/DeepSeek-V4-Pro:fastest";
+const HF_MODEL = ensureInferenceRoutingSuffix(HF_MODEL_RAW);
+if (HF_MODEL !== HF_MODEL_RAW) {
+  // eslint-disable-next-line no-console
+  console.log(`HF_MODEL had no routing suffix; using "${HF_MODEL}" (Inference Providers need e.g. :fastest or :groq).`);
+}
 /** OpenAI-compatible chat completions endpoint (Inference Providers / Router). */
 const HF_CHAT_URL =
   normalizeEnvString(process.env.HF_CHAT_URL) || "https://router.huggingface.co/v1/chat/completions";
@@ -61,7 +75,15 @@ const indexHtmlPath = path.join(publicDir, "index.html");
 
 if (!fs.existsSync(indexHtmlPath)) {
   // eslint-disable-next-line no-console
-  console.error("FATAL: public/index.html is missing. Ensure the public/ folder is committed and deployed.");
+  console.error(
+    [
+      "ERROR: public/index.html is missing from this deploy.",
+      `Expected file at: ${indexHtmlPath}`,
+      "Fix: (1) In your machine repo, run: git add public && git commit -m \"Add public assets\" && git push",
+      "    (2) On Render: Settings -> Root Directory must be empty unless this app lives in a subfolder that CONTAINS public/",
+      "    (3) Manual Deploy after push. Check /api/health -> indexHtmlDeployed should be true.",
+    ].join("\n")
+  );
 }
 
 app.use(cors());
@@ -126,7 +148,7 @@ function explainProviderPatternError(rawBody) {
   return [
     "The Hugging Face API rejected the request (validation / pattern error). Check your `.env` next to `server.js`:",
     "",
-    "1) **HF_MODEL** - Use a valid Hub id, e.g. `google/gemma-2-2b-it:fastest`. Re-type it (no smart quotes; use a normal `:` before routing suffixes like `:fastest`).",
+    "1) **HF_MODEL** - Use a valid Hub id with a routing suffix, e.g. `deepseek-ai/DeepSeek-V4-Pro:fastest`. Re-type it (no smart quotes).",
     "2) **HF_CHAT_URL** - Should be `https://router.huggingface.co/v1/chat/completions` unless you use a custom endpoint.",
     "3) **HF_API_TOKEN** - Fine-grained token with permission to call Inference Providers.",
     "",
@@ -344,6 +366,7 @@ app.post("/api/doc-insights", upload.single("document"), async (req, res) => {
 });
 
 app.get("/api/health", (_req, res) => {
+  const indexHtmlDeployed = fs.existsSync(indexHtmlPath);
   res.json({
     ok: true,
     envFileExists,
@@ -352,8 +375,14 @@ app.get("/api/health", (_req, res) => {
     hfChatUrl: HF_CHAT_URL,
     betaTesting: BETA_TESTING,
     betaMessage: betaBannerText(),
-    /** If false, the Git deploy is missing `public/index.html` (root URL will 404). */
-    indexHtmlDeployed: fs.existsSync(indexHtmlPath),
+    /** If false, Git/Render never received `public/` (root URL will 404). */
+    indexHtmlDeployed,
+    ...(indexHtmlDeployed
+      ? {}
+      : {
+          deployHint:
+            "Missing public/index.html on server. Commit and push the entire public/ folder, set Render Root Directory to repo root (blank), redeploy.",
+        }),
   });
 });
 
@@ -370,16 +399,24 @@ app.use((req, res, next) => {
 });
 
 app.listen(PORT, () => {
+  const isProd = process.env.NODE_ENV === "production";
   // eslint-disable-next-line no-console
-  console.log(`Student AI MVP running on http://localhost:${PORT}`);
-  // eslint-disable-next-line no-console
-  console.log(`Looking for env file at: ${envPath}`);
-  // eslint-disable-next-line no-console
-  console.log(envFileExists ? ".env file found." : ".env file NOT found next to server.js.");
+  console.log(`Student AI MVP listening on port ${PORT}`);
+  if (!isProd) {
+    // eslint-disable-next-line no-console
+    console.log(`Local .env path (optional): ${envPath}`);
+    // eslint-disable-next-line no-console
+    console.log(envFileExists ? ".env file found." : ".env file not found (use .env.example as a template).");
+  } else {
+    // eslint-disable-next-line no-console
+    console.log("Production: secrets come from the host (e.g. Render Environment), not from a committed .env file.");
+  }
   // eslint-disable-next-line no-console
   console.log(
     HF_API_TOKEN
       ? `Hugging Face token loaded (${HF_MODEL} via ${HF_CHAT_URL}).`
-      : "Hugging Face token missing - API runs in demo mode until HF_API_TOKEN is set in .env"
+      : isProd
+        ? "Hugging Face token missing ù set HF_API_TOKEN in Render (Environment) and redeploy."
+        : "Hugging Face token missing ù add HF_API_TOKEN to .env next to server.js for real AI."
   );
 });
