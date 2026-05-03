@@ -827,6 +827,13 @@ textarea {
     padding: 18px 0 4px;
   }
 
+  /* Empty state: hero search uses vertical space like a proper landing area */
+  .perplexity-panel .search-hero {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: min(36dvh, 320px);
+  }
+
   .search-title {
     font-size: 1.2rem;
     line-height: 1.2;
@@ -863,23 +870,90 @@ textarea {
     border-radius: 0 0 15px 15px;
   }
 
-  .search-bar.compact {
-    grid-template-columns: 1fr;
-    border-radius: 16px;
+  /*
+   * Follow-up composers use .search-bar.compact only inside .followup-bar.
+   * Keep them as one horizontal pill (field | Send) like the hero search bar,
+   * not a stacked block.
+   */
+  .followup-bar .search-bar.compact {
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(rgba(8, 12, 30, 0.92), rgba(8, 12, 30, 0.92)) padding-box,
+      linear-gradient(125deg, rgba(122, 109, 255, 0.55), rgba(62, 184, 248, 0.42), rgba(122, 109, 255, 0.35))
+        border-box;
+    box-shadow:
+      0 14px 40px rgba(5, 12, 40, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 0 36px rgba(122, 109, 255, 0.08);
+    overflow: hidden;
   }
 
-  .search-bar.compact textarea {
-    min-height: 48px;
+  .followup-bar .search-bar.compact textarea {
+    min-height: 52px;
     font-size: 16px;
-    border-radius: 15px 15px 0 0;
+    padding: 14px 14px 14px 18px;
+    border-radius: 0;
   }
 
-  .search-bar.compact .search-submit {
-    border-left: none;
-    border-top: 1px solid rgba(160, 182, 255, 0.28);
-    border-radius: 0 0 15px 15px;
-    width: 100%;
-    min-height: 48px;
+  .followup-bar .search-bar.compact .search-submit {
+    width: auto;
+    min-width: 92px;
+    min-height: 52px;
+    border-left: 1px solid rgba(160, 182, 255, 0.28);
+    border-top: none;
+    border-radius: 0;
+    padding: 0 18px;
+  }
+
+  /* Ask/Code conversation: fill space between tabs and footer */
+  #appCard {
+    display: flex;
+    flex-direction: column;
+    min-height: min(100dvh, 100vh);
+  }
+
+  #appCard .app-head,
+  #appCard .tabs {
+    flex-shrink: 0;
+  }
+
+  #appCard .panel:not(.hidden) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  #appCard .answer-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  #appCard .answer-shell .chat-thread.perplexity-thread {
+    flex: 1 1 auto;
+    min-height: min(52dvh, 560px);
+    max-height: none;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(rgba(10, 14, 32, 0.94), rgba(10, 14, 32, 0.94)) padding-box,
+      linear-gradient(130deg, rgba(122, 109, 255, 0.38), rgba(62, 184, 248, 0.28), rgba(122, 109, 255, 0.25))
+        border-box;
+    box-shadow:
+      0 14px 44px rgba(5, 12, 40, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  #appCard .followup-bar {
+    flex-shrink: 0;
+    position: relative;
+    background: linear-gradient(180deg, transparent 0%, rgba(11, 16, 32, 0.88) 45%);
   }
 
   .primary-btn,
@@ -897,10 +971,16 @@ textarea {
     padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   }
 
+  /* Notebook (no answer-shell): keep a bounded scroll area */
+  .notebook-thread,
+  #panelNotebook .chat-thread {
+    max-height: min(58dvh, 620px);
+    min-height: 220px;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .chat-thread,
-  .perplexity-thread,
-  .notebook-thread {
-    max-height: min(52dvh, 520px);
+  .perplexity-thread {
     min-height: 220px;
     -webkit-overflow-scrolling: touch;
   }
