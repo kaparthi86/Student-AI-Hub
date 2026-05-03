@@ -17,7 +17,6 @@ const chatSearchSubmit = document.getElementById("chatSearchSubmit");
 const chatThread = document.getElementById("chatThread");
 const chatFollowupInput = document.getElementById("chatFollowupInput");
 const chatFollowupSubmit = document.getElementById("chatFollowupSubmit");
-const clearChatBtn = document.getElementById("clearChatBtn");
 const apiStatus = document.getElementById("apiStatus");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
@@ -27,7 +26,6 @@ const codeSearchSubmit = document.getElementById("codeSearchSubmit");
 const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
-const clearCodeBtn = document.getElementById("clearCodeBtn");
 const codeStatus = document.getElementById("codeStatus");
 
 const docFileInput = document.getElementById("docFileInput");
@@ -55,6 +53,109 @@ function formatChatErrorForUi(err) {
     );
   }
   return msg;
+}
+
+const DEFAULT_ATTACH_MAX_CHARS = 14000;
+
+function appendBlockToTextarea(textarea, block) {
+  const cur = textarea.value.replace(/\s+$/, "");
+  const sep = cur ? "\n\n" : "";
+  textarea.value = `${cur}${sep}${block}`.trim();
+  textarea.focus();
+}
+
+async function handleComposerFileSelected(file, textarea, maxChars) {
+  const name = file.name || "file";
+  if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
+    appendBlockToTextarea(
+      textarea,
+      `[Attached PDF: ${name}] For a full document summary, use the **Notebook** tab to upload this file, then ask follow-ups here.`
+    );
+    return;
+  }
+  const looksText =
+    /^text\//.test(file.type) ||
+    /application\/json/.test(file.type) ||
+    /\.(txt|md|markdown|csv|json|js|mjs|cjs|ts|tsx|jsx|py|java|c|h|cpp|go|rs|html|css|sql|sh|yaml|yml|xml|log)$/i.test(name);
+
+  if (!looksText) {
+    appendBlockToTextarea(
+      textarea,
+      `[Attached: ${name}] This file type is not auto-loaded. Paste the relevant text here, or use Notebook for long documents.`
+    );
+    return;
+  }
+  try {
+    let text = await file.text();
+    if (text.length > maxChars) {
+      text = `${text.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
+    }
+    appendBlockToTextarea(textarea, `--- From file: ${name} ---\n${text}`);
+  } catch {
+    appendBlockToTextarea(textarea, `[Could not read file: ${name}] Paste contents manually.`);
+  }
+}
+
+function handleComposerPhotoSelected(file, textarea) {
+  const name = file.name || "photo";
+  appendBlockToTextarea(
+    textarea,
+    `[Photo: ${name}] This assistant reads text here onlyadd a short description of whats in the image (or any text visible in it).`
+  );
+}
+
+/**
+ * Perplexity-style attach chips: injects file text or placeholder into search / follow-up field.
+ * @param {{ panel: HTMLElement; fileInput: HTMLInputElement; photoInput: HTMLInputElement; searchTa: HTMLTextAreaElement; followupTa: HTMLTextAreaElement; statusEl?: HTMLElement; busySubmitBtn?: HTMLButtonElement; maxTextChars?: number }} opts
+ */
+function wireComposerAttachments(opts) {
+  const {
+    panel,
+    fileInput,
+    photoInput,
+    searchTa,
+    followupTa,
+    statusEl,
+    busySubmitBtn,
+    maxTextChars = DEFAULT_ATTACH_MAX_CHARS,
+  } = opts;
+  if (!panel || !fileInput || !photoInput || !searchTa || !followupTa) return;
+
+  panel.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-composer-attach]");
+    if (!btn || !panel.contains(btn)) return;
+    const targetTa = btn.dataset.composerTarget === "followup" ? followupTa : searchTa;
+    if (busySubmitBtn?.disabled && targetTa === followupTa) return;
+    const kind = btn.getAttribute("data-composer-attach");
+    const targetKey = btn.dataset.composerTarget === "followup" ? "followup" : "search";
+    fileInput.dataset.textTarget = targetKey;
+    photoInput.dataset.textTarget = targetKey;
+    if (kind === "file") fileInput.click();
+    else if (kind === "photo") photoInput.click();
+  });
+
+  fileInput.addEventListener("change", async () => {
+    const f = fileInput.files?.[0];
+    fileInput.value = "";
+    if (!f) return;
+    const ta = fileInput.dataset.textTarget === "followup" ? followupTa : searchTa;
+    if (busySubmitBtn?.disabled && ta === followupTa) return;
+    if (statusEl) statusEl.textContent = "Reading file";
+    try {
+      await handleComposerFileSelected(f, ta, maxTextChars);
+    } finally {
+      if (statusEl) statusEl.textContent = "Ready";
+    }
+  });
+
+  photoInput.addEventListener("change", () => {
+    const f = photoInput.files?.[0];
+    photoInput.value = "";
+    if (!f) return;
+    const ta = photoInput.dataset.textTarget === "followup" ? followupTa : searchTa;
+    if (busySubmitBtn?.disabled && ta === followupTa) return;
+    handleComposerPhotoSelected(f, ta);
+  });
 }
 
 /** Starter prompts for in-chat follow-up chips (uses chat history). */
@@ -286,6 +387,127 @@ function appendBubble(container, role, text) {
   return { wrap, bubble };
 }
 
+/** Assistant row with a live <pre> while tokens stream; finalize() swaps in rendered Markdown + Copy. */
+function startStreamingAssistantBubble(container) {
+  const wrap = document.createElement("div");
+  wrap.className = "msg assistant";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble bubble--streaming";
+
+  const head = document.createElement("div");
+  head.className = "bubble-head";
+  const label = document.createElement("div");
+  label.className = "bubble-label";
+  label.textContent = "Assistant";
+  const copyBtn = document.createElement("button");
+  copyBtn.type = "button";
+  copyBtn.className = "bubble-copy";
+  copyBtn.setAttribute("aria-label", "Copy assistant response");
+  copyBtn.textContent = "Copy";
+  copyBtn.disabled = true;
+  head.appendChild(label);
+  head.appendChild(copyBtn);
+  bubble.appendChild(head);
+
+  const pre = document.createElement("pre");
+  pre.className = "bubble-text bubble-text--streaming";
+  pre.textContent = "";
+  bubble.appendChild(pre);
+  wrap.appendChild(bubble);
+  container.appendChild(wrap);
+
+  const scroll = () => {
+    container.scrollTop = container.scrollHeight;
+  };
+
+  return {
+    setStreamingText(text) {
+      pre.textContent = text;
+      scroll();
+    },
+    finalize(markdownRaw) {
+      pre.remove();
+      fillAssistantBubbleBody(bubble, markdownRaw);
+      scroll();
+    },
+    showError(markdownRaw) {
+      pre.remove();
+      fillAssistantBubbleBody(bubble, markdownRaw);
+      scroll();
+    },
+    remove() {
+      wrap.remove();
+    },
+    wrap,
+    bubble,
+  };
+}
+
+/**
+ * Reads OpenAI-style SSE from /api/chat (stream: true). Invokes onDelta with the full text so far.
+ * @returns {Promise<string>} final concatenated assistant text
+ */
+async function consumeChatSseStream(response, onDelta) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let lineBuf = "";
+  let full = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    lineBuf += decoder.decode(value, { stream: true });
+    let nl;
+    while ((nl = lineBuf.indexOf("\n")) >= 0) {
+      const rawLine = lineBuf.slice(0, nl);
+      lineBuf = lineBuf.slice(nl + 1);
+      const line = rawLine.replace(/\r$/, "");
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).replace(/^\s*/, "");
+      if (!payload || payload === "[DONE]") continue;
+      let json;
+      try {
+        json = JSON.parse(payload);
+      } catch {
+        continue;
+      }
+      const err = json.error;
+      if (err) {
+        const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
+        throw new Error(msg);
+      }
+      const piece = json.choices?.[0]?.delta?.content;
+      if (typeof piece === "string" && piece.length > 0) {
+        full += piece;
+        onDelta(full);
+      }
+    }
+  }
+  if (lineBuf.trim()) {
+    const line = lineBuf.replace(/\r$/, "");
+    if (line.startsWith("data:")) {
+      const payload = line.slice(5).replace(/^\s*/, "");
+      if (payload && payload !== "[DONE]") {
+        try {
+          const json = JSON.parse(payload);
+          const err = json.error;
+          if (err) {
+            const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
+            throw new Error(msg);
+          }
+          const piece = json.choices?.[0]?.delta?.content;
+          if (typeof piece === "string" && piece.length > 0) {
+            full += piece;
+            onDelta(full);
+          }
+        } catch (e) {
+          if (!(e instanceof SyntaxError)) throw e;
+        }
+      }
+    }
+  }
+  return full;
+}
+
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn) {
   const trimmed = message.trim();
   if (!trimmed) return;
@@ -295,21 +517,84 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   sendBtn.disabled = true;
   statusEl.textContent = "Thinking...";
 
+  const streamUi = startStreamingAssistantBubble(threadEl);
+  let rafId = 0;
+  let pendingFull = "";
+
+  const flushPending = () => {
+    rafId = 0;
+    streamUi.setStreamingText(pendingFull);
+  };
+
+  const scheduleDelta = (full) => {
+    pendingFull = full;
+    if (rafId) return;
+    rafId = requestAnimationFrame(flushPending);
+  };
+
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode, message: trimmed, history }),
+      body: JSON.stringify({ mode, message: trimmed, history, stream: true }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Request failed");
-    const output = data.output || "No response.";
-    appendBubble(threadEl, "assistant", output);
+
+    const ct = (response.headers.get("content-type") || "").toLowerCase();
+
+    if (!response.ok) {
+      streamUi.remove();
+      if (ct.includes("application/json")) {
+        const data = await response.json();
+        throw new Error(data.error || "Request failed");
+      }
+      throw new Error(`Request failed (${response.status})`);
+    }
+
+    if (!response.body || !ct.includes("text/event-stream")) {
+      streamUi.remove();
+      let output = "No response.";
+      try {
+        const data = await response.json();
+        output = typeof data.output === "string" && data.output.trim() ? data.output.trim() : output;
+      } catch {
+        try {
+          const t = await response.text();
+          if (t.trim()) output = t.trim().slice(0, 2000);
+        } catch {
+          /* keep default */
+        }
+      }
+      appendBubble(threadEl, "assistant", output);
+      history.push({ role: "user", content: trimmed });
+      history.push({ role: "assistant", content: output });
+      statusEl.textContent = "Ready";
+      return;
+    }
+
+    statusEl.textContent = "Streaming";
+    const fullOut = await consumeChatSseStream(response, scheduleDelta);
+
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+    const finalText = String(fullOut || "").trim() || "(No text returned.)";
+    streamUi.setStreamingText(finalText);
+    streamUi.finalize(finalText);
+
     history.push({ role: "user", content: trimmed });
-    history.push({ role: "assistant", content: output });
+    history.push({ role: "assistant", content: finalText });
     statusEl.textContent = "Ready";
   } catch (error) {
-    appendBubble(threadEl, "assistant", `Error: ${formatChatErrorForUi(error)}`);
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+    if (streamUi.bubble.isConnected) {
+      streamUi.showError(`Error: ${formatChatErrorForUi(error)}`);
+    } else {
+      appendBubble(threadEl, "assistant", `Error: ${formatChatErrorForUi(error)}`);
+    }
     statusEl.textContent = "Failed";
   } finally {
     sendBtn.disabled = false;
@@ -508,22 +793,24 @@ wireSearchFlow({
   },
 });
 
-clearChatBtn.addEventListener("click", () => {
-  chatHistory.length = 0;
-  chatThread.innerHTML = "";
-  chatSessionOpen = false;
-  apiStatus.textContent = "Ready";
-  syncLearnLayout();
-  chatSearchInput.focus();
+wireComposerAttachments({
+  panel: document.getElementById("panelChat"),
+  fileInput: document.getElementById("chatAttachFileInput"),
+  photoInput: document.getElementById("chatAttachPhotoInput"),
+  searchTa: chatSearchInput,
+  followupTa: chatFollowupInput,
+  statusEl: apiStatus,
+  busySubmitBtn: chatFollowupSubmit,
 });
 
-clearCodeBtn.addEventListener("click", () => {
-  codeHistory.length = 0;
-  codeThread.innerHTML = "";
-  codeSessionOpen = false;
-  codeStatus.textContent = "Ready";
-  syncCodeLayout();
-  codeSearchInput.focus();
+wireComposerAttachments({
+  panel: document.getElementById("panelCode"),
+  fileInput: document.getElementById("codeAttachFileInput"),
+  photoInput: document.getElementById("codeAttachPhotoInput"),
+  searchTa: codeSearchInput,
+  followupTa: codeFollowupInput,
+  statusEl: codeStatus,
+  busySubmitBtn: codeFollowupSubmit,
 });
 
 docFileInput.addEventListener("change", () => {
