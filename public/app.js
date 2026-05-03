@@ -56,6 +56,14 @@ function formatChatErrorForUi(err) {
 }
 
 const DEFAULT_ATTACH_MAX_CHARS = 14000;
+/** Max file size before we refuse inline read (bytes). */
+const MAX_ATTACH_FILE_BYTES = 4 * 1024 * 1024;
+/** Raw binary up to this size may be inlined as truncated base64. */
+const MAX_BINARY_RAW_FOR_B64 = 96 * 1024;
+/** Max base64 characters embedded in the prompt (rest truncated). */
+const MAX_B64_CHARS_IN_PROMPT = 14000;
+/** Target max length for embedded JPEG data URLs (characters). */
+const MAX_IMAGE_DATA_URL_CHARS = 450000;
 
 function appendBlockToTextarea(textarea, block) {
   const cur = textarea.value.replace(/\s+$/, "");
@@ -64,8 +72,120 @@ function appendBlockToTextarea(textarea, block) {
   textarea.focus();
 }
 
-async function handleComposerFileSelected(file, textarea, maxChars) {
+function isLikelyImageFile(file) {
+  const name = file.name || "";
+  if (file.type && file.type.startsWith("image/")) return true;
+  return /\.(png|jpe?g|gif|webp|bmp|avif|heic|heif|svg|ico|tiff?)$/i.test(name);
+}
+
+function isMostlyPrintableText(s, sampleLen = 12000) {
+  if (!s.length) return true;
+  const n = Math.min(s.length, sampleLen);
+  let bad = 0;
+  for (let i = 0; i < n; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 0) return false;
+    if (c < 9 || (c > 13 && c < 32)) bad++;
+  }
+  return bad / n < 0.02;
+}
+
+function readFileBase64Only(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const data = String(r.result || "");
+      const i = data.indexOf(",");
+      resolve(i >= 0 ? data.slice(i + 1) : data);
+    };
+    r.onerror = () => reject(new Error("read failed"));
+    r.readAsDataURL(file);
+  });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => reject(new Error("read failed"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function readImageAsJpegDataUrl(file, maxEdge, quality, maxChars) {
+  let bmp;
+  try {
+    bmp = await createImageBitmap(file);
+  } catch {
+    return null;
+  }
+  try {
+    let { width, height } = bmp;
+    const scale = Math.min(1, maxEdge / Math.max(width, height, 1));
+    const w = Math.max(1, Math.round(width * scale));
+    const h = Math.max(1, Math.round(height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(bmp, 0, 0, w, h);
+    let q = quality;
+    let dataUrl = canvas.toDataURL("image/jpeg", q);
+    let guard = 0;
+    while (dataUrl.length > maxChars && q > 0.35 && guard < 14) {
+      q -= 0.07;
+      dataUrl = canvas.toDataURL("image/jpeg", q);
+      guard += 1;
+    }
+    if (dataUrl.length > maxChars) return null;
+    return dataUrl;
+  } finally {
+    try {
+      bmp.close();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+async function injectSvgOrImageMarkdown(file, textarea) {
+  const name = file.name || "image";
+  if (file.type === "image/svg+xml" || /\.svg$/i.test(name)) {
+    let t = await file.text();
+    if (t.length > 24000) t = `${t.slice(0, 24000)}\n<!-- truncated -->`;
+    appendBlockToTextarea(textarea, `--- SVG: ${name} ---\n\`\`\`xml\n${t}\n\`\`\``);
+    return;
+  }
+  let dataUrl = await readImageAsJpegDataUrl(file, 1680, 0.82, MAX_IMAGE_DATA_URL_CHARS);
+  if (!dataUrl && file.size < 900000) {
+    const raw = await readFileAsDataUrl(file);
+    if (raw.length <= MAX_IMAGE_DATA_URL_CHARS) dataUrl = raw;
+  }
+  if (!dataUrl) {
+    appendBlockToTextarea(
+      textarea,
+      `[Image: ${name}] Could not compress small enough to embed here. Add a short description, or resize the image and try again.`
+    );
+    return;
+  }
+  appendBlockToTextarea(textarea, `![${name}](${dataUrl})`);
+}
+
+async function handleComposerAttachment(file, textarea, maxChars) {
   const name = file.name || "file";
+  if (!file.size) {
+    appendBlockToTextarea(textarea, `[Attached: ${name}] (empty file)`);
+    return;
+  }
+  if (file.size > MAX_ATTACH_FILE_BYTES) {
+    appendBlockToTextarea(
+      textarea,
+      `[Attached: ${name}] File is ${Math.round(file.size / (1024 * 1024))} MB; max ${Math.round(MAX_ATTACH_FILE_BYTES / (1024 * 1024))} MB for inline attach. Use **Notebook** for large documents.`
+    );
+    return;
+  }
+
   if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
     appendBlockToTextarea(
       textarea,
@@ -73,34 +193,51 @@ async function handleComposerFileSelected(file, textarea, maxChars) {
     );
     return;
   }
-  const looksText =
-    /^text\//.test(file.type) ||
-    /application\/json/.test(file.type) ||
-    /\.(txt|md|markdown|csv|json|js|mjs|cjs|ts|tsx|jsx|py|java|c|h|cpp|go|rs|html|css|sql|sh|yaml|yml|xml|log)$/i.test(name);
 
-  if (!looksText) {
-    appendBlockToTextarea(
-      textarea,
-      `[Attached: ${name}] This file type is not auto-loaded. Paste the relevant text here, or use Notebook for long documents.`
-    );
+  if (isLikelyImageFile(file)) {
+    try {
+      await injectSvgOrImageMarkdown(file, textarea);
+    } catch {
+      appendBlockToTextarea(textarea, `[Image: ${name}] Could not read this image. Try another format or describe it in text.`);
+    }
     return;
   }
-  try {
-    let text = await file.text();
-    if (text.length > maxChars) {
-      text = `${text.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
-    }
-    appendBlockToTextarea(textarea, `--- From file: ${name} ---\n${text}`);
-  } catch {
-    appendBlockToTextarea(textarea, `[Could not read file: ${name}] Paste contents manually.`);
-  }
-}
 
-function handleComposerPhotoSelected(file, textarea) {
-  const name = file.name || "photo";
+  let text;
+  try {
+    text = await file.text();
+  } catch {
+    appendBlockToTextarea(textarea, `[Attached: ${name}] Could not read file. Try again or paste contents manually.`);
+    return;
+  }
+
+  if (isMostlyPrintableText(text)) {
+    let body = text;
+    if (body.length > maxChars) {
+      body = `${body.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
+    }
+    appendBlockToTextarea(textarea, `--- From file: ${name} (${file.type || "unknown type"}) ---\n${body}`);
+    return;
+  }
+
+  if (file.size <= MAX_BINARY_RAW_FOR_B64) {
+    try {
+      const b64 = await readFileBase64Only(file);
+      const chunk =
+        b64.length > MAX_B64_CHARS_IN_PROMPT ? `${b64.slice(0, MAX_B64_CHARS_IN_PROMPT)}\n...[base64 truncated]` : b64;
+      appendBlockToTextarea(
+        textarea,
+        `--- Binary file: ${name} (${file.type || "application/octet-stream"}, ${file.size} bytes) as base64 ---\n\`\`\`text\n${chunk}\n\`\`\`\n_(If the model cannot use this, use Notebook for PDFs/Zips or describe the file.)_`
+      );
+    } catch {
+      appendBlockToTextarea(textarea, `[Attached: ${name}] Binary file could not be read. Use **Notebook** or paste a relevant excerpt.`);
+    }
+    return;
+  }
+
   appendBlockToTextarea(
     textarea,
-    `[Photo: ${name}] This assistant reads text here onlyùadd a short description of whatùs in the image (or any text visible in it).`
+    `[Attached: ${name}] Binary file (${Math.round(file.size / 1024)} KB) is too large for inline base64. Use **Notebook** for documents, or paste the part you need.`
   );
 }
 
@@ -134,27 +271,31 @@ function wireComposerAttachments(opts) {
     else if (kind === "photo") photoInput.click();
   });
 
+  const runAttachment = async (f, ta) => {
+    if (statusEl) statusEl.textContent = "Reading file...";
+    try {
+      await handleComposerAttachment(f, ta, maxTextChars);
+    } finally {
+      if (statusEl) statusEl.textContent = "Ready";
+    }
+  };
+
   fileInput.addEventListener("change", async () => {
     const f = fileInput.files?.[0];
     fileInput.value = "";
     if (!f) return;
     const ta = fileInput.dataset.textTarget === "followup" ? followupTa : searchTa;
     if (busySubmitBtn?.disabled && ta === followupTa) return;
-    if (statusEl) statusEl.textContent = "Reading fileù";
-    try {
-      await handleComposerFileSelected(f, ta, maxTextChars);
-    } finally {
-      if (statusEl) statusEl.textContent = "Ready";
-    }
+    await runAttachment(f, ta);
   });
 
-  photoInput.addEventListener("change", () => {
+  photoInput.addEventListener("change", async () => {
     const f = photoInput.files?.[0];
     photoInput.value = "";
     if (!f) return;
     const ta = photoInput.dataset.textTarget === "followup" ? followupTa : searchTa;
     if (busySubmitBtn?.disabled && ta === followupTa) return;
-    handleComposerPhotoSelected(f, ta);
+    await runAttachment(f, ta);
   });
 }
 
@@ -387,7 +528,9 @@ function appendBubble(container, role, text) {
   return { wrap, bubble };
 }
 
-/** Assistant row with a live <pre> while tokens stream; finalize() swaps in rendered Markdown + Copy. */
+/**
+ * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then ÔøΩjumpÔøΩ).
+ */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
   wrap.className = "msg assistant";
@@ -409,10 +552,10 @@ function startStreamingAssistantBubble(container) {
   head.appendChild(copyBtn);
   bubble.appendChild(head);
 
-  const pre = document.createElement("pre");
-  pre.className = "bubble-text bubble-text--streaming";
-  pre.textContent = "";
-  bubble.appendChild(pre);
+  const body = document.createElement("div");
+  body.className = "bubble-text bubble-md bubble-md--streaming";
+  body.setAttribute("aria-busy", "true");
+  bubble.appendChild(body);
   wrap.appendChild(bubble);
   container.appendChild(wrap);
 
@@ -422,16 +565,21 @@ function startStreamingAssistantBubble(container) {
 
   return {
     setStreamingText(text) {
-      pre.textContent = text;
+      const rendered = renderAssistantHtml(text);
+      if ("plain" in rendered) {
+        body.textContent = rendered.plain;
+      } else {
+        body.innerHTML = rendered.html;
+      }
       scroll();
     },
     finalize(markdownRaw) {
-      pre.remove();
+      body.remove();
       fillAssistantBubbleBody(bubble, markdownRaw);
       scroll();
     },
     showError(markdownRaw) {
-      pre.remove();
+      body.remove();
       fillAssistantBubbleBody(bubble, markdownRaw);
       scroll();
     },
@@ -441,6 +589,36 @@ function startStreamingAssistantBubble(container) {
     wrap,
     bubble,
   };
+}
+
+/** OpenAI-compatible chat delta: `content` may be a string or a list of { type, text } parts. */
+function extractChatDeltaText(delta) {
+  if (!delta || typeof delta !== "object") return "";
+  const c = delta.content;
+  if (c === null || c === undefined) return "";
+  if (typeof c === "string") return c;
+  if (Array.isArray(c)) {
+    let out = "";
+    for (const part of c) {
+      if (!part || typeof part !== "object") continue;
+      if (part.type === "text" && typeof part.text === "string") out += part.text;
+    }
+    return out;
+  }
+  return "";
+}
+
+function applyStreamDelta(json, full, onDelta) {
+  const err = json.error;
+  if (err) {
+    const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
+    throw new Error(msg);
+  }
+  const piece = extractChatDeltaText(json.choices?.[0]?.delta);
+  if (piece.length === 0) return full;
+  const next = full + piece;
+  onDelta(next);
+  return next;
 }
 
 /**
@@ -470,16 +648,7 @@ async function consumeChatSseStream(response, onDelta) {
       } catch {
         continue;
       }
-      const err = json.error;
-      if (err) {
-        const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
-        throw new Error(msg);
-      }
-      const piece = json.choices?.[0]?.delta?.content;
-      if (typeof piece === "string" && piece.length > 0) {
-        full += piece;
-        onDelta(full);
-      }
+      full = applyStreamDelta(json, full, onDelta);
     }
   }
   if (lineBuf.trim()) {
@@ -489,16 +658,7 @@ async function consumeChatSseStream(response, onDelta) {
       if (payload && payload !== "[DONE]") {
         try {
           const json = JSON.parse(payload);
-          const err = json.error;
-          if (err) {
-            const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
-            throw new Error(msg);
-          }
-          const piece = json.choices?.[0]?.delta?.content;
-          if (typeof piece === "string" && piece.length > 0) {
-            full += piece;
-            onDelta(full);
-          }
+          full = applyStreamDelta(json, full, onDelta);
         } catch (e) {
           if (!(e instanceof SyntaxError)) throw e;
         }
@@ -571,7 +731,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       return;
     }
 
-    statusEl.textContent = "Streamingù";
+    statusEl.textContent = "Streaming...";
     const fullOut = await consumeChatSseStream(response, scheduleDelta);
 
     if (rafId) {

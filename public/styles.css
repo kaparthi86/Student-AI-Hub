@@ -725,6 +725,10 @@ textarea {
   white-space: normal;
 }
 
+.bubble-md--streaming {
+  min-height: 1.25em;
+}
+
 .bubble-md > :first-child {
   margin-top: 0;
 }
