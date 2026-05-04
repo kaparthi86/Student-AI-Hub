@@ -40,11 +40,6 @@ let supabaseClient = null;
 const chatHistory = [];
 const codeHistory = [];
 
-/** Pending file/image payloads for Learn tab; merged into the outbound message on send, not shown in the textarea. */
-const chatComposerAttachments = [];
-/** Pending attachments for Code tab. */
-const codeComposerAttachments = [];
-
 let chatSessionOpen = false;
 let codeSessionOpen = false;
 
@@ -58,322 +53,6 @@ function formatChatErrorForUi(err) {
     );
   }
   return msg;
-}
-
-const DEFAULT_ATTACH_MAX_CHARS = 14000;
-/** Max file size before we refuse inline read (bytes). */
-const MAX_ATTACH_FILE_BYTES = 4 * 1024 * 1024;
-/** Raw binary up to this size may be inlined as truncated base64. */
-const MAX_BINARY_RAW_FOR_B64 = 96 * 1024;
-/** Max base64 characters embedded in the prompt (rest truncated). */
-const MAX_B64_CHARS_IN_PROMPT = 14000;
-/** Target max length for embedded JPEG data URLs (characters). */
-const MAX_IMAGE_DATA_URL_CHARS = 450000;
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function shortAttachmentLabel(name, maxLen = 40) {
-  const n = String(name || "file").trim() || "file";
-  if (n.length <= maxLen) return n;
-  return `${n.slice(0, Math.max(0, maxLen - 1))}ù`;
-}
-
-function newComposerAttachmentId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `att-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-const COMPOSER_ATTACHMENT_STRIPS = {
-  chat: ["chatComposerAttachmentStrip", "chatComposerAttachmentStripFollowup"],
-  code: ["codeComposerAttachmentStrip", "codeComposerAttachmentStripFollowup"],
-};
-
-/** Same order as the old append-to-textarea behavior: typed text first, then each attachment block. */
-function buildOutboundAttachmentMessage(userText, attachments) {
-  const payloads = attachments.map((a) => a.payload).filter((p) => typeof p === "string" && p.trim());
-  const t = String(userText || "").trim();
-  if (!payloads.length) return t;
-  if (!t) return payloads.join("\n\n");
-  return `${t}\n\n${payloads.join("\n\n")}`;
-}
-
-function renderComposerAttachmentStrips(panelKey) {
-  const store = panelKey === "code" ? codeComposerAttachments : chatComposerAttachments;
-  const stripIds = COMPOSER_ATTACHMENT_STRIPS[panelKey];
-  if (!stripIds) return;
-  const count = store.length;
-  let html = "";
-  if (count > 0) {
-    html += `<div class="composer-attachments-meta"><span class="muted">${
-      count === 1 ? "1 attachment" : `${count} attachments`
-    } will be sent with your next message</span></div>`;
-    for (const a of store) {
-      const label = escapeHtml(a.label);
-      const id = escapeHtml(a.id);
-      html += `<span class="composer-attach-pill" role="group" aria-label="Attachment ${label}">
-  <span class="composer-attach-pill-name" title="${label}">${label}</span>
-  <button type="button" class="composer-attach-remove" data-remove-composer-attachment="${id}" aria-label="Remove attachment ${label}">ù</button>
-</span>`;
-    }
-  }
-  for (const stripId of stripIds) {
-    const el = document.getElementById(stripId);
-    if (!el) continue;
-    el.innerHTML = html;
-    const show = count > 0;
-    el.hidden = !show;
-  }
-}
-
-function isLikelyImageFile(file) {
-  const name = file.name || "";
-  if (file.type && file.type.startsWith("image/")) return true;
-  return /\.(png|jpe?g|gif|webp|bmp|avif|heic|heif|svg|ico|tiff?)$/i.test(name);
-}
-
-function isMostlyPrintableText(s, sampleLen = 12000) {
-  if (!s.length) return true;
-  const n = Math.min(s.length, sampleLen);
-  let bad = 0;
-  for (let i = 0; i < n; i++) {
-    const c = s.charCodeAt(i);
-    if (c === 0) return false;
-    if (c < 9 || (c > 13 && c < 32)) bad++;
-  }
-  return bad / n < 0.02;
-}
-
-function readFileBase64Only(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => {
-      const data = String(r.result || "");
-      const i = data.indexOf(",");
-      resolve(i >= 0 ? data.slice(i + 1) : data);
-    };
-    r.onerror = () => reject(new Error("read failed"));
-    r.readAsDataURL(file);
-  });
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result || ""));
-    r.onerror = () => reject(new Error("read failed"));
-    r.readAsDataURL(file);
-  });
-}
-
-async function readImageAsJpegDataUrl(file, maxEdge, quality, maxChars) {
-  let bmp;
-  try {
-    bmp = await createImageBitmap(file);
-  } catch {
-    return null;
-  }
-  try {
-    let { width, height } = bmp;
-    const scale = Math.min(1, maxEdge / Math.max(width, height, 1));
-    const w = Math.max(1, Math.round(width * scale));
-    const h = Math.max(1, Math.round(height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.drawImage(bmp, 0, 0, w, h);
-    let q = quality;
-    let dataUrl = canvas.toDataURL("image/jpeg", q);
-    let guard = 0;
-    while (dataUrl.length > maxChars && q > 0.35 && guard < 14) {
-      q -= 0.07;
-      dataUrl = canvas.toDataURL("image/jpeg", q);
-      guard += 1;
-    }
-    if (dataUrl.length > maxChars) return null;
-    return dataUrl;
-  } finally {
-    try {
-      bmp.close();
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-async function buildImageComposerPayload(file) {
-  const name = file.name || "image";
-  if (file.type === "image/svg+xml" || /\.svg$/i.test(name)) {
-    let t = await file.text();
-    if (t.length > 24000) t = `${t.slice(0, 24000)}\n<!-- truncated -->`;
-    return `--- SVG: ${name} ---\n\`\`\`xml\n${t}\n\`\`\``;
-  }
-  let dataUrl = await readImageAsJpegDataUrl(file, 1680, 0.82, MAX_IMAGE_DATA_URL_CHARS);
-  if (!dataUrl && file.size < 900000) {
-    const raw = await readFileAsDataUrl(file);
-    if (raw.length <= MAX_IMAGE_DATA_URL_CHARS) dataUrl = raw;
-  }
-  if (!dataUrl) {
-    return `[Image: ${name}] Could not compress small enough to embed here. Add a short description, or resize the image and try again.`;
-  }
-  return `![${name}](${dataUrl})`;
-}
-
-/** Builds the model-facing block for one file; label is for the attachment strip only. */
-async function buildComposerAttachmentPayload(file, maxChars) {
-  const name = file.name || "file";
-  const label = shortAttachmentLabel(name);
-  if (!file.size) {
-    return { label, payload: `[Attached: ${name}] (empty file)` };
-  }
-  if (file.size > MAX_ATTACH_FILE_BYTES) {
-    return {
-      label,
-      payload: `[Attached: ${name}] File is ${Math.round(file.size / (1024 * 1024))} MB; max ${Math.round(MAX_ATTACH_FILE_BYTES / (1024 * 1024))} MB for inline attach. Use **Notebook** for large documents.`,
-    };
-  }
-
-  if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
-    return {
-      label,
-      payload: `[Attached PDF: ${name}] For a full document summary, use the **Notebook** tab to upload this file, then ask follow-ups here.`,
-    };
-  }
-
-  if (isLikelyImageFile(file)) {
-    try {
-      const payload = await buildImageComposerPayload(file);
-      return { label, payload };
-    } catch {
-      return {
-        label,
-        payload: `[Image: ${name}] Could not read this image. Try another format or describe it in text.`,
-      };
-    }
-  }
-
-  let text;
-  try {
-    text = await file.text();
-  } catch {
-    return { label, payload: `[Attached: ${name}] Could not read file. Try again or paste contents manually.` };
-  }
-
-  if (isMostlyPrintableText(text)) {
-    let body = text;
-    if (body.length > maxChars) {
-      body = `${body.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
-    }
-    return { label, payload: `--- From file: ${name} (${file.type || "unknown type"}) ---\n${body}` };
-  }
-
-  if (file.size <= MAX_BINARY_RAW_FOR_B64) {
-    try {
-      const b64 = await readFileBase64Only(file);
-      const chunk =
-        b64.length > MAX_B64_CHARS_IN_PROMPT ? `${b64.slice(0, MAX_B64_CHARS_IN_PROMPT)}\n...[base64 truncated]` : b64;
-      return {
-        label,
-        payload: `--- Binary file: ${name} (${file.type || "application/octet-stream"}, ${file.size} bytes) as base64 ---\n\`\`\`text\n${chunk}\n\`\`\`\n_(If the model cannot use this, use Notebook for PDFs/Zips or describe the file.)_`,
-      };
-    } catch {
-      return {
-        label,
-        payload: `[Attached: ${name}] Binary file could not be read. Use **Notebook** or paste a relevant excerpt.`,
-      };
-    }
-  }
-
-  return {
-    label,
-    payload: `[Attached: ${name}] Binary file (${Math.round(file.size / 1024)} KB) is too large for inline base64. Use **Notebook** for documents, or paste the part you need.`,
-  };
-}
-
-/**
- * Attach chips: queue payloads for the next send and show a strip (search/follow-up textareas stay clean).
- * @param {{ panel: HTMLElement; panelKey: "chat" | "code"; fileInput: HTMLInputElement; photoInput: HTMLInputElement; searchTa: HTMLTextAreaElement; followupTa: HTMLTextAreaElement; statusEl?: HTMLElement; busySubmitBtn?: HTMLButtonElement; maxTextChars?: number }} opts
- */
-function wireComposerAttachments(opts) {
-  const {
-    panel,
-    panelKey,
-    fileInput,
-    photoInput,
-    searchTa,
-    followupTa,
-    statusEl,
-    busySubmitBtn,
-    maxTextChars = DEFAULT_ATTACH_MAX_CHARS,
-  } = opts;
-  if (!panel || !panelKey || !fileInput || !photoInput || !searchTa || !followupTa) return;
-
-  const store = panelKey === "code" ? codeComposerAttachments : chatComposerAttachments;
-
-  panel.addEventListener("click", (e) => {
-    const rm = e.target.closest("[data-remove-composer-attachment]");
-    if (rm && panel.contains(rm)) {
-      const id = rm.getAttribute("data-remove-composer-attachment");
-      if (id) {
-        const ix = store.findIndex((x) => x.id === id);
-        if (ix >= 0) {
-          store.splice(ix, 1);
-          renderComposerAttachmentStrips(panelKey);
-        }
-      }
-      return;
-    }
-
-    const btn = e.target.closest("[data-composer-attach]");
-    if (!btn || !panel.contains(btn)) return;
-    const targetTa = btn.dataset.composerTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && targetTa === followupTa) return;
-    const kind = btn.getAttribute("data-composer-attach");
-    const targetKey = btn.dataset.composerTarget === "followup" ? "followup" : "search";
-    fileInput.dataset.textTarget = targetKey;
-    photoInput.dataset.textTarget = targetKey;
-    if (kind === "file") fileInput.click();
-    else if (kind === "photo") photoInput.click();
-  });
-
-  const runAttachment = async (f, focusTa) => {
-    if (statusEl) statusEl.textContent = "Reading file...";
-    try {
-      const { label, payload } = await buildComposerAttachmentPayload(f, maxTextChars);
-      store.push({ id: newComposerAttachmentId(), label, payload });
-      renderComposerAttachmentStrips(panelKey);
-      focusTa?.focus();
-    } finally {
-      if (statusEl) statusEl.textContent = "Ready";
-    }
-  };
-
-  fileInput.addEventListener("change", async () => {
-    const f = fileInput.files?.[0];
-    fileInput.value = "";
-    if (!f) return;
-    const ta = fileInput.dataset.textTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && ta === followupTa) return;
-    await runAttachment(f, ta);
-  });
-
-  photoInput.addEventListener("change", async () => {
-    const f = photoInput.files?.[0];
-    photoInput.value = "";
-    if (!f) return;
-    const ta = photoInput.dataset.textTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && ta === followupTa) return;
-    await runAttachment(f, ta);
-  });
 }
 
 /** Starter prompts for in-chat follow-up chips (uses chat history). */
@@ -769,7 +448,7 @@ async function consumeChatSseStream(response, onDelta) {
   return full;
 }
 
-/** @returns {Promise<boolean>} true if the exchange completed without a client-side failure (attachments cleared on success). */
+/** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn) {
   const trimmed = message.trim();
   if (!trimmed) return false;
@@ -979,23 +658,13 @@ function wireSearchFlow({
   threadEl,
   statusEl,
   onFirstSend,
-  attachmentStore,
 }) {
-  const panelKey = mode === "code" ? "code" : "chat";
-  const pendingAttachments = attachmentStore || (panelKey === "code" ? codeComposerAttachments : chatComposerAttachments);
-
   const run = (raw, activeBtn) => {
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
-    const combined = buildOutboundAttachmentMessage(trimmed, pendingAttachments);
-    if (!combined.trim()) return;
+    if (!trimmed) return;
     if (!history.length) onFirstSend();
-    void sendChatMessage(mode, combined, history, threadEl, statusEl, activeBtn).then((ok) => {
-      if (ok) {
-        pendingAttachments.length = 0;
-        renderComposerAttachmentStrips(panelKey);
-      }
-    });
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn);
     followupInput.value = "";
     followupInput.focus();
   };
@@ -1041,7 +710,6 @@ const chatSearchFlow = wireSearchFlow({
   history: chatHistory,
   threadEl: chatThread,
   statusEl: apiStatus,
-  attachmentStore: chatComposerAttachments,
   onFirstSend: () => {
     chatSessionOpen = true;
     syncLearnLayout();
@@ -1064,33 +732,10 @@ wireSearchFlow({
   history: codeHistory,
   threadEl: codeThread,
   statusEl: codeStatus,
-  attachmentStore: codeComposerAttachments,
   onFirstSend: () => {
     codeSessionOpen = true;
     syncCodeLayout();
   },
-});
-
-wireComposerAttachments({
-  panel: document.getElementById("panelChat"),
-  panelKey: "chat",
-  fileInput: document.getElementById("chatAttachFileInput"),
-  photoInput: document.getElementById("chatAttachPhotoInput"),
-  searchTa: chatSearchInput,
-  followupTa: chatFollowupInput,
-  statusEl: apiStatus,
-  busySubmitBtn: chatFollowupSubmit,
-});
-
-wireComposerAttachments({
-  panel: document.getElementById("panelCode"),
-  panelKey: "code",
-  fileInput: document.getElementById("codeAttachFileInput"),
-  photoInput: document.getElementById("codeAttachPhotoInput"),
-  searchTa: codeSearchInput,
-  followupTa: codeFollowupInput,
-  statusEl: codeStatus,
-  busySubmitBtn: codeFollowupSubmit,
 });
 
 docFileInput.addEventListener("change", () => {
