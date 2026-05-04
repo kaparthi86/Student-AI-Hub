@@ -109,8 +109,31 @@ function buildPrompt(mode, userInput) {
 function explainRouterModelError(status, rawBody) {
   try {
     const parsed = JSON.parse(rawBody);
-    const msg = parsed?.error?.message || parsed?.message;
-    const code = parsed?.error?.code || parsed?.code;
+    const errField = parsed?.error;
+    const msg =
+      typeof errField === "string"
+        ? errField
+        : errField?.message || (typeof parsed?.message === "string" ? parsed.message : "");
+    const code =
+      typeof errField === "object" && errField && "code" in errField ? errField.code : parsed?.code;
+
+    if (status === 401) {
+      const lower = String(msg || rawBody || "").toLowerCase();
+      if (lower.includes("invalid") || lower.includes("unauthorized") || lower.includes("authentication")) {
+        return [
+          "Hugging Face returned HTTP 401 (authentication failed). The text \"Invalid username or password\" refers to your **HF_API_TOKEN**, not your Google / Student app login.",
+          "",
+          "Fix:",
+          "1) Open https://huggingface.co/settings/tokens and create a **new** token (classic with Read, or fine-grained with **Make calls to Inference Providers**).",
+          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only ù no quotes, no spaces, full string starting with `hf_`.",
+          "3) **Redeploy** or restart the service after saving env vars.",
+          "4) Confirm **HF_CHAT_URL** is `https://router.huggingface.co/v1/chat/completions` unless you use another HF endpoint.",
+          "",
+          `Provider message: ${msg || rawBody.slice(0, 300)}`,
+        ].join("\n");
+      }
+    }
+
     if (
       status === 400 &&
       (code === "model_not_supported" ||

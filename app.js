@@ -55,109 +55,6 @@ function formatChatErrorForUi(err) {
   return msg;
 }
 
-const DEFAULT_ATTACH_MAX_CHARS = 14000;
-
-function appendBlockToTextarea(textarea, block) {
-  const cur = textarea.value.replace(/\s+$/, "");
-  const sep = cur ? "\n\n" : "";
-  textarea.value = `${cur}${sep}${block}`.trim();
-  textarea.focus();
-}
-
-async function handleComposerFileSelected(file, textarea, maxChars) {
-  const name = file.name || "file";
-  if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
-    appendBlockToTextarea(
-      textarea,
-      `[Attached PDF: ${name}] For a full document summary, use the **Notebook** tab to upload this file, then ask follow-ups here.`
-    );
-    return;
-  }
-  const looksText =
-    /^text\//.test(file.type) ||
-    /application\/json/.test(file.type) ||
-    /\.(txt|md|markdown|csv|json|js|mjs|cjs|ts|tsx|jsx|py|java|c|h|cpp|go|rs|html|css|sql|sh|yaml|yml|xml|log)$/i.test(name);
-
-  if (!looksText) {
-    appendBlockToTextarea(
-      textarea,
-      `[Attached: ${name}] This file type is not auto-loaded. Paste the relevant text here, or use Notebook for long documents.`
-    );
-    return;
-  }
-  try {
-    let text = await file.text();
-    if (text.length > maxChars) {
-      text = `${text.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
-    }
-    appendBlockToTextarea(textarea, `--- From file: ${name} ---\n${text}`);
-  } catch {
-    appendBlockToTextarea(textarea, `[Could not read file: ${name}] Paste contents manually.`);
-  }
-}
-
-function handleComposerPhotoSelected(file, textarea) {
-  const name = file.name || "photo";
-  appendBlockToTextarea(
-    textarea,
-    `[Photo: ${name}] This assistant reads text here onlyadd a short description of whats in the image (or any text visible in it).`
-  );
-}
-
-/**
- * Perplexity-style attach chips: injects file text or placeholder into search / follow-up field.
- * @param {{ panel: HTMLElement; fileInput: HTMLInputElement; photoInput: HTMLInputElement; searchTa: HTMLTextAreaElement; followupTa: HTMLTextAreaElement; statusEl?: HTMLElement; busySubmitBtn?: HTMLButtonElement; maxTextChars?: number }} opts
- */
-function wireComposerAttachments(opts) {
-  const {
-    panel,
-    fileInput,
-    photoInput,
-    searchTa,
-    followupTa,
-    statusEl,
-    busySubmitBtn,
-    maxTextChars = DEFAULT_ATTACH_MAX_CHARS,
-  } = opts;
-  if (!panel || !fileInput || !photoInput || !searchTa || !followupTa) return;
-
-  panel.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-composer-attach]");
-    if (!btn || !panel.contains(btn)) return;
-    const targetTa = btn.dataset.composerTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && targetTa === followupTa) return;
-    const kind = btn.getAttribute("data-composer-attach");
-    const targetKey = btn.dataset.composerTarget === "followup" ? "followup" : "search";
-    fileInput.dataset.textTarget = targetKey;
-    photoInput.dataset.textTarget = targetKey;
-    if (kind === "file") fileInput.click();
-    else if (kind === "photo") photoInput.click();
-  });
-
-  fileInput.addEventListener("change", async () => {
-    const f = fileInput.files?.[0];
-    fileInput.value = "";
-    if (!f) return;
-    const ta = fileInput.dataset.textTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && ta === followupTa) return;
-    if (statusEl) statusEl.textContent = "Reading file";
-    try {
-      await handleComposerFileSelected(f, ta, maxTextChars);
-    } finally {
-      if (statusEl) statusEl.textContent = "Ready";
-    }
-  });
-
-  photoInput.addEventListener("change", () => {
-    const f = photoInput.files?.[0];
-    photoInput.value = "";
-    if (!f) return;
-    const ta = photoInput.dataset.textTarget === "followup" ? followupTa : searchTa;
-    if (busySubmitBtn?.disabled && ta === followupTa) return;
-    handleComposerPhotoSelected(f, ta);
-  });
-}
-
 /** Starter prompts for in-chat follow-up chips (uses chat history). */
 const CHAT_FOLLOWUP_STARTER_PROMPTS = {
   summarize:
@@ -320,8 +217,13 @@ function wireAssistantCopy(bubble, rawText) {
   const btn = bubble.querySelector(".bubble-copy");
   if (!btn) return;
   const fresh = btn.cloneNode(true);
+  /* Streaming UI leaves Copy disabled; cloneNode copies that, which blocks clicks. */
+  fresh.disabled = false;
+  fresh.removeAttribute("disabled");
   btn.replaceWith(fresh);
-  fresh.addEventListener("click", async () => {
+  fresh.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const ok = await copyAssistantOutput(rawText);
     const prev = fresh.textContent;
     fresh.textContent = ok ? "Copied!" : "Failed";
@@ -387,7 +289,9 @@ function appendBubble(container, role, text) {
   return { wrap, bubble };
 }
 
-/** Assistant row with a live <pre> while tokens stream; finalize() swaps in rendered Markdown + Copy. */
+/**
+ * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then jump).
+ */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
   wrap.className = "msg assistant";
@@ -409,10 +313,10 @@ function startStreamingAssistantBubble(container) {
   head.appendChild(copyBtn);
   bubble.appendChild(head);
 
-  const pre = document.createElement("pre");
-  pre.className = "bubble-text bubble-text--streaming";
-  pre.textContent = "";
-  bubble.appendChild(pre);
+  const body = document.createElement("div");
+  body.className = "bubble-text bubble-md bubble-md--streaming";
+  body.setAttribute("aria-busy", "true");
+  bubble.appendChild(body);
   wrap.appendChild(bubble);
   container.appendChild(wrap);
 
@@ -422,16 +326,21 @@ function startStreamingAssistantBubble(container) {
 
   return {
     setStreamingText(text) {
-      pre.textContent = text;
+      const rendered = renderAssistantHtml(text);
+      if ("plain" in rendered) {
+        body.textContent = rendered.plain;
+      } else {
+        body.innerHTML = rendered.html;
+      }
       scroll();
     },
     finalize(markdownRaw) {
-      pre.remove();
+      body.remove();
       fillAssistantBubbleBody(bubble, markdownRaw);
       scroll();
     },
     showError(markdownRaw) {
-      pre.remove();
+      body.remove();
       fillAssistantBubbleBody(bubble, markdownRaw);
       scroll();
     },
@@ -441,6 +350,55 @@ function startStreamingAssistantBubble(container) {
     wrap,
     bubble,
   };
+}
+
+/**
+ * OpenAI-compatible `choices[].delta`: `content` string or parts; some HF / reasoning models use
+ * `reasoning_content`, `text`, or `input_text` instead of (or before) `content`.
+ */
+function extractChatDeltaText(delta) {
+  if (!delta || typeof delta !== "object") return "";
+  const bits = [];
+  const reasoning = delta.reasoning_content;
+  if (typeof reasoning === "string" && reasoning.length) bits.push(reasoning);
+  const c = delta.content;
+  if (typeof c === "string" && c.length) bits.push(c);
+  else if (Array.isArray(c)) {
+    for (const part of c) {
+      if (!part || typeof part !== "object") continue;
+      if (part.type === "text" && typeof part.text === "string") bits.push(part.text);
+      if (part.type === "input_text" && typeof part.text === "string") bits.push(part.text);
+    }
+  }
+  const legacy = delta.text;
+  if (typeof legacy === "string" && legacy.length) bits.push(legacy);
+  const inputText = delta.input_text;
+  if (typeof inputText === "string" && inputText.length) bits.push(inputText);
+  return bits.join("");
+}
+
+/** Some proxies put assistant text on `choices[].text` or `choices[].message` instead of `delta`. */
+function extractStreamChoiceText(choice) {
+  if (!choice || typeof choice !== "object") return "";
+  const fromDelta = extractChatDeltaText(choice.delta);
+  if (fromDelta.length) return fromDelta;
+  if (typeof choice.text === "string" && choice.text.length) return choice.text;
+  const msg = choice.message;
+  if (msg && typeof msg.content === "string" && msg.content.length) return msg.content;
+  return "";
+}
+
+function applyStreamDelta(json, full, onDelta) {
+  const err = json.error;
+  if (err) {
+    const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
+    throw new Error(msg);
+  }
+  const piece = extractStreamChoiceText(json.choices?.[0]);
+  if (piece.length === 0) return full;
+  const next = full + piece;
+  onDelta(next);
+  return next;
 }
 
 /**
@@ -470,16 +428,7 @@ async function consumeChatSseStream(response, onDelta) {
       } catch {
         continue;
       }
-      const err = json.error;
-      if (err) {
-        const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
-        throw new Error(msg);
-      }
-      const piece = json.choices?.[0]?.delta?.content;
-      if (typeof piece === "string" && piece.length > 0) {
-        full += piece;
-        onDelta(full);
-      }
+      full = applyStreamDelta(json, full, onDelta);
     }
   }
   if (lineBuf.trim()) {
@@ -489,16 +438,7 @@ async function consumeChatSseStream(response, onDelta) {
       if (payload && payload !== "[DONE]") {
         try {
           const json = JSON.parse(payload);
-          const err = json.error;
-          if (err) {
-            const msg = typeof err === "string" ? err : err.message || JSON.stringify(err);
-            throw new Error(msg);
-          }
-          const piece = json.choices?.[0]?.delta?.content;
-          if (typeof piece === "string" && piece.length > 0) {
-            full += piece;
-            onDelta(full);
-          }
+          full = applyStreamDelta(json, full, onDelta);
         } catch (e) {
           if (!(e instanceof SyntaxError)) throw e;
         }
@@ -508,9 +448,10 @@ async function consumeChatSseStream(response, onDelta) {
   return full;
 }
 
+/** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn) {
   const trimmed = message.trim();
-  if (!trimmed) return;
+  if (!trimmed) return false;
 
   appendBubble(threadEl, "user", trimmed);
 
@@ -568,23 +509,26 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       history.push({ role: "user", content: trimmed });
       history.push({ role: "assistant", content: output });
       statusEl.textContent = "Ready";
-      return;
+      return true;
     }
 
-    statusEl.textContent = "Streaming";
+    statusEl.textContent = "Streaming...";
     const fullOut = await consumeChatSseStream(response, scheduleDelta);
 
     if (rafId) {
       cancelAnimationFrame(rafId);
       rafId = 0;
     }
-    const finalText = String(fullOut || "").trim() || "(No text returned.)";
+    const finalText =
+      String(fullOut || "").trim() ||
+      "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render **HF_API_TOKEN**, **HF_MODEL** (Inference Providers routing suffix, e.g. `:fastest`), and **HF_CHAT_URL**; open `/api/health` to confirm `hfConfigured` is true.";
     streamUi.setStreamingText(finalText);
     streamUi.finalize(finalText);
 
     history.push({ role: "user", content: trimmed });
     history.push({ role: "assistant", content: finalText });
     statusEl.textContent = "Ready";
+    return true;
   } catch (error) {
     if (rafId) {
       cancelAnimationFrame(rafId);
@@ -596,6 +540,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       appendBubble(threadEl, "assistant", `Error: ${formatChatErrorForUi(error)}`);
     }
     statusEl.textContent = "Failed";
+    return false;
   } finally {
     sendBtn.disabled = false;
   }
@@ -719,7 +664,7 @@ function wireSearchFlow({
     const trimmed = msg.trim();
     if (!trimmed) return;
     if (!history.length) onFirstSend();
-    sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn);
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn);
     followupInput.value = "";
     followupInput.focus();
   };
@@ -791,26 +736,6 @@ wireSearchFlow({
     codeSessionOpen = true;
     syncCodeLayout();
   },
-});
-
-wireComposerAttachments({
-  panel: document.getElementById("panelChat"),
-  fileInput: document.getElementById("chatAttachFileInput"),
-  photoInput: document.getElementById("chatAttachPhotoInput"),
-  searchTa: chatSearchInput,
-  followupTa: chatFollowupInput,
-  statusEl: apiStatus,
-  busySubmitBtn: chatFollowupSubmit,
-});
-
-wireComposerAttachments({
-  panel: document.getElementById("panelCode"),
-  fileInput: document.getElementById("codeAttachFileInput"),
-  photoInput: document.getElementById("codeAttachPhotoInput"),
-  searchTa: codeSearchInput,
-  followupTa: codeFollowupInput,
-  statusEl: codeStatus,
-  busySubmitBtn: codeFollowupSubmit,
 });
 
 docFileInput.addEventListener("change", () => {
