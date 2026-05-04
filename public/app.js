@@ -461,8 +461,13 @@ function wireAssistantCopy(bubble, rawText) {
   const btn = bubble.querySelector(".bubble-copy");
   if (!btn) return;
   const fresh = btn.cloneNode(true);
+  /* Streaming UI leaves Copy disabled; cloneNode copies that, which blocks clicks. */
+  fresh.disabled = false;
+  fresh.removeAttribute("disabled");
   btn.replaceWith(fresh);
-  fresh.addEventListener("click", async () => {
+  fresh.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const ok = await copyAssistantOutput(rawText);
     const prev = fresh.textContent;
     fresh.textContent = ok ? "Copied!" : "Failed";
