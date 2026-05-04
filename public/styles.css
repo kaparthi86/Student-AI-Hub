@@ -62,7 +62,7 @@ body {
   padding: 28px 18px 40px;
 }
 
-/* Private beta / class testing (~20 people) ù copy from BETA_MESSAGE or default when BETA_TESTING=1 */
+/* Private beta / class testing (~20 people) ÔøΩ copy from BETA_MESSAGE or default when BETA_TESTING=1 */
 .beta-banner {
   margin-bottom: 14px;
   padding: 10px 14px;
@@ -596,6 +596,89 @@ textarea {
   opacity: 0.92;
 }
 
+.composer-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: min(100%, 640px);
+}
+
+.composer-attachments--followup {
+  margin-top: 8px;
+  max-width: none;
+}
+
+.search-hero .composer-attachments {
+  justify-content: center;
+}
+
+.composer-attachments[hidden] {
+  display: none !important;
+}
+
+.composer-attachments-meta {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+}
+
+.followup-bar .composer-attachments-meta {
+  text-align: left;
+}
+
+.composer-attach-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 6px 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 109, 255, 0.45);
+  background: rgba(122, 109, 255, 0.12);
+  color: #e8ecff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.composer-attach-pill-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.composer-attach-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #dbe4ff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.composer-attach-remove:hover {
+  background: rgba(255, 120, 120, 0.25);
+  color: #fff;
+}
+
+.composer-attach-remove:focus-visible {
+  outline: 2px solid rgba(122, 109, 255, 0.85);
+  outline-offset: 1px;
+}
+
 .tiny-btn {
   padding: 6px 10px;
   font-size: 12px;
@@ -655,7 +738,7 @@ textarea {
   background: linear-gradient(120deg, rgba(122, 109, 255, 0.35), rgba(78, 181, 248, 0.22));
 }
 
-/* Assistant replies use full thread width (not a narrow ùpopupù strip). */
+/* Assistant replies use full thread width (not a narrow ÔøΩpopupÔøΩ strip). */
 .msg.assistant .bubble {
   width: 100%;
   max-width: 100%;

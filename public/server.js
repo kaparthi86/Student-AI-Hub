@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
+const { Readable } = require("node:stream");
 const multer = require("multer");
 
 const envPath = path.join(__dirname, ".env");
@@ -108,8 +109,31 @@ function buildPrompt(mode, userInput) {
 function explainRouterModelError(status, rawBody) {
   try {
     const parsed = JSON.parse(rawBody);
-    const msg = parsed?.error?.message || parsed?.message;
-    const code = parsed?.error?.code || parsed?.code;
+    const errField = parsed?.error;
+    const msg =
+      typeof errField === "string"
+        ? errField
+        : errField?.message || (typeof parsed?.message === "string" ? parsed.message : "");
+    const code =
+      typeof errField === "object" && errField && "code" in errField ? errField.code : parsed?.code;
+
+    if (status === 401) {
+      const lower = String(msg || rawBody || "").toLowerCase();
+      if (lower.includes("invalid") || lower.includes("unauthorized") || lower.includes("authentication")) {
+        return [
+          "Hugging Face returned HTTP 401 (authentication failed). The text \"Invalid username or password\" refers to your **HF_API_TOKEN**, not your Google / Student app login.",
+          "",
+          "Fix:",
+          "1) Open https://huggingface.co/settings/tokens and create a **new** token (classic with Read, or fine-grained with **Make calls to Inference Providers**).",
+          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only  no quotes, no spaces, full string starting with `hf_`.",
+          "3) **Redeploy** or restart the service after saving env vars.",
+          "4) Confirm **HF_CHAT_URL** is `https://router.huggingface.co/v1/chat/completions` unless you use another HF endpoint.",
+          "",
+          `Provider message: ${msg || rawBody.slice(0, 300)}`,
+        ].join("\n");
+      }
+    }
+
     if (
       status === 400 &&
       (code === "model_not_supported" ||
@@ -323,6 +347,81 @@ app.post("/api/chat", async (req, res) => {
 
     const history = normalizeChatMessages(req.body?.history);
     const messages = [{ role: "system", content: chatSystemBase(mode) }, ...history, { role: "user", content: lastMessage }];
+
+    const wantsStream = req.body?.stream === true;
+    if (wantsStream) {
+      let chatEndpoint;
+      try {
+        chatEndpoint = new URL(HF_CHAT_URL);
+      } catch {
+        return res.status(500).json({
+          error: `HF_CHAT_URL is not a valid URL. Value starts with: ${String(HF_CHAT_URL).slice(0, 48)}`,
+        });
+      }
+      if (chatEndpoint.protocol !== "http:" && chatEndpoint.protocol !== "https:") {
+        return res.status(500).json({ error: "HF_CHAT_URL must use http: or https:" });
+      }
+
+      const demoLine = () => {
+        const demo =
+          "Demo mode: add HF_API_TOKEN in .env next to server.js, then restart the server.";
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("X-Accel-Buffering", "no");
+        if (typeof res.flushHeaders === "function") res.flushHeaders();
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: demo } }] })}\n\n`);
+        res.write("data: [DONE]\n\n");
+        res.end();
+      };
+
+      if (!HF_API_TOKEN) {
+        demoLine();
+        return;
+      }
+
+      const hfRes = await fetch(chatEndpoint.href, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: HF_MODEL,
+          messages,
+          temperature: 0.55,
+          max_tokens: 720,
+          stream: true,
+        }),
+      });
+
+      if (!hfRes.ok) {
+        const errText = await hfRes.text();
+        const explained =
+          explainRouterModelError(hfRes.status, errText) || explainProviderPatternError(errText);
+        return res.status(502).json({
+          error: explained || `Model API failed: ${hfRes.status} ${errText.slice(0, 800)}`,
+        });
+      }
+
+      if (!hfRes.body) {
+        return res.status(502).json({ error: "Model API returned an empty response body." });
+      }
+
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Accel-Buffering", "no");
+      if (typeof res.flushHeaders === "function") res.flushHeaders();
+
+      const nodeReadable = Readable.fromWeb(hfRes.body);
+      res.on("close", () => {
+        nodeReadable.destroy();
+      });
+      nodeReadable.on("error", () => {
+        if (!res.writableEnded) res.end();
+      });
+      nodeReadable.pipe(res);
+      return;
+    }
 
     const output = await callChatCompletion(messages, { max_tokens: 720, temperature: 0.55 });
     return res.json({ output });

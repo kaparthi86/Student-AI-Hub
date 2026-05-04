@@ -40,6 +40,11 @@ let supabaseClient = null;
 const chatHistory = [];
 const codeHistory = [];
 
+/** Pending file/image payloads for Learn tab; merged into the outbound message on send, not shown in the textarea. */
+const chatComposerAttachments = [];
+/** Pending attachments for Code tab. */
+const codeComposerAttachments = [];
+
 let chatSessionOpen = false;
 let codeSessionOpen = false;
 
@@ -65,11 +70,67 @@ const MAX_B64_CHARS_IN_PROMPT = 14000;
 /** Target max length for embedded JPEG data URLs (characters). */
 const MAX_IMAGE_DATA_URL_CHARS = 450000;
 
-function appendBlockToTextarea(textarea, block) {
-  const cur = textarea.value.replace(/\s+$/, "");
-  const sep = cur ? "\n\n" : "";
-  textarea.value = `${cur}${sep}${block}`.trim();
-  textarea.focus();
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function shortAttachmentLabel(name, maxLen = 40) {
+  const n = String(name || "file").trim() || "file";
+  if (n.length <= maxLen) return n;
+  return `${n.slice(0, Math.max(0, maxLen - 1))}ù`;
+}
+
+function newComposerAttachmentId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `att-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+const COMPOSER_ATTACHMENT_STRIPS = {
+  chat: ["chatComposerAttachmentStrip", "chatComposerAttachmentStripFollowup"],
+  code: ["codeComposerAttachmentStrip", "codeComposerAttachmentStripFollowup"],
+};
+
+/** Same order as the old append-to-textarea behavior: typed text first, then each attachment block. */
+function buildOutboundAttachmentMessage(userText, attachments) {
+  const payloads = attachments.map((a) => a.payload).filter((p) => typeof p === "string" && p.trim());
+  const t = String(userText || "").trim();
+  if (!payloads.length) return t;
+  if (!t) return payloads.join("\n\n");
+  return `${t}\n\n${payloads.join("\n\n")}`;
+}
+
+function renderComposerAttachmentStrips(panelKey) {
+  const store = panelKey === "code" ? codeComposerAttachments : chatComposerAttachments;
+  const stripIds = COMPOSER_ATTACHMENT_STRIPS[panelKey];
+  if (!stripIds) return;
+  const count = store.length;
+  let html = "";
+  if (count > 0) {
+    html += `<div class="composer-attachments-meta"><span class="muted">${
+      count === 1 ? "1 attachment" : `${count} attachments`
+    } will be sent with your next message</span></div>`;
+    for (const a of store) {
+      const label = escapeHtml(a.label);
+      const id = escapeHtml(a.id);
+      html += `<span class="composer-attach-pill" role="group" aria-label="Attachment ${label}">
+  <span class="composer-attach-pill-name" title="${label}">${label}</span>
+  <button type="button" class="composer-attach-remove" data-remove-composer-attachment="${id}" aria-label="Remove attachment ${label}">ù</button>
+</span>`;
+    }
+  }
+  for (const stripId of stripIds) {
+    const el = document.getElementById(stripId);
+    if (!el) continue;
+    el.innerHTML = html;
+    const show = count > 0;
+    el.hidden = !show;
+  }
 }
 
 function isLikelyImageFile(file) {
@@ -149,13 +210,12 @@ async function readImageAsJpegDataUrl(file, maxEdge, quality, maxChars) {
   }
 }
 
-async function injectSvgOrImageMarkdown(file, textarea) {
+async function buildImageComposerPayload(file) {
   const name = file.name || "image";
   if (file.type === "image/svg+xml" || /\.svg$/i.test(name)) {
     let t = await file.text();
     if (t.length > 24000) t = `${t.slice(0, 24000)}\n<!-- truncated -->`;
-    appendBlockToTextarea(textarea, `--- SVG: ${name} ---\n\`\`\`xml\n${t}\n\`\`\``);
-    return;
+    return `--- SVG: ${name} ---\n\`\`\`xml\n${t}\n\`\`\``;
   }
   let dataUrl = await readImageAsJpegDataUrl(file, 1680, 0.82, MAX_IMAGE_DATA_URL_CHARS);
   if (!dataUrl && file.size < 900000) {
@@ -163,52 +223,49 @@ async function injectSvgOrImageMarkdown(file, textarea) {
     if (raw.length <= MAX_IMAGE_DATA_URL_CHARS) dataUrl = raw;
   }
   if (!dataUrl) {
-    appendBlockToTextarea(
-      textarea,
-      `[Image: ${name}] Could not compress small enough to embed here. Add a short description, or resize the image and try again.`
-    );
-    return;
+    return `[Image: ${name}] Could not compress small enough to embed here. Add a short description, or resize the image and try again.`;
   }
-  appendBlockToTextarea(textarea, `![${name}](${dataUrl})`);
+  return `![${name}](${dataUrl})`;
 }
 
-async function handleComposerAttachment(file, textarea, maxChars) {
+/** Builds the model-facing block for one file; label is for the attachment strip only. */
+async function buildComposerAttachmentPayload(file, maxChars) {
   const name = file.name || "file";
+  const label = shortAttachmentLabel(name);
   if (!file.size) {
-    appendBlockToTextarea(textarea, `[Attached: ${name}] (empty file)`);
-    return;
+    return { label, payload: `[Attached: ${name}] (empty file)` };
   }
   if (file.size > MAX_ATTACH_FILE_BYTES) {
-    appendBlockToTextarea(
-      textarea,
-      `[Attached: ${name}] File is ${Math.round(file.size / (1024 * 1024))} MB; max ${Math.round(MAX_ATTACH_FILE_BYTES / (1024 * 1024))} MB for inline attach. Use **Notebook** for large documents.`
-    );
-    return;
+    return {
+      label,
+      payload: `[Attached: ${name}] File is ${Math.round(file.size / (1024 * 1024))} MB; max ${Math.round(MAX_ATTACH_FILE_BYTES / (1024 * 1024))} MB for inline attach. Use **Notebook** for large documents.`,
+    };
   }
 
   if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
-    appendBlockToTextarea(
-      textarea,
-      `[Attached PDF: ${name}] For a full document summary, use the **Notebook** tab to upload this file, then ask follow-ups here.`
-    );
-    return;
+    return {
+      label,
+      payload: `[Attached PDF: ${name}] For a full document summary, use the **Notebook** tab to upload this file, then ask follow-ups here.`,
+    };
   }
 
   if (isLikelyImageFile(file)) {
     try {
-      await injectSvgOrImageMarkdown(file, textarea);
+      const payload = await buildImageComposerPayload(file);
+      return { label, payload };
     } catch {
-      appendBlockToTextarea(textarea, `[Image: ${name}] Could not read this image. Try another format or describe it in text.`);
+      return {
+        label,
+        payload: `[Image: ${name}] Could not read this image. Try another format or describe it in text.`,
+      };
     }
-    return;
   }
 
   let text;
   try {
     text = await file.text();
   } catch {
-    appendBlockToTextarea(textarea, `[Attached: ${name}] Could not read file. Try again or paste contents manually.`);
-    return;
+    return { label, payload: `[Attached: ${name}] Could not read file. Try again or paste contents manually.` };
   }
 
   if (isMostlyPrintableText(text)) {
@@ -216,8 +273,7 @@ async function handleComposerAttachment(file, textarea, maxChars) {
     if (body.length > maxChars) {
       body = `${body.slice(0, maxChars)}\n\n[...truncated after ${maxChars} characters]`;
     }
-    appendBlockToTextarea(textarea, `--- From file: ${name} (${file.type || "unknown type"}) ---\n${body}`);
-    return;
+    return { label, payload: `--- From file: ${name} (${file.type || "unknown type"}) ---\n${body}` };
   }
 
   if (file.size <= MAX_BINARY_RAW_FOR_B64) {
@@ -225,29 +281,32 @@ async function handleComposerAttachment(file, textarea, maxChars) {
       const b64 = await readFileBase64Only(file);
       const chunk =
         b64.length > MAX_B64_CHARS_IN_PROMPT ? `${b64.slice(0, MAX_B64_CHARS_IN_PROMPT)}\n...[base64 truncated]` : b64;
-      appendBlockToTextarea(
-        textarea,
-        `--- Binary file: ${name} (${file.type || "application/octet-stream"}, ${file.size} bytes) as base64 ---\n\`\`\`text\n${chunk}\n\`\`\`\n_(If the model cannot use this, use Notebook for PDFs/Zips or describe the file.)_`
-      );
+      return {
+        label,
+        payload: `--- Binary file: ${name} (${file.type || "application/octet-stream"}, ${file.size} bytes) as base64 ---\n\`\`\`text\n${chunk}\n\`\`\`\n_(If the model cannot use this, use Notebook for PDFs/Zips or describe the file.)_`,
+      };
     } catch {
-      appendBlockToTextarea(textarea, `[Attached: ${name}] Binary file could not be read. Use **Notebook** or paste a relevant excerpt.`);
+      return {
+        label,
+        payload: `[Attached: ${name}] Binary file could not be read. Use **Notebook** or paste a relevant excerpt.`,
+      };
     }
-    return;
   }
 
-  appendBlockToTextarea(
-    textarea,
-    `[Attached: ${name}] Binary file (${Math.round(file.size / 1024)} KB) is too large for inline base64. Use **Notebook** for documents, or paste the part you need.`
-  );
+  return {
+    label,
+    payload: `[Attached: ${name}] Binary file (${Math.round(file.size / 1024)} KB) is too large for inline base64. Use **Notebook** for documents, or paste the part you need.`,
+  };
 }
 
 /**
- * Perplexity-style attach chips: injects file text or placeholder into search / follow-up field.
- * @param {{ panel: HTMLElement; fileInput: HTMLInputElement; photoInput: HTMLInputElement; searchTa: HTMLTextAreaElement; followupTa: HTMLTextAreaElement; statusEl?: HTMLElement; busySubmitBtn?: HTMLButtonElement; maxTextChars?: number }} opts
+ * Attach chips: queue payloads for the next send and show a strip (search/follow-up textareas stay clean).
+ * @param {{ panel: HTMLElement; panelKey: "chat" | "code"; fileInput: HTMLInputElement; photoInput: HTMLInputElement; searchTa: HTMLTextAreaElement; followupTa: HTMLTextAreaElement; statusEl?: HTMLElement; busySubmitBtn?: HTMLButtonElement; maxTextChars?: number }} opts
  */
 function wireComposerAttachments(opts) {
   const {
     panel,
+    panelKey,
     fileInput,
     photoInput,
     searchTa,
@@ -256,9 +315,24 @@ function wireComposerAttachments(opts) {
     busySubmitBtn,
     maxTextChars = DEFAULT_ATTACH_MAX_CHARS,
   } = opts;
-  if (!panel || !fileInput || !photoInput || !searchTa || !followupTa) return;
+  if (!panel || !panelKey || !fileInput || !photoInput || !searchTa || !followupTa) return;
+
+  const store = panelKey === "code" ? codeComposerAttachments : chatComposerAttachments;
 
   panel.addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-remove-composer-attachment]");
+    if (rm && panel.contains(rm)) {
+      const id = rm.getAttribute("data-remove-composer-attachment");
+      if (id) {
+        const ix = store.findIndex((x) => x.id === id);
+        if (ix >= 0) {
+          store.splice(ix, 1);
+          renderComposerAttachmentStrips(panelKey);
+        }
+      }
+      return;
+    }
+
     const btn = e.target.closest("[data-composer-attach]");
     if (!btn || !panel.contains(btn)) return;
     const targetTa = btn.dataset.composerTarget === "followup" ? followupTa : searchTa;
@@ -271,10 +345,13 @@ function wireComposerAttachments(opts) {
     else if (kind === "photo") photoInput.click();
   });
 
-  const runAttachment = async (f, ta) => {
+  const runAttachment = async (f, focusTa) => {
     if (statusEl) statusEl.textContent = "Reading file...";
     try {
-      await handleComposerAttachment(f, ta, maxTextChars);
+      const { label, payload } = await buildComposerAttachmentPayload(f, maxTextChars);
+      store.push({ id: newComposerAttachmentId(), label, payload });
+      renderComposerAttachmentStrips(panelKey);
+      focusTa?.focus();
     } finally {
       if (statusEl) statusEl.textContent = "Ready";
     }
@@ -692,9 +769,10 @@ async function consumeChatSseStream(response, onDelta) {
   return full;
 }
 
+/** @returns {Promise<boolean>} true if the exchange completed without a client-side failure (attachments cleared on success). */
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn) {
   const trimmed = message.trim();
-  if (!trimmed) return;
+  if (!trimmed) return false;
 
   appendBubble(threadEl, "user", trimmed);
 
@@ -752,7 +830,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       history.push({ role: "user", content: trimmed });
       history.push({ role: "assistant", content: output });
       statusEl.textContent = "Ready";
-      return;
+      return true;
     }
 
     statusEl.textContent = "Streaming...";
@@ -771,6 +849,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     history.push({ role: "user", content: trimmed });
     history.push({ role: "assistant", content: finalText });
     statusEl.textContent = "Ready";
+    return true;
   } catch (error) {
     if (rafId) {
       cancelAnimationFrame(rafId);
@@ -782,6 +861,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       appendBubble(threadEl, "assistant", `Error: ${formatChatErrorForUi(error)}`);
     }
     statusEl.textContent = "Failed";
+    return false;
   } finally {
     sendBtn.disabled = false;
   }
@@ -899,13 +979,23 @@ function wireSearchFlow({
   threadEl,
   statusEl,
   onFirstSend,
+  attachmentStore,
 }) {
+  const panelKey = mode === "code" ? "code" : "chat";
+  const pendingAttachments = attachmentStore || (panelKey === "code" ? codeComposerAttachments : chatComposerAttachments);
+
   const run = (raw, activeBtn) => {
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
-    if (!trimmed) return;
+    const combined = buildOutboundAttachmentMessage(trimmed, pendingAttachments);
+    if (!combined.trim()) return;
     if (!history.length) onFirstSend();
-    sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn);
+    void sendChatMessage(mode, combined, history, threadEl, statusEl, activeBtn).then((ok) => {
+      if (ok) {
+        pendingAttachments.length = 0;
+        renderComposerAttachmentStrips(panelKey);
+      }
+    });
     followupInput.value = "";
     followupInput.focus();
   };
@@ -951,6 +1041,7 @@ const chatSearchFlow = wireSearchFlow({
   history: chatHistory,
   threadEl: chatThread,
   statusEl: apiStatus,
+  attachmentStore: chatComposerAttachments,
   onFirstSend: () => {
     chatSessionOpen = true;
     syncLearnLayout();
@@ -973,6 +1064,7 @@ wireSearchFlow({
   history: codeHistory,
   threadEl: codeThread,
   statusEl: codeStatus,
+  attachmentStore: codeComposerAttachments,
   onFirstSend: () => {
     codeSessionOpen = true;
     syncCodeLayout();
@@ -981,6 +1073,7 @@ wireSearchFlow({
 
 wireComposerAttachments({
   panel: document.getElementById("panelChat"),
+  panelKey: "chat",
   fileInput: document.getElementById("chatAttachFileInput"),
   photoInput: document.getElementById("chatAttachPhotoInput"),
   searchTa: chatSearchInput,
@@ -991,6 +1084,7 @@ wireComposerAttachments({
 
 wireComposerAttachments({
   panel: document.getElementById("panelCode"),
+  panelKey: "code",
   fileInput: document.getElementById("codeAttachFileInput"),
   photoInput: document.getElementById("codeAttachPhotoInput"),
   searchTa: codeSearchInput,
