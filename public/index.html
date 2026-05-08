@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=prod-polish-1" />
+    <link rel="stylesheet" href="./styles.css?v=chat-flow-chips-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -152,15 +152,6 @@
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Press Enter to search. Shift+Enter for a new line.</p>
-            <div id="chatStudyModes" class="mode-chips" role="group" aria-label="Study mode">
-              <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
-              <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
-              <button type="button" class="mode-chip" data-study-mode="socratic">Socratic</button>
-            </div>
-            <div id="chatHistoryChips" class="history-chips hidden" aria-label="Recent searches"></div>
-            <div class="hero-actions">
-              <button id="chatWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
-            </div>
           </div>
 
           <div id="chatAnswerShell" class="answer-shell hidden">
@@ -175,6 +166,14 @@
                 <button type="button" class="starter-chip" data-starter="summarize">Summarize</button>
                 <button type="button" class="starter-chip" data-starter="quiz">Quiz me</button>
                 <button type="button" class="starter-chip" data-starter="steps">Explain step-by-step</button>
+              </div>
+              <div class="followup-tools">
+                <div id="chatStudyModes" class="mode-chips" role="group" aria-label="Study mode">
+                  <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
+                  <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
+                                  </div>
+                <button id="chatWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
+                <button id="chatFlashcardsBtn" class="ghost-btn tiny-btn" type="button">Flashcards</button>
               </div>
               <div class="search-bar compact">
                 <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
@@ -222,20 +221,18 @@
               <button id="codeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Tip: include error messages and what you expected.</p>
-            <div id="codeStudyModes" class="mode-chips" role="group" aria-label="Study mode">
-              <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
-              <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
-              <button type="button" class="mode-chip" data-study-mode="socratic">Socratic</button>
-            </div>
-            <div id="codeHistoryChips" class="history-chips hidden" aria-label="Recent searches"></div>
-            <div class="hero-actions">
-              <button id="codeWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
-            </div>
           </div>
 
           <div id="codeAnswerShell" class="answer-shell hidden">
             <div id="codeThread" class="chat-thread perplexity-thread" aria-live="polite"></div>
             <div class="followup-bar">
+              <div class="followup-tools">
+                <div id="codeStudyModes" class="mode-chips" role="group" aria-label="Study mode">
+                  <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
+                  <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
+                                  </div>
+                <button id="codeWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
+              </div>
               <div class="search-bar compact">
                 <textarea id="codeFollowupInput" rows="1" placeholder="Follow-up..."></textarea>
                 <button id="codeFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
@@ -289,16 +286,14 @@
             <select id="prefChatMode">
               <option value="explain">Explain</option>
               <option value="quiz">Quiz</option>
-              <option value="socratic">Socratic</option>
-            </select>
+                          </select>
           </label>
           <label>
             Default Code mode
             <select id="prefCodeMode">
               <option value="explain">Explain</option>
               <option value="quiz">Quiz</option>
-              <option value="socratic">Socratic</option>
-            </select>
+                          </select>
           </label>
           <label class="settings-checkbox">
             <input id="prefRestoreSessions" type="checkbox" />
@@ -316,6 +311,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=prod-polish-1"></script>
+    <script src="./app.js?v=chat-flow-chips-1"></script>
   </body>
 </html>

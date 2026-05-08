@@ -26,9 +26,9 @@ const chatThread = document.getElementById("chatThread");
 const chatFollowupInput = document.getElementById("chatFollowupInput");
 const chatFollowupSubmit = document.getElementById("chatFollowupSubmit");
 const apiStatus = document.getElementById("apiStatus");
-const chatHistoryChips = document.getElementById("chatHistoryChips");
 const chatStudyModes = document.getElementById("chatStudyModes");
 const chatWeakRecapBtn = document.getElementById("chatWeakRecapBtn");
+const chatFlashcardsBtn = document.getElementById("chatFlashcardsBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -38,7 +38,6 @@ const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
 const codeStatus = document.getElementById("codeStatus");
-const codeHistoryChips = document.getElementById("codeHistoryChips");
 const codeStudyModes = document.getElementById("codeStudyModes");
 const codeWeakRecapBtn = document.getElementById("codeWeakRecapBtn");
 
@@ -54,8 +53,6 @@ let supabaseClient = null;
 
 const chatHistory = [];
 const codeHistory = [];
-const RECENT_SEARCHES_KEY = "student_ai_recent_searches_v1";
-const MAX_RECENT_SEARCHES = 7;
 const FEEDBACK_REASONS = ["too_vague", "incorrect", "too_long", "not_my_level", "other"];
 const USER_PREFS_KEY = "student_ai_user_prefs_v1";
 const CHAT_SESSION_KEY = "student_ai_sessions_v1";
@@ -101,91 +98,9 @@ function wireStarterChipsAsSend(container, promptMap, sendFn, busyButton) {
   });
 }
 
-function shortHistoryLabel(s, maxLen = 60) {
-  const t = String(s || "").replace(/\s+/g, " ").trim();
-  if (t.length <= maxLen) return t;
-  return `${t.slice(0, maxLen - 1)}`;
-}
-
-function loadRecentSearches() {
-  try {
-    const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
-    const parsed = JSON.parse(raw || "[]");
-    if (!Array.isArray(parsed)) return { learn: [], code: [] };
-    const normalized = parsed
-      .map((x) => ({
-        mode: x && x.mode === "code" ? "code" : "learn",
-        text: String(x?.text || "").trim(),
-      }))
-      .filter((x) => x.text.length > 0);
-    return {
-      learn: normalized.filter((x) => x.mode === "learn").map((x) => x.text).slice(0, MAX_RECENT_SEARCHES),
-      code: normalized.filter((x) => x.mode === "code").map((x) => x.text).slice(0, MAX_RECENT_SEARCHES),
-    };
-  } catch {
-    return { learn: [], code: [] };
-  }
-}
-
-function saveRecentSearches(learnTexts, codeTexts) {
-  const combined = [
-    ...learnTexts.map((text) => ({ mode: "learn", text })),
-    ...codeTexts.map((text) => ({ mode: "code", text })),
-  ];
-  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(combined));
-}
-
-function pushRecentSearch(mode, text) {
-  const t = String(text || "").replace(/\s+/g, " ").trim();
-  if (!t) return;
-  const current = loadRecentSearches();
-  const bucket = mode === "code" ? current.code : current.learn;
-  const nextBucket = [t, ...bucket.filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, MAX_RECENT_SEARCHES);
-  if (mode === "code") saveRecentSearches(current.learn, nextBucket);
-  else saveRecentSearches(nextBucket, current.code);
-}
-
-function clearRecentSearches(mode) {
-  const current = loadRecentSearches();
-  if (mode === "code") saveRecentSearches(current.learn, []);
-  else saveRecentSearches([], current.code);
-}
-
-function renderRecentHistoryChips(container, mode, onUse) {
-  if (!container) return;
-  const current = loadRecentSearches();
-  const items = mode === "code" ? current.code : current.learn;
-  if (!items.length) {
-    container.innerHTML = "";
-    container.classList.add("hidden");
-    return;
-  }
-  const chips = items
-    .map(
-      (txt) =>
-        `<button type="button" class="history-chip" data-history-value="${encodeURIComponent(txt)}" title="${txt.replace(/"/g, "&quot;")}">${shortHistoryLabel(txt)}</button>`
-    )
-    .join("");
-  container.innerHTML = `${chips}<button type="button" class="history-chip history-chip--clear" data-history-clear="1">Clear</button>`;
-  container.classList.remove("hidden");
-  container.onclick = (e) => {
-    const clearBtn = e.target.closest("[data-history-clear]");
-    if (clearBtn) {
-      clearRecentSearches(mode);
-      renderRecentHistoryChips(container, mode, onUse);
-      return;
-    }
-    const chip = e.target.closest("[data-history-value]");
-    if (!chip) return;
-    const raw = decodeURIComponent(chip.getAttribute("data-history-value") || "");
-    if (!raw) return;
-    onUse(raw);
-  };
-}
-
 function normalizeStudyMode(raw) {
   const v = String(raw || "").trim().toLowerCase();
-  return v === "quiz" || v === "socratic" ? v : "explain";
+  return v === "quiz" ? v : "explain";
 }
 
 function defaultPrefs() {
@@ -610,7 +525,7 @@ function appendBubble(container, role, text, meta = {}) {
 }
 
 /**
- * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then jump).
+ * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then ï¿½jumpï¿½).
  */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
@@ -985,7 +900,6 @@ function wireSearchFlow({
   threadEl,
   statusEl,
   onFirstSend,
-  historyChipsEl,
   getStudyMode,
 }) {
   const run = (raw, activeBtn) => {
@@ -993,8 +907,6 @@ function wireSearchFlow({
     const trimmed = msg.trim();
     if (!trimmed) return;
     if (!history.length) onFirstSend();
-    pushRecentSearch(mode, trimmed);
-    renderRecentHistoryChips(historyChipsEl, mode, (text) => run(text, searchSubmit));
     void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, getStudyMode ? getStudyMode() : "explain");
     followupInput.value = "";
     followupInput.focus();
@@ -1029,13 +941,15 @@ function wireSearchFlow({
       followupInput.value = "";
       run(raw, followupSubmit);
     },
-    renderHistory: () => renderRecentHistoryChips(historyChipsEl, mode, (text) => run(text, searchSubmit)),
   };
 }
 
 async function requestWeakTopicRecap(mode, history, statusEl) {
-  const recent = loadRecentSearches();
-  const recentSearches = mode === "code" ? recent.code : recent.learn;
+  const recentSearches = (Array.isArray(history) ? history : [])
+    .filter((m) => m && m.role === "user")
+    .map((m) => String(m.content || "").replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(-10);
   const r = await fetch("/api/weak-topic-recap", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1061,7 +975,6 @@ const chatSearchFlow = wireSearchFlow({
   history: chatHistory,
   threadEl: chatThread,
   statusEl: apiStatus,
-  historyChipsEl: chatHistoryChips,
   getStudyMode: () => chatStudyMode,
   onFirstSend: () => {
     chatSessionOpen = true;
@@ -1085,7 +998,6 @@ wireSearchFlow({
   history: codeHistory,
   threadEl: codeThread,
   statusEl: codeStatus,
-  historyChipsEl: codeHistoryChips,
   getStudyMode: () => codeStudyMode,
   onFirstSend: () => {
     codeSessionOpen = true;
@@ -1158,6 +1070,13 @@ codeWeakRecapBtn?.addEventListener("click", async () => {
   } finally {
     codeWeakRecapBtn.disabled = false;
   }
+});
+
+chatFlashcardsBtn?.addEventListener("click", () => {
+  if (chatFollowupSubmit.disabled) return;
+  chatSearchFlow.sendFromFollowup(
+    "Create 10 concise flashcards from our conversation so far. Format as:\n1. **Q:** ...\n   **A:** ...\nKeep answers short and high-yield."
+  );
 });
 
 docFileInput.addEventListener("change", () => {
@@ -1304,11 +1223,6 @@ setMainTab("chat");
 restoreSessionStateIfEnabled();
 syncLearnLayout();
 syncCodeLayout();
-chatSearchFlow.renderHistory();
-renderRecentHistoryChips(codeHistoryChips, "code", (text) => {
-  codeSearchInput.value = text;
-  codeSearchSubmit.click();
-});
 wireSettingsUi();
 hydratePromptFromUrl();
 initAuth();

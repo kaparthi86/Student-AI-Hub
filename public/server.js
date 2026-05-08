@@ -74,6 +74,7 @@ const upload = multer({
 const publicDir = path.join(__dirname, "public");
 const indexHtmlPath = path.join(publicDir, "index.html");
 const feedbackLogPath = path.join(__dirname, "feedback.ndjson");
+const feedbackTmpLogPath = path.join("/tmp", "feedback.ndjson");
 
 if (!fs.existsSync(indexHtmlPath)) {
   // eslint-disable-next-line no-console
@@ -126,7 +127,7 @@ function explainRouterModelError(status, rawBody) {
           "",
           "Fix:",
           "1) Open https://huggingface.co/settings/tokens and create a **new** token (classic with Read, or fine-grained with **Make calls to Inference Providers**).",
-          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only ù no quotes, no spaces, full string starting with `hf_`.",
+          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only ÔøΩ no quotes, no spaces, full string starting with `hf_`.",
           "3) **Redeploy** or restart the service after saving env vars.",
           "4) Confirm **HF_CHAT_URL** is `https://router.huggingface.co/v1/chat/completions` unless you use another HF endpoint.",
           "",
@@ -332,9 +333,6 @@ function modeStyleInstruction(studyMode) {
   if (m === "quiz") {
     return "Mode: Quiz. Give 4-6 short questions first, then provide answer key with concise explanations.";
   }
-  if (m === "socratic") {
-    return "Mode: Socratic. Ask guiding questions and hints before giving direct answers. Keep it encouraging.";
-  }
   return "Mode: Explain. Give a clear explanation with a compact example.";
 }
 
@@ -404,7 +402,7 @@ app.post("/api/ai", async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
-    const studyMode = ["explain", "quiz", "socratic"].includes(String(req.body?.studyMode || "").toLowerCase())
+    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
       ? String(req.body.studyMode).toLowerCase()
       : "explain";
     const lastMessage = String(req.body?.message || "").trim().slice(0, 4000);
@@ -585,7 +583,7 @@ app.post("/api/feedback", async (req, res) => {
       return res.status(400).json({ error: "rating must be 1 or -1" });
     }
     const mode = req.body?.mode === "code" ? "code" : req.body?.mode === "notebook" ? "notebook" : "learn";
-    const studyMode = ["explain", "quiz", "socratic"].includes(String(req.body?.studyMode || ""))
+    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || ""))
       ? String(req.body.studyMode)
       : "explain";
     const reason = String(req.body?.reason || "").trim().slice(0, 64) || (ratingRaw > 0 ? "helpful" : "other");
@@ -601,8 +599,21 @@ app.post("/api/feedback", async (req, res) => {
       createdAt,
       receivedAt: new Date().toISOString(),
     };
-    await fs.promises.appendFile(feedbackLogPath, `${JSON.stringify(entry)}\n`, "utf8");
-    return res.json({ ok: true });
+    const line = `${JSON.stringify(entry)}\n`;
+    try {
+      await fs.promises.appendFile(feedbackLogPath, line, "utf8");
+      return res.json({ ok: true, stored: "project" });
+    } catch (e1) {
+      try {
+        await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
+        return res.json({ ok: true, stored: "tmp" });
+      } catch (e2) {
+        // Do not fail user feedback UI if local file storage is unavailable on host.
+        // eslint-disable-next-line no-console
+        console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
+        return res.json({ ok: true, stored: "none" });
+      }
+    }
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
@@ -704,7 +715,7 @@ app.listen(PORT, () => {
     HF_API_TOKEN
       ? `Hugging Face token loaded (${HF_MODEL} via ${HF_CHAT_URL}).`
       : isProd
-        ? "Hugging Face token missing ù set HF_API_TOKEN in Render (Environment) and redeploy."
-        : "Hugging Face token missing ù add HF_API_TOKEN to .env next to server.js for real AI."
+        ? "Hugging Face token missing ÔøΩ set HF_API_TOKEN in Render (Environment) and redeploy."
+        : "Hugging Face token missing ÔøΩ add HF_API_TOKEN to .env next to server.js for real AI."
   );
 });

@@ -509,38 +509,6 @@ textarea {
   font-size: 12px;
 }
 
-.history-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  max-width: min(100%, 680px);
-  margin-top: 10px;
-}
-
-.history-chip {
-  border: 1px solid rgba(132, 155, 235, 0.42);
-  background: rgba(255, 255, 255, 0.05);
-  color: #dce6ff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.history-chip:hover {
-  background: rgba(122, 109, 255, 0.2);
-  border-color: rgba(180, 200, 255, 0.52);
-}
-
-.history-chip--clear {
-  border-style: dashed;
-  color: #b8c9ff;
-}
-
 .mode-chips {
   display: flex;
   flex-wrap: wrap;
@@ -572,8 +540,17 @@ textarea {
   margin-top: 8px;
 }
 
-.history-chips.hidden {
-  display: none;
+.followup-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.followup-tools .mode-chips {
+  margin-top: 0;
+  justify-content: flex-start;
 }
 
 .answer-shell {
