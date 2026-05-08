@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=notebook-only-upload-1" />
+    <link rel="stylesheet" href="./styles.css?v=prod-polish-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -107,7 +107,10 @@
                 <span class="brand-kicker">Learn &middot; Code &middot; Notebook</span>
               </div>
             </div>
-            <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+            <div class="head-actions">
+              <button id="openSettingsBtn" class="ghost-btn" type="button">Settings</button>
+              <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+            </div>
           </div>
           <div class="app-greeting">
             <h2>Welcome <span id="userName">Student</span></h2>
@@ -149,6 +152,15 @@
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Press Enter to search. Shift+Enter for a new line.</p>
+            <div id="chatStudyModes" class="mode-chips" role="group" aria-label="Study mode">
+              <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
+              <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
+              <button type="button" class="mode-chip" data-study-mode="socratic">Socratic</button>
+            </div>
+            <div id="chatHistoryChips" class="history-chips hidden" aria-label="Recent searches"></div>
+            <div class="hero-actions">
+              <button id="chatWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
+            </div>
           </div>
 
           <div id="chatAnswerShell" class="answer-shell hidden">
@@ -210,6 +222,15 @@
               <button id="codeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Tip: include error messages and what you expected.</p>
+            <div id="codeStudyModes" class="mode-chips" role="group" aria-label="Study mode">
+              <button type="button" class="mode-chip active" data-study-mode="explain">Explain</button>
+              <button type="button" class="mode-chip" data-study-mode="quiz">Quiz</button>
+              <button type="button" class="mode-chip" data-study-mode="socratic">Socratic</button>
+            </div>
+            <div id="codeHistoryChips" class="history-chips hidden" aria-label="Recent searches"></div>
+            <div class="hero-actions">
+              <button id="codeWeakRecapBtn" class="ghost-btn tiny-btn" type="button">Weak-topic recap</button>
+            </div>
           </div>
 
           <div id="codeAnswerShell" class="answer-shell hidden">
@@ -234,6 +255,7 @@
           <div class="upload-row">
             <input id="docFileInput" type="file" accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf" />
             <button id="docAnalyzeBtn" class="primary-btn" type="button">Analyze document</button>
+            <button id="docFlashcardsBtn" class="ghost-btn" type="button">Generate flashcards (10)</button>
           </div>
           <p id="docFileMeta" class="muted"></p>
           <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
@@ -255,10 +277,45 @@
       </section>
     </main>
 
+    <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-card">
+        <div class="settings-head">
+          <h3 id="settingsTitle">Preferences</h3>
+          <button id="closeSettingsBtn" class="ghost-btn tiny-btn" type="button">Close</button>
+        </div>
+        <div class="settings-grid">
+          <label>
+            Default Ask mode
+            <select id="prefChatMode">
+              <option value="explain">Explain</option>
+              <option value="quiz">Quiz</option>
+              <option value="socratic">Socratic</option>
+            </select>
+          </label>
+          <label>
+            Default Code mode
+            <select id="prefCodeMode">
+              <option value="explain">Explain</option>
+              <option value="quiz">Quiz</option>
+              <option value="socratic">Socratic</option>
+            </select>
+          </label>
+          <label class="settings-checkbox">
+            <input id="prefRestoreSessions" type="checkbox" />
+            Restore previous chat sessions on load
+          </label>
+        </div>
+        <div class="settings-actions">
+          <button id="saveSettingsBtn" class="primary-btn" type="button">Save preferences</button>
+        </div>
+      </div>
+    </div>
+    <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=notebook-only-upload-1"></script>
+    <script src="./app.js?v=prod-polish-1"></script>
   </body>
 </html>
