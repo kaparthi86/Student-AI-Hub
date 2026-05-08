@@ -8,8 +8,6 @@ const openSettingsBtn = document.getElementById("openSettingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-const prefChatMode = document.getElementById("prefChatMode");
-const prefCodeMode = document.getElementById("prefCodeMode");
 const prefRestoreSessions = document.getElementById("prefRestoreSessions");
 const toastStack = document.getElementById("toastStack");
 
@@ -26,8 +24,6 @@ const chatThread = document.getElementById("chatThread");
 const chatFollowupInput = document.getElementById("chatFollowupInput");
 const chatFollowupSubmit = document.getElementById("chatFollowupSubmit");
 const apiStatus = document.getElementById("apiStatus");
-const chatStudyModes = document.getElementById("chatStudyModes");
-const chatWeakRecapBtn = document.getElementById("chatWeakRecapBtn");
 const chatFlashcardsBtn = document.getElementById("chatFlashcardsBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
@@ -38,8 +34,6 @@ const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
 const codeStatus = document.getElementById("codeStatus");
-const codeStudyModes = document.getElementById("codeStudyModes");
-const codeWeakRecapBtn = document.getElementById("codeWeakRecapBtn");
 
 const docFileInput = document.getElementById("docFileInput");
 const docAnalyzeBtn = document.getElementById("docAnalyzeBtn");
@@ -59,8 +53,6 @@ const CHAT_SESSION_KEY = "student_ai_sessions_v1";
 
 let chatSessionOpen = false;
 let codeSessionOpen = false;
-let chatStudyMode = "explain";
-let codeStudyMode = "explain";
 
 function formatChatErrorForUi(err) {
   const msg = err && err.message ? String(err.message) : "Request failed";
@@ -105,8 +97,6 @@ function normalizeStudyMode(raw) {
 
 function defaultPrefs() {
   return {
-    chatMode: "explain",
-    codeMode: "explain",
     restoreSessions: true,
   };
 }
@@ -116,8 +106,6 @@ function loadPrefs() {
     const parsed = JSON.parse(localStorage.getItem(USER_PREFS_KEY) || "{}");
     const d = defaultPrefs();
     return {
-      chatMode: normalizeStudyMode(parsed.chatMode || d.chatMode),
-      codeMode: normalizeStudyMode(parsed.codeMode || d.codeMode),
       restoreSessions: parsed.restoreSessions !== false,
     };
   } catch {
@@ -147,8 +135,6 @@ function saveSessionState() {
       codeHistory,
       chatSessionOpen,
       codeSessionOpen,
-      chatStudyMode,
-      codeStudyMode,
     };
     localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(payload));
   } catch {
@@ -180,30 +166,11 @@ function restoreSessionStateIfEnabled() {
     }
     chatSessionOpen = parsed.chatSessionOpen === true || chatHistory.length > 0;
     codeSessionOpen = parsed.codeSessionOpen === true || codeHistory.length > 0;
-    chatStudyMode = normalizeStudyMode(parsed.chatStudyMode || prefs.chatMode);
-    codeStudyMode = normalizeStudyMode(parsed.codeStudyMode || prefs.codeMode);
-    renderThreadFromHistory(chatThread, chatHistory, "learn", chatStudyMode);
-    renderThreadFromHistory(codeThread, codeHistory, "code", codeStudyMode);
+    renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
+    renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
   } catch {
     /* ignore malformed storage */
   }
-}
-
-function wireStudyModePicker(container, getCurrent, onChange) {
-  if (!container) return;
-  const render = () => {
-    const cur = normalizeStudyMode(getCurrent());
-    container.querySelectorAll("[data-study-mode]").forEach((btn) => {
-      btn.classList.toggle("active", normalizeStudyMode(btn.getAttribute("data-study-mode")) === cur);
-    });
-  };
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-study-mode]");
-    if (!btn || !container.contains(btn)) return;
-    onChange(normalizeStudyMode(btn.getAttribute("data-study-mode")));
-    render();
-  });
-  render();
 }
 
 function initMarkdown() {
@@ -525,7 +492,7 @@ function appendBubble(container, role, text, meta = {}) {
 }
 
 /**
- * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then ï¿½jumpï¿½).
+ * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then jump).
  */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
@@ -900,14 +867,13 @@ function wireSearchFlow({
   threadEl,
   statusEl,
   onFirstSend,
-  getStudyMode,
 }) {
   const run = (raw, activeBtn) => {
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
     if (!trimmed) return;
     if (!history.length) onFirstSend();
-    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, getStudyMode ? getStudyMode() : "explain");
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, "explain");
     followupInput.value = "";
     followupInput.focus();
   };
@@ -944,28 +910,6 @@ function wireSearchFlow({
   };
 }
 
-async function requestWeakTopicRecap(mode, history, statusEl) {
-  const recentSearches = (Array.isArray(history) ? history : [])
-    .filter((m) => m && m.role === "user")
-    .map((m) => String(m.content || "").replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .slice(-10);
-  const r = await fetch("/api/weak-topic-recap", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      mode,
-      recentSearches,
-      history: Array.isArray(history) ? history.slice(-12) : [],
-    }),
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error || "Could not generate recap.");
-  if (!data.output || !String(data.output).trim()) throw new Error("No recap output.");
-  statusEl.textContent = "Ready";
-  return String(data.output).trim();
-}
-
 const chatSearchFlow = wireSearchFlow({
   searchInput: chatSearchInput,
   searchSubmit: chatSearchSubmit,
@@ -975,7 +919,6 @@ const chatSearchFlow = wireSearchFlow({
   history: chatHistory,
   threadEl: chatThread,
   statusEl: apiStatus,
-  getStudyMode: () => chatStudyMode,
   onFirstSend: () => {
     chatSessionOpen = true;
     syncLearnLayout();
@@ -998,78 +941,10 @@ wireSearchFlow({
   history: codeHistory,
   threadEl: codeThread,
   statusEl: codeStatus,
-  getStudyMode: () => codeStudyMode,
   onFirstSend: () => {
     codeSessionOpen = true;
     syncCodeLayout();
   },
-});
-
-const initialPrefs = loadPrefs();
-chatStudyMode = normalizeStudyMode(initialPrefs.chatMode);
-codeStudyMode = normalizeStudyMode(initialPrefs.codeMode);
-
-wireStudyModePicker(chatStudyModes, () => chatStudyMode, (next) => {
-  chatStudyMode = next;
-  saveSessionState();
-});
-wireStudyModePicker(codeStudyModes, () => codeStudyMode, (next) => {
-  codeStudyMode = next;
-  saveSessionState();
-});
-
-chatWeakRecapBtn?.addEventListener("click", async () => {
-  if (chatFollowupSubmit.disabled) return;
-  chatWeakRecapBtn.disabled = true;
-  apiStatus.textContent = "Building recap...";
-  try {
-    const recap = await requestWeakTopicRecap("learn", chatHistory, apiStatus);
-    if (!chatSessionOpen) {
-      chatSessionOpen = true;
-      syncLearnLayout();
-    }
-    appendBubble(chatThread, "user", "Create my weak-topic recap from recent questions.");
-    appendBubble(chatThread, "assistant", recap, { mode: "learn", studyMode: chatStudyMode });
-    chatHistory.push({ role: "user", content: "Create my weak-topic recap from recent questions." });
-    chatHistory.push({ role: "assistant", content: recap });
-    saveSessionState();
-  } catch (error) {
-    appendBubble(chatThread, "assistant", `Error: ${error.message || "Could not build recap."}`, {
-      mode: "learn",
-      studyMode: chatStudyMode,
-    });
-    apiStatus.textContent = "Failed";
-    showToast(error.message || "Could not build recap");
-  } finally {
-    chatWeakRecapBtn.disabled = false;
-  }
-});
-
-codeWeakRecapBtn?.addEventListener("click", async () => {
-  if (codeFollowupSubmit.disabled) return;
-  codeWeakRecapBtn.disabled = true;
-  codeStatus.textContent = "Building recap...";
-  try {
-    const recap = await requestWeakTopicRecap("code", codeHistory, codeStatus);
-    if (!codeSessionOpen) {
-      codeSessionOpen = true;
-      syncCodeLayout();
-    }
-    appendBubble(codeThread, "user", "Create my weak-topic recap from recent coding questions.");
-    appendBubble(codeThread, "assistant", recap, { mode: "code", studyMode: codeStudyMode });
-    codeHistory.push({ role: "user", content: "Create my weak-topic recap from recent coding questions." });
-    codeHistory.push({ role: "assistant", content: recap });
-    saveSessionState();
-  } catch (error) {
-    appendBubble(codeThread, "assistant", `Error: ${error.message || "Could not build recap."}`, {
-      mode: "code",
-      studyMode: codeStudyMode,
-    });
-    codeStatus.textContent = "Failed";
-    showToast(error.message || "Could not build recap");
-  } finally {
-    codeWeakRecapBtn.disabled = false;
-  }
 });
 
 chatFlashcardsBtn?.addEventListener("click", () => {
@@ -1189,8 +1064,6 @@ function hydratePromptFromUrl() {
 function wireSettingsUi() {
   const syncForm = () => {
     const prefs = loadPrefs();
-    if (prefChatMode) prefChatMode.value = normalizeStudyMode(prefs.chatMode);
-    if (prefCodeMode) prefCodeMode.value = normalizeStudyMode(prefs.codeMode);
     if (prefRestoreSessions) prefRestoreSessions.checked = prefs.restoreSessions !== false;
   };
   syncForm();
@@ -1205,13 +1078,9 @@ function wireSettingsUi() {
   });
   saveSettingsBtn?.addEventListener("click", () => {
     const prefs = {
-      chatMode: normalizeStudyMode(prefChatMode?.value || "explain"),
-      codeMode: normalizeStudyMode(prefCodeMode?.value || "explain"),
       restoreSessions: prefRestoreSessions?.checked !== false,
     };
     savePrefs(prefs);
-    chatStudyMode = prefs.chatMode;
-    codeStudyMode = prefs.codeMode;
     saveSessionState();
     settingsModal?.classList.add("hidden");
     showToast("Preferences saved");

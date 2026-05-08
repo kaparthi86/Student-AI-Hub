@@ -62,7 +62,7 @@ body {
   padding: 28px 18px 40px;
 }
 
-/* Private beta / class testing (~20 people) ù copy from BETA_MESSAGE or default when BETA_TESTING=1 */
+/* Private beta / class testing (~20 people) ÔøΩ copy from BETA_MESSAGE or default when BETA_TESTING=1 */
 .beta-banner {
   margin-bottom: 14px;
   padding: 10px 14px;
@@ -509,37 +509,6 @@ textarea {
   font-size: 12px;
 }
 
-.mode-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.mode-chip {
-  border: 1px solid rgba(140, 165, 245, 0.45);
-  background: rgba(255, 255, 255, 0.04);
-  color: #dce6ff;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 6px 11px;
-  cursor: pointer;
-}
-
-.mode-chip.active {
-  border-color: rgba(122, 109, 255, 0.8);
-  background: rgba(122, 109, 255, 0.28);
-  color: #f2f5ff;
-}
-
-.hero-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 8px;
-}
-
 .followup-tools {
   display: flex;
   flex-wrap: wrap;
@@ -548,10 +517,6 @@ textarea {
   margin: 4px 0 8px;
 }
 
-.followup-tools .mode-chips {
-  margin-top: 0;
-  justify-content: flex-start;
-}
 
 .answer-shell {
   display: flex;
@@ -634,7 +599,7 @@ textarea {
   background: linear-gradient(120deg, rgba(122, 109, 255, 0.35), rgba(78, 181, 248, 0.22));
 }
 
-/* Assistant replies use full thread width (not a narrow ùpopupù strip). */
+/* Assistant replies use full thread width (not a narrow ÔøΩpopupÔøΩ strip). */
 .msg.assistant .bubble {
   width: 100%;
   max-width: 100%;
