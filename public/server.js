@@ -127,7 +127,7 @@ function explainRouterModelError(status, rawBody) {
           "",
           "Fix:",
           "1) Open https://huggingface.co/settings/tokens and create a **new** token (classic with Read, or fine-grained with **Make calls to Inference Providers**).",
-          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only ÔøΩ no quotes, no spaces, full string starting with `hf_`.",
+          "2) In Render **Environment** (or local `.env`), set **HF_API_TOKEN** to that token only ù no quotes, no spaces, full string starting with `hf_`.",
           "3) **Redeploy** or restart the service after saving env vars.",
           "4) Confirm **HF_CHAT_URL** is `https://router.huggingface.co/v1/chat/completions` unless you use another HF endpoint.",
           "",
@@ -336,27 +336,6 @@ function modeStyleInstruction(studyMode) {
   return "Mode: Explain. Give a clear explanation with a compact example.";
 }
 
-function flashcardsPrompt(docName, docText) {
-  const body = truncateForPrompt(docText, MAX_DOC_CHARS);
-  return `You are a study coach. Create exactly 10 high-quality flashcards from the uploaded notes.
-
-Document: "${docName}"
-
-Output format (Markdown):
-## Flashcards
-1. **Q:** ...
-   **A:** ...
-
-Rules:
-- Use ONLY the document content.
-- Mix definitions, concepts, and applied understanding.
-- Keep each answer concise (1-3 sentences).
-
---- DOCUMENT START ---
-${body}
---- DOCUMENT END ---`;
-}
-
 function weakTopicRecapPrompt(mode, recentSearches, history) {
   const modeLabel = mode === "code" ? "coding" : "learning";
   const recent = (Array.isArray(recentSearches) ? recentSearches : []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 10);
@@ -528,34 +507,6 @@ app.post("/api/doc-insights", upload.single("document"), async (req, res) => {
   }
 });
 
-app.post("/api/doc-flashcards", upload.single("document"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded (field name: document)." });
-    let text;
-    try {
-      text = await extractTextFromUpload(req.file);
-    } catch (e) {
-      return res.status(400).json({ error: e.message || "Could not read file." });
-    }
-    if (!text) return res.status(400).json({ error: "Could not extract text from this file." });
-
-    const name = req.file.originalname || "document";
-    const output = await callChatCompletion(
-      [
-        {
-          role: "system",
-          content: "You create accurate flashcards for students from provided notes only.",
-        },
-        { role: "user", content: flashcardsPrompt(name, text) },
-      ],
-      { max_tokens: 1200, temperature: 0.35 }
-    );
-    return res.json({ output, docName: name, charsUsed: Math.min(text.length, MAX_DOC_CHARS) });
-  } catch (error) {
-    return res.status(500).json({ error: error.message || "Unexpected error" });
-  }
-});
-
 app.post("/api/weak-topic-recap", async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
@@ -715,7 +666,7 @@ app.listen(PORT, () => {
     HF_API_TOKEN
       ? `Hugging Face token loaded (${HF_MODEL} via ${HF_CHAT_URL}).`
       : isProd
-        ? "Hugging Face token missing ÔøΩ set HF_API_TOKEN in Render (Environment) and redeploy."
-        : "Hugging Face token missing ÔøΩ add HF_API_TOKEN to .env next to server.js for real AI."
+        ? "Hugging Face token missing ù set HF_API_TOKEN in Render (Environment) and redeploy."
+        : "Hugging Face token missing ù add HF_API_TOKEN to .env next to server.js for real AI."
   );
 });

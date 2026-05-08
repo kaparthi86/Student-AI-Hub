@@ -24,7 +24,6 @@ const chatThread = document.getElementById("chatThread");
 const chatFollowupInput = document.getElementById("chatFollowupInput");
 const chatFollowupSubmit = document.getElementById("chatFollowupSubmit");
 const apiStatus = document.getElementById("apiStatus");
-const chatFlashcardsBtn = document.getElementById("chatFlashcardsBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -37,7 +36,6 @@ const codeStatus = document.getElementById("codeStatus");
 
 const docFileInput = document.getElementById("docFileInput");
 const docAnalyzeBtn = document.getElementById("docAnalyzeBtn");
-const docFlashcardsBtn = document.getElementById("docFlashcardsBtn");
 const docFileMeta = document.getElementById("docFileMeta");
 const notebookThread = document.getElementById("notebookThread");
 const notebookStatus = document.getElementById("notebookStatus");
@@ -947,13 +945,6 @@ wireSearchFlow({
   },
 });
 
-chatFlashcardsBtn?.addEventListener("click", () => {
-  if (chatFollowupSubmit.disabled) return;
-  chatSearchFlow.sendFromFollowup(
-    "Create 10 concise flashcards from our conversation so far. Format as:\n1. **Q:** ...\n   **A:** ...\nKeep answers short and high-yield."
-  );
-});
-
 docFileInput.addEventListener("change", () => {
   const f = docFileInput.files?.[0];
   docFileMeta.textContent = f ? `Selected: ${f.name} (${Math.round(f.size / 1024)} KB)` : "";
@@ -991,38 +982,6 @@ docAnalyzeBtn.addEventListener("click", async () => {
     showToast(error.message || "Document analysis failed");
   } finally {
     docAnalyzeBtn.disabled = false;
-  }
-});
-
-docFlashcardsBtn.addEventListener("click", async () => {
-  const file = docFileInput.files?.[0];
-  if (!file) {
-    notebookStatus.textContent = "Choose a file first";
-    return;
-  }
-  appendBubble(notebookThread, "user", `Generate 10 flashcards from: ${file.name}`);
-  docFlashcardsBtn.disabled = true;
-  notebookStatus.textContent = "Generating flashcards...";
-  try {
-    const form = new FormData();
-    form.append("document", file);
-    const response = await fetch("/api/doc-flashcards", {
-      method: "POST",
-      body: form,
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Request failed");
-    appendBubble(notebookThread, "assistant", data.output || "No flashcards generated.", {
-      mode: "notebook",
-      studyMode: "explain",
-    });
-    notebookStatus.textContent = "Ready";
-  } catch (error) {
-    appendBubble(notebookThread, "assistant", `Error: ${error.message}`, { mode: "notebook", studyMode: "explain" });
-    notebookStatus.textContent = "Failed";
-    showToast(error.message || "Flashcard generation failed");
-  } finally {
-    docFlashcardsBtn.disabled = false;
   }
 });
 

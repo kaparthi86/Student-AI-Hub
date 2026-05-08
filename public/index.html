@@ -167,9 +167,6 @@
                 <button type="button" class="starter-chip" data-starter="quiz">Quiz me</button>
                 <button type="button" class="starter-chip" data-starter="steps">Explain step-by-step</button>
               </div>
-              <div class="followup-tools">
-                <button id="chatFlashcardsBtn" class="ghost-btn tiny-btn" type="button">Flashcards</button>
-              </div>
               <div class="search-bar compact">
                 <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
                 <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
@@ -240,7 +237,6 @@
           <div class="upload-row">
             <input id="docFileInput" type="file" accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf" />
             <button id="docAnalyzeBtn" class="primary-btn" type="button">Analyze document</button>
-            <button id="docFlashcardsBtn" class="ghost-btn" type="button">Generate flashcards (10)</button>
           </div>
           <p id="docFileMeta" class="muted"></p>
           <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
@@ -285,6 +281,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=remove-mode-recap-ui-1"></script>
+    <script src="./app.js?v=remove-flashcards-1"></script>
   </body>
 </html>
