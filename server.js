@@ -73,6 +73,8 @@ const upload = multer({
 
 const publicDir = path.join(__dirname, "public");
 const indexHtmlPath = path.join(publicDir, "index.html");
+const feedbackLogPath = path.join(__dirname, "feedback.ndjson");
+const feedbackTmpLogPath = path.join("/tmp", "feedback.ndjson");
 
 if (!fs.existsSync(indexHtmlPath)) {
   // eslint-disable-next-line no-console
@@ -89,7 +91,15 @@ if (!fs.existsSync(indexHtmlPath)) {
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
-app.use(express.static(publicDir));
+app.use(
+  express.static(publicDir, {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".webmanifest")) {
+        res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
+      }
+    },
+  })
+);
 
 /** Render + express.static: always wire `/` to the SPA shell (static may 404 before fallthrough in some cases). */
 app.get("/", (_req, res) => {
@@ -326,6 +336,43 @@ function chatSystemBase(mode) {
     : "You are a friendly study coach for students. Keep answers concise and actionable. Use Markdown when helpful.";
 }
 
+function modeStyleInstruction(studyMode) {
+  const m = String(studyMode || "explain").trim().toLowerCase();
+  if (m === "quiz") {
+    return "Mode: Quiz. Give 4-6 short questions first, then provide answer key with concise explanations.";
+  }
+  return "Mode: Explain. Give a clear explanation with a compact example.";
+}
+
+function weakTopicRecapPrompt(mode, recentSearches, history) {
+  const modeLabel = mode === "code" ? "coding" : "learning";
+  const recent = (Array.isArray(recentSearches) ? recentSearches : []).map((x) => String(x || "").trim()).filter(Boolean).slice(0, 10);
+  const hist = (Array.isArray(history) ? history : [])
+    .map((m) => ({
+      role: m?.role === "assistant" ? "assistant" : "user",
+      content: String(m?.content || "").trim().slice(0, 1200),
+    }))
+    .filter((m) => m.content)
+    .slice(-12);
+  return `You are a student coach. Build a "weak-topic recap" from this ${modeLabel} activity.
+
+Recent searches:
+${recent.length ? recent.map((x, i) => `${i + 1}. ${x}`).join("\n") : "(none)"}
+
+Recent chat transcript:
+${hist.length ? hist.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join("\n\n") : "(none)"}
+
+Return Markdown with:
+## Likely weak topics (max 5)
+- topic + why
+## 7-day improvement plan
+- one short task/day
+## Quick checks
+- 5 mini questions to verify progress
+
+If data is sparse, say so briefly and still give a conservative plan.`;
+}
+
 app.post("/api/ai", async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
@@ -342,11 +389,15 @@ app.post("/api/ai", async (req, res) => {
 app.post("/api/chat", async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
+    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
+      ? String(req.body.studyMode).toLowerCase()
+      : "explain";
     const lastMessage = String(req.body?.message || "").trim().slice(0, 4000);
     if (!lastMessage) return res.status(400).json({ error: "message is required." });
 
     const history = normalizeChatMessages(req.body?.history);
-    const messages = [{ role: "system", content: chatSystemBase(mode) }, ...history, { role: "user", content: lastMessage }];
+    const system = `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}`;
+    const messages = [{ role: "system", content: system }, ...history, { role: "user", content: lastMessage }];
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {
@@ -459,6 +510,114 @@ app.post("/api/doc-insights", upload.single("document"), async (req, res) => {
     );
 
     return res.json({ output, docName: name, charsUsed: Math.min(text.length, MAX_DOC_CHARS) });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.post("/api/weak-topic-recap", async (req, res) => {
+  try {
+    const mode = req.body?.mode === "code" ? "code" : "learn";
+    const prompt = weakTopicRecapPrompt(mode, req.body?.recentSearches, req.body?.history);
+    const output = await callChatCompletion(
+      [
+        {
+          role: "system",
+          content: "You are an accurate, concise student coach. Use the provided activity to infer weak spots conservatively.",
+        },
+        { role: "user", content: prompt },
+      ],
+      { max_tokens: 1100, temperature: 0.4 }
+    );
+    return res.json({ output });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.post("/api/feedback", async (req, res) => {
+  try {
+    const ratingRaw = Number(req.body?.rating);
+    if (ratingRaw !== 1 && ratingRaw !== -1) {
+      return res.status(400).json({ error: "rating must be 1 or -1" });
+    }
+    const mode = req.body?.mode === "code" ? "code" : req.body?.mode === "notebook" ? "notebook" : "learn";
+    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || ""))
+      ? String(req.body.studyMode)
+      : "explain";
+    const reason = String(req.body?.reason || "").trim().slice(0, 64) || (ratingRaw > 0 ? "helpful" : "other");
+    const assistantMessage = String(req.body?.assistantMessage || "").trim().slice(0, 8000);
+    const createdAt = String(req.body?.createdAt || new Date().toISOString());
+    const entry = {
+      type: "message_feedback",
+      rating: ratingRaw,
+      reason,
+      mode,
+      studyMode,
+      assistantMessage,
+      createdAt,
+      receivedAt: new Date().toISOString(),
+    };
+    const line = `${JSON.stringify(entry)}\n`;
+    try {
+      await fs.promises.appendFile(feedbackLogPath, line, "utf8");
+      return res.json({ ok: true, stored: "project" });
+    } catch (e1) {
+      try {
+        await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
+        return res.json({ ok: true, stored: "tmp" });
+      } catch (e2) {
+        // Do not fail user feedback UI if local file storage is unavailable on host.
+        // eslint-disable-next-line no-console
+        console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
+        return res.json({ ok: true, stored: "none" });
+      }
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.get("/api/feedback-summary", async (_req, res) => {
+  try {
+    if (!fs.existsSync(feedbackLogPath)) {
+      return res.json({
+        ok: true,
+        total: 0,
+        byRating: { positive: 0, negative: 0 },
+        byReason: {},
+        byMode: {},
+        byStudyMode: {},
+      });
+    }
+    const raw = await fs.promises.readFile(feedbackLogPath, "utf8");
+    const lines = raw.split("\n").filter(Boolean);
+    const summary = {
+      ok: true,
+      total: 0,
+      byRating: { positive: 0, negative: 0 },
+      byReason: {},
+      byMode: {},
+      byStudyMode: {},
+    };
+    for (const line of lines) {
+      let row;
+      try {
+        row = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      summary.total += 1;
+      if (Number(row.rating) > 0) summary.byRating.positive += 1;
+      else if (Number(row.rating) < 0) summary.byRating.negative += 1;
+      const reason = String(row.reason || "unknown");
+      summary.byReason[reason] = (summary.byReason[reason] || 0) + 1;
+      const mode = String(row.mode || "unknown");
+      summary.byMode[mode] = (summary.byMode[mode] || 0) + 1;
+      const studyMode = String(row.studyMode || "unknown");
+      summary.byStudyMode[studyMode] = (summary.byStudyMode[studyMode] || 0) + 1;
+    }
+    return res.json(summary);
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
