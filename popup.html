@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Student Coach Quick Ask</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Ask Student Coach</h1>
+      <textarea id="promptInput" rows="4" placeholder="Type a question..."></textarea>
+      <div class="row">
+        <button id="askBtn" type="button">Ask</button>
+        <button id="openBtn" type="button" class="secondary">Open site</button>
+      </div>
+      <label class="label" for="baseUrlInput">Target URL</label>
+      <div class="row row--targets">
+        <button id="targetProdBtn" type="button" class="secondary">Use Prod</button>
+        <button id="targetLocalBtn" type="button" class="secondary">Use Localhost</button>
+      </div>
+      <input id="baseUrlInput" type="url" />
+      <p id="status" class="status"></p>
+    </main>
+    <script src="./popup.js"></script>
+  </body>
+  </html>

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Student Coach Quick Ask",
+  "description": "Send selected text or a quick prompt to Student AI Hub.",
+  "version": "0.1.0",
+  "permissions": ["contextMenus", "storage"],
+  "host_permissions": [
+    "https://www.my-student-coach.com/*",
+    "http://localhost:3001/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "action": {
+    "default_title": "Ask Student Coach",
+    "default_popup": "popup.html"
+  }
+}
