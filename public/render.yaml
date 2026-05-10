@@ -1,0 +1,30 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Deploy URL is your private testing link for ~20 people (set BETA_MESSAGE in dashboard for custom copy).
+services:
+  - type: web
+    name: student-ai-hub
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render injects PORT. Set HF_* secrets in the dashboard; do not commit tokens.
+      - key: HF_API_TOKEN
+        sync: false
+      - key: HF_MODEL
+        sync: false
+      - key: HF_CHAT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      # Private beta banner (optional custom text in dashboard).
+      - key: BETA_TESTING
+        value: "1"
+      - key: BETA_MESSAGE
+        sync: false

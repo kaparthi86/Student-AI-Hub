@@ -898,6 +898,97 @@ textarea {
   justify-content: flex-end;
 }
 
+.default-page-hint-modal {
+  z-index: 65;
+}
+
+.default-page-hint-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.default-page-hint-lead {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.default-page-hint-steps {
+  margin-bottom: 12px;
+}
+
+.default-page-hint-url-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.default-page-hint-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.default-page-hint-url-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(160, 182, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #eaf0ff;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.default-page-hint-ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #dce6ff;
+}
+
+.default-page-hint-ol li {
+  margin-bottom: 8px;
+}
+
+.default-page-hint-ol code {
+  font-size: 12px;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.default-page-hint-extension-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.default-page-hint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .default-page-hint-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .default-page-hint-actions .primary-btn,
+  .default-page-hint-actions .ghost-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .toast-stack {
   position: fixed;
   right: 14px;
@@ -930,6 +1021,16 @@ textarea {
 
 /* Phones / small tablets */
 @media (max-width: 640px) {
+  /* Logged-in shell: calmer page chrome, subtle taps — reads closer to a native app than a long web doc */
+  body:has(#appCard:not(.hidden)) {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: rgba(122, 109, 255, 0.12);
+  }
+
+  body:has(#appCard:not(.hidden)) .bg-glow {
+    opacity: 0.2;
+  }
+
   .container {
     padding-left: max(14px, env(safe-area-inset-left, 0px));
     padding-right: max(14px, env(safe-area-inset-right, 0px));
@@ -995,12 +1096,6 @@ textarea {
     margin-bottom: 0;
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .tabs {
-    margin-top: 4px;
-    margin-bottom: 6px;
-    flex-shrink: 0;
-  }
-
   .container:has(#appCard:not(.hidden)) #appCard .app-fine-print {
     margin-top: auto;
     padding-top: 10px;
@@ -1033,16 +1128,35 @@ textarea {
     padding: 10px 14px;
   }
 
+  /* iOS-style segmented control: only the app uses .tabs (Ask / Code / Notebook) */
   .tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 4px;
+    margin: 8px 0 10px;
+    padding: 5px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .tab {
     min-height: 44px;
     font-size: 14px;
+    font-weight: 600;
     text-align: center;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .tab.active {
+    border: none;
+    background: rgba(122, 109, 255, 0.42);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    font-weight: 700;
   }
 
   .search-hero {
@@ -1059,57 +1173,61 @@ textarea {
   }
 
   .search-title {
-    font-size: 1.2rem;
-    line-height: 1.2;
+    font-size: 1.35rem;
+    line-height: 1.22;
   }
 
   /*
    * Hero ask bar: one wide pill (logo | field | Ask) like Google mobile search /
-   * omnibox — larger touch target, field gets horizontal space instead of a thin
-   * stacked strip.
+   * omnibox — tall row + soft shadow so it feels like a primary app composer.
    */
   .search-bar:not(.compact) {
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
     align-items: stretch;
     width: 100%;
     max-width: none;
     border-radius: 999px;
+    box-shadow:
+      0 10px 36px rgba(5, 12, 40, 0.48),
+      0 4px 14px rgba(122, 109, 255, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .search-bar:not(.compact) .search-icon--logo,
   .search-bar:not(.compact) .search-icon {
-    width: 48px;
-    min-width: 48px;
+    width: 52px;
+    min-width: 52px;
     min-height: 0;
-    padding: 0 6px;
+    padding: 0 8px;
     border-right: 1px solid rgba(160, 182, 255, 0.22);
     border-bottom: none;
   }
 
   .search-bar:not(.compact) .search-logo-svg {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 
   .search-bar:not(.compact) textarea {
-    min-height: 56px;
-    padding: 16px 12px;
+    min-height: 68px;
+    padding: 18px 14px;
     /* 16px+ stops iOS Safari from zooming the page on focus */
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.45;
+    touch-action: manipulation;
   }
 
   .search-bar:not(.compact) .search-submit {
     width: auto;
     align-self: stretch;
-    min-height: 56px;
-    min-width: 88px;
-    padding: 0 22px;
+    min-height: 68px;
+    min-width: 94px;
+    padding: 0 24px;
     border-left: 1px solid rgba(160, 182, 255, 0.28);
     border-top: none;
     border-radius: 0;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
   }
 
@@ -1135,16 +1253,17 @@ textarea {
   }
 
   .followup-bar .search-bar.compact textarea {
-    min-height: 56px;
-    font-size: 16px;
-    padding: 16px 14px 16px 18px;
+    min-height: 68px;
+    font-size: 17px;
+    padding: 18px 14px 18px 18px;
     border-radius: 0;
+    touch-action: manipulation;
   }
 
   .followup-bar .search-bar.compact .search-submit {
     width: auto;
-    min-width: 92px;
-    min-height: 56px;
+    min-width: 96px;
+    min-height: 68px;
     border-left: 1px solid rgba(160, 182, 255, 0.28);
     border-top: none;
     border-radius: 0;

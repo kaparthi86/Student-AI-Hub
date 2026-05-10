@@ -43,14 +43,30 @@ const notebookStatus = document.getElementById("notebookStatus");
 let mainTab = "chat";
 let supabaseClient = null;
 
+async function authHeaders(base = {}) {
+  const h = { ...base };
+  try {
+    if (supabaseClient) {
+      const { data } = await supabaseClient.auth.getSession();
+      const t = data?.session?.access_token;
+      if (t) h.Authorization = `Bearer ${t}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return h;
+}
+
 const chatHistory = [];
 const codeHistory = [];
 const FEEDBACK_REASONS = ["too_vague", "incorrect", "too_long", "not_my_level", "other"];
 const USER_PREFS_KEY = "student_ai_user_prefs_v1";
 const CHAT_SESSION_KEY = "student_ai_sessions_v1";
+const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_v1";
 
 let chatSessionOpen = false;
 let codeSessionOpen = false;
+let defaultPageHintOfferedThisLoad = false;
 
 function formatChatErrorForUi(err) {
   const msg = err && err.message ? String(err.message) : "Request failed";
@@ -328,7 +344,7 @@ function wireAssistantCopy(bubble, rawText) {
 async function submitAssistantFeedback(payload) {
   const res = await fetch("/api/feedback", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -678,7 +694,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ mode, message: trimmed, history, studyMode: normalizeStudyMode(studyMode), stream: true }),
     });
 
@@ -753,6 +769,102 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   }
 }
 
+function isStandaloneWebAppDisplay() {
+  try {
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+  } catch {
+    /* ignore */
+  }
+  return window.navigator.standalone === true;
+}
+
+function hubPageUrlForBookmark() {
+  try {
+    if (window.location.protocol === "file:") return "";
+    return `${window.location.origin}${window.location.pathname || "/"}`;
+  } catch {
+    return "";
+  }
+}
+
+function maybeOfferDefaultPageHint() {
+  if (defaultPageHintOfferedThisLoad) return;
+  const modal = document.getElementById("defaultPageHintModal");
+  if (!modal || !appCard || appCard.classList.contains("hidden")) return;
+  if (localStorage.getItem(DEFAULT_PAGE_HINT_DISMISSED_KEY) === "1") return;
+  if (isStandaloneWebAppDisplay()) return;
+  if (window.location.protocol === "file:") return;
+
+  defaultPageHintOfferedThisLoad = true;
+  const urlField = document.getElementById("defaultPageHintUrlField");
+  const steps = document.getElementById("defaultPageHintSteps");
+  const showStepsBtn = document.getElementById("showDefaultPageStepsBtn");
+  if (urlField) urlField.value = hubPageUrlForBookmark();
+
+  window.setTimeout(() => {
+    if (!modal.classList.contains("hidden")) return;
+    modal.classList.remove("hidden");
+    showStepsBtn?.focus();
+  }, 700);
+}
+
+function hideDefaultPageHintModal(saveDismiss) {
+  const modal = document.getElementById("defaultPageHintModal");
+  const steps = document.getElementById("defaultPageHintSteps");
+  if (saveDismiss) localStorage.setItem(DEFAULT_PAGE_HINT_DISMISSED_KEY, "1");
+  modal?.classList.add("hidden");
+  steps?.classList.add("hidden");
+  const showStepsBtn = document.getElementById("showDefaultPageStepsBtn");
+  if (showStepsBtn) showStepsBtn.textContent = "Yes, show me how";
+}
+
+function wireDefaultPageHintModal() {
+  const modal = document.getElementById("defaultPageHintModal");
+  const steps = document.getElementById("defaultPageHintSteps");
+  const showStepsBtn = document.getElementById("showDefaultPageStepsBtn");
+  const dismissBtn = document.getElementById("dismissDefaultPageHintBtn");
+  const closeBtn = document.getElementById("closeDefaultPageHintBtn");
+  const copyBtn = document.getElementById("copyDefaultPageUrlBtn");
+  const urlField = document.getElementById("defaultPageHintUrlField");
+
+  showStepsBtn?.addEventListener("click", () => {
+    if (!steps) return;
+    const opening = steps.classList.contains("hidden");
+    if (opening) {
+      steps.classList.remove("hidden");
+      showStepsBtn.textContent = "Hide steps";
+      urlField?.select();
+    } else {
+      steps.classList.add("hidden");
+      showStepsBtn.textContent = "Yes, show me how";
+    }
+  });
+
+  dismissBtn?.addEventListener("click", () => hideDefaultPageHintModal(true));
+  closeBtn?.addEventListener("click", () => hideDefaultPageHintModal(true));
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) hideDefaultPageHintModal(true);
+  });
+
+  copyBtn?.addEventListener("click", async () => {
+    const t = urlField?.value || hubPageUrlForBookmark();
+    if (!t) return;
+    try {
+      await navigator.clipboard.writeText(t);
+      showToast("Address copied");
+    } catch {
+      urlField?.select();
+      showToast("Select the field and copy (?C / Ctrl+C)");
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!modal || modal.classList.contains("hidden")) return;
+    hideDefaultPageHintModal(true);
+  });
+}
+
 function showApp(session) {
   const metadata = session?.user?.user_metadata || {};
   const email = session?.user?.email || "";
@@ -760,6 +872,7 @@ function showApp(session) {
   userName.textContent = display;
   authCard.classList.add("hidden");
   appCard.classList.remove("hidden");
+  maybeOfferDefaultPageHint();
 }
 
 function showAuth(message = "") {
@@ -968,6 +1081,7 @@ docAnalyzeBtn.addEventListener("click", async () => {
     form.append("document", file);
     const response = await fetch("/api/doc-insights", {
       method: "POST",
+      headers: await authHeaders(),
       body: form,
     });
     const data = await response.json();
@@ -1052,6 +1166,7 @@ restoreSessionStateIfEnabled();
 syncLearnLayout();
 syncCodeLayout();
 wireSettingsUi();
+wireDefaultPageHintModal();
 hydratePromptFromUrl();
 initAuth();
 initBetaBanner();

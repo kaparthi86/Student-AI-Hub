@@ -1,4 +1,4 @@
-# Student AI Hub MVP
+# Student AI Hub
 
 A prototype for a free student-focused AI app with:
 
@@ -81,8 +81,8 @@ Use a **single HTTPS URL** everyone shares (e.g. Render). That URL is your **tes
 
 1. Push the project to **GitHub** (do not commit `.env`; set secrets in the host UI).
 2. Deploy (e.g. **Render ? New ? Blueprint**, pick `render.yaml`). The blueprint sets **`BETA_TESTING=1`** so the app shows a **private beta banner** (optional **`BETA_MESSAGE`** in Render **Environment** overrides the default text).
-3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE` (e.g. *"CS101 pilot ï¿½ report bugs to you@school.edu"*).
-4. Copy the live URL, e.g. `https://student-ai-hub.onrender.com` ï¿½ **that is the only link you send** (up to ~20 testers is fine on free tier for light use; first request after sleep may take ~30s).
+3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE` (e.g. *"CS101 pilot  report bugs to you@school.edu"*).
+4. Copy the live URL, e.g. `https://student-ai-hub.onrender.com`  **that is the only link you send** (up to ~20 testers is fine on free tier for light use; first request after sleep may take ~30s).
 
 ### Supabase + Google (required for login on that URL)
 
@@ -104,7 +104,7 @@ In **Google Cloud Console** (OAuth client used by Supabase): add **Authorized Ja
 
 ### Checks
 
-- Open `https://YOUR-SERVICE.onrender.com/api/health` ï¿½ `"hfConfigured": true` when the token is set; **`betaMessage`** is non-empty when beta mode is on.
+- Open `https://YOUR-SERVICE.onrender.com/api/health`  `"hfConfigured": true` when the token is set; **`betaMessage`** is non-empty when beta mode is on.
 - Confirm **`"indexHtmlDeployed": true`**. If it is **`false`**, the server cannot see `public/index.html` (you will see a startup log about a missing file, and `/` returns Not Found). Fix it by:
   1. Locally: `git add public` then `git commit` and `git push` so GitHub contains `public/index.html`, `public/app.js`, `public/styles.css`, and `public/config.js`.
   2. Render **Settings ? Root Directory**: leave **empty** unless the app really lives in a subfolder (then Root Directory must be that folder, and `public/` must be inside it).
@@ -119,7 +119,33 @@ For a **very short** test you can use `npx localtunnel --port 3001` or [ngrok](h
 
 - `POST /api/chat` JSON: `{ "mode": "learn"|"code", "message": "...", "history": [{ "role": "user"|"assistant", "content": "..." }] }` (optional `"stream": true` for SSE)
 - `POST /api/doc-insights` multipart form field `document` (file)
+- `POST /api/weak-topic-recap` JSON: `{ "mode": "learn"|"code", "recentSearches": ["..."], "history": [...] }`
+- `POST /api/feedback` JSON: `{ "rating": 1|-1, "reason": "...", "mode": "...", "studyMode": "...", "assistantMessage": "..." }`
+- `GET /api/feedback-summary` returns aggregate counts from `feedback.ndjson`
 - `POST /api/ai` still works for one-shot prompts (optional)
+
+## Chrome extension (Phase 1: context menu + popup)
+
+A lightweight extension is included in `chrome-extension/`:
+
+- Right-click selected text on any page -> **Ask Student Coach**
+- Toolbar popup to type a quick prompt and open your site
+
+### Install locally (unpacked)
+
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select the `student-ai-mvp/chrome-extension` folder
+
+By default, the extension opens `https://www.my-student-coach.com/`.
+You can change the target URL in the popup (for example `http://localhost:3001/` while developing),
+or use the one-click **Use Prod** / **Use Localhost** buttons.
+
+### Deep-link behavior
+
+The app supports `?q=` deep links (example: `https://www.my-student-coach.com/?q=Explain%20Bayes%20rule`).
+This prefills the Ask textarea; the user still clicks **Ask** to send.
 
 ## Notes
 

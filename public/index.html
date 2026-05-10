@@ -8,14 +8,17 @@
     />
     <meta name="theme-color" content="#0b1020" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Student AI Hub - MVP</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Student AI Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=chat-flow-chips-1" />
+    <link rel="stylesheet" href="./styles.css?v=default-page-hint-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -258,6 +261,52 @@
       </section>
     </main>
 
+    <div
+      id="defaultPageHintModal"
+      class="settings-modal default-page-hint-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="defaultPageHintTitle"
+    >
+      <div class="settings-card default-page-hint-card">
+        <div class="settings-head">
+          <h3 id="defaultPageHintTitle">Make this your start page?</h3>
+          <button id="closeDefaultPageHintBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">
+            Close
+          </button>
+        </div>
+        <p class="default-page-hint-lead muted">
+          Browsers don&rsquo;t let websites change your home or startup page for you (by design). If you&rsquo;d like
+          Student AI Hub to open when you start the browser, you can set it yourself in a few seconds.
+        </p>
+        <div id="defaultPageHintSteps" class="default-page-hint-steps hidden">
+          <p class="default-page-hint-url-label muted">Copy this address:</p>
+          <div class="default-page-hint-url-row">
+            <input id="defaultPageHintUrlField" class="default-page-hint-url-input" type="text" readonly />
+            <button id="copyDefaultPageUrlBtn" class="ghost-btn tiny-btn" type="button">Copy</button>
+          </div>
+          <ol class="default-page-hint-ol">
+            <li>
+              <strong>Chrome / Edge:</strong> Settings → On startup → Open a specific page → Add a new page → paste the
+              address above. (Or visit <code>chrome://settings/onStartup</code> in Chrome.)
+            </li>
+            <li><strong>Safari (Mac):</strong> Safari → Settings → General → Homepage — paste the address.</li>
+            <li>
+              <strong>iPhone / iPad:</strong> Share → <strong>Add to Home Screen</strong> for a quick icon (separate from
+              the browser home page).
+            </li>
+          </ol>
+          <p class="muted default-page-hint-extension-note">
+            Using our Chrome extension? After you install it, new tabs can open this site automatically.
+          </p>
+        </div>
+        <div class="default-page-hint-actions">
+          <button id="showDefaultPageStepsBtn" class="primary-btn" type="button">Yes, show me how</button>
+          <button id="dismissDefaultPageHintBtn" class="ghost-btn" type="button">Not now</button>
+        </div>
+      </div>
+    </div>
+
     <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="settings-card">
         <div class="settings-head">
@@ -281,6 +330,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=remove-flashcards-1"></script>
+    <script src="./app.js?v=default-page-hint-1"></script>
   </body>
 </html>
