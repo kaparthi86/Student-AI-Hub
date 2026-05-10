@@ -1063,35 +1063,54 @@ textarea {
     line-height: 1.2;
   }
 
-  /* Stack hero search: icon, field, CTA (avoids squashed 3-col on narrow screens) */
+  /*
+   * Hero ask bar: one wide pill (logo | field | Ask) like Google mobile search /
+   * omnibox — larger touch target, field gets horizontal space instead of a thin
+   * stacked strip.
+   */
   .search-bar:not(.compact) {
     display: grid;
-    grid-template-columns: 1fr;
-    border-radius: 16px;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+    border-radius: 999px;
   }
 
   .search-bar:not(.compact) .search-icon--logo,
   .search-bar:not(.compact) .search-icon {
-    width: 100%;
-    min-width: 0;
-    min-height: 48px;
-    padding: 10px 12px;
-    border-right: none;
-    border-bottom: 1px solid rgba(160, 182, 255, 0.22);
+    width: 48px;
+    min-width: 48px;
+    min-height: 0;
+    padding: 0 6px;
+    border-right: 1px solid rgba(160, 182, 255, 0.22);
+    border-bottom: none;
+  }
+
+  .search-bar:not(.compact) .search-logo-svg {
+    width: 26px;
+    height: 26px;
   }
 
   .search-bar:not(.compact) textarea {
-    min-height: 52px;
+    min-height: 56px;
+    padding: 16px 12px;
     /* 16px+ stops iOS Safari from zooming the page on focus */
     font-size: 16px;
+    line-height: 1.45;
   }
 
   .search-bar:not(.compact) .search-submit {
-    width: 100%;
-    min-height: 48px;
-    border-left: none;
-    border-top: 1px solid rgba(160, 182, 255, 0.28);
-    border-radius: 0 0 15px 15px;
+    width: auto;
+    align-self: stretch;
+    min-height: 56px;
+    min-width: 88px;
+    padding: 0 22px;
+    border-left: 1px solid rgba(160, 182, 255, 0.28);
+    border-top: none;
+    border-radius: 0;
+    font-size: 16px;
+    font-weight: 700;
   }
 
   /*
@@ -1116,16 +1135,16 @@ textarea {
   }
 
   .followup-bar .search-bar.compact textarea {
-    min-height: 52px;
+    min-height: 56px;
     font-size: 16px;
-    padding: 14px 14px 14px 18px;
+    padding: 16px 14px 16px 18px;
     border-radius: 0;
   }
 
   .followup-bar .search-bar.compact .search-submit {
     width: auto;
     min-width: 92px;
-    min-height: 52px;
+    min-height: 56px;
     border-left: 1px solid rgba(160, 182, 255, 0.28);
     border-top: none;
     border-radius: 0;
