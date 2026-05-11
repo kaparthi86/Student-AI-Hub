@@ -1,7 +1,7 @@
 {
   "name": "student-ai-mvp",
   "version": "1.0.0",
-  "description": "Free AI learning + coding tools MVP",
+  "description": "Free AI learning + coding tools",
   "main": "server.js",
   "engines": {
     "node": ">=18"
@@ -11,6 +11,7 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
