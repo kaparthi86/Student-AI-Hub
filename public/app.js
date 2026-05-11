@@ -1,3 +1,6 @@
+/** Ask-tab image attach (VQA / multimodal). Set `true` to show UI and send images; keep `false` to mute. */
+const LEARN_VISION_ENABLED = false;
+
 const authCard = document.getElementById("authCard");
 const appCard = document.getElementById("appCard");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
@@ -24,6 +27,11 @@ const chatThread = document.getElementById("chatThread");
 const chatFollowupInput = document.getElementById("chatFollowupInput");
 const chatFollowupSubmit = document.getElementById("chatFollowupSubmit");
 const apiStatus = document.getElementById("apiStatus");
+const learnChatImageInput = document.getElementById("learnChatImageInput");
+const chatHeroAttachBtn = document.getElementById("chatHeroAttachBtn");
+const chatFollowupAttachBtn = document.getElementById("chatFollowupAttachBtn");
+const chatHeroAttachPreview = document.getElementById("chatHeroAttachPreview");
+const chatFollowupAttachPreview = document.getElementById("chatFollowupAttachPreview");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -43,18 +51,64 @@ const notebookStatus = document.getElementById("notebookStatus");
 let mainTab = "chat";
 let supabaseClient = null;
 
+/** JWT `exp` in ms (0 if unknown). Used to refresh before API calls. */
+function accessTokenExpiresAtMs(accessToken) {
+  try {
+    const parts = String(accessToken).split(".");
+    if (parts.length < 2) return 0;
+    let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    const json = JSON.parse(atob(b64));
+    return typeof json.exp === "number" ? json.exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Headers for `/api/*` including `Authorization: Bearer <access_token>`.
+ * Proactively calls `refreshSession` when the access token is expired or near expiry.
+ */
 async function authHeaders(base = {}) {
   const h = { ...base };
   try {
-    if (supabaseClient) {
-      const { data } = await supabaseClient.auth.getSession();
-      const t = data?.session?.access_token;
-      if (t) h.Authorization = `Bearer ${t}`;
+    if (!supabaseClient) return h;
+    let { data: { session } = {} } = await supabaseClient.auth.getSession();
+    let token = session?.access_token;
+    if (!token) return h;
+    const exp = accessTokenExpiresAtMs(token);
+    const refreshIfBeforeMs = 120_000;
+    if (!exp || Date.now() > exp - refreshIfBeforeMs) {
+      const { data: ref, error } = await supabaseClient.auth.refreshSession();
+      if (!error && ref?.session?.access_token) {
+        session = ref.session;
+        token = session.access_token;
+      }
     }
+    if (token) h.Authorization = `Bearer ${token}`;
   } catch {
     /* ignore */
   }
   return h;
+}
+
+/**
+ * `fetch` with auth headers; on 401 runs `refreshSession` once and retries (handles stale tokens after idle tabs).
+ * Pass `headers` as a plain object only (same as existing callers).
+ */
+async function fetchAuthed(url, init = {}) {
+  const { headers: extra, ...rest } = init;
+  const ext = typeof extra === "object" && extra && !(extra instanceof Headers) ? extra : {};
+  const run = async () => {
+    const headers = await authHeaders(ext);
+    return fetch(url, { ...rest, headers });
+  };
+  let res = await run();
+  if (res.status === 401 && supabaseClient) {
+    await supabaseClient.auth.refreshSession().catch(() => {});
+    res = await run();
+  }
+  return res;
 }
 
 const chatHistory = [];
@@ -67,6 +121,122 @@ const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_
 let chatSessionOpen = false;
 let codeSessionOpen = false;
 let defaultPageHintOfferedThisLoad = false;
+
+/** @type {{ mime: string, base64: string, dataUrl: string } | null} */
+let learnChatVisionAttachment = null;
+
+function clearLearnChatVisionAttachment() {
+  learnChatVisionAttachment = null;
+  [chatHeroAttachPreview, chatFollowupAttachPreview].forEach((el) => {
+    if (!el) return;
+    el.replaceChildren();
+    el.classList.add("hidden");
+  });
+}
+
+function updateLearnChatAttachPreview() {
+  [chatHeroAttachPreview, chatFollowupAttachPreview].forEach((el) => {
+    if (!el) return;
+    el.replaceChildren();
+    if (!learnChatVisionAttachment) {
+      el.classList.add("hidden");
+      return;
+    }
+    el.classList.remove("hidden");
+    const wrap = document.createElement("span");
+    wrap.className = "learn-chat-attach-thumb-wrap";
+    const img = document.createElement("img");
+    img.className = "learn-chat-attach-thumb";
+    img.src = learnChatVisionAttachment.dataUrl;
+    img.alt = "Attached preview";
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "learn-chat-attach-remove";
+    rm.setAttribute("aria-label", "Remove image");
+    rm.textContent = "\u00d7";
+    rm.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearLearnChatVisionAttachment();
+    });
+    wrap.appendChild(img);
+    wrap.appendChild(rm);
+    el.appendChild(wrap);
+  });
+}
+
+/**
+ * Resize to max side ~1280px and JPEG re-encode to keep JSON payloads reasonable.
+ * @returns {Promise<{ mime: string, base64: string, dataUrl: string }>}
+ */
+function prepareImageForLearnChat(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type || !file.type.startsWith("image/")) {
+      reject(new Error("Choose an image file (JPEG, PNG, GIF, or WebP)."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read the file."));
+    reader.onload = () => {
+      const url = reader.result;
+      if (typeof url !== "string") {
+        reject(new Error("Could not read the file."));
+        return;
+      }
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 1280;
+        let { width, height } = image;
+        if (width > maxSide || height > maxSide) {
+          if (width >= height) {
+            height = Math.max(1, Math.round((height * maxSide) / width));
+            width = maxSide;
+          } else {
+            width = Math.max(1, Math.round((width * maxSide) / height));
+            height = maxSide;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not process image."));
+          return;
+        }
+        ctx.drawImage(image, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Could not process image."));
+              return;
+            }
+            const fr = new FileReader();
+            fr.onload = () => {
+              const dataUrl = fr.result;
+              if (typeof dataUrl !== "string") {
+                reject(new Error("Could not process image."));
+                return;
+              }
+              const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+              if (!m) {
+                reject(new Error("Could not process image."));
+                return;
+              }
+              resolve({ mime: m[1], base64: m[2], dataUrl });
+            };
+            fr.onerror = () => reject(new Error("Could not process image."));
+            fr.readAsDataURL(blob);
+          },
+          "image/jpeg",
+          0.88,
+        );
+      };
+      image.onerror = () => reject(new Error("Could not load image."));
+      image.src = url;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function formatChatErrorForUi(err) {
   const msg = err && err.message ? String(err.message) : "Request failed";
@@ -90,18 +260,75 @@ const CHAT_FOLLOWUP_STARTER_PROMPTS = {
     "Explain that again step-by-step, with smaller steps and a simple example where it helps.\n\n",
 };
 
-/** Starter chips send the prompt immediately (same path as Ask / Send). */
-function wireStarterChipsAsSend(container, promptMap, sendFn, busyButton) {
+/**
+ * Starter chips send the prompt immediately (same path as Ask / Send).
+ * Optional `customStarters`: map of data-starter key -> handler (runs instead of sending a prompt).
+ */
+function wireStarterChipsAsSend(container, promptMap, sendFn, busyButton, customStarters = null) {
   if (!container || !promptMap || typeof sendFn !== "function") return;
   container.addEventListener("click", (e) => {
     const chip = e.target.closest(".starter-chip[data-starter]");
     if (!chip || !container.contains(chip)) return;
     if (busyButton?.disabled) return;
     const key = chip.getAttribute("data-starter");
+    if (customStarters && typeof customStarters[key] === "function") {
+      customStarters[key]();
+      return;
+    }
     const prompt = promptMap[key];
     if (typeof prompt !== "string") return;
     sendFn(prompt);
   });
+}
+
+function stopReadAloud() {
+  try {
+    if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+  } catch {
+    /* ignore */
+  }
+}
+
+function getLastAssistantMarkdownFromHistory(history) {
+  if (!Array.isArray(history)) return "";
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const m = history[i];
+    if (m && m.role === "assistant" && typeof m.content === "string") {
+      const t = m.content.trim();
+      if (t) return m.content;
+    }
+  }
+  return "";
+}
+
+/** Read-aloud chip: Web Speech API, last assistant reply only. Tap again while playing to stop. */
+function readLastAssistantAloud() {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    showToast("Read aloud is not supported in this browser.");
+    return;
+  }
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    stopReadAloud();
+    showToast("Stopped");
+    return;
+  }
+  const raw = getLastAssistantMarkdownFromHistory(chatHistory);
+  if (!String(raw).trim()) {
+    showToast("No assistant reply to read yet.");
+    return;
+  }
+  const { plain } = getAssistantCopyFormats(raw);
+  const text = String(plain || "").trim();
+  if (!text) {
+    showToast("Nothing to read.");
+    return;
+  }
+  const maxChars = 32000;
+  const toSpeak = text.length > maxChars ? `${text.slice(0, maxChars)}\n\n(Truncated for speech.)` : text;
+  const u = new SpeechSynthesisUtterance(toSpeak);
+  u.rate = 1;
+  u.onerror = () => showToast("Speech playback failed.");
+  window.speechSynthesis.speak(u);
 }
 
 function normalizeStudyMode(raw) {
@@ -144,8 +371,15 @@ function showToast(msg) {
 
 function saveSessionState() {
   try {
+    const chatOut = LEARN_VISION_ENABLED
+      ? chatHistory
+      : chatHistory.map((m) => {
+          if (!m || typeof m !== "object") return m;
+          const { imageBase64, imageMime, ...rest } = m;
+          return rest;
+        });
     const payload = {
-      chatHistory,
+      chatHistory: chatOut,
       codeHistory,
       chatSessionOpen,
       codeSessionOpen,
@@ -163,7 +397,11 @@ function renderThreadFromHistory(container, history, mode, studyMode) {
     if (!item || typeof item !== "object") continue;
     const role = item.role === "assistant" ? "assistant" : "user";
     const content = String(item.content || "");
-    appendBubble(container, role, content, { mode, studyMode });
+    let imageDataUrl;
+    if (LEARN_VISION_ENABLED && role === "user" && item.imageMime && item.imageBase64) {
+      imageDataUrl = `data:${item.imageMime};base64,${item.imageBase64}`;
+    }
+    appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
   }
 }
 
@@ -173,7 +411,23 @@ function restoreSessionStateIfEnabled() {
   try {
     const parsed = JSON.parse(localStorage.getItem(CHAT_SESSION_KEY) || "{}");
     if (Array.isArray(parsed.chatHistory)) {
-      chatHistory.splice(0, chatHistory.length, ...parsed.chatHistory.filter((x) => x && typeof x.content === "string"));
+      chatHistory.splice(
+        0,
+        chatHistory.length,
+        ...parsed.chatHistory.filter(
+          (x) =>
+            x &&
+            typeof x.content === "string" &&
+            (x.content.trim().length > 0 || (typeof x.imageBase64 === "string" && x.imageBase64.length > 40 && x.imageMime)),
+        ),
+      );
+      if (!LEARN_VISION_ENABLED) {
+        chatHistory.forEach((m) => {
+          if (!m || typeof m !== "object") return;
+          delete m.imageBase64;
+          delete m.imageMime;
+        });
+      }
     }
     if (Array.isArray(parsed.codeHistory)) {
       codeHistory.splice(0, codeHistory.length, ...parsed.codeHistory.filter((x) => x && typeof x.content === "string"));
@@ -301,6 +555,8 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
+  if (mainTab !== "chat") stopReadAloud();
+  if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.tab === mainTab);
   });
@@ -342,9 +598,9 @@ function wireAssistantCopy(bubble, rawText) {
 }
 
 async function submitAssistantFeedback(payload) {
-  const res = await fetch("/api/feedback", {
+  const res = await fetchAuthed("/api/feedback", {
     method: "POST",
-    headers: await authHeaders({ "Content-Type": "application/json" }),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -478,10 +734,31 @@ function appendBubble(container, role, text, meta = {}) {
     label.className = "bubble-label";
     label.textContent = "You";
     bubble.appendChild(label);
-    const pre = document.createElement("pre");
-    pre.className = "bubble-text";
-    pre.textContent = text;
-    bubble.appendChild(pre);
+    if (meta.imageDataUrl) {
+      const fig = document.createElement("div");
+      fig.className = "bubble-user-image";
+      const img = document.createElement("img");
+      img.src = meta.imageDataUrl;
+      img.alt = "Attached";
+      img.loading = "lazy";
+      img.decoding = "async";
+      fig.appendChild(img);
+      bubble.appendChild(fig);
+    }
+    const trimmed = String(text || "").trim();
+    if (trimmed) {
+      const pre = document.createElement("pre");
+      pre.className = "bubble-text";
+      pre.textContent = text;
+      bubble.appendChild(pre);
+    } else if (meta.imageDataUrl) {
+      const cap = document.createElement("p");
+      cap.className = "bubble-text muted";
+      cap.style.margin = "0";
+      cap.style.fontSize = "13px";
+      cap.textContent = "Attached image";
+      bubble.appendChild(cap);
+    }
   } else {
     const head = document.createElement("div");
     head.className = "bubble-head";
@@ -665,11 +942,41 @@ async function consumeChatSseStream(response, onDelta) {
 }
 
 /** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
-async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn, studyMode = "explain") {
-  const trimmed = message.trim();
-  if (!trimmed) return false;
+async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn, studyMode = "explain", visionAttachment = null) {
+  stopReadAloud();
+  const attach = LEARN_VISION_ENABLED ? visionAttachment : null;
+  const trimmed = typeof message === "string" ? message.trim() : "";
+  if (!trimmed && !attach) return false;
 
-  appendBubble(threadEl, "user", trimmed);
+  appendBubble(threadEl, "user", trimmed, { imageDataUrl: attach?.dataUrl });
+
+  const historyForApi =
+    mode === "learn" && LEARN_VISION_ENABLED
+      ? history.map((m) => {
+          if (!m || typeof m !== "object") return { role: "user", content: "" };
+          const o = { role: m.role, content: typeof m.content === "string" ? m.content : "" };
+          if (m.role === "user" && m.imageMime && m.imageBase64) {
+            o.imageMime = m.imageMime;
+            o.imageBase64 = m.imageBase64;
+          }
+          return o;
+        })
+      : history.map((m) => ({
+          role: m.role,
+          content: typeof m.content === "string" ? m.content : "",
+        }));
+
+  const chatBody = {
+    mode,
+    message: trimmed,
+    history: historyForApi,
+    studyMode: normalizeStudyMode(studyMode),
+    stream: true,
+  };
+  if (mode === "learn" && attach) {
+    chatBody.imageBase64 = attach.base64;
+    chatBody.imageMime = attach.mime;
+  }
 
   sendBtn.disabled = true;
   statusEl.textContent = "Thinking...";
@@ -692,10 +999,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetchAuthed("/api/chat", {
       method: "POST",
-      headers: await authHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ mode, message: trimmed, history, studyMode: normalizeStudyMode(studyMode), stream: true }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chatBody),
     });
 
     const ct = (response.headers.get("content-type") || "").toLowerCase();
@@ -724,7 +1031,12 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
         }
       }
       appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
-      history.push({ role: "user", content: trimmed });
+      const userRow = { role: "user", content: trimmed };
+      if (attach) {
+        userRow.imageMime = attach.mime;
+        userRow.imageBase64 = attach.base64;
+      }
+      history.push(userRow);
       history.push({ role: "assistant", content: output });
       saveSessionState();
       statusEl.textContent = "Ready";
@@ -744,7 +1056,12 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     streamUi.setStreamingText(finalText);
     streamUi.finalize(finalText);
 
-    history.push({ role: "user", content: trimmed });
+    const userRow = { role: "user", content: trimmed };
+    if (attach) {
+      userRow.imageMime = attach.mime;
+      userRow.imageBase64 = attach.base64;
+    }
+    history.push(userRow);
     history.push({ role: "assistant", content: finalText });
     saveSessionState();
     statusEl.textContent = "Ready";
@@ -978,13 +1295,17 @@ function wireSearchFlow({
   threadEl,
   statusEl,
   onFirstSend,
-}) {
+  getVisionAttachment,
+  clearVisionAttachment,
+} = {}) {
   const run = (raw, activeBtn) => {
+    const attach = typeof getVisionAttachment === "function" ? getVisionAttachment() : null;
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
-    if (!trimmed) return;
+    if (!trimmed && !attach) return;
+    if (typeof clearVisionAttachment === "function") clearVisionAttachment();
     if (!history.length) onFirstSend();
-    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, "explain");
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, "explain", attach);
     followupInput.value = "";
     followupInput.focus();
   };
@@ -1015,6 +1336,7 @@ function wireSearchFlow({
 
   return {
     sendFromFollowup: (raw) => {
+      if (typeof clearVisionAttachment === "function") clearVisionAttachment();
       followupInput.value = "";
       run(raw, followupSubmit);
     },
@@ -1034,6 +1356,8 @@ const chatSearchFlow = wireSearchFlow({
     chatSessionOpen = true;
     syncLearnLayout();
   },
+  getVisionAttachment: LEARN_VISION_ENABLED ? () => learnChatVisionAttachment : undefined,
+  clearVisionAttachment: LEARN_VISION_ENABLED ? clearLearnChatVisionAttachment : undefined,
 });
 
 wireStarterChipsAsSend(
@@ -1041,6 +1365,7 @@ wireStarterChipsAsSend(
   CHAT_FOLLOWUP_STARTER_PROMPTS,
   chatSearchFlow.sendFromFollowup,
   chatFollowupSubmit,
+  { readAloud: readLastAssistantAloud },
 );
 
 wireSearchFlow({
@@ -1057,6 +1382,37 @@ wireSearchFlow({
     syncCodeLayout();
   },
 });
+
+function wireLearnChatImageAttach() {
+  const openPicker = () => learnChatImageInput?.click();
+  chatHeroAttachBtn?.addEventListener("click", () => openPicker());
+  chatFollowupAttachBtn?.addEventListener("click", () => openPicker());
+  learnChatImageInput?.addEventListener("change", async () => {
+    const f = learnChatImageInput?.files?.[0];
+    if (learnChatImageInput) learnChatImageInput.value = "";
+    if (!f) return;
+    try {
+      learnChatVisionAttachment = await prepareImageForLearnChat(f);
+      updateLearnChatAttachPreview();
+      showToast("Image attached. Add your question, then Send.");
+      chatFollowupInput?.focus();
+    } catch (err) {
+      showToast(err.message || "Could not read image");
+    }
+  });
+}
+
+/** Hide attach UI and single-row layout when VQA is muted (see LEARN_VISION_ENABLED). */
+function applyLearnVisionMuted() {
+  if (LEARN_VISION_ENABLED) return;
+  document.querySelectorAll(".learn-vision-ui").forEach((el) => el.classList.add("hidden"));
+  document.querySelectorAll(".search-bar--learn").forEach((el) => el.classList.remove("search-bar--learn"));
+}
+
+applyLearnVisionMuted();
+if (LEARN_VISION_ENABLED) {
+  wireLearnChatImageAttach();
+}
 
 docFileInput.addEventListener("change", () => {
   const f = docFileInput.files?.[0];
@@ -1079,9 +1435,9 @@ docAnalyzeBtn.addEventListener("click", async () => {
   try {
     const form = new FormData();
     form.append("document", file);
-    const response = await fetch("/api/doc-insights", {
+    const response = await fetchAuthed("/api/doc-insights", {
       method: "POST",
-      headers: await authHeaders(),
+      headers: {},
       body: form,
     });
     const data = await response.json();

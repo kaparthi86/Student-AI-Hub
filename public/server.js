@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 const dotenv = require("dotenv");
@@ -52,6 +51,17 @@ if (HF_MODEL !== HF_MODEL_RAW) {
   // eslint-disable-next-line no-console
   console.log(`HF_MODEL had no routing suffix; using "${HF_MODEL}" (Inference Providers need e.g. :fastest or :groq).`);
 }
+/** Optional: vision-capable Hub id (with routing suffix) used when chat includes images. Falls back to HF_MODEL if unset. */
+const HF_MODEL_VISION_RAW = normalizeEnvString(process.env.HF_MODEL_VISION);
+const HF_MODEL_VISION = HF_MODEL_VISION_RAW ? ensureInferenceRoutingSuffix(HF_MODEL_VISION_RAW) : "";
+
+/**
+ * Ask-tab image attach / multimodal (VQA). Off by default; set ENABLE_LEARN_VISION=1 on the server.
+ * The browser UI is gated separately in public/app.js (`LEARN_VISION_ENABLED`); turn both on to ship the feature.
+ */
+const ENABLE_LEARN_VISION = ["1", "true", "yes"].includes(
+  String(process.env.ENABLE_LEARN_VISION || "").trim().toLowerCase()
+);
 /** OpenAI-compatible chat completions endpoint (Inference Providers / Router). */
 const HF_CHAT_URL =
   normalizeEnvString(process.env.HF_CHAT_URL) || "https://router.huggingface.co/v1/chat/completions";
@@ -102,8 +112,8 @@ function completionCacheSet(hashKey, text) {
   completionResponseCache.set(hashKey, { exp: Date.now() + RESPONSE_CACHE_TTL_MS, text });
 }
 
-function buildCompletionCacheHash(cacheUserKey, messages, kind = "json") {
-  return sha256Hex(["v1", HF_MODEL, kind, String(cacheUserKey || ""), stableJson(messages)].join("\x1e"));
+function buildCompletionCacheHash(cacheUserKey, messages, kind = "json", modelKey = HF_MODEL) {
+  return sha256Hex(["v1", String(modelKey || HF_MODEL), kind, String(cacheUserKey || ""), stableJson(messages)].join("\x1e"));
 }
 
 function augmentOpenAiPromptCacheFields(body, promptCacheKey) {
@@ -117,9 +127,9 @@ function augmentOpenAiPromptCacheFields(body, promptCacheKey) {
   return body;
 }
 
-function buildChatCompletionPayload(messages, { stream, temperature, max_tokens, promptCacheKey }) {
+function buildChatCompletionPayload(messages, { stream, temperature, max_tokens, promptCacheKey, model }) {
   const body = {
-    model: HF_MODEL,
+    model: model || HF_MODEL,
     messages,
     temperature,
     max_tokens,
@@ -302,14 +312,48 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "15mb" }));
 
-const apiLimiter = rateLimit({
-  windowMs: 60_000,
-  max: Number(process.env.API_RATE_LIMIT_PER_MINUTE || 80),
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+/** Per-IP fixed window limiter (no `express-rate-limit` package ? avoids deploy missing-module issues). */
+function createApiMemoryRateLimiter() {
+  const windowMs = 60_000;
+  const max = Math.max(1, Math.min(5000, Number(process.env.API_RATE_LIMIT_PER_MINUTE || 80)));
+  const hits = new Map();
+  const maxKeys = 8000;
+
+  function prune(now) {
+    if (hits.size <= maxKeys) return;
+    for (const [k, v] of hits) {
+      if (now >= v.reset) hits.delete(k);
+      if (hits.size <= maxKeys * 0.75) break;
+    }
+  }
+
+  return function apiRateLimit(req, res, next) {
+    const now = Date.now();
+    prune(now);
+    const key = req.ip || "unknown";
+    let row = hits.get(key);
+    if (!row || now >= row.reset) {
+      row = { n: 0, reset: now + windowMs };
+      hits.set(key, row);
+    }
+    row.n += 1;
+    const remaining = Math.max(0, max - row.n);
+    res.setHeader("RateLimit-Limit", String(max));
+    res.setHeader("RateLimit-Remaining", String(remaining));
+    res.setHeader("RateLimit-Reset", String(Math.ceil(row.reset / 1000)));
+    if (row.n > max) {
+      const retrySec = Math.max(1, Math.ceil((row.reset - now) / 1000));
+      res.setHeader("Retry-After", String(retrySec));
+      res.status(429).json({ error: "Too many requests. Please try again in a moment." });
+      return;
+    }
+    next();
+  };
+}
+
+const apiLimiter = createApiMemoryRateLimiter();
 
 app.use("/api", (req, res, next) => {
   if (req.method === "GET" && req.path === "/health") return next();
@@ -501,8 +545,9 @@ async function callChatCompletion(messages, options = {}) {
   const max_tokens = typeof options.max_tokens === "number" ? options.max_tokens : 700;
   const cacheUserKey = options.cacheUserKey != null ? String(options.cacheUserKey) : "";
   const promptCacheKey = options.promptCacheKey != null ? String(options.promptCacheKey) : "";
+  const modelKey = options.model != null ? String(options.model) : HF_MODEL;
 
-  const cacheHash = buildCompletionCacheHash(cacheUserKey, messages, "json");
+  const cacheHash = buildCompletionCacheHash(cacheUserKey, messages, "json", modelKey);
   const cachedText = completionCacheGet(cacheHash);
   if (cachedText) return cachedText;
 
@@ -511,6 +556,7 @@ async function callChatCompletion(messages, options = {}) {
     temperature,
     max_tokens,
     promptCacheKey,
+    model: modelKey,
   });
 
   const response = await fetch(chatEndpoint.href, {
@@ -574,6 +620,94 @@ function normalizeChatMessages(raw) {
     }))
     .filter((m) => m.content.length > 0)
     .slice(-MAX_CHAT_HISTORY);
+}
+
+const MAX_CHAT_IMAGE_BYTES = 3 * 1024 * 1024;
+
+function normalizeImageMime(mime) {
+  const m = String(mime || "").trim().toLowerCase();
+  if (m === "image/jpg") return "image/jpeg";
+  if (["image/jpeg", "image/png", "image/gif", "image/webp"].includes(m)) return m;
+  return null;
+}
+
+/**
+ * @returns {string | Array<{type:string, [k:string]: unknown}> | null}
+ */
+function buildMultimodalUserContent(text, imageBase64, imageMime) {
+  const t = String(text || "").trim().slice(0, 4000);
+  const mime = normalizeImageMime(imageMime);
+  const b64 = imageBase64 != null ? String(imageBase64).replace(/\s/g, "") : "";
+  if (!mime || !b64) {
+    if (!t) return null;
+    return t;
+  }
+  let buf;
+  try {
+    buf = Buffer.from(b64, "base64");
+  } catch {
+    throw new Error("Invalid image data (base64).");
+  }
+  if (buf.length > MAX_CHAT_IMAGE_BYTES) {
+    throw new Error("Image too large (max about 3 MB decoded).");
+  }
+  if (buf.length < 32) throw new Error("Image data too small or corrupt.");
+  const url = `data:${mime};base64,${buf.toString("base64")}`;
+  return [
+    { type: "image_url", image_url: { url } },
+    { type: "text", text: t || "Answer using the image." },
+  ];
+}
+
+function historyUserEntryToApiMessage(entry) {
+  const text = String(entry?.content || "").trim().slice(0, 8000);
+  const mime = normalizeImageMime(entry?.imageMime);
+  const b64 = entry?.imageBase64 != null ? String(entry.imageBase64).replace(/\s/g, "") : "";
+  if (mime && b64) {
+    return { role: "user", content: buildMultimodalUserContent(text, b64, mime) };
+  }
+  if (!text) return null;
+  return { role: "user", content: text };
+}
+
+function normalizeMultimodalChatHistory(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const role = entry.role === "assistant" ? "assistant" : "user";
+    if (role === "assistant") {
+      const content = String(entry.content || "").trim().slice(0, 8000);
+      if (content) out.push({ role: "assistant", content });
+      continue;
+    }
+    try {
+      const msg = historyUserEntryToApiMessage(entry);
+      if (msg) {
+        const c = msg.content;
+        if (typeof c === "string" && c.length) out.push(msg);
+        else if (Array.isArray(c) && c.length) out.push(msg);
+      }
+    } catch {
+      /* skip invalid image history row */
+    }
+  }
+  return out.slice(-MAX_CHAT_HISTORY);
+}
+
+function messagesIncludeImages(msgs) {
+  return msgs.some(
+    (m) =>
+      m &&
+      m.role === "user" &&
+      Array.isArray(m.content) &&
+      m.content.some((p) => p && typeof p === "object" && p.type === "image_url"),
+  );
+}
+
+function pickChatModelForMessages(msgs) {
+  if (!messagesIncludeImages(msgs)) return HF_MODEL;
+  return HF_MODEL_VISION || HF_MODEL;
 }
 
 function chatSystemBase(mode) {
@@ -647,15 +781,48 @@ app.post("/api/chat", requireSession, async (req, res) => {
     const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
       ? String(req.body.studyMode).toLowerCase()
       : "explain";
-    const lastMessage = String(req.body?.message || "").trim().slice(0, 4000);
-    if (!lastMessage) return res.status(400).json({ error: "message is required." });
+    const learnVisionOn = mode === "learn" && ENABLE_LEARN_VISION;
+    const imageMimeIn = req.body?.imageMime;
+    const imageB64In = req.body?.imageBase64 != null ? String(req.body.imageBase64).replace(/\s/g, "") : "";
+    const hasCurrentImage =
+      learnVisionOn && Boolean(normalizeImageMime(imageMimeIn) && imageB64In.length > 40);
 
-    const history = normalizeChatMessages(req.body?.history);
+    let lastMessage = String(req.body?.message || "").trim().slice(0, 4000);
+    if (!lastMessage && hasCurrentImage) {
+      lastMessage = "Explain what you see and help with any problem or diagram in the image.";
+    }
+    if (!lastMessage) {
+      return res.status(400).json({
+        error: learnVisionOn ? "message is required (or attach an image)." : "message is required.",
+      });
+    }
+
+    const historyApi = learnVisionOn
+      ? normalizeMultimodalChatHistory(req.body?.history)
+      : normalizeChatMessages(req.body?.history);
+
+    let lastUserContent;
+    try {
+      lastUserContent =
+        learnVisionOn && hasCurrentImage
+          ? buildMultimodalUserContent(lastMessage, imageB64In, imageMimeIn)
+          : lastMessage;
+    } catch (e) {
+      return res.status(400).json({ error: e.message || "Invalid image." });
+    }
+    if (lastUserContent == null) {
+      return res.status(400).json({ error: "message is required." });
+    }
+
     const system = `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}`;
-    const messages = [{ role: "system", content: system }, ...history, { role: "user", content: lastMessage }];
+    const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
+    const modelForRequest = pickChatModelForMessages(coreMessages);
+    const messages = [{ role: "system", content: system }, ...coreMessages];
     const cacheUserKey = req.user?.id || "";
     const promptCacheKey = `${cacheUserKey}:${mode}:${studyMode}`;
-    const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse");
+    const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
+    const visionTurn = messagesIncludeImages(coreMessages);
+    const maxOutTokens = visionTurn ? 1100 : 720;
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {
@@ -710,8 +877,9 @@ app.post("/api/chat", requireSession, async (req, res) => {
           buildChatCompletionPayload(messages, {
             stream: true,
             temperature: 0.55,
-            max_tokens: 720,
+            max_tokens: maxOutTokens,
             promptCacheKey,
+            model: modelForRequest,
           })
         ),
       });
@@ -750,10 +918,11 @@ app.post("/api/chat", requireSession, async (req, res) => {
     }
 
     const output = await callChatCompletion(messages, {
-      max_tokens: 720,
+      max_tokens: maxOutTokens,
       temperature: 0.55,
       cacheUserKey,
       promptCacheKey,
+      model: modelForRequest,
     });
     return res.json({ output });
   } catch (error) {
@@ -974,6 +1143,7 @@ app.get("/api/health", (_req, res) => {
     hfConfigured: Boolean(HF_API_TOKEN),
     betaMessage: betaBannerText(),
     indexHtmlDeployed,
+    learnVisionEnabled: ENABLE_LEARN_VISION,
   };
   if (prod) {
     return res.json(base);
@@ -982,6 +1152,7 @@ app.get("/api/health", (_req, res) => {
     ...base,
     envFileExists,
     hfModel: HF_MODEL,
+    hfVisionModel: HF_MODEL_VISION || null,
     hfChatUrl: HF_CHAT_URL,
     betaTesting: BETA_TESTING,
     ...(indexHtmlDeployed
@@ -1008,7 +1179,9 @@ app.use((req, res, next) => {
 const isProdBoot = process.env.NODE_ENV === "production";
 if (isProdBoot && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
   // eslint-disable-next-line no-console
-  console.error("FATAL: Set SUPABASE_URL and SUPABASE_ANON_KEY in production.");
+  console.error(
+    "FATAL: Missing SUPABASE_URL or SUPABASE_ANON_KEY. In production, set both in your host (e.g. Render: Web Service -> Environment). Copy from Supabase: Project Settings -> API (Project URL and anon public key).",
+  );
   process.exit(1);
 }
 

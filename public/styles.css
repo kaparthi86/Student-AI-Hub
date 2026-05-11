@@ -13,6 +13,18 @@
   font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Logo / product wordmark (Outfit) */
 .app-brand .brand-title,
 .search-title {
@@ -368,6 +380,110 @@ textarea {
     0 0 36px rgba(90, 159, 255, 0.1);
 }
 
+/* Learn (Ask): image attach column */
+.search-bar--learn {
+  grid-template-columns: auto auto 1fr auto;
+}
+
+.search-bar.compact.search-bar--learn {
+  grid-template-columns: auto 1fr auto;
+}
+
+.learn-chat-attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  min-width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-right: 1px solid rgba(160, 182, 255, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+  color: #c9d6ff;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.learn-chat-attach-btn:hover {
+  background: rgba(122, 109, 255, 0.2);
+  color: #fff;
+}
+
+.learn-chat-attach-btn:focus-visible {
+  outline: 2px solid rgba(122, 109, 255, 0.75);
+  outline-offset: -2px;
+}
+
+.learn-chat-attach-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.learn-chat-attach-preview {
+  width: min(100%, 640px);
+  margin: 0 auto 8px;
+  padding: 0 4px;
+}
+
+.learn-chat-attach-preview.hidden {
+  display: none;
+}
+
+.learn-chat-attach-thumb-wrap {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 182, 255, 0.35);
+  background: rgba(6, 10, 28, 0.55);
+}
+
+.learn-chat-attach-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.learn-chat-attach-remove {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.learn-chat-attach-remove:hover {
+  background: rgba(255, 100, 120, 0.25);
+}
+
+.bubble-user-image {
+  margin: 0 0 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(160, 182, 255, 0.28);
+  max-width: min(100%, 280px);
+}
+
+.bubble-user-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.25);
+}
+
 .search-icon--logo {
   width: 54px;
   min-width: 54px;
@@ -408,6 +524,14 @@ textarea {
 
 .search-bar.compact textarea {
   min-height: 48px;
+  border-radius: 15px 0 0 15px;
+}
+
+.search-bar.compact.search-bar--learn textarea {
+  border-radius: 0;
+}
+
+.search-bar.compact.search-bar--learn .learn-chat-attach-btn {
   border-radius: 15px 0 0 15px;
 }
 
@@ -1238,6 +1362,17 @@ textarea {
     font-weight: 700;
   }
 
+  .search-bar:not(.compact).search-bar--learn {
+    grid-template-columns: 56px 48px minmax(0, 1fr) auto;
+  }
+
+  .search-bar:not(.compact).search-bar--learn .learn-chat-attach-btn {
+    min-height: 80px;
+    align-self: stretch;
+    width: 48px;
+    min-width: 48px;
+  }
+
   /*
    * Follow-up composers use .search-bar.compact only inside .followup-bar.
    * Keep them as one horizontal pill (field | Send) like the hero search bar,
@@ -1271,6 +1406,10 @@ textarea {
     -webkit-appearance: none;
     appearance: none;
     touch-action: manipulation;
+  }
+
+  .followup-bar .search-bar.compact.search-bar--learn {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
   }
 
   .followup-bar .search-bar.compact .search-submit {
