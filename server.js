@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 const dotenv = require("dotenv");
@@ -315,12 +314,46 @@ if (process.env.NODE_ENV === "production") {
 app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 
-const apiLimiter = rateLimit({
-  windowMs: 60_000,
-  max: Number(process.env.API_RATE_LIMIT_PER_MINUTE || 80),
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+/** Per-IP fixed window limiter (no `express-rate-limit` package ? avoids deploy missing-module issues). */
+function createApiMemoryRateLimiter() {
+  const windowMs = 60_000;
+  const max = Math.max(1, Math.min(5000, Number(process.env.API_RATE_LIMIT_PER_MINUTE || 80)));
+  const hits = new Map();
+  const maxKeys = 8000;
+
+  function prune(now) {
+    if (hits.size <= maxKeys) return;
+    for (const [k, v] of hits) {
+      if (now >= v.reset) hits.delete(k);
+      if (hits.size <= maxKeys * 0.75) break;
+    }
+  }
+
+  return function apiRateLimit(req, res, next) {
+    const now = Date.now();
+    prune(now);
+    const key = req.ip || "unknown";
+    let row = hits.get(key);
+    if (!row || now >= row.reset) {
+      row = { n: 0, reset: now + windowMs };
+      hits.set(key, row);
+    }
+    row.n += 1;
+    const remaining = Math.max(0, max - row.n);
+    res.setHeader("RateLimit-Limit", String(max));
+    res.setHeader("RateLimit-Remaining", String(remaining));
+    res.setHeader("RateLimit-Reset", String(Math.ceil(row.reset / 1000)));
+    if (row.n > max) {
+      const retrySec = Math.max(1, Math.ceil((row.reset - now) / 1000));
+      res.setHeader("Retry-After", String(retrySec));
+      res.status(429).json({ error: "Too many requests. Please try again in a moment." });
+      return;
+    }
+    next();
+  };
+}
+
+const apiLimiter = createApiMemoryRateLimiter();
 
 app.use("/api", (req, res, next) => {
   if (req.method === "GET" && req.path === "/health") return next();
