@@ -11,14 +11,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <title>Student AI Hub - MVP</title>
+    <title>Student AI Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=mobile-app-shell-1" />
+    <link rel="stylesheet" href="./styles.css?v=learn-vision-muted-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -129,8 +129,17 @@
 
         <section id="panelChat" class="panel perplexity-panel">
           <div id="chatSearchShell" class="search-hero">
+            <input
+              type="file"
+              id="learnChatImageInput"
+              class="sr-only learn-vision-ui"
+              accept="image/*"
+              aria-hidden="true"
+              tabindex="-1"
+            />
             <p class="search-title">What do you want to learn today?</p>
-            <div class="search-bar search-bar--branded">
+            <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
+            <div class="search-bar search-bar--branded search-bar--learn">
               <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="11" fill="url(#searchBrandGrad)" />
@@ -147,6 +156,23 @@
                   </defs>
                 </svg>
               </span>
+              <button
+                type="button"
+                class="learn-chat-attach-btn learn-vision-ui"
+                id="chatHeroAttachBtn"
+                aria-label="Attach image"
+                title="Attach image"
+              >
+                <svg class="learn-chat-attach-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2h-2.343a2 2 0 01-1.414-.586l-1.172-1.172A2 2 0 0012.343 4H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
               <textarea
                 id="chatSearchInput"
                 rows="1"
@@ -164,13 +190,32 @@
                 id="chatFollowupChips"
                 class="starter-chips starter-chips--inline"
                 role="group"
-                aria-label="Quick follow-ups, click to send"
+                aria-label="Quick follow-ups and read aloud"
               >
                 <button type="button" class="starter-chip" data-starter="summarize">Summarize</button>
                 <button type="button" class="starter-chip" data-starter="quiz">Quiz me</button>
                 <button type="button" class="starter-chip" data-starter="steps">Explain step-by-step</button>
+                <button type="button" class="starter-chip" data-starter="readAloud">Listen Mode</button>
               </div>
-              <div class="search-bar compact">
+              <div id="chatFollowupAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
+              <div class="search-bar compact search-bar--learn">
+                <button
+                  type="button"
+                  class="learn-chat-attach-btn learn-vision-ui"
+                  id="chatFollowupAttachBtn"
+                  aria-label="Attach image"
+                  title="Attach image"
+                >
+                  <svg class="learn-chat-attach-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2h-2.343a2 2 0 01-1.414-.586l-1.172-1.172A2 2 0 0012.343 4H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      stroke="currentColor"
+                      stroke-width="1.75"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
                 <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
                 <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
               </div>
@@ -261,6 +306,52 @@
       </section>
     </main>
 
+    <div
+      id="defaultPageHintModal"
+      class="settings-modal default-page-hint-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="defaultPageHintTitle"
+    >
+      <div class="settings-card default-page-hint-card">
+        <div class="settings-head">
+          <h3 id="defaultPageHintTitle">Make this your start page?</h3>
+          <button id="closeDefaultPageHintBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">
+            Close
+          </button>
+        </div>
+        <p class="default-page-hint-lead muted">
+          Browsers don&rsquo;t let websites change your home or startup page for you (by design). If you&rsquo;d like
+          Student AI Hub to open when you start the browser, you can set it yourself in a few seconds.
+        </p>
+        <div id="defaultPageHintSteps" class="default-page-hint-steps hidden">
+          <p class="default-page-hint-url-label muted">Copy this address:</p>
+          <div class="default-page-hint-url-row">
+            <input id="defaultPageHintUrlField" class="default-page-hint-url-input" type="text" readonly />
+            <button id="copyDefaultPageUrlBtn" class="ghost-btn tiny-btn" type="button">Copy</button>
+          </div>
+          <ol class="default-page-hint-ol">
+            <li>
+              <strong>Chrome / Edge:</strong> Settings → On startup → Open a specific page → Add a new page → paste the
+              address above. (Or visit <code>chrome://settings/onStartup</code> in Chrome.)
+            </li>
+            <li><strong>Safari (Mac):</strong> Safari → Settings → General → Homepage — paste the address.</li>
+            <li>
+              <strong>iPhone / iPad:</strong> Share → <strong>Add to Home Screen</strong> for a quick icon (separate from
+              the browser home page).
+            </li>
+          </ol>
+          <p class="muted default-page-hint-extension-note">
+            Using our Chrome extension? After you install it, new tabs can open this site automatically.
+          </p>
+        </div>
+        <div class="default-page-hint-actions">
+          <button id="showDefaultPageStepsBtn" class="primary-btn" type="button">Yes, show me how</button>
+          <button id="dismissDefaultPageHintBtn" class="ghost-btn" type="button">Not now</button>
+        </div>
+      </div>
+    </div>
+
     <div id="settingsModal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="settings-card">
         <div class="settings-head">
@@ -284,6 +375,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=remove-flashcards-1"></script>
+    <script src="./app.js?v=read-aloud-chip-1"></script>
   </body>
 </html>
