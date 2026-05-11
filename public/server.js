@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 const HF_API_TOKEN = String(process.env.HF_API_TOKEN || "").trim();
 const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
 const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || "").trim();
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 /** Trim quotes and fix common copy-paste typos (fullwidth colon, etc.). */
 function normalizeEnvString(s) {
@@ -212,6 +213,51 @@ function getSupabaseAuthClient() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return supabaseAuthClient;
+}
+
+/** Server-only: bypasses RLS for feedback inserts. Never expose this key to the browser. */
+let supabaseAdminClient = null;
+function getSupabaseAdminClient() {
+  if (supabaseAdminClient) return supabaseAdminClient;
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+  supabaseAdminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return supabaseAdminClient;
+}
+
+function parseClientCreatedAt(iso) {
+  const s = String(iso || "").trim();
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+async function persistFeedbackRow({
+  userId,
+  rating,
+  reason,
+  mode,
+  studyMode,
+  assistantMessage,
+  clientCreatedAt,
+}) {
+  const admin = getSupabaseAdminClient();
+  if (!admin || !userId) return { stored: null, error: new Error("no admin client or user") };
+
+  const row = {
+    user_id: userId,
+    rating,
+    reason,
+    mode,
+    study_mode: studyMode,
+    assistant_message: assistantMessage.length ? assistantMessage : null,
+    client_created_at: parseClientCreatedAt(clientCreatedAt),
+  };
+
+  const { error } = await admin.from("assistant_feedback").insert(row);
+  if (error) return { stored: null, error };
+  return { stored: "supabase", error: null };
 }
 
 function mustVerifySession() {
@@ -796,6 +842,27 @@ app.post("/api/feedback", requireSession, async (req, res) => {
       receivedAt: new Date().toISOString(),
     };
     const line = `${JSON.stringify(entry)}\n`;
+
+    const userId = req.user?.id || "";
+    const dbResult = await persistFeedbackRow({
+      userId,
+      rating: ratingRaw,
+      reason,
+      mode,
+      studyMode,
+      assistantMessage,
+      clientCreatedAt: createdAt,
+    });
+
+    if (dbResult.stored === "supabase") {
+      return res.json({ ok: true, stored: "supabase" });
+    }
+
+    if (dbResult.error) {
+      // eslint-disable-next-line no-console
+      console.warn("[feedback] Supabase insert failed, using file fallback:", dbResult.error.message || dbResult.error);
+    }
+
     try {
       await fs.promises.appendFile(feedbackLogPath, line, "utf8");
       return res.json({ ok: true, stored: "project" });
@@ -804,7 +871,6 @@ app.post("/api/feedback", requireSession, async (req, res) => {
         await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
         return res.json({ ok: true, stored: "tmp" });
       } catch (e2) {
-        // Do not fail user feedback UI if local file storage is unavailable on host.
         // eslint-disable-next-line no-console
         console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
         return res.json({ ok: true, stored: "none" });
@@ -815,8 +881,46 @@ app.post("/api/feedback", requireSession, async (req, res) => {
   }
 });
 
+function aggregateFeedbackRows(rows) {
+  const summary = {
+    ok: true,
+    total: 0,
+    byRating: { positive: 0, negative: 0 },
+    byReason: {},
+    byMode: {},
+    byStudyMode: {},
+    source: "supabase",
+  };
+  for (const row of rows) {
+    summary.total += 1;
+    const r = Number(row.rating);
+    if (r > 0) summary.byRating.positive += 1;
+    else if (r < 0) summary.byRating.negative += 1;
+    const reason = String(row.reason || "unknown");
+    summary.byReason[reason] = (summary.byReason[reason] || 0) + 1;
+    const mode = String(row.mode || "unknown");
+    summary.byMode[mode] = (summary.byMode[mode] || 0) + 1;
+    const sm = String(row.study_mode ?? row.studyMode ?? "unknown");
+    summary.byStudyMode[sm] = (summary.byStudyMode[sm] || 0) + 1;
+  }
+  return summary;
+}
+
 app.get("/api/feedback-summary", requireSession, async (_req, res) => {
   try {
+    const admin = getSupabaseAdminClient();
+    if (admin) {
+      const { data, error } = await admin
+        .from("assistant_feedback")
+        .select("rating, reason, mode, study_mode")
+        .limit(50000);
+      if (!error && Array.isArray(data)) {
+        return res.json(aggregateFeedbackRows(data));
+      }
+      // eslint-disable-next-line no-console
+      console.warn("[feedback-summary] Supabase read failed, falling back to file:", error?.message || error);
+    }
+
     if (!fs.existsSync(feedbackLogPath)) {
       return res.json({
         ok: true,
@@ -825,6 +929,7 @@ app.get("/api/feedback-summary", requireSession, async (_req, res) => {
         byReason: {},
         byMode: {},
         byStudyMode: {},
+        source: "file",
       });
     }
     const raw = await fs.promises.readFile(feedbackLogPath, "utf8");
@@ -836,6 +941,7 @@ app.get("/api/feedback-summary", requireSession, async (_req, res) => {
       byReason: {},
       byMode: {},
       byStudyMode: {},
+      source: "file",
     };
     for (const line of lines) {
       let row;
