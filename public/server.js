@@ -221,7 +221,9 @@ let supabaseAuthClient = null;
 function getSupabaseAuthClient() {
   if (supabaseAuthClient) return supabaseAuthClient;
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-  supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   return supabaseAuthClient;
 }
 
@@ -284,14 +286,50 @@ function requireSession(req, res, next) {
   const raw = String(req.headers.authorization || "");
   const m = /^Bearer\s+(\S+)/i.exec(raw);
   if (!m) return res.status(401).json({ error: "Sign in required." });
-  client.auth
-    .getUser(m[1])
-    .then(({ data: { user }, error }) => {
-      if (error || !user) return res.status(401).json({ error: "Session expired. Sign in again." });
+  const jwt = m[1];
+  const logAuth = ["1", "true", "yes"].includes(String(process.env.LOG_AUTH_ERRORS || "").trim().toLowerCase());
+
+  void (async () => {
+    try {
+      if (typeof client.auth.getClaims === "function") {
+        const { data: claimData, error: claimErr } = await client.auth.getClaims(jwt);
+        if (!claimErr && claimData?.claims?.sub) {
+          const c = claimData.claims;
+          req.user = {
+            id: c.sub,
+            email: c.email,
+            app_metadata: typeof c.app_metadata === "object" && c.app_metadata ? c.app_metadata : {},
+            user_metadata: typeof c.user_metadata === "object" && c.user_metadata ? c.user_metadata : {},
+          };
+          return next();
+        }
+        if (logAuth && claimErr) {
+          // eslint-disable-next-line no-console
+          console.warn("[auth] getClaims:", claimErr.message || claimErr);
+        }
+      }
+    } catch (e) {
+      if (logAuth) {
+        // eslint-disable-next-line no-console
+        console.warn("[auth] getClaims threw:", e?.message || e);
+      }
+    }
+
+    try {
+      const { data: { user }, error } = await client.auth.getUser(jwt);
+      if (error || !user) {
+        if (logAuth) {
+          // eslint-disable-next-line no-console
+          console.warn("[auth] getUser:", error?.message || error || "no user");
+        }
+        return res.status(401).json({ error: "Session expired. Sign in again." });
+      }
       req.user = user;
-      next();
-    })
-    .catch((err) => next(err));
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  })();
 }
 
 if (!fs.existsSync(indexHtmlPath)) {
