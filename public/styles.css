@@ -494,6 +494,75 @@ textarea {
   transform: scale(0.98);
 }
 
+.bubble--exam-quiz {
+  border: 1px solid rgba(160, 182, 255, 0.32);
+}
+
+.exam-quiz-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.exam-quiz-form {
+  margin: 0;
+}
+
+.exam-q {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(160, 182, 255, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.exam-q legend {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.exam-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.exam-choice input {
+  margin-top: 3px;
+}
+
+.exam-choice label {
+  cursor: pointer;
+  flex: 1;
+}
+
+.exam-quiz-actions {
+  margin-top: 12px;
+}
+
+.exam-quiz-results {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.exam-score-line {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.exam-progress-line {
+  margin: 0;
+  font-size: 13px;
+}
+
 /* In-thread chips: align with conversation, not centered hero */
 .starter-chips--inline {
   justify-content: flex-start;
@@ -1179,15 +1248,17 @@ textarea {
 
   /*
    * Hero ask bar: one wide pill (logo | field | Ask) like Google mobile search /
-   * omnibox — tall row + soft shadow so it feels like a primary app composer.
+   * omnibox — taller row + padding so glyphs are not clipped on WebKit; overflow
+   * visible avoids caret/text clipped by the pill mask.
    */
   .search-bar:not(.compact) {
     display: grid;
-    grid-template-columns: 52px minmax(0, 1fr) auto;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     align-items: stretch;
     width: 100%;
     max-width: none;
     border-radius: 999px;
+    overflow: visible;
     box-shadow:
       0 10px 36px rgba(5, 12, 40, 0.48),
       0 4px 14px rgba(122, 109, 255, 0.14),
@@ -1196,8 +1267,8 @@ textarea {
 
   .search-bar:not(.compact) .search-icon--logo,
   .search-bar:not(.compact) .search-icon {
-    width: 52px;
-    min-width: 52px;
+    width: 56px;
+    min-width: 56px;
     min-height: 0;
     padding: 0 8px;
     border-right: 1px solid rgba(160, 182, 255, 0.22);
@@ -1205,24 +1276,29 @@ textarea {
   }
 
   .search-bar:not(.compact) .search-logo-svg {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
 
   .search-bar:not(.compact) textarea {
-    min-height: 68px;
-    padding: 18px 14px;
+    box-sizing: border-box;
+    min-height: 80px;
+    max-height: 220px;
+    padding: 22px 16px;
     /* 16px+ stops iOS Safari from zooming the page on focus */
     font-size: 17px;
-    line-height: 1.45;
+    line-height: 1.52;
+    overflow-y: auto;
+    -webkit-appearance: none;
+    appearance: none;
     touch-action: manipulation;
   }
 
   .search-bar:not(.compact) .search-submit {
     width: auto;
     align-self: stretch;
-    min-height: 68px;
-    min-width: 94px;
+    min-height: 80px;
+    min-width: 96px;
     padding: 0 24px;
     border-left: 1px solid rgba(160, 182, 255, 0.28);
     border-top: none;
@@ -1253,17 +1329,23 @@ textarea {
   }
 
   .followup-bar .search-bar.compact textarea {
-    min-height: 68px;
+    box-sizing: border-box;
+    min-height: 76px;
+    max-height: 220px;
     font-size: 17px;
-    padding: 18px 14px 18px 18px;
+    line-height: 1.52;
+    padding: 20px 14px 20px 18px;
     border-radius: 0;
+    overflow-y: auto;
+    -webkit-appearance: none;
+    appearance: none;
     touch-action: manipulation;
   }
 
   .followup-bar .search-bar.compact .search-submit {
     width: auto;
     min-width: 96px;
-    min-height: 68px;
+    min-height: 76px;
     border-left: 1px solid rgba(160, 182, 255, 0.28);
     border-top: none;
     border-radius: 0;
