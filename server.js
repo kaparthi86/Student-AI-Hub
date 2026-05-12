@@ -18,9 +18,6 @@ if (envResult.error && process.env.NODE_ENV !== "production") {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HF_API_TOKEN = String(process.env.HF_API_TOKEN || "").trim();
-const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
-const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || "").trim();
-const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 /** Trim quotes and fix common copy-paste typos (fullwidth colon, etc.). */
 function normalizeEnvString(s) {
@@ -29,6 +26,18 @@ function normalizeEnvString(s) {
     t = t.slice(1, -1).trim();
   }
   return t.replace(/\uFF1A/g, ":").replace(/\u2013|\u2014/g, "-");
+}
+
+/** Same cleanup as HF_* (Render / .env often paste quoted URLs or keys). */
+const SUPABASE_URL = normalizeEnvString(process.env.SUPABASE_URL || "");
+const SUPABASE_ANON_KEY = normalizeEnvString(process.env.SUPABASE_ANON_KEY || "");
+const SUPABASE_SERVICE_ROLE_KEY = normalizeEnvString(process.env.SUPABASE_SERVICE_ROLE_KEY || "");
+
+if (SUPABASE_ANON_KEY.startsWith("sb_secret_")) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "SUPABASE_ANON_KEY looks like a secret key (sb_secret_*). Use the publishable/anon key for SUPABASE_ANON_KEY; put service_role only in SUPABASE_SERVICE_ROLE_KEY.",
+  );
 }
 
 /**
@@ -221,7 +230,9 @@ let supabaseAuthClient = null;
 function getSupabaseAuthClient() {
   if (supabaseAuthClient) return supabaseAuthClient;
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-  supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseAuthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   return supabaseAuthClient;
 }
 
@@ -275,6 +286,58 @@ function mustVerifySession() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
+function logAuthFailures() {
+  return ["1", "true", "yes"].includes(String(process.env.LOG_AUTH_ERRORS || "").trim().toLowerCase());
+}
+
+/**
+ * Validate the browser's Supabase access_token via GoTrue HTTP API (same contract as Auth docs).
+ * Runs before supabase-js getUser/getClaims to avoid client/SDK mismatches with publishable keys or JWT shape changes.
+ */
+async function fetchGoTrueUser(accessToken) {
+  const base = String(SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const apikey = String(SUPABASE_ANON_KEY || "").trim();
+  if (!base || !apikey || !accessToken) return null;
+
+  const url = `${base}/auth/v1/user`;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 12_000);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey,
+      },
+      signal: ac.signal,
+    });
+    const txt = await res.text();
+    let body;
+    try {
+      body = JSON.parse(txt);
+    } catch {
+      body = null;
+    }
+    if (!res.ok) {
+      if (logAuthFailures()) {
+        // eslint-disable-next-line no-console
+        console.warn("[auth] GET /auth/v1/user", res.status, typeof body === "object" ? JSON.stringify(body).slice(0, 400) : txt.slice(0, 400));
+      }
+      return null;
+    }
+    if (body && typeof body === "object" && typeof body.id === "string") return body;
+    return null;
+  } catch (e) {
+    if (logAuthFailures()) {
+      // eslint-disable-next-line no-console
+      console.warn("[auth] GET /auth/v1/user network error:", e?.message || e);
+    }
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function requireSession(req, res, next) {
   if (!mustVerifySession()) return next();
   const client = getSupabaseAuthClient();
@@ -284,14 +347,60 @@ function requireSession(req, res, next) {
   const raw = String(req.headers.authorization || "");
   const m = /^Bearer\s+(\S+)/i.exec(raw);
   if (!m) return res.status(401).json({ error: "Sign in required." });
-  client.auth
-    .getUser(m[1])
-    .then(({ data: { user }, error }) => {
-      if (error || !user) return res.status(401).json({ error: "Session expired. Sign in again." });
+  const jwt = m[1];
+  const logAuth = logAuthFailures();
+
+  void (async () => {
+    const userFromHttp = await fetchGoTrueUser(jwt);
+    if (userFromHttp) {
+      req.user = userFromHttp;
+      return next();
+    }
+    if (logAuth) {
+      // eslint-disable-next-line no-console
+      console.warn("[auth] HTTP user fetch failed; trying supabase-js getClaims / getUser");
+    }
+
+    try {
+      if (typeof client.auth.getClaims === "function") {
+        const { data: claimData, error: claimErr } = await client.auth.getClaims(jwt);
+        if (!claimErr && claimData?.claims?.sub) {
+          const c = claimData.claims;
+          req.user = {
+            id: c.sub,
+            email: c.email,
+            app_metadata: typeof c.app_metadata === "object" && c.app_metadata ? c.app_metadata : {},
+            user_metadata: typeof c.user_metadata === "object" && c.user_metadata ? c.user_metadata : {},
+          };
+          return next();
+        }
+        if (logAuth && claimErr) {
+          // eslint-disable-next-line no-console
+          console.warn("[auth] getClaims:", claimErr.message || claimErr);
+        }
+      }
+    } catch (e) {
+      if (logAuth) {
+        // eslint-disable-next-line no-console
+        console.warn("[auth] getClaims threw:", e?.message || e);
+      }
+    }
+
+    try {
+      const { data: { user }, error } = await client.auth.getUser(jwt);
+      if (error || !user) {
+        if (logAuth) {
+          // eslint-disable-next-line no-console
+          console.warn("[auth] getUser:", error?.message || error || "no user");
+        }
+        return res.status(401).json({ error: "Session expired. Sign in again." });
+      }
       req.user = user;
-      next();
-    })
-    .catch((err) => next(err));
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  })();
 }
 
 if (!fs.existsSync(indexHtmlPath)) {
@@ -1144,6 +1253,10 @@ app.get("/api/health", (_req, res) => {
     betaMessage: betaBannerText(),
     indexHtmlDeployed,
     learnVisionEnabled: ENABLE_LEARN_VISION,
+    supabaseUrlConfigured: Boolean(SUPABASE_URL),
+    supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
+    /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
+    supabaseAnonKeyIsSecretNotAllowed: SUPABASE_ANON_KEY.startsWith("sb_secret_"),
   };
   if (prod) {
     return res.json(base);
@@ -1179,7 +1292,9 @@ app.use((req, res, next) => {
 const isProdBoot = process.env.NODE_ENV === "production";
 if (isProdBoot && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
   // eslint-disable-next-line no-console
-  console.error("FATAL: Set SUPABASE_URL and SUPABASE_ANON_KEY in production.");
+  console.error(
+    "FATAL: Missing SUPABASE_URL or SUPABASE_ANON_KEY. In production, set both in your host (e.g. Render: Web Service -> Environment). Copy from Supabase: Project Settings -> API (Project URL and anon public key).",
+  );
   process.exit(1);
 }
 
