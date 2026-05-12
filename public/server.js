@@ -18,9 +18,6 @@ if (envResult.error && process.env.NODE_ENV !== "production") {
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HF_API_TOKEN = String(process.env.HF_API_TOKEN || "").trim();
-const SUPABASE_URL = String(process.env.SUPABASE_URL || "").trim();
-const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || "").trim();
-const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
 /** Trim quotes and fix common copy-paste typos (fullwidth colon, etc.). */
 function normalizeEnvString(s) {
@@ -29,6 +26,18 @@ function normalizeEnvString(s) {
     t = t.slice(1, -1).trim();
   }
   return t.replace(/\uFF1A/g, ":").replace(/\u2013|\u2014/g, "-");
+}
+
+/** Same cleanup as HF_* (Render / .env often paste quoted URLs or keys). */
+const SUPABASE_URL = normalizeEnvString(process.env.SUPABASE_URL || "");
+const SUPABASE_ANON_KEY = normalizeEnvString(process.env.SUPABASE_ANON_KEY || "");
+const SUPABASE_SERVICE_ROLE_KEY = normalizeEnvString(process.env.SUPABASE_SERVICE_ROLE_KEY || "");
+
+if (SUPABASE_ANON_KEY.startsWith("sb_secret_")) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "SUPABASE_ANON_KEY looks like a secret key (sb_secret_*). Use the publishable/anon key for SUPABASE_ANON_KEY; put service_role only in SUPABASE_SERVICE_ROLE_KEY.",
+  );
 }
 
 /**
@@ -70,7 +79,7 @@ const envFileExists = fs.existsSync(envPath);
 const MAX_DOC_CHARS = 45000;
 const MAX_CHAT_HISTORY = 24;
 
-/** Exact-replay cache (per-user key) ? skips provider calls for identical payloads within TTL. */
+/** Exact-replay cache (per-user key): skips provider calls for identical payloads within TTL. */
 const RESPONSE_CACHE_TTL_MS = Math.max(0, Number(process.env.HF_RESPONSE_CACHE_TTL_SEC || 0) * 1000);
 const RESPONSE_CACHE_MAX = Math.max(16, Math.min(5000, Number(process.env.HF_RESPONSE_CACHE_MAX_ENTRIES || 400)));
 const completionResponseCache = new Map();
@@ -154,6 +163,24 @@ function sendSseSingleChunk(res, text) {
   if (typeof res.flushHeaders === "function") res.flushHeaders();
   res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
   res.write("data: [DONE]\n\n");
+  res.end();
+}
+
+/**
+ * Replay archived provider SSE. A single res.end(blob) often arrives as one fetch read(), so the
+ * client parses every data: line in one turn and streaming UI does not update incrementally.
+ */
+async function replayCachedSseResponse(res, archivedUtf8) {
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("X-Accel-Buffering", "no");
+  if (typeof res.flushHeaders === "function") res.flushHeaders();
+  const s = String(archivedUtf8);
+  const step = 4096;
+  for (let i = 0; i < s.length; i += step) {
+    res.write(s.slice(i, Math.min(s.length, i + step)));
+    if (i + step < s.length) await new Promise((r) => setImmediate(r));
+  }
   res.end();
 }
 
@@ -277,6 +304,58 @@ function mustVerifySession() {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
+function logAuthFailures() {
+  return ["1", "true", "yes"].includes(String(process.env.LOG_AUTH_ERRORS || "").trim().toLowerCase());
+}
+
+/**
+ * Validate the browser's Supabase access_token via GoTrue HTTP API (same contract as Auth docs).
+ * Runs before supabase-js getUser/getClaims to avoid client/SDK mismatches with publishable keys or JWT shape changes.
+ */
+async function fetchGoTrueUser(accessToken) {
+  const base = String(SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const apikey = String(SUPABASE_ANON_KEY || "").trim();
+  if (!base || !apikey || !accessToken) return null;
+
+  const url = `${base}/auth/v1/user`;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 12_000);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey,
+      },
+      signal: ac.signal,
+    });
+    const txt = await res.text();
+    let body;
+    try {
+      body = JSON.parse(txt);
+    } catch {
+      body = null;
+    }
+    if (!res.ok) {
+      if (logAuthFailures()) {
+        // eslint-disable-next-line no-console
+        console.warn("[auth] GET /auth/v1/user", res.status, typeof body === "object" ? JSON.stringify(body).slice(0, 400) : txt.slice(0, 400));
+      }
+      return null;
+    }
+    if (body && typeof body === "object" && typeof body.id === "string") return body;
+    return null;
+  } catch (e) {
+    if (logAuthFailures()) {
+      // eslint-disable-next-line no-console
+      console.warn("[auth] GET /auth/v1/user network error:", e?.message || e);
+    }
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function requireSession(req, res, next) {
   if (!mustVerifySession()) return next();
   const client = getSupabaseAuthClient();
@@ -287,9 +366,19 @@ function requireSession(req, res, next) {
   const m = /^Bearer\s+(\S+)/i.exec(raw);
   if (!m) return res.status(401).json({ error: "Sign in required." });
   const jwt = m[1];
-  const logAuth = ["1", "true", "yes"].includes(String(process.env.LOG_AUTH_ERRORS || "").trim().toLowerCase());
+  const logAuth = logAuthFailures();
 
   void (async () => {
+    const userFromHttp = await fetchGoTrueUser(jwt);
+    if (userFromHttp) {
+      req.user = userFromHttp;
+      return next();
+    }
+    if (logAuth) {
+      // eslint-disable-next-line no-console
+      console.warn("[auth] HTTP user fetch failed; trying supabase-js getClaims / getUser");
+    }
+
     try {
       if (typeof client.auth.getClaims === "function") {
         const { data: claimData, error: claimErr } = await client.auth.getClaims(jwt);
@@ -750,8 +839,8 @@ function pickChatModelForMessages(msgs) {
 
 function chatSystemBase(mode) {
   return mode === "code"
-    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code."
-    : "You are a friendly study coach for students. Keep answers concise and actionable. Use Markdown when helpful.";
+    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code. Answer the question directly; do not open by restating or paraphrasing what they asked unless they are unclear."
+    : "You are a friendly study coach for students. Answer directly?start with useful content, not a reframed repeat of their question (avoid lines like 'So you want?' or 'We need to?'). Keep answers concise and actionable. Use Markdown when helpful.";
 }
 
 function modeStyleInstruction(studyMode) {
@@ -759,7 +848,7 @@ function modeStyleInstruction(studyMode) {
   if (m === "quiz") {
     return "Mode: Quiz. Give 4-6 short questions first, then provide answer key with concise explanations.";
   }
-  return "Mode: Explain. Give a clear explanation with a compact example.";
+  return "Mode: Explain. Give a clear explanation with a compact example. No meta preamble that only restates the topic.";
 }
 
 const WEAK_TOPIC_SYSTEM_STATIC = `You are a student coach. Build a "weak-topic recap" from the activity data in the user message.
@@ -896,11 +985,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
       if (RESPONSE_CACHE_TTL_MS) {
         const hit = completionCacheGet(streamCacheHash);
         if (hit) {
-          res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-          res.setHeader("Cache-Control", "no-cache, no-transform");
-          res.setHeader("X-Accel-Buffering", "no");
-          if (typeof res.flushHeaders === "function") res.flushHeaders();
-          res.end(hit);
+          await replayCachedSseResponse(res, hit);
           return;
         }
       }
@@ -1182,6 +1267,10 @@ app.get("/api/health", (_req, res) => {
     betaMessage: betaBannerText(),
     indexHtmlDeployed,
     learnVisionEnabled: ENABLE_LEARN_VISION,
+    supabaseUrlConfigured: Boolean(SUPABASE_URL),
+    supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
+    /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
+    supabaseAnonKeyIsSecretNotAllowed: SUPABASE_ANON_KEY.startsWith("sb_secret_"),
   };
   if (prod) {
     return res.json(base);

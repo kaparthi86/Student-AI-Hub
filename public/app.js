@@ -1249,7 +1249,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     }
     const finalText =
       String(fullOut || "").trim() ||
-      "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render **HF_API_TOKEN**, **HF_MODEL** (Inference Providers routing suffix, e.g. `:fastest`), and **HF_CHAT_URL**; open `/api/health` to confirm `hfConfigured` is true.";
+      "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render env HF_API_TOKEN, HF_MODEL (Inference Providers routing suffix, e.g. :fastest), and HF_CHAT_URL; open /api/health to confirm hfConfigured is true.";
     streamUi.setStreamingText(finalText, { plain: true });
     streamUi.finalize(finalText);
 
