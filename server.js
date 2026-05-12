@@ -492,6 +492,9 @@ app.use(
       if (filePath.endsWith(".webmanifest")) {
         res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
       }
+      if (filePath.endsWith("sw.js")) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      }
     },
   })
 );
@@ -851,6 +854,21 @@ function modeStyleInstruction(studyMode) {
   return "Mode: Explain. Give a clear explanation with a compact example. No meta preamble that only restates the topic.";
 }
 
+function normalizeUiLanguage(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (["en", "es", "hi", "te"].includes(v)) return v;
+  return "en";
+}
+
+function uiLanguageInstruction(rawLang) {
+  const lang = normalizeUiLanguage(rawLang);
+  if (lang === "en") return "Respond in English unless the student explicitly asks for another language.";
+  if (lang === "es") return "Responde en espanol claro y sencillo, salvo que el estudiante pida otro idioma.";
+  if (lang === "hi") return "Jawab Hindi mein dein, jab tak vidyarthi kisi aur bhasha ki maang na kare.";
+  if (lang === "te") return "Vidyarthi vere bhaasha adigithe tappaa, samadhanalu Telugu lo ivvandi.";
+  return "Respond in English unless the student explicitly asks for another language.";
+}
+
 const WEAK_TOPIC_SYSTEM_STATIC = `You are a student coach. Build a "weak-topic recap" from the activity data in the user message.
 
 Return Markdown with:
@@ -889,10 +907,11 @@ app.post("/api/ai", requireSession, async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
     const input = String(req.body?.input || "").trim().slice(0, 2000);
+    const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
     if (!input) return res.status(400).json({ error: "Input is required." });
 
     const uid = req.user?.id || "";
-    const output = await queryModelSingle(mode, input, {
+    const output = await queryModelSingle(mode, `${uiLanguageInstruction(uiLanguage)}\n\n${input}`, {
       cacheUserKey: uid,
       promptCacheKey: `${uid}:${mode}:ai`,
     });
@@ -905,6 +924,7 @@ app.post("/api/ai", requireSession, async (req, res) => {
 app.post("/api/chat", requireSession, async (req, res) => {
   try {
     const mode = req.body?.mode === "code" ? "code" : "learn";
+    const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
     const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
       ? String(req.body.studyMode).toLowerCase()
       : "explain";
@@ -941,7 +961,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
       return res.status(400).json({ error: "message is required." });
     }
 
-    const system = `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}`;
+    const system = `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}`;
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
     const modelForRequest = pickChatModelForMessages(coreMessages);
     const messages = [{ role: "system", content: system }, ...coreMessages];
