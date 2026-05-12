@@ -380,13 +380,59 @@ textarea {
     0 0 36px rgba(90, 159, 255, 0.1);
 }
 
-/* Learn (Ask): image attach column */
-.search-bar--learn {
-  grid-template-columns: auto auto 1fr auto;
+/* Learn Ask hero: logo | textarea | mic | Ask (vision muted removes .search-bar--learn only) */
+.search-bar--learn-hero:not(.search-bar--learn) {
+  grid-template-columns: auto 1fr auto auto;
+}
+
+.search-bar--learn-hero.search-bar--learn {
+  grid-template-columns: auto auto 1fr auto auto;
 }
 
 .search-bar.compact.search-bar--learn {
   grid-template-columns: auto 1fr auto;
+}
+
+.learn-hero-mic-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  min-width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid rgba(160, 182, 255, 0.22);
+  background: rgba(0, 0, 0, 0.18);
+  color: #c9d6ff;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.learn-hero-mic-btn:hover {
+  background: rgba(122, 109, 255, 0.2);
+  color: #fff;
+}
+
+.learn-hero-mic-btn:focus-visible {
+  outline: 2px solid rgba(122, 109, 255, 0.75);
+  outline-offset: -2px;
+}
+
+.learn-hero-mic-btn--active {
+  background: rgba(122, 109, 255, 0.32);
+  color: #fff;
+}
+
+.learn-hero-mic-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.learn-hero-mic-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
 .learn-chat-attach-btn {
@@ -1362,11 +1408,22 @@ textarea {
     font-weight: 700;
   }
 
-  .search-bar:not(.compact).search-bar--learn {
-    grid-template-columns: 56px 48px minmax(0, 1fr) auto;
+  .search-bar:not(.compact).search-bar--learn-hero:not(.search-bar--learn) {
+    grid-template-columns: 56px minmax(0, 1fr) 48px auto;
   }
 
-  .search-bar:not(.compact).search-bar--learn .learn-chat-attach-btn {
+  .search-bar:not(.compact).search-bar--learn-hero.search-bar--learn {
+    grid-template-columns: 56px 48px minmax(0, 1fr) 48px auto;
+  }
+
+  .search-bar:not(.compact).search-bar--learn-hero.search-bar--learn .learn-chat-attach-btn {
+    min-height: 80px;
+    align-self: stretch;
+    width: 48px;
+    min-width: 48px;
+  }
+
+  .search-bar:not(.compact).search-bar--learn-hero .learn-hero-mic-btn {
     min-height: 80px;
     align-self: stretch;
     width: 48px;

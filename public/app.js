@@ -32,6 +32,7 @@ const chatHeroAttachBtn = document.getElementById("chatHeroAttachBtn");
 const chatFollowupAttachBtn = document.getElementById("chatFollowupAttachBtn");
 const chatHeroAttachPreview = document.getElementById("chatHeroAttachPreview");
 const chatFollowupAttachPreview = document.getElementById("chatFollowupAttachPreview");
+const chatHeroMicBtn = document.getElementById("chatHeroMicBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -50,6 +51,12 @@ const notebookStatus = document.getElementById("notebookStatus");
 
 let mainTab = "chat";
 let supabaseClient = null;
+
+/** Learn hero only: tap mic to dictate, tap again to stop ? same path as Ask (auto-submit when non-empty). */
+let learnHeroVoiceRec = null;
+let learnHeroVoiceListening = false;
+let learnHeroVoiceSavedInput = "";
+let learnHeroVoiceAbandon = false;
 
 /** JWT `exp` in ms (0 if unknown). Used to refresh before API calls. */
 function accessTokenExpiresAtMs(accessToken) {
@@ -555,6 +562,14 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
+  if (mainTab !== "chat") {
+    learnHeroVoiceAbandon = true;
+    try {
+      learnHeroVoiceRec?.stop();
+    } catch {
+      /* ignore */
+    }
+  }
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -1367,6 +1382,110 @@ wireStarterChipsAsSend(
   chatFollowupSubmit,
   { readAloud: readLastAssistantAloud },
 );
+
+function setLearnHeroMicUi(listening) {
+  chatHeroMicBtn?.classList.toggle("learn-hero-mic-btn--active", !!listening);
+  if (chatHeroMicBtn) chatHeroMicBtn.setAttribute("aria-pressed", listening ? "true" : "false");
+  if (!chatSearchSubmit) return;
+  if (listening) {
+    chatSearchSubmit.dataset.learnHeroVoiceHold = chatSearchSubmit.disabled ? "1" : "";
+    if (!chatSearchSubmit.disabled) chatSearchSubmit.disabled = true;
+  } else {
+    if (chatSearchSubmit.dataset.learnHeroVoiceHold !== "1") chatSearchSubmit.disabled = false;
+    delete chatSearchSubmit.dataset.learnHeroVoiceHold;
+  }
+}
+
+function learnHeroVoiceOnEnd() {
+  learnHeroVoiceRec = null;
+  const wasListening = learnHeroVoiceListening;
+  learnHeroVoiceListening = false;
+  if (!wasListening) return;
+  setLearnHeroMicUi(false);
+  if (learnHeroVoiceAbandon) {
+    learnHeroVoiceAbandon = false;
+    if (chatSearchInput) chatSearchInput.value = learnHeroVoiceSavedInput;
+    return;
+  }
+  const text = (chatSearchInput?.value || "").trim();
+  if (text) {
+    chatSearchSubmit?.click();
+  } else {
+    if (chatSearchInput) chatSearchInput.value = learnHeroVoiceSavedInput;
+    showToast("No speech heard.");
+  }
+}
+
+function wireLearnHeroVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!chatHeroMicBtn || !chatSearchInput || !chatSearchSubmit) return;
+  if (!SR) {
+    chatHeroMicBtn.disabled = true;
+    chatHeroMicBtn.title = "Voice search is not supported in this browser";
+    return;
+  }
+
+  chatHeroMicBtn.addEventListener("click", () => {
+    if (!learnHeroVoiceListening) {
+      learnHeroVoiceSavedInput = chatSearchInput.value || "";
+      learnHeroVoiceAbandon = false;
+      const rec = new SR();
+      learnHeroVoiceRec = rec;
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = document.documentElement.lang || "en-US";
+
+      rec.onresult = (ev) => {
+        let t = "";
+        for (let i = 0; i < ev.results.length; i++) {
+          t += ev.results[i][0]?.transcript || "";
+        }
+        chatSearchInput.value = t.replace(/^\s+/, "");
+      };
+
+      rec.onerror = (ev) => {
+        const err = ev.error || "";
+        if (err === "aborted") return;
+        if (err === "not-allowed") {
+          showToast("Microphone permission denied.");
+        } else if (err === "no-speech") {
+          showToast("No speech heard.");
+        } else {
+          showToast("Voice input failed.");
+        }
+        learnHeroVoiceAbandon = true;
+        try {
+          rec.stop();
+        } catch {
+          /* ignore */
+        }
+      };
+
+      rec.onend = () => {
+        learnHeroVoiceOnEnd();
+      };
+
+      try {
+        learnHeroVoiceListening = true;
+        setLearnHeroMicUi(true);
+        rec.start();
+      } catch {
+        learnHeroVoiceListening = false;
+        learnHeroVoiceRec = null;
+        setLearnHeroMicUi(false);
+        showToast("Could not start voice input.");
+      }
+    } else {
+      try {
+        learnHeroVoiceRec?.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+}
+
+wireLearnHeroVoice();
 
 wireSearchFlow({
   searchInput: codeSearchInput,

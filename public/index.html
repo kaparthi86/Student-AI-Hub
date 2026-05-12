@@ -139,7 +139,7 @@
             />
             <p class="search-title">What do you want to learn today?</p>
             <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
-            <div class="search-bar search-bar--branded search-bar--learn">
+            <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
               <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="11" fill="url(#searchBrandGrad)" />
@@ -178,6 +178,21 @@
                 rows="1"
                 placeholder="Ask anything... (e.g. Explain gradient descent like I am 15)"
               ></textarea>
+              <button
+                type="button"
+                class="learn-hero-mic-btn"
+                id="chatHeroMicBtn"
+                aria-label="Voice search"
+                aria-pressed="false"
+                title="Tap to speak, tap again to search"
+              >
+                <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 1 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Press Enter to search. Shift+Enter for a new line.</p>
@@ -375,6 +390,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=session-refresh-1"></script>
+    <script src="./app.js?v=learn-hero-voice-1"></script>
   </body>
 </html>
