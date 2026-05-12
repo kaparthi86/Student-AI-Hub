@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=learn-vision-muted-1" />
+    <link rel="stylesheet" href="./styles.css?v=learn-followup-hero-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -213,7 +213,30 @@
                 <button type="button" class="starter-chip" data-starter="readAloud">Listen Mode</button>
               </div>
               <div id="chatFollowupAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
-              <div class="search-bar compact search-bar--learn search-bar--learn-followup">
+              <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
+                <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
+                  <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="11" fill="url(#searchBrandGradFollowup)" />
+                    <path
+                      d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                      fill="white"
+                      fill-opacity="0.88"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="searchBrandGradFollowup"
+                        x1="8"
+                        y1="6"
+                        x2="34"
+                        y2="36"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stop-color="#7a6dff" />
+                        <stop offset="1" stop-color="#3eb8f8" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </span>
                 <button
                   type="button"
                   class="learn-chat-attach-btn learn-vision-ui"
@@ -238,7 +261,7 @@
                   id="chatFollowupMicBtn"
                   aria-label="Voice input"
                   aria-pressed="false"
-                  title="Tap to speak; pauses end listening, or tap again to send"
+                  title="Tap to speak; pauses end listening, or tap again to Ask"
                 >
                   <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path
@@ -247,7 +270,7 @@
                     />
                   </svg>
                 </button>
-                <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
+                <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Ask</button>
               </div>
               <div class="followup-meta">
                 <span id="apiStatus" class="muted">Ready</span>
@@ -405,6 +428,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=learn-voice-followup-1"></script>
+    <script src="./app.js?v=stream-plain-deltas-1"></script>
   </body>
 </html>
