@@ -380,13 +380,25 @@ textarea {
     0 0 36px rgba(90, 159, 255, 0.1);
 }
 
-/* Learn Ask hero: logo | textarea | mic | Ask (vision muted removes .search-bar--learn only) */
-.search-bar--learn-hero:not(.search-bar--learn) {
-  grid-template-columns: auto 1fr auto auto;
+/* Learn Ask hero: flex row — WebKit stretches mic/Ask with textarea more reliably than grid */
+.search-bar--learn-hero {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
 }
 
-.search-bar--learn-hero.search-bar--learn {
-  grid-template-columns: auto auto 1fr auto auto;
+.search-bar--learn-hero > textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-bar--learn-hero > .search-icon--logo,
+.search-bar--learn-hero > .learn-chat-attach-btn,
+.search-bar--learn-hero > .learn-hero-mic-btn,
+.search-bar--learn-hero > .search-submit {
+  flex: 0 0 auto;
 }
 
 /* Learn hero Ask: slimmer control so it matches logo/mic rails */
@@ -396,12 +408,23 @@ textarea {
   font-size: 14px;
 }
 
-.search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) {
-  grid-template-columns: minmax(0, 1fr) auto;
+/* Follow-up Ask: same flex pattern as Learn hero */
+.search-bar.compact.search-bar--learn-followup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
 }
 
-.search-bar.compact.search-bar--learn-followup.search-bar--learn {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+.search-bar.compact.search-bar--learn-followup > textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-bar.compact.search-bar--learn-followup > .learn-chat-attach-btn,
+.search-bar.compact.search-bar--learn-followup > .learn-followup-actions {
+  flex: 0 0 auto;
 }
 
 /* Mic + Send as one rail (matches Learn hero mic | Ask) */
@@ -428,36 +451,6 @@ textarea {
 
 .search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) textarea {
   border-radius: 15px 0 0 15px;
-}
-
-/*
- * Safari / WebKit: native <button> metrics in a grid next to textarea often misalign
- * vs Chromium. Scope fixes to WebKit using -webkit-touch-callout (iOS Safari + WebKit).
- */
-@supports (-webkit-touch-callout: none) {
-  .search-bar--learn-hero,
-  .search-bar.compact.search-bar--learn-followup {
-    align-items: stretch;
-    justify-items: stretch;
-  }
-
-  .search-bar--learn-hero .learn-hero-mic-btn,
-  .search-bar--learn-hero .search-submit,
-  .search-bar--learn-hero .learn-chat-attach-btn,
-  .search-bar.compact.search-bar--learn-followup .learn-chat-attach-btn,
-  .search-bar.compact.search-bar--learn-followup .learn-followup-actions .learn-hero-mic-btn,
-  .search-bar.compact.search-bar--learn-followup .learn-followup-actions .search-submit {
-    -webkit-align-self: stretch;
-    align-self: stretch;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  .search-bar.compact.search-bar--learn-followup .learn-followup-actions {
-    align-self: stretch;
-    align-items: stretch;
-    min-height: 100%;
-  }
 }
 
 .search-bar.compact .learn-hero-mic-btn {
@@ -1495,24 +1488,34 @@ textarea {
     font-weight: 700;
   }
 
-  .search-bar:not(.compact).search-bar--learn-hero:not(.search-bar--learn) {
-    grid-template-columns: 56px minmax(0, 1fr) 48px auto;
+  .search-bar:not(.compact).search-bar--learn-hero {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
   }
 
-  .search-bar:not(.compact).search-bar--learn-hero.search-bar--learn {
-    grid-template-columns: 56px 48px minmax(0, 1fr) 48px auto;
+  .search-bar:not(.compact).search-bar--learn-hero > textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .search-bar:not(.compact).search-bar--learn-hero > .search-icon--logo,
+  .search-bar:not(.compact).search-bar--learn-hero > .learn-chat-attach-btn,
+  .search-bar:not(.compact).search-bar--learn-hero > .learn-hero-mic-btn,
+  .search-bar:not(.compact).search-bar--learn-hero > .search-submit {
+    flex: 0 0 auto;
   }
 
   .search-bar:not(.compact).search-bar--learn-hero.search-bar--learn .learn-chat-attach-btn {
     min-height: 80px;
-    align-self: stretch;
     width: 48px;
     min-width: 48px;
   }
 
   .search-bar:not(.compact).search-bar--learn-hero .learn-hero-mic-btn {
     min-height: 80px;
-    align-self: stretch;
     width: 48px;
     min-width: 48px;
   }
@@ -1559,12 +1562,22 @@ textarea {
     touch-action: manipulation;
   }
 
-  .followup-bar .search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) {
-    grid-template-columns: minmax(0, 1fr) auto;
+  .followup-bar .search-bar.compact.search-bar--learn-followup {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
   }
 
-  .followup-bar .search-bar.compact.search-bar--learn-followup.search-bar--learn {
-    grid-template-columns: 48px minmax(0, 1fr) auto;
+  .followup-bar .search-bar.compact.search-bar--learn-followup > textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .followup-bar .search-bar.compact.search-bar--learn-followup > .learn-chat-attach-btn,
+  .followup-bar .search-bar.compact.search-bar--learn-followup > .learn-followup-actions {
+    flex: 0 0 auto;
   }
 
   .followup-bar .search-bar.compact.search-bar--learn-followup .learn-followup-actions .learn-hero-mic-btn,

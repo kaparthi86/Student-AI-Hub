@@ -968,7 +968,8 @@ function appendBubble(container, role, text, meta = {}) {
 }
 
 /**
- * Assistant row while streaming: render Markdown the same way as the final bubble (no raw # / * then jump).
+ * Assistant row while streaming: plain text as tokens arrive (ChatGPT-style),
+ * then full markdown + feedback on finalize (skip marked/DOMPurify on every chunk).
  */
 function startStreamingAssistantBubble(container) {
   const wrap = document.createElement("div");
@@ -1003,12 +1004,17 @@ function startStreamingAssistantBubble(container) {
   };
 
   return {
-    setStreamingText(text) {
-      const rendered = renderAssistantHtml(text);
-      if ("plain" in rendered) {
-        body.textContent = rendered.plain;
+    /** While tokens arrive: plain text (no markdown parse) for ChatGPT-style live typing. */
+    setStreamingText(text, { plain = true } = {}) {
+      if (plain) {
+        body.textContent = String(text ?? "");
       } else {
-        body.innerHTML = rendered.html;
+        const rendered = renderAssistantHtml(text);
+        if ("plain" in rendered) {
+          body.textContent = rendered.plain;
+        } else {
+          body.innerHTML = rendered.html;
+        }
       }
       scroll();
     },
@@ -1164,21 +1170,28 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   }
 
   sendBtn.disabled = true;
-  statusEl.textContent = "Thinking...";
+  statusEl.textContent = "Generating...";
 
   const streamUi = startStreamingAssistantBubble(threadEl);
   streamUi.bubble.dataset.mode = mode;
   streamUi.bubble.dataset.studyMode = normalizeStudyMode(studyMode);
   let rafId = 0;
   let pendingFull = "";
+  let sawFirstDelta = false;
 
   const flushPending = () => {
     rafId = 0;
-    streamUi.setStreamingText(pendingFull);
+    streamUi.setStreamingText(pendingFull, { plain: true });
   };
 
   const scheduleDelta = (full) => {
     pendingFull = full;
+    if (!sawFirstDelta && String(full || "").length > 0) {
+      sawFirstDelta = true;
+      statusEl.textContent = "Streaming...";
+      streamUi.setStreamingText(full, { plain: true });
+      return;
+    }
     if (rafId) return;
     rafId = requestAnimationFrame(flushPending);
   };
@@ -1228,7 +1241,6 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       return true;
     }
 
-    statusEl.textContent = "Streaming...";
     const fullOut = await consumeChatSseStream(response, scheduleDelta);
 
     if (rafId) {
@@ -1238,7 +1250,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     const finalText =
       String(fullOut || "").trim() ||
       "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render **HF_API_TOKEN**, **HF_MODEL** (Inference Providers routing suffix, e.g. `:fastest`), and **HF_CHAT_URL**; open `/api/health` to confirm `hfConfigured` is true.";
-    streamUi.setStreamingText(finalText);
+    streamUi.setStreamingText(finalText, { plain: true });
     streamUi.finalize(finalText);
 
     const userRow = { role: "user", content: trimmed };
