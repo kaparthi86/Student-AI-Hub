@@ -1,0 +1,14 @@
+<svg width="1024" height="1024" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="12" fill="url(#brandGrad)" />
+  <path
+    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+    fill="white"
+    fill-opacity="0.92"
+  />
+  <defs>
+    <linearGradient id="brandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7a6dff" />
+      <stop offset="1" stop-color="#3eb8f8" />
+    </linearGradient>
+  </defs>
+</svg>

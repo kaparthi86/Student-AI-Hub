@@ -9,8 +9,11 @@
     <meta name="theme-color" content="#0b1020" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Student AI" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="manifest" href="./manifest.webmanifest?v=pwa-logo-1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=pwa-logo-1" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=pwa-logo-1" />
     <title>Student AI Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=stream-md-perplexity-1" />
+    <link rel="stylesheet" href="./styles.css?v=pwa-install-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -26,6 +29,37 @@
 
     <main class="container">
       <div id="betaBanner" class="beta-banner hidden" role="status" aria-live="polite"></div>
+      <div id="pwaInstallBar" class="pwa-install-bar hidden" role="region" aria-label="Install Student AI Hub">
+        <div class="pwa-install-bar-row">
+          <img
+            class="pwa-install-bar-icon"
+            src="./icons/icon-192.png?v=pwa-logo-1"
+            width="40"
+            height="40"
+            alt=""
+            decoding="async"
+          />
+          <div class="pwa-install-bar-copy">
+            <div class="pwa-install-bar-title" id="pwaInstallTitle">Install Student AI Hub</div>
+            <p class="pwa-install-bar-sub muted" id="pwaInstallSub">
+              Add our icon to your home screen or desktop for quick access until the mobile app ships.
+            </p>
+          </div>
+          <div class="pwa-install-bar-actions">
+            <button type="button" id="pwaInstallBtn" class="primary-btn pwa-install-bar-install hidden">
+              Install
+            </button>
+            <button type="button" id="pwaIosHelpBtn" class="ghost-btn tiny-btn hidden">iPhone / iPad</button>
+            <button type="button" id="pwaInstallDismiss" class="ghost-btn tiny-btn pwa-install-dismiss" aria-label="Dismiss">
+              Not now
+            </button>
+          </div>
+        </div>
+        <div id="pwaIosSteps" class="pwa-ios-steps hidden muted" role="note">
+          <strong>Safari on iPhone or iPad:</strong> tap the Share button <span aria-hidden="true">(□↑)</span>, then
+          <strong>Add to Home Screen</strong>, then Add. You will get our branded icon on your home screen.
+        </div>
+      </div>
       <section class="auth card auth-card" id="authCard">
         <header class="app-head auth-head">
           <div class="app-head-top">
@@ -62,14 +96,14 @@
             </button>
           </div>
           <div class="app-greeting auth-greeting">
-            <h2 class="auth-signin-title">Sign in</h2>
-            <p class="muted app-tagline">
+            <h2 class="auth-signin-title" id="authSigninTitle">Sign in</h2>
+            <p class="muted app-tagline" id="authSigninTagline">
               Continue with Google to use Ask, Code, and Notebook. Free for students &mdash; learn faster, code smarter.
             </p>
           </div>
         </header>
 
-        <p class="eyebrow auth-eyebrow">Free for students</p>
+        <p class="eyebrow auth-eyebrow" id="authEyebrow">Free for students</p>
         <button id="googleLoginBtn" class="primary-btn auth-google-btn" type="button">Continue with Google</button>
         <p id="authStatus" class="muted auth-status"></p>
 
@@ -116,15 +150,15 @@
             </div>
           </div>
           <div class="app-greeting">
-            <h2>Welcome <span id="userName">Student</span></h2>
-            <p class="muted app-tagline">Ask a question, get an answer, keep the conversation going.</p>
+            <h2><span id="welcomePrefix">Welcome</span> <span id="userName">Student</span></h2>
+            <p class="muted app-tagline" id="appTaglineMain">Ask a question, get an answer, keep the conversation going.</p>
           </div>
         </header>
 
         <div class="tabs">
-          <button class="tab active" data-tab="chat" type="button">Ask</button>
-          <button class="tab" data-tab="code" type="button">Code</button>
-          <button class="tab" data-tab="notebook" type="button">Notebook</button>
+          <button class="tab active" data-tab="chat" type="button" id="tabChat">Ask</button>
+          <button class="tab" data-tab="code" type="button" id="tabCode">Code</button>
+          <button class="tab" data-tab="notebook" type="button" id="tabNotebook">Notebook</button>
         </div>
 
         <section id="panelChat" class="panel perplexity-panel">
@@ -137,7 +171,7 @@
               aria-hidden="true"
               tabindex="-1"
             />
-            <p class="search-title">What do you want to learn today?</p>
+            <p class="search-title" id="chatSearchTitle">What do you want to learn today?</p>
             <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
             <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
               <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
@@ -195,7 +229,7 @@
               </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <p class="search-hint muted">Press Enter to search. Shift+Enter for a new line.</p>
+            <p class="search-hint muted" id="chatSearchHint">Press Enter to search. Shift+Enter for a new line.</p>
           </div>
 
           <div id="chatAnswerShell" class="answer-shell hidden">
@@ -281,7 +315,7 @@
 
         <section id="panelCode" class="panel perplexity-panel hidden">
           <div id="codeSearchShell" class="search-hero">
-            <p class="search-title">Debug or learn code</p>
+            <p class="search-title" id="codeSearchTitle">Debug or learn code</p>
             <div class="search-bar search-bar--branded search-bar--code">
               <span class="search-icon search-icon--logo search-icon--code" aria-hidden="true" title="Student AI Hub">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -313,7 +347,7 @@
               ></textarea>
               <button id="codeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <p class="search-hint muted">Tip: include error messages and what you expected.</p>
+            <p class="search-hint muted" id="codeSearchHint">Tip: include error messages and what you expected.</p>
           </div>
 
           <div id="codeAnswerShell" class="answer-shell hidden">
@@ -331,7 +365,7 @@
         </section>
 
         <section id="panelNotebook" class="panel hidden">
-          <p class="muted notebook-hint">
+          <p class="muted notebook-hint" id="notebookHint">
             Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study
             plan - similar to a lightweight notebook assistant.
           </p>
@@ -373,28 +407,18 @@
             Close
           </button>
         </div>
-        <p class="default-page-hint-lead muted">
+        <p id="defaultPageHintLead" class="default-page-hint-lead muted">
           Browsers don&rsquo;t let websites change your home or startup page for you (by design). If you&rsquo;d like
           Student AI Hub to open when you start the browser, you can set it yourself in a few seconds.
         </p>
         <div id="defaultPageHintSteps" class="default-page-hint-steps hidden">
-          <p class="default-page-hint-url-label muted">Copy this address:</p>
+          <p id="defaultPageHintUrlLabel" class="default-page-hint-url-label muted">Copy this address:</p>
           <div class="default-page-hint-url-row">
             <input id="defaultPageHintUrlField" class="default-page-hint-url-input" type="text" readonly />
             <button id="copyDefaultPageUrlBtn" class="ghost-btn tiny-btn" type="button">Copy</button>
           </div>
-          <ol class="default-page-hint-ol">
-            <li>
-              <strong>Chrome / Edge:</strong> Settings → On startup → Open a specific page → Add a new page → paste the
-              address above. (Or visit <code>chrome://settings/onStartup</code> in Chrome.)
-            </li>
-            <li><strong>Safari (Mac):</strong> Safari → Settings → General → Homepage — paste the address.</li>
-            <li>
-              <strong>iPhone / iPad:</strong> Share → <strong>Add to Home Screen</strong> for a quick icon (separate from
-              the browser home page).
-            </li>
-          </ol>
-          <p class="muted default-page-hint-extension-note">
+          <ol id="defaultPageHintList" class="default-page-hint-ol"></ol>
+          <p id="defaultPageHintExtensionNote" class="muted default-page-hint-extension-note">
             Using our Chrome extension? After you install it, new tabs can open this site automatically.
           </p>
         </div>
@@ -412,9 +436,16 @@
           <button id="closeSettingsBtn" class="ghost-btn tiny-btn" type="button">Close</button>
         </div>
         <div class="settings-grid">
-<label class="settings-checkbox">
+          <label for="prefUiLanguage" id="prefUiLanguageLabel">Display language</label>
+          <select id="prefUiLanguage">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="hi">हिन्दी</option>
+            <option value="te">తెలుగు</option>
+          </select>
+          <label class="settings-checkbox">
             <input id="prefRestoreSessions" type="checkbox" />
-            Restore previous chat sessions on load
+            <span id="prefRestoreSessionsLabel">Restore previous chat sessions on load</span>
           </label>
         </div>
         <div class="settings-actions">
@@ -428,6 +459,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=stream-md-throttle-1"></script>
+    <script src="./app.js?v=i18n-polish-2"></script>
   </body>
 </html>

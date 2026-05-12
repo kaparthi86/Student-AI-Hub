@@ -12,6 +12,7 @@ const settingsModal = document.getElementById("settingsModal");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const prefRestoreSessions = document.getElementById("prefRestoreSessions");
+const prefUiLanguage = document.getElementById("prefUiLanguage");
 const toastStack = document.getElementById("toastStack");
 
 const panelChat = document.getElementById("panelChat");
@@ -123,10 +124,514 @@ const FEEDBACK_REASONS = ["too_vague", "incorrect", "too_long", "not_my_level", 
 const USER_PREFS_KEY = "student_ai_user_prefs_v1";
 const CHAT_SESSION_KEY = "student_ai_sessions_v1";
 const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_v1";
+const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
+const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 
+let deferredInstallPrompt = null;
 let chatSessionOpen = false;
 let codeSessionOpen = false;
 let defaultPageHintOfferedThisLoad = false;
+let activeUiLanguage = "en";
+
+const SUPPORTED_UI_LANGS = ["en", "es", "hi", "te"];
+const UI_LANG_LABELS = {
+  en: "English",
+  es: "Espanol",
+  hi: "Hindi",
+  te: "Telugu",
+};
+
+const I18N = {
+  en: {
+    signin_title: "Sign in",
+    signin_tagline: "Continue with Google to use Ask, Code, and Notebook. Free for students - learn faster, code smarter.",
+    free_for_students: "Free for students",
+    continue_google: "Continue with Google",
+    settings: "Settings",
+    logout: "Logout",
+    welcome: "Welcome",
+    app_tagline: "Ask a question, get an answer, keep the conversation going.",
+    tab_ask: "Ask",
+    send: "Send",
+    tab_code: "Code",
+    tab_notebook: "Notebook",
+    chat_title: "What do you want to learn today?",
+    chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
+    chat_hint: "Press Enter to search. Shift+Enter for a new line.",
+    chat_followup: "Ask a follow-up...",
+    code_title: "Debug or learn code",
+    code_placeholder: "Paste code or describe the bug...",
+    code_hint: "Tip: include error messages and what you expected.",
+    code_followup: "Follow-up...",
+    notebook_hint:
+      "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study plan - similar to a lightweight notebook assistant.",
+    analyze_doc: "Analyze document",
+    status_ready: "Ready",
+    status_generating: "Generating...",
+    status_streaming: "Streaming...",
+    status_failed: "Failed",
+    settings_title: "Preferences",
+    settings_close: "Close",
+    settings_language: "Display language",
+    settings_restore_sessions: "Restore previous chat sessions on load",
+    settings_save: "Save preferences",
+    settings_saved_toast: "Preferences saved",
+    opening_google_login: "Opening Google login...",
+    choose_file_first: "Choose a file first",
+    reading_summarizing: "Reading and summarizing...",
+    language_hint: "Switch interface language to {lang}?",
+    language_hint_desc: "You can always change this later in Settings.",
+    keep_english: "Keep English",
+    switch_lang: "Switch",
+    you: "You",
+    assistant: "Assistant",
+    copy: "Copy",
+    attached_image: "Attached image",
+    show_steps: "Yes, show me how",
+    hide_steps: "Hide steps",
+    pwa_install_title: "Install Student AI Hub",
+    pwa_install_btn: "Install",
+    pwa_ios_help_btn: "iPhone / iPad",
+    pwa_not_now: "Not now",
+    default_title: "Make this your start page?",
+    default_lead:
+      "Browsers do not let websites change your startup page automatically. You can still set Student AI Hub as your start page in a few steps.",
+    default_copy_address: "Copy this address:",
+    default_step_chrome:
+      "Chrome / Edge: Settings > On startup > Open a specific page > Add a new page, then paste this address.",
+    default_step_safari: "Safari (Mac): Safari > Settings > General > Homepage, then paste this address.",
+    default_step_ios: "iPhone / iPad: Share > Add to Home Screen for a quick icon.",
+    default_extension_note:
+      "Using our Chrome extension? After install, new tabs can open this site automatically.",
+    copied: "Copied!",
+    toast_no_assistant_reply: "No assistant reply to read yet.",
+    toast_nothing_to_read: "Nothing to read.",
+    toast_mic_permission_denied: "Microphone permission denied.",
+    toast_no_speech: "No speech heard.",
+    toast_voice_failed: "Voice input failed.",
+    toast_voice_start_failed: "Could not start voice input.",
+    voice_not_supported: "Voice input is not supported in this browser",
+    remove_image: "Remove image",
+    copy_assistant_aria: "Copy assistant response",
+    toast_read_aloud_not_supported: "Read aloud is not supported in this browser.",
+    toast_stopped: "Stopped",
+    toast_speech_playback_failed: "Speech playback failed.",
+    toast_image_attached: "Image attached. Add your question, then Ask.",
+    toast_address_copied: "Address copied",
+    toast_select_copy: "Select the field and copy (Cmd/Ctrl+C)",
+    feedback_prompt: "Was this helpful?",
+    feedback_helpful: "Helpful",
+    feedback_not_helpful: "Not helpful",
+    feedback_select_reason: "Select a reason",
+    feedback_thanks: "Thanks!",
+    feedback_thanks_reason: "Thanks for the feedback",
+    reason_too_vague: "Too vague",
+    reason_incorrect: "Incorrect",
+    reason_too_long: "Too long",
+    reason_not_my_level: "Not my level",
+    reason_other: "Other",
+    no_response: "No response.",
+    error_prefix: "Error",
+    stream_empty_fallback:
+      "No assistant text arrived in the stream. This usually means empty model output or an SSE shape we could not parse. Check HF_API_TOKEN, HF_MODEL, and HF_CHAT_URL in your env.",
+    pwa_sub_install:
+      "Tap Install to add Student AI Hub with our icon. It opens fullscreen like an app from your home screen or taskbar.",
+    pwa_sub_ios: "Use Add to Home Screen for our branded icon. Safari does not show an Install button on websites.",
+    pwa_sub_desktop:
+      "On Chrome or Edge, use the install icon in the address bar (or browser menu) when it appears to add our icon on desktop or home screen.",
+    pwa_ios_steps:
+      "Safari on iPhone or iPad: tap Share, then Add to Home Screen, then Add to place the branded icon on your home screen.",
+  },
+  es: {
+    signin_title: "Iniciar sesin",
+    signin_tagline: "Contina con Google para usar Ask, Code y Notebook. Gratis para estudiantes: aprende ms rpido y programa mejor.",
+    free_for_students: "Gratis para estudiantes",
+    continue_google: "Continuar con Google",
+    settings: "Configuracin",
+    logout: "Cerrar sesin",
+    welcome: "Bienvenido",
+    app_tagline: "Haz una pregunta, obtn una respuesta y sigue la conversacin.",
+    tab_ask: "Preguntar",
+    send: "Enviar",
+    tab_code: "Cdigo",
+    tab_notebook: "Cuaderno",
+    chat_title: "Qu quieres aprender hoy?",
+    chat_placeholder: "Pregunta lo que sea... (p. ej., explica descenso de gradiente como si tuviera 15)",
+    chat_hint: "Pulsa Enter para buscar. Shift+Enter para nueva lnea.",
+    chat_followup: "Haz una pregunta de seguimiento...",
+    code_title: "Depura o aprende cdigo",
+    code_placeholder: "Pega cdigo o describe el error...",
+    code_hint: "Consejo: incluye mensajes de error y lo que esperabas.",
+    code_followup: "Seguimiento...",
+    notebook_hint:
+      "Sube apuntes (.txt, .md, .csv, .json, .pdf). Obtendrs resumen, conceptos clave, preguntas tipo quiz y un plan de estudio.",
+    analyze_doc: "Analizar documento",
+    status_ready: "Listo",
+    status_generating: "Generando...",
+    status_streaming: "Transmitiendo...",
+    status_failed: "Error",
+    settings_title: "Preferencias",
+    settings_close: "Cerrar",
+    settings_language: "Idioma de la interfaz",
+    settings_restore_sessions: "Restaurar sesiones anteriores al cargar",
+    settings_save: "Guardar preferencias",
+    settings_saved_toast: "Preferencias guardadas",
+    language_hint: "Cambiar el idioma de la interfaz a {lang}?",
+    language_hint_desc: "Siempre puedes cambiarlo despus en Configuracin.",
+    keep_english: "Seguir en ingls",
+    switch_lang: "Cambiar",
+    you: "T",
+    assistant: "Asistente",
+    copy: "Copiar",
+    attached_image: "Imagen adjunta",
+    show_steps: "Si, mostrar pasos",
+    hide_steps: "Ocultar pasos",
+    pwa_install_title: "Instalar Student AI Hub",
+    pwa_install_btn: "Instalar",
+    pwa_ios_help_btn: "iPhone / iPad",
+    pwa_not_now: "Ahora no",
+    default_title: "Hacer esta tu pagina de inicio?",
+    default_lead:
+      "Los navegadores no permiten cambiar la pagina de inicio automaticamente. Aun asi puedes configurarlo en pocos pasos.",
+    default_copy_address: "Copia esta direccion:",
+    default_step_chrome:
+      "Chrome / Edge: Configuracion > Al iniciar > Abrir una pagina especifica > Agregar una pagina nueva y pegar la direccion.",
+    default_step_safari: "Safari (Mac): Safari > Configuracion > General > Pagina de inicio y pega la direccion.",
+    default_step_ios: "iPhone / iPad: Compartir > Agregar a pantalla de inicio para un acceso rapido.",
+    default_extension_note:
+      "Usas nuestra extension de Chrome? Despues de instalarla, las nuevas pestanas pueden abrir este sitio automaticamente.",
+    copied: "Copiado!",
+    toast_no_assistant_reply: "Aun no hay respuesta del asistente para leer.",
+    toast_nothing_to_read: "No hay nada para leer.",
+    toast_mic_permission_denied: "Permiso del microfono denegado.",
+    toast_no_speech: "No se detecto voz.",
+    toast_voice_failed: "Fallo la entrada de voz.",
+    toast_voice_start_failed: "No se pudo iniciar la entrada de voz.",
+    voice_not_supported: "La entrada de voz no es compatible con este navegador",
+    remove_image: "Quitar imagen",
+    copy_assistant_aria: "Copiar respuesta del asistente",
+    toast_read_aloud_not_supported: "La lectura en voz alta no es compatible con este navegador.",
+    toast_stopped: "Detenido",
+    toast_speech_playback_failed: "Fallo la reproduccion de voz.",
+    toast_image_attached: "Imagen adjunta. Agrega tu pregunta y luego pulsa Preguntar.",
+    toast_address_copied: "Direccion copiada",
+    toast_select_copy: "Selecciona el campo y copia (Cmd/Ctrl+C)",
+    feedback_prompt: "Te fue util?",
+    feedback_helpful: "Util",
+    feedback_not_helpful: "No util",
+    feedback_select_reason: "Selecciona un motivo",
+    feedback_thanks: "Gracias!",
+    feedback_thanks_reason: "Gracias por tu comentario",
+    reason_too_vague: "Muy vago",
+    reason_incorrect: "Incorrecto",
+    reason_too_long: "Muy largo",
+    reason_not_my_level: "No es mi nivel",
+    reason_other: "Otro",
+    no_response: "Sin respuesta.",
+    error_prefix: "Error",
+    stream_empty_fallback:
+      "No llego texto del asistente durante el stream. Suele ser salida vacia del modelo o un formato SSE no reconocido.",
+    pwa_sub_install:
+      "Pulsa Instalar para agregar Student AI Hub con nuestro icono. Se abrira en pantalla completa como una app.",
+    pwa_sub_ios: "Usa Agregar a pantalla de inicio para obtener nuestro icono. Safari no muestra boton Instalar en sitios web.",
+    pwa_sub_desktop:
+      "En Chrome o Edge, usa el icono de instalar en la barra de direcciones (o menu) para agregar el acceso.",
+    pwa_ios_steps:
+      "Safari en iPhone o iPad: pulsa Compartir, luego Agregar a pantalla de inicio y despues Agregar para tener el icono.",
+  },
+  hi: {
+    signin_title: "Sign in karein",
+    signin_tagline: "Google ke saath continue karke Ask, Code aur Notebook use karein. Students ke liye free.",
+    free_for_students: "Students ke liye free",
+    continue_google: "Google ke saath jari rakhen",
+    settings: "Settings",
+    logout: "Logout",
+    welcome: "Swagat hai",
+    app_tagline: "Sawal poochen, jawab paayen, aur conversation continue karein.",
+    tab_ask: "Ask",
+    send: "Bhejen",
+    tab_code: "Code",
+    tab_notebook: "Notebook",
+    chat_title: "Aaj aap kya seekhna chahte hain?",
+    chat_placeholder: "Kuch bhi poochiye... (jaise gradient descent ko simple terms mein samjhao)",
+    chat_hint: "Search ke liye Enter dabayen. Nayi line ke liye Shift+Enter.",
+    chat_followup: "Follow-up poochiye...",
+    code_title: "Code debug karein ya seekhein",
+    code_placeholder: "Code paste karein ya bug describe karein...",
+    code_hint: "Tip: error message aur expected result zarur likhein.",
+    code_followup: "Follow-up...",
+    notebook_hint:
+      "Notes upload karein (.txt, .md, .csv, .json, .pdf). Aapko summary, key concepts, quiz aur study plan milega.",
+    analyze_doc: "Document analyze karein",
+    status_ready: "Ready",
+    status_generating: "Generate ho raha hai...",
+    status_streaming: "Streaming...",
+    status_failed: "Failed",
+    settings_title: "Preferences",
+    settings_close: "Close",
+    settings_language: "Display language",
+    settings_restore_sessions: "Load par purane chat sessions restore karein",
+    settings_save: "Preferences save karein",
+    settings_saved_toast: "Preferences save ho gayi",
+    opening_google_login: "Google login khul raha hai...",
+    choose_file_first: "Pehle file chunen",
+    reading_summarizing: "Padhkar summarize kiya ja raha hai...",
+    language_hint: "Interface language ko {lang} mein switch karein?",
+    language_hint_desc: "Aap ise baad mein Settings mein badal sakte hain.",
+    keep_english: "English rakhein",
+    switch_lang: "Switch",
+    you: "Aap",
+    assistant: "Assistant",
+    copy: "Copy",
+    attached_image: "Attached image",
+    show_steps: "Haan, steps dikhaiye",
+    hide_steps: "Steps chhupaye",
+    pwa_install_title: "Student AI Hub install karein",
+    pwa_install_btn: "Install",
+    pwa_ios_help_btn: "iPhone / iPad",
+    pwa_not_now: "Abhi nahi",
+    default_title: "Kya ise aapka start page banayen?",
+    default_lead:
+      "Browser website ko startup page automatic badalne nahi dete. Aap kuch steps mein ise set kar sakte hain.",
+    default_copy_address: "Yeh address copy karein:",
+    default_step_chrome:
+      "Chrome / Edge: Settings > On startup > Open a specific page > Add a new page, phir address paste karein.",
+    default_step_safari: "Safari (Mac): Safari > Settings > General > Homepage, phir address paste karein.",
+    default_step_ios: "iPhone / iPad: Share > Add to Home Screen se quick icon payen.",
+    default_extension_note:
+      "Chrome extension use kar rahe hain? Install ke baad new tabs is site ko automatic khol sakte hain.",
+    copied: "Copy ho gaya!",
+    toast_no_assistant_reply: "Padhne ke liye assistant ka reply abhi nahi mila.",
+    toast_nothing_to_read: "Padhne ke liye kuch nahi hai.",
+    toast_mic_permission_denied: "Microphone permission mana ki gayi.",
+    toast_no_speech: "Koi awaaz sunai nahi di.",
+    toast_voice_failed: "Voice input fail ho gaya.",
+    toast_voice_start_failed: "Voice input start nahi ho saka.",
+    voice_not_supported: "Is browser mein voice input supported nahi hai",
+    remove_image: "Image hataen",
+    copy_assistant_aria: "Assistant response copy karein",
+    toast_read_aloud_not_supported: "Is browser mein read aloud supported nahi hai.",
+    toast_stopped: "Rok diya gaya",
+    toast_speech_playback_failed: "Speech playback fail ho gaya.",
+    toast_image_attached: "Image attach ho gayi. Ab apna sawal likhkar Ask dabayen.",
+    toast_address_copied: "Address copy ho gaya",
+    toast_select_copy: "Field select karke copy karein (Cmd/Ctrl+C)",
+    feedback_prompt: "Kya yeh helpful tha?",
+    feedback_helpful: "Helpful",
+    feedback_not_helpful: "Not helpful",
+    feedback_select_reason: "Ek reason chunen",
+    feedback_thanks: "Dhanyavaad!",
+    feedback_thanks_reason: "Feedback ke liye dhanyavaad",
+    reason_too_vague: "Bahut vague",
+    reason_incorrect: "Galat",
+    reason_too_long: "Bahut lamba",
+    reason_not_my_level: "Mere level ka nahi",
+    reason_other: "Anya",
+    no_response: "Koi response nahi.",
+    error_prefix: "Error",
+    stream_empty_fallback:
+      "Stream mein assistant text nahi aaya. Aksar iska matlab empty model output ya unknown SSE format hota hai.",
+    pwa_sub_install:
+      "Install dabakar Student AI Hub icon add karein. Ye app jaisa fullscreen open hoga.",
+    pwa_sub_ios: "Add to Home Screen use karein. Safari websites par Install button nahi dikhata.",
+    pwa_sub_desktop: "Chrome ya Edge mein address bar ka install icon use karke shortcut add karein.",
+    pwa_ios_steps:
+      "iPhone/iPad Safari: Share dabayein, phir Add to Home Screen, phir Add dabayein taki icon home screen par aaye.",
+  },
+  te: {
+    signin_title: "Sign in cheyyandi",
+    signin_tagline: "Google tho continue ayi Ask, Code mariyu Notebook use cheyyandi. Students ki free.",
+    free_for_students: "Students ki free",
+    continue_google: "Google to continue cheyyandi",
+    settings: "Settings",
+    logout: "Logout",
+    welcome: "Swagatam",
+    app_tagline: "Question adagandi, answer pondandi, conversation continue cheyyandi.",
+    tab_ask: "Ask",
+    send: "Pampu",
+    tab_code: "Code",
+    tab_notebook: "Notebook",
+    chat_title: "I roju meeru emi nerchukovalani anukuntunnaru?",
+    chat_placeholder: "Edaina adagandi... (udaharan: gradient descent ni simple ga explain cheyyi)",
+    chat_hint: "Search kosam Enter nokkandi. Kotha line kosam Shift+Enter.",
+    chat_followup: "Follow-up adagandi...",
+    code_title: "Code debug cheyyandi leda nerchukondi",
+    code_placeholder: "Code paste cheyyandi leda bug describe cheyyandi...",
+    code_hint: "Tip: error messages mariyu expected result include cheyyandi.",
+    code_followup: "Follow-up...",
+    notebook_hint:
+      "Notes upload cheyyandi (.txt, .md, .csv, .json, .pdf). Summary, key concepts, quiz mariyu study plan vastayi.",
+    analyze_doc: "Document analyze cheyyandi",
+    status_ready: "Ready",
+    status_generating: "Generate avutondi...",
+    status_streaming: "Streaming...",
+    status_failed: "Failed",
+    settings_title: "Preferences",
+    settings_close: "Close",
+    settings_language: "Display language",
+    settings_restore_sessions: "Load appudu previous chat sessions restore cheyyandi",
+    settings_save: "Preferences save cheyyandi",
+    settings_saved_toast: "Preferences save ayyayi",
+    opening_google_login: "Google login open avutondi...",
+    choose_file_first: "Munduga file select cheyyandi",
+    reading_summarizing: "Chadivi summarize chestunnam...",
+    language_hint: "Interface language ni {lang} ki marchala?",
+    language_hint_desc: "Idi taruvata Settings lo eppudaina marchavachu.",
+    keep_english: "English continue",
+    switch_lang: "Switch",
+    you: "Meeru",
+    assistant: "Assistant",
+    copy: "Copy",
+    attached_image: "Attached image",
+    show_steps: "Avunu, steps chupinchandi",
+    hide_steps: "Steps dachandi",
+    pwa_install_title: "Student AI Hub install cheyyandi",
+    pwa_install_btn: "Install",
+    pwa_ios_help_btn: "iPhone / iPad",
+    pwa_not_now: "Ippudu vaddu",
+    default_title: "Idi mee start page ga set cheyyala?",
+    default_lead:
+      "Browsers websites ki startup page ni automatic marchadaniki allow cheyyavu. Konni steps lo meeru set cheyyachu.",
+    default_copy_address: "Ee address ni copy cheyyandi:",
+    default_step_chrome:
+      "Chrome / Edge: Settings > On startup > Open a specific page > Add a new page, taruvata address paste cheyyandi.",
+    default_step_safari: "Safari (Mac): Safari > Settings > General > Homepage lo address paste cheyyandi.",
+    default_step_ios: "iPhone / iPad: Share > Add to Home Screen dwara quick icon pondandi.",
+    default_extension_note:
+      "Chrome extension vadutunnara? Install tarvata kotha tabs ee site ni automatic ga open cheyyagalavu.",
+    copied: "Copy ayyindi!",
+    toast_no_assistant_reply: "Chadavadaniki assistant reply inka raledu.",
+    toast_nothing_to_read: "Chadavadaniki emi ledu.",
+    toast_mic_permission_denied: "Microphone permission deny ayyindi.",
+    toast_no_speech: "Voice vinipinchaledu.",
+    toast_voice_failed: "Voice input fail ayyindi.",
+    toast_voice_start_failed: "Voice input start cheyyalekapoyam.",
+    voice_not_supported: "Ee browser lo voice input support ledu",
+    remove_image: "Image remove cheyyandi",
+    copy_assistant_aria: "Assistant response copy cheyyandi",
+    toast_read_aloud_not_supported: "Ee browser lo read aloud support ledu.",
+    toast_stopped: "Aapesaru",
+    toast_speech_playback_failed: "Speech playback fail ayyindi.",
+    toast_image_attached: "Image attach ayyindi. Ippudu mee prashna raasi Ask nokkandi.",
+    toast_address_copied: "Address copy ayyindi",
+    toast_select_copy: "Field select chesi copy cheyyandi (Cmd/Ctrl+C)",
+    feedback_prompt: "Idi upayogapadina?",
+    feedback_helpful: "Helpful",
+    feedback_not_helpful: "Not helpful",
+    feedback_select_reason: "Oka reason select cheyyandi",
+    feedback_thanks: "Dhanyavadalu!",
+    feedback_thanks_reason: "Mee feedback ki dhanyavadalu",
+    reason_too_vague: "Spashtanga ledu",
+    reason_incorrect: "Tappu",
+    reason_too_long: "Chala pedda ga undi",
+    reason_not_my_level: "Na level ki taggadu",
+    reason_other: "Itara",
+    no_response: "Response ledu.",
+    error_prefix: "Error",
+    stream_empty_fallback:
+      "Stream lo assistant text raledu. Idi mostly empty model output leka unknown SSE format valla jarugutundi.",
+    pwa_sub_install: "Install nokki Student AI Hub icon add cheyyandi. Idi app la fullscreen lo open avutundi.",
+    pwa_sub_ios: "Add to Home Screen vadandi. Safari websites ki Install button chupinchadu.",
+    pwa_sub_desktop: "Chrome/Edge address bar lo install icon tho shortcut add cheyyandi.",
+    pwa_ios_steps:
+      "iPhone/iPad Safari lo Share nokki, Add to Home Screen > Add nokkandi. App icon home screen lo vastundi.",
+  },
+};
+
+function normalizeUiLanguage(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return SUPPORTED_UI_LANGS.includes(v) ? v : "en";
+}
+
+function t(key, vars = {}) {
+  const dict = I18N[activeUiLanguage] || I18N.en;
+  let out = dict[key] || I18N.en[key] || key;
+  Object.entries(vars).forEach(([k, v]) => {
+    out = out.replaceAll(`{${k}}`, String(v));
+  });
+  return out;
+}
+
+function setUiLanguage(nextLang) {
+  activeUiLanguage = normalizeUiLanguage(nextLang);
+  document.documentElement.lang = activeUiLanguage;
+  applyTranslations();
+  renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
+  renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
+}
+
+function applyTranslations() {
+  const byIdText = {
+    authSigninTitle: "signin_title",
+    authSigninTagline: "signin_tagline",
+    authEyebrow: "free_for_students",
+    googleLoginBtn: "continue_google",
+    openSettingsBtn: "settings",
+    logoutBtn: "logout",
+    welcomePrefix: "welcome",
+    appTaglineMain: "app_tagline",
+    tabChat: "tab_ask",
+    tabCode: "tab_code",
+    tabNotebook: "tab_notebook",
+    chatSearchTitle: "chat_title",
+    chatSearchHint: "chat_hint",
+    codeSearchTitle: "code_title",
+    codeSearchHint: "code_hint",
+    notebookHint: "notebook_hint",
+    chatSearchSubmit: "tab_ask",
+    chatFollowupSubmit: "tab_ask",
+    codeSearchSubmit: "tab_ask",
+    codeFollowupSubmit: "send",
+    docAnalyzeBtn: "analyze_doc",
+    settingsTitle: "settings_title",
+    closeSettingsBtn: "settings_close",
+    prefUiLanguageLabel: "settings_language",
+    prefRestoreSessionsLabel: "settings_restore_sessions",
+    saveSettingsBtn: "settings_save",
+    pwaInstallTitle: "pwa_install_title",
+    pwaInstallBtn: "pwa_install_btn",
+    pwaIosHelpBtn: "pwa_ios_help_btn",
+    pwaInstallDismiss: "pwa_not_now",
+    defaultPageHintTitle: "default_title",
+    closeDefaultPageHintBtn: "settings_close",
+    defaultPageHintLead: "default_lead",
+    defaultPageHintUrlLabel: "default_copy_address",
+    copyDefaultPageUrlBtn: "copy",
+    defaultPageHintExtensionNote: "default_extension_note",
+    showDefaultPageStepsBtn: "show_steps",
+    dismissDefaultPageHintBtn: "pwa_not_now",
+  };
+  Object.entries(byIdText).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  });
+  if (chatSearchInput) chatSearchInput.placeholder = t("chat_placeholder");
+  if (chatFollowupInput) chatFollowupInput.placeholder = t("chat_followup");
+  if (codeSearchInput) codeSearchInput.placeholder = t("code_placeholder");
+  if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
+  const pwaIosSteps = document.getElementById("pwaIosSteps");
+  if (pwaIosSteps) pwaIosSteps.textContent = t("pwa_ios_steps");
+  const hintList = document.getElementById("defaultPageHintList");
+  if (hintList) {
+    hintList.innerHTML = "";
+    [t("default_step_chrome"), t("default_step_safari"), t("default_step_ios")].forEach((line) => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      hintList.appendChild(li);
+    });
+  }
+  [apiStatus, codeStatus, notebookStatus].forEach((el) => {
+    if (!el) return;
+    const key = el.dataset.i18nStatus || "status_ready";
+    el.textContent = t(key);
+  });
+}
+
+function setStatus(el, key) {
+  if (!el) return;
+  el.dataset.i18nStatus = key;
+  el.textContent = t(key);
+}
 
 /** @type {{ mime: string, base64: string, dataUrl: string } | null} */
 let learnChatVisionAttachment = null;
@@ -158,7 +663,7 @@ function updateLearnChatAttachPreview() {
     const rm = document.createElement("button");
     rm.type = "button";
     rm.className = "learn-chat-attach-remove";
-    rm.setAttribute("aria-label", "Remove image");
+    rm.setAttribute("aria-label", t("remove_image"));
     rm.textContent = "\u00d7";
     rm.addEventListener("click", (e) => {
       e.preventDefault();
@@ -310,30 +815,30 @@ function getLastAssistantMarkdownFromHistory(history) {
 /** Read-aloud chip: Web Speech API, last assistant reply only. Tap again while playing to stop. */
 function readLastAssistantAloud() {
   if (typeof window === "undefined" || !window.speechSynthesis) {
-    showToast("Read aloud is not supported in this browser.");
+    showToast(t("toast_read_aloud_not_supported"));
     return;
   }
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
     stopReadAloud();
-    showToast("Stopped");
+    showToast(t("toast_stopped"));
     return;
   }
   const raw = getLastAssistantMarkdownFromHistory(chatHistory);
   if (!String(raw).trim()) {
-    showToast("No assistant reply to read yet.");
+    showToast(t("toast_no_assistant_reply"));
     return;
   }
   const { plain } = getAssistantCopyFormats(raw);
   const text = String(plain || "").trim();
   if (!text) {
-    showToast("Nothing to read.");
+    showToast(t("toast_nothing_to_read"));
     return;
   }
   const maxChars = 32000;
   const toSpeak = text.length > maxChars ? `${text.slice(0, maxChars)}\n\n(Truncated for speech.)` : text;
   const u = new SpeechSynthesisUtterance(toSpeak);
   u.rate = 1;
-  u.onerror = () => showToast("Speech playback failed.");
+  u.onerror = () => showToast(t("toast_speech_playback_failed"));
   window.speechSynthesis.speak(u);
 }
 
@@ -345,15 +850,16 @@ function normalizeStudyMode(raw) {
 function defaultPrefs() {
   return {
     restoreSessions: true,
+    uiLanguage: "en",
   };
 }
 
 function loadPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(USER_PREFS_KEY) || "{}");
-    const d = defaultPrefs();
     return {
       restoreSessions: parsed.restoreSessions !== false,
+      uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
     };
   } catch {
     return defaultPrefs();
@@ -362,6 +868,35 @@ function loadPrefs() {
 
 function savePrefs(prefs) {
   localStorage.setItem(USER_PREFS_KEY, JSON.stringify(prefs));
+}
+
+function guessUiLanguageFromBrowser() {
+  const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language || "en"];
+  for (const raw of langs) {
+    const lower = String(raw || "").toLowerCase();
+    const base = lower.split("-")[0];
+    if (SUPPORTED_UI_LANGS.includes(base)) return base;
+  }
+  return "en";
+}
+
+function maybeOfferLanguageSuggestion() {
+  const dismissed = localStorage.getItem(LANGUAGE_HINT_DISMISSED_KEY) === "1";
+  const prefs = loadPrefs();
+  if (dismissed || prefs.uiLanguage !== "en") return;
+  const guess = guessUiLanguageFromBrowser();
+  if (guess === "en") return;
+  const ask = `${t("language_hint", { lang: UI_LANG_LABELS[guess] || guess })}\n${t("language_hint_desc")}`;
+  const accept = window.confirm(ask);
+  if (accept) {
+    const next = { ...prefs, uiLanguage: guess };
+    savePrefs(next);
+    setUiLanguage(guess);
+    if (prefUiLanguage) prefUiLanguage.value = guess;
+    saveSessionState();
+  } else {
+    localStorage.setItem(LANGUAGE_HINT_DISMISSED_KEY, "1");
+  }
 }
 
 function showToast(msg) {
@@ -400,7 +935,7 @@ function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     micBtn.disabled = true;
-    micBtn.title = "Voice input is not supported in this browser";
+    micBtn.title = t("voice_not_supported");
     return;
   }
 
@@ -484,7 +1019,7 @@ function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
       submitBtn.click();
     } else {
       if (inputEl) inputEl.value = savedInput;
-      showToast("No speech heard.");
+      showToast(t("toast_no_speech"));
     }
   };
 
@@ -512,11 +1047,11 @@ function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
         const err = ev.error || "";
         if (err === "aborted") return;
         if (err === "not-allowed") {
-          showToast("Microphone permission denied.");
+          showToast(t("toast_mic_permission_denied"));
         } else if (err === "no-speech") {
-          showToast("No speech heard.");
+          showToast(t("toast_no_speech"));
         } else {
-          showToast("Voice input failed.");
+          showToast(t("toast_voice_failed"));
         }
         abandon = true;
         try {
@@ -541,7 +1076,7 @@ function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
         rec = null;
         setMicUi(false);
         endLearnVoiceSessionIfCurrent(stopSelf);
-        showToast("Could not start voice input.");
+        showToast(t("toast_voice_start_failed"));
       }
     } else {
       try {
@@ -775,7 +1310,7 @@ function wireAssistantCopy(bubble, rawText) {
     e.stopPropagation();
     const ok = await copyAssistantOutput(rawText);
     const prev = fresh.textContent;
-    fresh.textContent = ok ? "Copied!" : "Failed";
+    fresh.textContent = ok ? t("copied") : t("status_failed");
     setTimeout(() => {
       fresh.textContent = prev;
     }, 2000);
@@ -809,15 +1344,15 @@ function mountAssistantFeedback(bubble, rawText) {
   wrap.className = "assistant-feedback";
   const prompt = document.createElement("span");
   prompt.className = "assistant-feedback-label";
-  prompt.textContent = "Was this helpful?";
+  prompt.textContent = t("feedback_prompt");
   const up = document.createElement("button");
   up.type = "button";
   up.className = "assistant-feedback-btn";
-  up.textContent = "Helpful";
+  up.textContent = t("feedback_helpful");
   const down = document.createElement("button");
   down.type = "button";
   down.className = "assistant-feedback-btn";
-  down.textContent = "Not helpful";
+  down.textContent = t("feedback_not_helpful");
   const status = document.createElement("span");
   status.className = "assistant-feedback-status";
   wrap.appendChild(prompt);
@@ -827,7 +1362,10 @@ function mountAssistantFeedback(bubble, rawText) {
 
   const reasons = document.createElement("div");
   reasons.className = "assistant-feedback-reasons hidden";
-  reasons.innerHTML = FEEDBACK_REASONS.map((r) => `<button type="button" class="assistant-feedback-reason" data-reason="${r}">${r.replace(/_/g, " ")}</button>`).join("");
+  reasons.innerHTML = FEEDBACK_REASONS.map((r) => {
+    const label = t(`reason_${r}`) || r.replace(/_/g, " ");
+    return `<button type="button" class="assistant-feedback-reason" data-reason="${r}">${label}</button>`;
+  }).join("");
   wrap.appendChild(reasons);
   bubble.appendChild(wrap);
 
@@ -851,9 +1389,9 @@ function mountAssistantFeedback(bubble, rawText) {
         assistantMessage: String(rawText || "").slice(0, 8000),
         createdAt: new Date().toISOString(),
       });
-      lock("Thanks!");
+      lock(t("feedback_thanks"));
     } catch (e) {
-      status.textContent = e.message || "Failed";
+      status.textContent = e.message || t("status_failed");
       up.disabled = false;
       down.disabled = false;
     }
@@ -861,7 +1399,7 @@ function mountAssistantFeedback(bubble, rawText) {
 
   down.addEventListener("click", () => {
     reasons.classList.remove("hidden");
-    status.textContent = "Select a reason";
+    status.textContent = t("feedback_select_reason");
   });
 
   reasons.addEventListener("click", async (e) => {
@@ -878,9 +1416,9 @@ function mountAssistantFeedback(bubble, rawText) {
         assistantMessage: String(rawText || "").slice(0, 8000),
         createdAt: new Date().toISOString(),
       });
-      lock("Thanks for the feedback");
+      lock(t("feedback_thanks_reason"));
     } catch (e2) {
-      status.textContent = e2.message || "Failed";
+      status.textContent = e2.message || t("status_failed");
     }
   });
 }
@@ -917,7 +1455,7 @@ function appendBubble(container, role, text, meta = {}) {
   if (role === "user") {
     const label = document.createElement("div");
     label.className = "bubble-label";
-    label.textContent = "You";
+    label.textContent = t("you");
     bubble.appendChild(label);
     if (meta.imageDataUrl) {
       const fig = document.createElement("div");
@@ -941,7 +1479,7 @@ function appendBubble(container, role, text, meta = {}) {
       cap.className = "bubble-text muted";
       cap.style.margin = "0";
       cap.style.fontSize = "13px";
-      cap.textContent = "Attached image";
+      cap.textContent = t("attached_image");
       bubble.appendChild(cap);
     }
   } else {
@@ -949,12 +1487,12 @@ function appendBubble(container, role, text, meta = {}) {
     head.className = "bubble-head";
     const label = document.createElement("div");
     label.className = "bubble-label";
-    label.textContent = "Assistant";
+    label.textContent = t("assistant");
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
     copyBtn.className = "bubble-copy";
-    copyBtn.setAttribute("aria-label", "Copy assistant response");
-    copyBtn.textContent = "Copy";
+    copyBtn.setAttribute("aria-label", t("copy_assistant_aria"));
+    copyBtn.textContent = t("copy");
     head.appendChild(label);
     head.appendChild(copyBtn);
     bubble.appendChild(head);
@@ -981,12 +1519,12 @@ function startStreamingAssistantBubble(container) {
   head.className = "bubble-head";
   const label = document.createElement("div");
   label.className = "bubble-label";
-  label.textContent = "Assistant";
+  label.textContent = t("assistant");
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
   copyBtn.className = "bubble-copy";
-  copyBtn.setAttribute("aria-label", "Copy assistant response");
-  copyBtn.textContent = "Copy";
+  copyBtn.setAttribute("aria-label", t("copy_assistant_aria"));
+  copyBtn.textContent = t("copy");
   copyBtn.disabled = true;
   head.appendChild(label);
   head.appendChild(copyBtn);
@@ -1167,6 +1705,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     message: trimmed,
     history: historyForApi,
     studyMode: normalizeStudyMode(studyMode),
+    uiLanguage: activeUiLanguage,
     stream: true,
   };
   if (mode === "learn" && attach) {
@@ -1175,7 +1714,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   }
 
   sendBtn.disabled = true;
-  statusEl.textContent = "Generating...";
+  setStatus(statusEl, "status_generating");
 
   const streamUi = startStreamingAssistantBubble(threadEl);
   streamUi.bubble.dataset.mode = mode;
@@ -1227,7 +1766,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     pendingFull = full;
     if (!sawFirstDelta && String(full || "").length > 0) {
       sawFirstDelta = true;
-      statusEl.textContent = "Streaming...";
+      setStatus(statusEl, "status_streaming");
       paintPendingMarkdown();
       return;
     }
@@ -1255,7 +1794,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
 
     if (!response.body || !ct.includes("text/event-stream")) {
       streamUi.remove();
-      let output = "No response.";
+      let output = t("no_response");
       try {
         const data = await response.json();
         output = typeof data.output === "string" && data.output.trim() ? data.output.trim() : output;
@@ -1276,7 +1815,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       history.push(userRow);
       history.push({ role: "assistant", content: output });
       saveSessionState();
-      statusEl.textContent = "Ready";
+      setStatus(statusEl, "status_ready");
       return true;
     }
 
@@ -1286,7 +1825,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
 
     const finalText =
       String(fullOut || "").trim() ||
-      "No assistant text arrived in the stream. This is usually not a token read error: invalid or empty model output, or an SSE shape we did not parse. Check Render env HF_API_TOKEN, HF_MODEL (Inference Providers routing suffix, e.g. :fastest), and HF_CHAT_URL; open /api/health to confirm hfConfigured is true.";
+      t("stream_empty_fallback");
     const streamPlainOnly = !String(fullOut || "").trim();
     streamUi.setStreamingText(finalText, { plain: streamPlainOnly });
     streamUi.finalize(finalText);
@@ -1299,19 +1838,19 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     history.push(userRow);
     history.push({ role: "assistant", content: finalText });
     saveSessionState();
-    statusEl.textContent = "Ready";
+    setStatus(statusEl, "status_ready");
     return true;
   } catch (error) {
     cancelStreamPaintTimers();
     if (streamUi.bubble.isConnected) {
-      streamUi.showError(`Error: ${formatChatErrorForUi(error)}`);
+      streamUi.showError(`${t("error_prefix")}: ${formatChatErrorForUi(error)}`);
     } else {
-      appendBubble(threadEl, "assistant", `Error: ${formatChatErrorForUi(error)}`, {
+      appendBubble(threadEl, "assistant", `${t("error_prefix")}: ${formatChatErrorForUi(error)}`, {
         mode,
         studyMode: normalizeStudyMode(studyMode),
       });
     }
-    statusEl.textContent = "Failed";
+    setStatus(statusEl, "status_failed");
     return false;
   } finally {
     sendBtn.disabled = false;
@@ -1325,6 +1864,116 @@ function isStandaloneWebAppDisplay() {
     /* ignore */
   }
   return window.navigator.standalone === true;
+}
+
+function isLikelyIOSBrowser() {
+  try {
+    const ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/i.test(ua)) return true;
+    if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
+function shouldOfferPwaInstallBar() {
+  if (window.location.protocol === "file:") return false;
+  if (isStandaloneWebAppDisplay()) return false;
+  if (localStorage.getItem(PWA_INSTALL_BAR_DISMISSED_KEY) === "1") return false;
+  return true;
+}
+
+function refreshPwaInstallBarUi() {
+  const bar = document.getElementById("pwaInstallBar");
+  const installBtn = document.getElementById("pwaInstallBtn");
+  const iosBtn = document.getElementById("pwaIosHelpBtn");
+  if (!bar || bar.classList.contains("hidden")) return;
+  installBtn?.classList.toggle("hidden", !deferredInstallPrompt);
+  iosBtn?.classList.toggle("hidden", !isLikelyIOSBrowser());
+}
+
+async function registerServiceWorkerIfEligible() {
+  if (!("serviceWorker" in navigator)) return;
+  if (window.location.protocol === "file:") return;
+  const host = window.location.hostname;
+  if (window.location.protocol !== "https:" && host !== "localhost" && host !== "127.0.0.1") return;
+  try {
+    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  } catch {
+    /* ignore registration failures */
+  }
+}
+
+function wirePwaInstallBar() {
+  const bar = document.getElementById("pwaInstallBar");
+  const dismiss = document.getElementById("pwaInstallDismiss");
+  const installBtn = document.getElementById("pwaInstallBtn");
+  const iosBtn = document.getElementById("pwaIosHelpBtn");
+  const iosSteps = document.getElementById("pwaIosSteps");
+
+  dismiss?.addEventListener("click", () => {
+    localStorage.setItem(PWA_INSTALL_BAR_DISMISSED_KEY, "1");
+    bar?.classList.add("hidden");
+    iosSteps?.classList.add("hidden");
+  });
+
+  installBtn?.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    try {
+      await deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+    } catch {
+      /* user dismissed native prompt */
+    }
+    deferredInstallPrompt = null;
+    installBtn.classList.add("hidden");
+  });
+
+  iosBtn?.addEventListener("click", () => {
+    if (!iosSteps) return;
+    iosSteps.classList.toggle("hidden");
+  });
+}
+
+function initPwaInstallSupport() {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const bar = document.getElementById("pwaInstallBar");
+    const sub = document.getElementById("pwaInstallSub");
+    if (bar && !bar.classList.contains("hidden") && sub) {
+      sub.textContent = t("pwa_sub_install");
+    }
+    refreshPwaInstallBarUi();
+  });
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    document.getElementById("pwaInstallBar")?.classList.add("hidden");
+  });
+  void registerServiceWorkerIfEligible();
+  wirePwaInstallBar();
+}
+
+function maybeOfferPwaInstallBar() {
+  const bar = document.getElementById("pwaInstallBar");
+  const sub = document.getElementById("pwaInstallSub");
+  if (!bar || !shouldOfferPwaInstallBar()) return;
+
+  bar.classList.remove("hidden");
+
+  if (sub) {
+    const ios = isLikelyIOSBrowser();
+    if (deferredInstallPrompt) {
+      sub.textContent = t("pwa_sub_install");
+    } else if (ios) {
+      sub.textContent = t("pwa_sub_ios");
+    } else {
+      sub.textContent = t("pwa_sub_desktop");
+    }
+  }
+
+  refreshPwaInstallBarUi();
 }
 
 function hubPageUrlForBookmark() {
@@ -1364,7 +2013,7 @@ function hideDefaultPageHintModal(saveDismiss) {
   modal?.classList.add("hidden");
   steps?.classList.add("hidden");
   const showStepsBtn = document.getElementById("showDefaultPageStepsBtn");
-  if (showStepsBtn) showStepsBtn.textContent = "Yes, show me how";
+  if (showStepsBtn) showStepsBtn.textContent = t("show_steps");
 }
 
 function wireDefaultPageHintModal() {
@@ -1381,11 +2030,11 @@ function wireDefaultPageHintModal() {
     const opening = steps.classList.contains("hidden");
     if (opening) {
       steps.classList.remove("hidden");
-      showStepsBtn.textContent = "Hide steps";
+      showStepsBtn.textContent = t("hide_steps");
       urlField?.select();
     } else {
       steps.classList.add("hidden");
-      showStepsBtn.textContent = "Yes, show me how";
+      showStepsBtn.textContent = t("show_steps");
     }
   });
 
@@ -1400,10 +2049,10 @@ function wireDefaultPageHintModal() {
     if (!t) return;
     try {
       await navigator.clipboard.writeText(t);
-      showToast("Address copied");
+      showToast(t("toast_address_copied"));
     } catch {
       urlField?.select();
-      showToast("Select the field and copy (?C / Ctrl+C)");
+      showToast(t("toast_select_copy"));
     }
   });
 
@@ -1421,10 +2070,15 @@ function showApp(session) {
   userName.textContent = display;
   authCard.classList.add("hidden");
   appCard.classList.remove("hidden");
+  window.setTimeout(() => {
+    maybeOfferPwaInstallBar();
+  }, 850);
   maybeOfferDefaultPageHint();
 }
 
 function showAuth(message = "") {
+  document.getElementById("pwaInstallBar")?.classList.add("hidden");
+  document.getElementById("pwaIosSteps")?.classList.add("hidden");
   authCard.classList.remove("hidden");
   appCard.classList.add("hidden");
   authStatus.textContent = message;
@@ -1496,7 +2150,7 @@ googleLoginBtn.addEventListener("click", async () => {
       "Sign-in needs http:// or https:// (open the app from your dev server, not a file:// page).";
     return;
   }
-  authStatus.textContent = "Opening Google login...";
+  authStatus.textContent = t("opening_google_login");
   try {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
@@ -1629,7 +2283,7 @@ function wireLearnChatImageAttach() {
     try {
       learnChatVisionAttachment = await prepareImageForLearnChat(f);
       updateLearnChatAttachPreview();
-      showToast("Image attached. Add your question, then Send.");
+      showToast(t("toast_image_attached"));
       chatFollowupInput?.focus();
     } catch (err) {
       showToast(err.message || "Could not read image");
@@ -1657,7 +2311,7 @@ docFileInput.addEventListener("change", () => {
 docAnalyzeBtn.addEventListener("click", async () => {
   const file = docFileInput.files?.[0];
   if (!file) {
-    notebookStatus.textContent = "Choose a file first";
+    setStatus(notebookStatus, "choose_file_first");
     return;
   }
 
@@ -1665,7 +2319,7 @@ docAnalyzeBtn.addEventListener("click", async () => {
   appendBubble(notebookThread, "user", `Analyze uploaded file: ${file.name}`);
 
   docAnalyzeBtn.disabled = true;
-  notebookStatus.textContent = "Reading and summarizing...";
+  setStatus(notebookStatus, "reading_summarizing");
 
   try {
     const form = new FormData();
@@ -1680,10 +2334,10 @@ docAnalyzeBtn.addEventListener("click", async () => {
     const note = data.output || "No response.";
     const meta = data.charsUsed != null ? `\n\n_(Used up to ${data.charsUsed} characters from the document.)_` : "";
     appendBubble(notebookThread, "assistant", `${note}${meta}`, { mode: "notebook", studyMode: "explain" });
-    notebookStatus.textContent = "Ready";
+    setStatus(notebookStatus, "status_ready");
   } catch (error) {
-    appendBubble(notebookThread, "assistant", `Error: ${error.message}`, { mode: "notebook", studyMode: "explain" });
-    notebookStatus.textContent = "Failed";
+    appendBubble(notebookThread, "assistant", `${t("error_prefix")}: ${error.message}`, { mode: "notebook", studyMode: "explain" });
+    setStatus(notebookStatus, "status_failed");
     showToast(error.message || "Document analysis failed");
   } finally {
     docAnalyzeBtn.disabled = false;
@@ -1729,6 +2383,7 @@ function wireSettingsUi() {
   const syncForm = () => {
     const prefs = loadPrefs();
     if (prefRestoreSessions) prefRestoreSessions.checked = prefs.restoreSessions !== false;
+    if (prefUiLanguage) prefUiLanguage.value = normalizeUiLanguage(prefs.uiLanguage);
   };
   syncForm();
 
@@ -1743,21 +2398,28 @@ function wireSettingsUi() {
   saveSettingsBtn?.addEventListener("click", () => {
     const prefs = {
       restoreSessions: prefRestoreSessions?.checked !== false,
+      uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
     };
     savePrefs(prefs);
+    setUiLanguage(prefs.uiLanguage);
     saveSessionState();
     settingsModal?.classList.add("hidden");
-    showToast("Preferences saved");
+    showToast(t("settings_saved_toast"));
   });
 }
 
+const prefsAtBoot = loadPrefs();
+setUiLanguage(prefsAtBoot.uiLanguage);
+
 initMarkdown();
+initPwaInstallSupport();
 setMainTab("chat");
 restoreSessionStateIfEnabled();
 syncLearnLayout();
 syncCodeLayout();
 wireSettingsUi();
 wireDefaultPageHintModal();
+maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
 initAuth();
 initBetaBanner();
