@@ -821,8 +821,8 @@ function pickChatModelForMessages(msgs) {
 
 function chatSystemBase(mode) {
   return mode === "code"
-    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code."
-    : "You are a friendly study coach for students. Keep answers concise and actionable. Use Markdown when helpful.";
+    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code. Answer the question directly; do not open by restating or paraphrasing what they asked unless they are unclear."
+    : "You are a friendly study coach for students. Answer directly?start with useful content, not a reframed repeat of their question (avoid lines like 'So you want?' or 'We need to?'). Keep answers concise and actionable. Use Markdown when helpful.";
 }
 
 function modeStyleInstruction(studyMode) {
@@ -830,7 +830,7 @@ function modeStyleInstruction(studyMode) {
   if (m === "quiz") {
     return "Mode: Quiz. Give 4-6 short questions first, then provide answer key with concise explanations.";
   }
-  return "Mode: Explain. Give a clear explanation with a compact example.";
+  return "Mode: Explain. Give a clear explanation with a compact example. No meta preamble that only restates the topic.";
 }
 
 const WEAK_TOPIC_SYSTEM_STATIC = `You are a student coach. Build a "weak-topic recap" from the activity data in the user message.
