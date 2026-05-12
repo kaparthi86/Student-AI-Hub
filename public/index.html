@@ -184,7 +184,7 @@
                 id="chatHeroMicBtn"
                 aria-label="Voice search"
                 aria-pressed="false"
-                title="Tap to speak, tap again to search"
+                title="Tap to speak; pauses end listening, or tap again to search"
               >
                 <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
@@ -213,7 +213,7 @@
                 <button type="button" class="starter-chip" data-starter="readAloud">Listen Mode</button>
               </div>
               <div id="chatFollowupAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
-              <div class="search-bar compact search-bar--learn">
+              <div class="search-bar compact search-bar--learn search-bar--learn-followup">
                 <button
                   type="button"
                   class="learn-chat-attach-btn learn-vision-ui"
@@ -232,6 +232,21 @@
                   </svg>
                 </button>
                 <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
+                <button
+                  type="button"
+                  class="learn-hero-mic-btn"
+                  id="chatFollowupMicBtn"
+                  aria-label="Voice input"
+                  aria-pressed="false"
+                  title="Tap to speak; pauses end listening, or tap again to send"
+                >
+                  <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 1 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
                 <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
               </div>
               <div class="followup-meta">
@@ -390,6 +405,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=learn-hero-voice-1"></script>
+    <script src="./app.js?v=learn-voice-followup-1"></script>
   </body>
 </html>

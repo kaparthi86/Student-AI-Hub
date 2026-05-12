@@ -32,7 +32,7 @@ const chatHeroAttachBtn = document.getElementById("chatHeroAttachBtn");
 const chatFollowupAttachBtn = document.getElementById("chatFollowupAttachBtn");
 const chatHeroAttachPreview = document.getElementById("chatHeroAttachPreview");
 const chatFollowupAttachPreview = document.getElementById("chatFollowupAttachPreview");
-const chatHeroMicBtn = document.getElementById("chatHeroMicBtn");
+const chatFollowupMicBtn = document.getElementById("chatFollowupMicBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -52,11 +52,10 @@ const notebookStatus = document.getElementById("notebookStatus");
 let mainTab = "chat";
 let supabaseClient = null;
 
-/** Learn hero only: tap mic to dictate, tap again to stop ? same path as Ask (auto-submit when non-empty). */
-let learnHeroVoiceRec = null;
-let learnHeroVoiceListening = false;
-let learnHeroVoiceSavedInput = "";
-let learnHeroVoiceAbandon = false;
+/** Learn Ask hero + follow-up: Web Speech with silence auto-stop and tap-to-stop. */
+const LEARN_VOICE_SILENCE_MS = 2000;
+let learnVoiceGlobalStop = null;
+let learnVoiceEpoch = 0;
 
 /** JWT `exp` in ms (0 if unknown). Used to refresh before API calls. */
 function accessTokenExpiresAtMs(accessToken) {
@@ -376,6 +375,184 @@ function showToast(msg) {
   }, 2600);
 }
 
+function beginLearnVoiceSession(stopFn) {
+  const prev = learnVoiceGlobalStop;
+  learnVoiceGlobalStop = stopFn;
+  prev?.();
+}
+
+function endLearnVoiceSessionIfCurrent(stopFn) {
+  if (learnVoiceGlobalStop === stopFn) learnVoiceGlobalStop = null;
+}
+
+function stopAllLearnVoice() {
+  const cur = learnVoiceGlobalStop;
+  learnVoiceGlobalStop = null;
+  cur?.();
+}
+
+/**
+ * Wire a Learn (Ask) mic: tap to start, tap again or pause after speech to stop; then auto-submit like the primary button when non-empty.
+ * @param {{ micBtn: HTMLElement | null, inputEl: HTMLTextAreaElement | null, submitBtn: HTMLElement | null }} p
+ */
+function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
+  if (!micBtn || !inputEl || !submitBtn) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    micBtn.disabled = true;
+    micBtn.title = "Voice input is not supported in this browser";
+    return;
+  }
+
+  let rec = null;
+  let listening = false;
+  let savedInput = "";
+  let abandon = false;
+  let silenceTimer = null;
+  let myEpoch = 0;
+
+  const clearSilence = () => {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+  };
+
+  const armSilenceAfterSpeech = (transcriptSoFar) => {
+    if (!String(transcriptSoFar || "").trim()) return;
+    clearSilence();
+    silenceTimer = setTimeout(() => {
+      silenceTimer = null;
+      try {
+        rec?.stop();
+      } catch {
+        /* ignore */
+      }
+    }, LEARN_VOICE_SILENCE_MS);
+  };
+
+  const setMicUi = (on) => {
+    micBtn.classList.toggle("learn-hero-mic-btn--active", !!on);
+    micBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) {
+      submitBtn.dataset.learnVoiceHold = submitBtn.disabled ? "1" : "";
+      if (!submitBtn.disabled) submitBtn.disabled = true;
+    } else {
+      if (submitBtn.dataset.learnVoiceHold !== "1") submitBtn.disabled = false;
+      delete submitBtn.dataset.learnVoiceHold;
+    }
+  };
+
+  const stopSelf = () => {
+    if (!listening) return;
+    abandon = true;
+    clearSilence();
+    try {
+      rec?.stop();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const onRecognitionEnd = () => {
+    clearSilence();
+    rec = null;
+    const wasListening = listening;
+    listening = false;
+    if (!wasListening) return;
+
+    const epochStale = myEpoch !== learnVoiceEpoch;
+    if (epochStale) {
+      if (abandon && inputEl) inputEl.value = savedInput;
+      abandon = false;
+      setMicUi(false);
+      endLearnVoiceSessionIfCurrent(stopSelf);
+      return;
+    }
+
+    setMicUi(false);
+    endLearnVoiceSessionIfCurrent(stopSelf);
+
+    if (abandon) {
+      abandon = false;
+      if (inputEl) inputEl.value = savedInput;
+      return;
+    }
+
+    const text = (inputEl.value || "").trim();
+    if (text) {
+      submitBtn.click();
+    } else {
+      if (inputEl) inputEl.value = savedInput;
+      showToast("No speech heard.");
+    }
+  };
+
+  micBtn.addEventListener("click", () => {
+    if (!listening) {
+      beginLearnVoiceSession(stopSelf);
+      savedInput = inputEl.value || "";
+      abandon = false;
+      const r = new SR();
+      rec = r;
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = document.documentElement.lang || "en-US";
+
+      r.onresult = (ev) => {
+        let t = "";
+        for (let i = 0; i < ev.results.length; i++) {
+          t += ev.results[i][0]?.transcript || "";
+        }
+        inputEl.value = t.replace(/^\s+/, "");
+        armSilenceAfterSpeech(inputEl.value);
+      };
+
+      r.onerror = (ev) => {
+        const err = ev.error || "";
+        if (err === "aborted") return;
+        if (err === "not-allowed") {
+          showToast("Microphone permission denied.");
+        } else if (err === "no-speech") {
+          showToast("No speech heard.");
+        } else {
+          showToast("Voice input failed.");
+        }
+        abandon = true;
+        try {
+          r.stop();
+        } catch {
+          /* ignore */
+        }
+      };
+
+      r.onend = () => {
+        onRecognitionEnd();
+      };
+
+      try {
+        listening = true;
+        setMicUi(true);
+        r.start();
+        learnVoiceEpoch += 1;
+        myEpoch = learnVoiceEpoch;
+      } catch {
+        listening = false;
+        rec = null;
+        setMicUi(false);
+        endLearnVoiceSessionIfCurrent(stopSelf);
+        showToast("Could not start voice input.");
+      }
+    } else {
+      try {
+        rec?.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+}
+
 function saveSessionState() {
   try {
     const chatOut = LEARN_VISION_ENABLED
@@ -562,14 +739,7 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
-  if (mainTab !== "chat") {
-    learnHeroVoiceAbandon = true;
-    try {
-      learnHeroVoiceRec?.stop();
-    } catch {
-      /* ignore */
-    }
-  }
+  if (mainTab !== "chat") stopAllLearnVoice();
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -1383,109 +1553,8 @@ wireStarterChipsAsSend(
   { readAloud: readLastAssistantAloud },
 );
 
-function setLearnHeroMicUi(listening) {
-  chatHeroMicBtn?.classList.toggle("learn-hero-mic-btn--active", !!listening);
-  if (chatHeroMicBtn) chatHeroMicBtn.setAttribute("aria-pressed", listening ? "true" : "false");
-  if (!chatSearchSubmit) return;
-  if (listening) {
-    chatSearchSubmit.dataset.learnHeroVoiceHold = chatSearchSubmit.disabled ? "1" : "";
-    if (!chatSearchSubmit.disabled) chatSearchSubmit.disabled = true;
-  } else {
-    if (chatSearchSubmit.dataset.learnHeroVoiceHold !== "1") chatSearchSubmit.disabled = false;
-    delete chatSearchSubmit.dataset.learnHeroVoiceHold;
-  }
-}
-
-function learnHeroVoiceOnEnd() {
-  learnHeroVoiceRec = null;
-  const wasListening = learnHeroVoiceListening;
-  learnHeroVoiceListening = false;
-  if (!wasListening) return;
-  setLearnHeroMicUi(false);
-  if (learnHeroVoiceAbandon) {
-    learnHeroVoiceAbandon = false;
-    if (chatSearchInput) chatSearchInput.value = learnHeroVoiceSavedInput;
-    return;
-  }
-  const text = (chatSearchInput?.value || "").trim();
-  if (text) {
-    chatSearchSubmit?.click();
-  } else {
-    if (chatSearchInput) chatSearchInput.value = learnHeroVoiceSavedInput;
-    showToast("No speech heard.");
-  }
-}
-
-function wireLearnHeroVoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!chatHeroMicBtn || !chatSearchInput || !chatSearchSubmit) return;
-  if (!SR) {
-    chatHeroMicBtn.disabled = true;
-    chatHeroMicBtn.title = "Voice search is not supported in this browser";
-    return;
-  }
-
-  chatHeroMicBtn.addEventListener("click", () => {
-    if (!learnHeroVoiceListening) {
-      learnHeroVoiceSavedInput = chatSearchInput.value || "";
-      learnHeroVoiceAbandon = false;
-      const rec = new SR();
-      learnHeroVoiceRec = rec;
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = document.documentElement.lang || "en-US";
-
-      rec.onresult = (ev) => {
-        let t = "";
-        for (let i = 0; i < ev.results.length; i++) {
-          t += ev.results[i][0]?.transcript || "";
-        }
-        chatSearchInput.value = t.replace(/^\s+/, "");
-      };
-
-      rec.onerror = (ev) => {
-        const err = ev.error || "";
-        if (err === "aborted") return;
-        if (err === "not-allowed") {
-          showToast("Microphone permission denied.");
-        } else if (err === "no-speech") {
-          showToast("No speech heard.");
-        } else {
-          showToast("Voice input failed.");
-        }
-        learnHeroVoiceAbandon = true;
-        try {
-          rec.stop();
-        } catch {
-          /* ignore */
-        }
-      };
-
-      rec.onend = () => {
-        learnHeroVoiceOnEnd();
-      };
-
-      try {
-        learnHeroVoiceListening = true;
-        setLearnHeroMicUi(true);
-        rec.start();
-      } catch {
-        learnHeroVoiceListening = false;
-        learnHeroVoiceRec = null;
-        setLearnHeroMicUi(false);
-        showToast("Could not start voice input.");
-      }
-    } else {
-      try {
-        learnHeroVoiceRec?.stop();
-      } catch {
-        /* ignore */
-      }
-    }
-  });
-}
-
-wireLearnHeroVoice();
+wireLearnVoiceMic({ micBtn: chatHeroMicBtn, inputEl: chatSearchInput, submitBtn: chatSearchSubmit });
+wireLearnVoiceMic({ micBtn: chatFollowupMicBtn, inputEl: chatFollowupInput, submitBtn: chatFollowupSubmit });
 
 wireSearchFlow({
   searchInput: codeSearchInput,

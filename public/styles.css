@@ -389,8 +389,28 @@ textarea {
   grid-template-columns: auto auto 1fr auto auto;
 }
 
-.search-bar.compact.search-bar--learn {
-  grid-template-columns: auto 1fr auto;
+/* Learn hero Ask: slimmer control so it matches logo/mic rails */
+.search-bar--learn-hero .search-submit {
+  min-width: 72px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.search-bar.compact.search-bar--learn-followup.search-bar--learn {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) textarea {
+  border-radius: 15px 0 0 15px;
+}
+
+.search-bar.compact .learn-hero-mic-btn {
+  align-self: stretch;
+  min-height: 48px;
 }
 
 .learn-hero-mic-btn {
@@ -1430,6 +1450,13 @@ textarea {
     min-width: 48px;
   }
 
+  .search-bar:not(.compact).search-bar--learn-hero .search-submit {
+    min-width: 80px;
+    padding: 0 18px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
   /*
    * Follow-up composers use .search-bar.compact only inside .followup-bar.
    * Keep them as one horizontal pill (field | Send) like the hero search bar,
@@ -1465,8 +1492,16 @@ textarea {
     touch-action: manipulation;
   }
 
-  .followup-bar .search-bar.compact.search-bar--learn {
-    grid-template-columns: 48px minmax(0, 1fr) auto;
+  .followup-bar .search-bar.compact.search-bar--learn-followup:not(.search-bar--learn) {
+    grid-template-columns: minmax(0, 1fr) 48px auto;
+  }
+
+  .followup-bar .search-bar.compact.search-bar--learn-followup.search-bar--learn {
+    grid-template-columns: 48px minmax(0, 1fr) 48px auto;
+  }
+
+  .followup-bar .search-bar.compact.search-bar--learn-followup .learn-hero-mic-btn {
+    min-height: 76px;
   }
 
   .followup-bar .search-bar.compact .search-submit {
