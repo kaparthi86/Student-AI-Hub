@@ -79,7 +79,7 @@ const envFileExists = fs.existsSync(envPath);
 const MAX_DOC_CHARS = 45000;
 const MAX_CHAT_HISTORY = 24;
 
-/** Exact-replay cache (per-user key) ? skips provider calls for identical payloads within TTL. */
+/** Exact-replay cache (per-user key): skips provider calls for identical payloads within TTL. */
 const RESPONSE_CACHE_TTL_MS = Math.max(0, Number(process.env.HF_RESPONSE_CACHE_TTL_SEC || 0) * 1000);
 const RESPONSE_CACHE_MAX = Math.max(16, Math.min(5000, Number(process.env.HF_RESPONSE_CACHE_MAX_ENTRIES || 400)));
 const completionResponseCache = new Map();
@@ -163,6 +163,24 @@ function sendSseSingleChunk(res, text) {
   if (typeof res.flushHeaders === "function") res.flushHeaders();
   res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
   res.write("data: [DONE]\n\n");
+  res.end();
+}
+
+/**
+ * Replay archived provider SSE. A single res.end(blob) often arrives as one fetch read(), so the
+ * client parses every data: line in one turn and streaming UI does not update incrementally.
+ */
+async function replayCachedSseResponse(res, archivedUtf8) {
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("X-Accel-Buffering", "no");
+  if (typeof res.flushHeaders === "function") res.flushHeaders();
+  const s = String(archivedUtf8);
+  const step = 4096;
+  for (let i = 0; i < s.length; i += step) {
+    res.write(s.slice(i, Math.min(s.length, i + step)));
+    if (i + step < s.length) await new Promise((r) => setImmediate(r));
+  }
   res.end();
 }
 
@@ -967,11 +985,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
       if (RESPONSE_CACHE_TTL_MS) {
         const hit = completionCacheGet(streamCacheHash);
         if (hit) {
-          res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-          res.setHeader("Cache-Control", "no-cache, no-transform");
-          res.setHeader("X-Accel-Buffering", "no");
-          if (typeof res.flushHeaders === "function") res.flushHeaders();
-          res.end(hit);
+          await replayCachedSseResponse(res, hit);
           return;
         }
       }
