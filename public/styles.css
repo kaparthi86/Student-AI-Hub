@@ -923,7 +923,12 @@ textarea {
 }
 
 .bubble-md--streaming {
-  min-height: 1.25em;
+  min-height: 1.35em;
+  line-height: 1.62;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .bubble-md > :first-child {
