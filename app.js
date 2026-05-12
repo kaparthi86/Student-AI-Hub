@@ -32,6 +32,7 @@ const chatHeroAttachBtn = document.getElementById("chatHeroAttachBtn");
 const chatFollowupAttachBtn = document.getElementById("chatFollowupAttachBtn");
 const chatHeroAttachPreview = document.getElementById("chatHeroAttachPreview");
 const chatFollowupAttachPreview = document.getElementById("chatFollowupAttachPreview");
+const chatFollowupMicBtn = document.getElementById("chatFollowupMicBtn");
 
 const codeSearchShell = document.getElementById("codeSearchShell");
 const codeAnswerShell = document.getElementById("codeAnswerShell");
@@ -51,18 +52,69 @@ const notebookStatus = document.getElementById("notebookStatus");
 let mainTab = "chat";
 let supabaseClient = null;
 
+/** Learn Ask hero + follow-up: Web Speech with silence auto-stop and tap-to-stop. */
+const LEARN_VOICE_SILENCE_MS = 2000;
+let learnVoiceGlobalStop = null;
+let learnVoiceEpoch = 0;
+
+/** JWT `exp` in ms (0 if unknown). Used to refresh before API calls. */
+function accessTokenExpiresAtMs(accessToken) {
+  try {
+    const parts = String(accessToken).split(".");
+    if (parts.length < 2) return 0;
+    let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    const json = JSON.parse(atob(b64));
+    return typeof json.exp === "number" ? json.exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Headers for `/api/*` including `Authorization: Bearer <access_token>`.
+ * Proactively calls `refreshSession` when the access token is expired or near expiry.
+ */
 async function authHeaders(base = {}) {
   const h = { ...base };
   try {
-    if (supabaseClient) {
-      const { data } = await supabaseClient.auth.getSession();
-      const t = data?.session?.access_token;
-      if (t) h.Authorization = `Bearer ${t}`;
+    if (!supabaseClient) return h;
+    let { data: { session } = {} } = await supabaseClient.auth.getSession();
+    let token = session?.access_token;
+    if (!token) return h;
+    const exp = accessTokenExpiresAtMs(token);
+    const refreshIfBeforeMs = 120_000;
+    if (!exp || Date.now() > exp - refreshIfBeforeMs) {
+      const { data: ref, error } = await supabaseClient.auth.refreshSession();
+      if (!error && ref?.session?.access_token) {
+        session = ref.session;
+        token = session.access_token;
+      }
     }
+    if (token) h.Authorization = `Bearer ${token}`;
   } catch {
     /* ignore */
   }
   return h;
+}
+
+/**
+ * `fetch` with auth headers; on 401 runs `refreshSession` once and retries (handles stale tokens after idle tabs).
+ * Pass `headers` as a plain object only (same as existing callers).
+ */
+async function fetchAuthed(url, init = {}) {
+  const { headers: extra, ...rest } = init;
+  const ext = typeof extra === "object" && extra && !(extra instanceof Headers) ? extra : {};
+  const run = async () => {
+    const headers = await authHeaders(ext);
+    return fetch(url, { ...rest, headers });
+  };
+  let res = await run();
+  if (res.status === 401 && supabaseClient) {
+    await supabaseClient.auth.refreshSession().catch(() => {});
+    res = await run();
+  }
+  return res;
 }
 
 const chatHistory = [];
@@ -323,6 +375,184 @@ function showToast(msg) {
   }, 2600);
 }
 
+function beginLearnVoiceSession(stopFn) {
+  const prev = learnVoiceGlobalStop;
+  learnVoiceGlobalStop = stopFn;
+  prev?.();
+}
+
+function endLearnVoiceSessionIfCurrent(stopFn) {
+  if (learnVoiceGlobalStop === stopFn) learnVoiceGlobalStop = null;
+}
+
+function stopAllLearnVoice() {
+  const cur = learnVoiceGlobalStop;
+  learnVoiceGlobalStop = null;
+  cur?.();
+}
+
+/**
+ * Wire a Learn (Ask) mic: tap to start, tap again or pause after speech to stop; then auto-submit like the primary button when non-empty.
+ * @param {{ micBtn: HTMLElement | null, inputEl: HTMLTextAreaElement | null, submitBtn: HTMLElement | null }} p
+ */
+function wireLearnVoiceMic({ micBtn, inputEl, submitBtn } = {}) {
+  if (!micBtn || !inputEl || !submitBtn) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    micBtn.disabled = true;
+    micBtn.title = "Voice input is not supported in this browser";
+    return;
+  }
+
+  let rec = null;
+  let listening = false;
+  let savedInput = "";
+  let abandon = false;
+  let silenceTimer = null;
+  let myEpoch = 0;
+
+  const clearSilence = () => {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+  };
+
+  const armSilenceAfterSpeech = (transcriptSoFar) => {
+    if (!String(transcriptSoFar || "").trim()) return;
+    clearSilence();
+    silenceTimer = setTimeout(() => {
+      silenceTimer = null;
+      try {
+        rec?.stop();
+      } catch {
+        /* ignore */
+      }
+    }, LEARN_VOICE_SILENCE_MS);
+  };
+
+  const setMicUi = (on) => {
+    micBtn.classList.toggle("learn-hero-mic-btn--active", !!on);
+    micBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) {
+      submitBtn.dataset.learnVoiceHold = submitBtn.disabled ? "1" : "";
+      if (!submitBtn.disabled) submitBtn.disabled = true;
+    } else {
+      if (submitBtn.dataset.learnVoiceHold !== "1") submitBtn.disabled = false;
+      delete submitBtn.dataset.learnVoiceHold;
+    }
+  };
+
+  const stopSelf = () => {
+    if (!listening) return;
+    abandon = true;
+    clearSilence();
+    try {
+      rec?.stop();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const onRecognitionEnd = () => {
+    clearSilence();
+    rec = null;
+    const wasListening = listening;
+    listening = false;
+    if (!wasListening) return;
+
+    const epochStale = myEpoch !== learnVoiceEpoch;
+    if (epochStale) {
+      if (abandon && inputEl) inputEl.value = savedInput;
+      abandon = false;
+      setMicUi(false);
+      endLearnVoiceSessionIfCurrent(stopSelf);
+      return;
+    }
+
+    setMicUi(false);
+    endLearnVoiceSessionIfCurrent(stopSelf);
+
+    if (abandon) {
+      abandon = false;
+      if (inputEl) inputEl.value = savedInput;
+      return;
+    }
+
+    const text = (inputEl.value || "").trim();
+    if (text) {
+      submitBtn.click();
+    } else {
+      if (inputEl) inputEl.value = savedInput;
+      showToast("No speech heard.");
+    }
+  };
+
+  micBtn.addEventListener("click", () => {
+    if (!listening) {
+      beginLearnVoiceSession(stopSelf);
+      savedInput = inputEl.value || "";
+      abandon = false;
+      const r = new SR();
+      rec = r;
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = document.documentElement.lang || "en-US";
+
+      r.onresult = (ev) => {
+        let t = "";
+        for (let i = 0; i < ev.results.length; i++) {
+          t += ev.results[i][0]?.transcript || "";
+        }
+        inputEl.value = t.replace(/^\s+/, "");
+        armSilenceAfterSpeech(inputEl.value);
+      };
+
+      r.onerror = (ev) => {
+        const err = ev.error || "";
+        if (err === "aborted") return;
+        if (err === "not-allowed") {
+          showToast("Microphone permission denied.");
+        } else if (err === "no-speech") {
+          showToast("No speech heard.");
+        } else {
+          showToast("Voice input failed.");
+        }
+        abandon = true;
+        try {
+          r.stop();
+        } catch {
+          /* ignore */
+        }
+      };
+
+      r.onend = () => {
+        onRecognitionEnd();
+      };
+
+      try {
+        listening = true;
+        setMicUi(true);
+        r.start();
+        learnVoiceEpoch += 1;
+        myEpoch = learnVoiceEpoch;
+      } catch {
+        listening = false;
+        rec = null;
+        setMicUi(false);
+        endLearnVoiceSessionIfCurrent(stopSelf);
+        showToast("Could not start voice input.");
+      }
+    } else {
+      try {
+        rec?.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+}
+
 function saveSessionState() {
   try {
     const chatOut = LEARN_VISION_ENABLED
@@ -509,6 +739,7 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
+  if (mainTab !== "chat") stopAllLearnVoice();
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -552,9 +783,9 @@ function wireAssistantCopy(bubble, rawText) {
 }
 
 async function submitAssistantFeedback(payload) {
-  const res = await fetch("/api/feedback", {
+  const res = await fetchAuthed("/api/feedback", {
     method: "POST",
-    headers: await authHeaders({ "Content-Type": "application/json" }),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -953,9 +1184,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   try {
-    const response = await fetch("/api/chat", {
+    const response = await fetchAuthed("/api/chat", {
       method: "POST",
-      headers: await authHeaders({ "Content-Type": "application/json" }),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(chatBody),
     });
 
@@ -1322,6 +1553,9 @@ wireStarterChipsAsSend(
   { readAloud: readLastAssistantAloud },
 );
 
+wireLearnVoiceMic({ micBtn: chatHeroMicBtn, inputEl: chatSearchInput, submitBtn: chatSearchSubmit });
+wireLearnVoiceMic({ micBtn: chatFollowupMicBtn, inputEl: chatFollowupInput, submitBtn: chatFollowupSubmit });
+
 wireSearchFlow({
   searchInput: codeSearchInput,
   searchSubmit: codeSearchSubmit,
@@ -1389,9 +1623,9 @@ docAnalyzeBtn.addEventListener("click", async () => {
   try {
     const form = new FormData();
     form.append("document", file);
-    const response = await fetch("/api/doc-insights", {
+    const response = await fetchAuthed("/api/doc-insights", {
       method: "POST",
-      headers: await authHeaders(),
+      headers: {},
       body: form,
     });
     const data = await response.json();

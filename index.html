@@ -18,7 +18,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=learn-vision-muted-1" />
+    <link rel="stylesheet" href="./styles.css?v=safari-learn-rail-2" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -139,7 +139,7 @@
             />
             <p class="search-title">What do you want to learn today?</p>
             <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
-            <div class="search-bar search-bar--branded search-bar--learn">
+            <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
               <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="11" fill="url(#searchBrandGrad)" />
@@ -178,6 +178,21 @@
                 rows="1"
                 placeholder="Ask anything... (e.g. Explain gradient descent like I am 15)"
               ></textarea>
+              <button
+                type="button"
+                class="learn-hero-mic-btn"
+                id="chatHeroMicBtn"
+                aria-label="Voice search"
+                aria-pressed="false"
+                title="Tap to speak; pauses end listening, or tap again to search"
+              >
+                <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 1 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted">Press Enter to search. Shift+Enter for a new line.</p>
@@ -198,7 +213,7 @@
                 <button type="button" class="starter-chip" data-starter="readAloud">Listen Mode</button>
               </div>
               <div id="chatFollowupAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
-              <div class="search-bar compact search-bar--learn">
+              <div class="search-bar compact search-bar--learn search-bar--learn-followup">
                 <button
                   type="button"
                   class="learn-chat-attach-btn learn-vision-ui"
@@ -217,7 +232,24 @@
                   </svg>
                 </button>
                 <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
-                <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
+                <div class="learn-followup-actions" role="group" aria-label="Voice and send">
+                  <button
+                    type="button"
+                    class="learn-hero-mic-btn"
+                    id="chatFollowupMicBtn"
+                    aria-label="Voice input"
+                    aria-pressed="false"
+                    title="Tap to speak; pauses end listening, or tap again to send"
+                  >
+                    <svg class="learn-hero-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 1 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                  <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
+                </div>
               </div>
               <div class="followup-meta">
                 <span id="apiStatus" class="muted">Ready</span>
@@ -375,6 +407,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=read-aloud-chip-1"></script>
+    <script src="./app.js?v=learn-voice-followup-1"></script>
   </body>
 </html>
