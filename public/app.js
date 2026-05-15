@@ -43,6 +43,9 @@ const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
 const codeStatus = document.getElementById("codeStatus");
+const chatCopyThreadBtn = document.getElementById("chatCopyThreadBtn");
+const codeCopyThreadBtn = document.getElementById("codeCopyThreadBtn");
+const chatHeroMicBtn = document.getElementById("chatHeroMicBtn");
 
 const docFileInput = document.getElementById("docFileInput");
 const docAnalyzeBtn = document.getElementById("docAnalyzeBtn");
@@ -241,6 +244,64 @@ const I18N = {
       "On Chrome or Edge, use the install icon in the address bar (or browser menu) when it appears to add our icon on desktop or home screen.",
     pwa_ios_steps:
       "Safari on iPhone or iPad: tap Share, then Add to Home Screen, then Add to place the branded icon on your home screen.",
+    pwa_help_btn: "How to install",
+    pwa_help_steps:
+      "Desktop Chrome / Edge: use the install icon in the address bar, or the menu (three dots) and choose Install Student AI Hub or Install app.\n\nAndroid Chrome: open the menu and tap Add to Home screen or Install app.\n\nFirefox or Safari on Mac usually do not offer a website Install button; bookmark this page or use Add to Home Screen on iPhone / iPad.\n\nIf no install icon appears, the page may need HTTPS (not http://) or the browser may show it after you use the site a little longer.",
+    empty_try_ask: "Try asking:",
+    empty_try_code: "Try pasting or asking:",
+    empty_try_notebook: "Works well with:",
+    empty_chat_1: "Photosynthesis, simply",
+    empty_chat_1_send: "Explain photosynthesis in simple terms, as if I am in high school.",
+    empty_chat_2: "Gradient descent",
+    empty_chat_2_send: "Explain gradient descent like I am 15, with a simple example.",
+    empty_chat_3: "Study plan for an exam",
+    empty_chat_3_send: "Help me make a one-week study plan for a biology midterm.",
+    empty_code_1: "Fix my Python loop",
+    empty_code_1_send:
+      "My Python for loop runs forever. Here is the code:\n\nwhile True:\n    print('hi')\n\nWhy does it not stop and how do I fix it?",
+    empty_code_2: "Explain this error",
+    empty_code_2_send:
+      "I get TypeError: cannot read property 'map' of undefined in JavaScript. What does it mean and how do I debug it?",
+    empty_code_3: "Big-O of binary search",
+    empty_code_3_send: "What is the time complexity of binary search and why? Keep it beginner-friendly.",
+    empty_nb_1: "PDF lecture notes",
+    empty_nb_1_hint: "Upload a PDF of lecture notes to get a summary, key concepts, and quiz questions.",
+    empty_nb_2: "Markdown study guide",
+    empty_nb_2_hint: "Upload a .md or .txt study guide for a structured recap and study plan.",
+    empty_nb_3: "CSV data table",
+    empty_nb_3_hint: "Upload a .csv file to summarize columns, patterns, and practice questions.",
+    chip_summarize: "Summarize",
+    chip_quiz: "Quiz me",
+    chip_steps: "Step-by-step",
+    chip_listen: "Listen mode",
+    chips_followup_aria: "Quick follow-ups and read aloud",
+    starter_prompt_summarize:
+      "Summarize your last answer in short bullet points. Highlight the key terms I should remember.\n\n",
+    starter_prompt_quiz:
+      "Based on our conversation so far, give me a short quiz: questions, answer choices, and correct answers with brief explanations.\n\n",
+    starter_prompt_steps: "Explain that again step-by-step, with smaller steps and a simple example where it helps.\n\n",
+    copy_thread: "Copy conversation",
+    copy_thread_aria: "Copy entire conversation",
+    toast_thread_copied: "Conversation copied",
+    toast_thread_empty: "Nothing to copy yet",
+    copy_code: "Copy code",
+    copy_code_aria: "Copy code block",
+    attach_image_aria: "Attach image",
+    attach_image_title: "Attach image",
+    voice_search_aria: "Voice search",
+    voice_search_title: "Tap to speak; pauses end listening, or tap again to search",
+    voice_input_aria: "Voice input",
+    voice_input_title: "Tap to speak; pauses end listening, or tap again to Ask",
+    disclaimer_mistakes:
+      "Student AI Hub can make mistakes. Check important facts and follow your instructor's policies on using AI.",
+    disclaimer_honor:
+      "For study help and practice only  follow your honor code; don't submit AI output when your course forbids it.",
+    disclaimer_aria: "Disclaimer",
+    doc_selected: "Selected: {name} ({kb} KB)",
+    toast_image_read_fail: "Could not read image",
+    toast_doc_analysis_failed: "Document analysis failed",
+    pwa_install_sub_default:
+      "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
   },
   es: {
     signin_title: "Iniciar sesin",
@@ -338,6 +399,64 @@ const I18N = {
       "En Chrome o Edge, usa el icono de instalar en la barra de direcciones (o menu) para agregar el acceso.",
     pwa_ios_steps:
       "Safari en iPhone o iPad: pulsa Compartir, luego Agregar a pantalla de inicio y despues Agregar para tener el icono.",
+    pwa_help_btn: "Como instalar",
+    pwa_help_steps:
+      "Chrome / Edge (escritorio): busca el icono de instalar en la barra de direcciones, o el menu (tres puntos) > Instalar aplicacion / Instalar Student AI Hub.\n\nAndroid Chrome: menu > Agregar a pantalla de inicio o Instalar aplicacion.\n\nFirefox o Safari en Mac a menudo no muestran Instalar en sitios web; guarda un marcador o usa Agregar a pantalla de inicio en iPhone / iPad.\n\nSi no ves el icono, puede hacer falta HTTPS o mas uso del sitio.",
+    empty_try_ask: "Prueba preguntando:",
+    empty_try_code: "Prueba pegando o preguntando:",
+    empty_try_notebook: "Funciona bien con:",
+    empty_chat_1: "Fotosintesis, simple",
+    empty_chat_1_send: "Explica la fotosintesis en terminos simples, como si estuviera en secundaria.",
+    empty_chat_2: "Descenso de gradiente",
+    empty_chat_2_send: "Explica el descenso de gradiente como si tuviera 15 anos, con un ejemplo simple.",
+    empty_chat_3: "Plan de estudio",
+    empty_chat_3_send: "Ayudame a hacer un plan de estudio de una semana para un parcial de biologia.",
+    empty_code_1: "Arreglar bucle Python",
+    empty_code_1_send:
+      "Mi bucle for en Python corre para siempre:\n\nwhile True:\n    print('hola')\n\nPor que no para y como lo arreglo?",
+    empty_code_2: "Explicar este error",
+    empty_code_2_send:
+      "Tengo TypeError: cannot read property 'map' of undefined en JavaScript. Que significa y como depurarlo?",
+    empty_code_3: "Big-O de busqueda binaria",
+    empty_code_3_send: "Cual es la complejidad temporal de la busqueda binaria y por que? Explicacion para principiantes.",
+    empty_nb_1: "Apuntes PDF",
+    empty_nb_1_hint: "Sube un PDF de apuntes para resumen, conceptos clave y preguntas tipo quiz.",
+    empty_nb_2: "Guia en Markdown",
+    empty_nb_2_hint: "Sube un .md o .txt para un repaso estructurado y plan de estudio.",
+    empty_nb_3: "Tabla CSV",
+    empty_nb_3_hint: "Sube un .csv para resumir columnas, patrones y preguntas de practica.",
+    chip_summarize: "Resumir",
+    chip_quiz: "Quiz",
+    chip_steps: "Paso a paso",
+    chip_listen: "Modo escuchar",
+    chips_followup_aria: "Seguimientos rapidos y lectura en voz alta",
+    starter_prompt_summarize:
+      "Resume tu ultima respuesta en vietas cortas. Destaca los terminos clave que debo recordar.\n\n",
+    starter_prompt_quiz:
+      "Segun nuestra conversacion, dame un quiz corto: preguntas, opciones y respuestas correctas con explicacion breve.\n\n",
+    starter_prompt_steps: "Explica de nuevo paso a paso, con pasos mas pequeos y un ejemplo simple si ayuda.\n\n",
+    copy_thread: "Copiar conversacion",
+    copy_thread_aria: "Copiar toda la conversacion",
+    toast_thread_copied: "Conversacion copiada",
+    toast_thread_empty: "Aun no hay nada que copiar",
+    copy_code: "Copiar codigo",
+    copy_code_aria: "Copiar bloque de codigo",
+    attach_image_aria: "Adjuntar imagen",
+    attach_image_title: "Adjuntar imagen",
+    voice_search_aria: "Busqueda por voz",
+    voice_search_title: "Toca para hablar; pausas terminan la escucha, o toca de nuevo para buscar",
+    voice_input_aria: "Entrada por voz",
+    voice_input_title: "Toca para hablar; pausas terminan la escucha, o toca de nuevo para Preguntar",
+    disclaimer_mistakes:
+      "Student AI Hub puede equivocarse. Verifica datos importantes y sigue las politicas de tu instructor sobre IA.",
+    disclaimer_honor:
+      "Solo para estudiar y practicar  respeta tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
+    disclaimer_aria: "Aviso legal",
+    doc_selected: "Seleccionado: {name} ({kb} KB)",
+    toast_image_read_fail: "No se pudo leer la imagen",
+    toast_doc_analysis_failed: "Fallo el analisis del documento",
+    pwa_install_sub_default:
+      "Agrega nuestro icono a la pantalla de inicio o escritorio para acceso rapido hasta la app movil.",
   },
   hi: {
     signin_title: "Sign in karein",
@@ -437,6 +556,63 @@ const I18N = {
     pwa_sub_desktop: "Chrome ya Edge mein address bar ka install icon use karke shortcut add karein.",
     pwa_ios_steps:
       "iPhone/iPad Safari: Share dabayein, phir Add to Home Screen, phir Add dabayein taki icon home screen par aaye.",
+    pwa_help_btn: "Install kaise karein",
+    pwa_help_steps:
+      "Desktop Chrome / Edge: address bar mein install icon dekhein, ya menu (teen dot) se Install app / Student AI Hub install chunen.\n\nAndroid Chrome: menu se Add to Home screen ya Install app.\n\nMac par Firefox / Safari aksar website Install button nahi dete; bookmark karein ya iPhone / iPad par Add to Home Screen.\n\nAgar icon nahi dikhe, HTTPS zaroori ho sakta hai ya thodi der site use karke phir dekhein.",
+    empty_try_ask: "Aise poochiye:",
+    empty_try_code: "Paste karein ya poochiye:",
+    empty_try_notebook: "Inke saath achha kaam karta hai:",
+    empty_chat_1: "Photosynthesis, simple",
+    empty_chat_1_send: "Photosynthesis ko simple terms mein samjhao, jaise main high school mein hoon.",
+    empty_chat_2: "Gradient descent",
+    empty_chat_2_send: "Gradient descent ko 15 saal ke level par example ke saath samjhao.",
+    empty_chat_3: "Exam study plan",
+    empty_chat_3_send: "Biology midterm ke liye ek hafte ka study plan banane mein madad karo.",
+    empty_code_1: "Python loop fix",
+    empty_code_1_send:
+      "Mera Python loop hamesha chalta rehta hai:\n\nwhile True:\n    print('hi')\n\nKyun aur kaise theek karun?",
+    empty_code_2: "Error samjhao",
+    empty_code_2_send:
+      "JavaScript mein TypeError: cannot read property 'map' of undefined aa raha hai. Iska matlab aur debug kaise karun?",
+    empty_code_3: "Binary search Big-O",
+    empty_code_3_send: "Binary search ki time complexity kya hai aur kyun? Beginner-friendly.",
+    empty_nb_1: "PDF lecture notes",
+    empty_nb_1_hint: "Lecture notes PDF upload karein  summary, key concepts aur quiz milega.",
+    empty_nb_2: "Markdown guide",
+    empty_nb_2_hint: ".md ya .txt study guide upload karein structured recap ke liye.",
+    empty_nb_3: "CSV table",
+    empty_nb_3_hint: ".csv upload karein columns aur patterns summarize karne ke liye.",
+    chip_summarize: "Summarize",
+    chip_quiz: "Quiz",
+    chip_steps: "Step-by-step",
+    chip_listen: "Listen mode",
+    chips_followup_aria: "Quick follow-ups aur read aloud",
+    starter_prompt_summarize:
+      "Apne last answer ko short bullets mein summarize karo. Key terms highlight karo.\n\n",
+    starter_prompt_quiz:
+      "Ab tak ki conversation se chhota quiz do: questions, choices, sahi jawab aur short explanation.\n\n",
+    starter_prompt_steps: "Dobara step-by-step samjhao, chhote steps aur simple example ke saath.\n\n",
+    copy_thread: "Conversation copy",
+    copy_thread_aria: "Poori conversation copy karein",
+    toast_thread_copied: "Conversation copy ho gayi",
+    toast_thread_empty: "Abhi copy karne ke liye kuch nahi",
+    copy_code: "Code copy",
+    copy_code_aria: "Code block copy karein",
+    attach_image_aria: "Image attach",
+    attach_image_title: "Image attach",
+    voice_search_aria: "Voice search",
+    voice_search_title: "Bolne ke liye tap karein; pause par band, ya dubara search",
+    voice_input_aria: "Voice input",
+    voice_input_title: "Bolne ke liye tap karein; pause par band, ya dubara Ask",
+    disclaimer_mistakes:
+      "Student AI Hub galti kar sakta hai. Important facts check karein aur instructor ki AI policy follow karein.",
+    disclaimer_honor:
+      "Sirf study aur practice ke liye  honor code follow karein; course mana kare to AI output submit na karein.",
+    disclaimer_aria: "Disclaimer",
+    doc_selected: "Chuna gaya: {name} ({kb} KB)",
+    toast_image_read_fail: "Image read nahi ho saki",
+    toast_doc_analysis_failed: "Document analysis fail",
+    pwa_install_sub_default: "Mobile app aane tak home screen ya desktop par quick access ke liye icon add karein.",
   },
   te: {
     signin_title: "Sign in cheyyandi",
@@ -535,6 +711,63 @@ const I18N = {
     pwa_sub_desktop: "Chrome/Edge address bar lo install icon tho shortcut add cheyyandi.",
     pwa_ios_steps:
       "iPhone/iPad Safari lo Share nokki, Add to Home Screen > Add nokkandi. App icon home screen lo vastundi.",
+    pwa_help_btn: "Ela install cheyyali",
+    pwa_help_steps:
+      "Desktop Chrome / Edge: address bar lo install icon vadandi, leka menu (three dots) nunchi Install app / Student AI Hub install.\n\nAndroid Chrome: menu nunchi Add to Home screen leka Install app.\n\nMac Firefox / Safari lo website Install button chala sarlu undadu; bookmark cheyyandi leka iPhone / iPad lo Add to Home Screen.\n\nInstall icon kanipinchakapothe HTTPS avasaram leka konchem site use chesaka malli chudandi.",
+    empty_try_ask: "Ila adagandi:",
+    empty_try_code: "Paste cheyyandi leda adagandi:",
+    empty_try_notebook: "Ivi manchiga pani chestayi:",
+    empty_chat_1: "Photosynthesis, simple ga",
+    empty_chat_1_send: "Photosynthesis ni simple ga explain cheyyi, nenu high school student la.",
+    empty_chat_2: "Gradient descent",
+    empty_chat_2_send: "Gradient descent ni 15 years vayassu student ki example tho explain cheyyi.",
+    empty_chat_3: "Exam study plan",
+    empty_chat_3_send: "Biology midterm kosam oka week study plan cheyyadaniki help cheyyi.",
+    empty_code_1: "Python loop fix",
+    empty_code_1_send:
+      "Na Python loop appudu aagadu:\n\nwhile True:\n    print('hi')\n\nEnduku mari ela fix cheyyali?",
+    empty_code_2: "Ee error explain",
+    empty_code_2_send:
+      "JavaScript lo TypeError: cannot read property 'map' of undefined vastundi. Ardham enti mari debug ela?",
+    empty_code_3: "Binary search Big-O",
+    empty_code_3_send: "Binary search time complexity enti mari enduku? Beginner ki simple ga.",
+    empty_nb_1: "PDF lecture notes",
+    empty_nb_1_hint: "Lecture notes PDF upload cheste summary, key concepts mariyu quiz vastundi.",
+    empty_nb_2: "Markdown guide",
+    empty_nb_2_hint: ".md leda .txt study guide upload cheste structured recap vastundi.",
+    empty_nb_3: "CSV table",
+    empty_nb_3_hint: ".csv upload cheste columns, patterns summarize avutayi.",
+    chip_summarize: "Summarize",
+    chip_quiz: "Quiz",
+    chip_steps: "Step-by-step",
+    chip_listen: "Listen mode",
+    chips_followup_aria: "Quick follow-ups mariyu read aloud",
+    starter_prompt_summarize:
+      "Mee last answer ni short bullets lo summarize cheyyandi. Gurtupettukovalasina key terms highlight cheyyandi.\n\n",
+    starter_prompt_quiz:
+      "Mana conversation nunchi chinna quiz ivvandi: questions, choices, correct answers mariyu short explanation.\n\n",
+    starter_prompt_steps: "Malli step-by-step explain cheyyandi, chinna steps mariyu simple example tho.\n\n",
+    copy_thread: "Conversation copy",
+    copy_thread_aria: "Mottam conversation copy cheyyandi",
+    toast_thread_copied: "Conversation copy ayyindi",
+    toast_thread_empty: "Copy cheyyadaniki inka emi ledu",
+    copy_code: "Code copy",
+    copy_code_aria: "Code block copy cheyyandi",
+    attach_image_aria: "Image attach",
+    attach_image_title: "Image attach",
+    voice_search_aria: "Voice search",
+    voice_search_title: "Matladadaniki tap; pause aite aaputundi, leda malli search",
+    voice_input_aria: "Voice input",
+    voice_input_title: "Matladadaniki tap; pause aite aaputundi, leda malli Ask",
+    disclaimer_mistakes:
+      "Student AI Hub tappu cheyagaladu. Important facts verify cheyyandi mariyu instructor AI policy follow avvandi.",
+    disclaimer_honor:
+      "Study mariyu practice kosame  honor code follow avvandi; course mana cheste AI output submit cheyyakandi.",
+    disclaimer_aria: "Disclaimer",
+    doc_selected: "Select chesaru: {name} ({kb} KB)",
+    toast_image_read_fail: "Image read avvaledu",
+    toast_doc_analysis_failed: "Document analysis fail ayyindi",
+    pwa_install_sub_default: "Mobile app varaku home screen leda desktop lo quick access kosam icon add cheyyandi.",
   },
 };
 
@@ -558,6 +791,7 @@ function setUiLanguage(nextLang) {
   applyTranslations();
   renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
   renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
+  refreshPwaInstallSubText();
 }
 
 function applyTranslations() {
@@ -591,6 +825,7 @@ function applyTranslations() {
     pwaInstallTitle: "pwa_install_title",
     pwaInstallBtn: "pwa_install_btn",
     pwaIosHelpBtn: "pwa_ios_help_btn",
+    pwaInstallHelpBtn: "pwa_help_btn",
     pwaInstallDismiss: "pwa_not_now",
     defaultPageHintTitle: "default_title",
     closeDefaultPageHintBtn: "settings_close",
@@ -600,6 +835,11 @@ function applyTranslations() {
     defaultPageHintExtensionNote: "default_extension_note",
     showDefaultPageStepsBtn: "show_steps",
     dismissDefaultPageHintBtn: "pwa_not_now",
+    chatCopyThreadBtn: "copy_thread",
+    codeCopyThreadBtn: "copy_thread",
+    chatEmptyPromptsLabel: "empty_try_ask",
+    codeEmptyPromptsLabel: "empty_try_code",
+    notebookEmptyPromptsLabel: "empty_try_notebook",
   };
   Object.entries(byIdText).forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -611,6 +851,8 @@ function applyTranslations() {
   if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
   const pwaIosSteps = document.getElementById("pwaIosSteps");
   if (pwaIosSteps) pwaIosSteps.textContent = t("pwa_ios_steps");
+  const pwaInstallHelpSteps = document.getElementById("pwaInstallHelpSteps");
+  if (pwaInstallHelpSteps) pwaInstallHelpSteps.textContent = t("pwa_help_steps");
   const hintList = document.getElementById("defaultPageHintList");
   if (hintList) {
     hintList.innerHTML = "";
@@ -620,6 +862,44 @@ function applyTranslations() {
       hintList.appendChild(li);
     });
   }
+  document.querySelectorAll(".fine-print-line[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (key) el.textContent = t(key);
+  });
+  ["authDisclaimerFooter", "appDisclaimerFooter"].forEach((id) => {
+    const footer = document.getElementById(id);
+    if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
+  });
+  if (chatFollowupChips) chatFollowupChips.setAttribute("aria-label", t("chips_followup_aria"));
+  document.querySelectorAll(".starter-chip[data-starter]").forEach((chip) => {
+    const starter = chip.getAttribute("data-starter");
+    const labelKey = STARTER_CHIP_LABEL_KEYS[starter];
+    if (labelKey) chip.textContent = t(labelKey);
+  });
+  document.querySelectorAll(".empty-prompt-chip[data-empty-scope]").forEach((chip) => {
+    const scope = chip.getAttribute("data-empty-scope");
+    const idx = Number(chip.getAttribute("data-empty-idx"));
+    const spec = EMPTY_PROMPT_SPECS[scope]?.[idx];
+    if (spec?.label) chip.textContent = t(spec.label);
+  });
+  [chatHeroAttachBtn, chatFollowupAttachBtn].forEach((btn) => {
+    if (!btn) return;
+    btn.setAttribute("aria-label", t("attach_image_aria"));
+    btn.setAttribute("title", t("attach_image_title"));
+  });
+  if (chatHeroMicBtn) {
+    chatHeroMicBtn.setAttribute("aria-label", t("voice_search_aria"));
+    chatHeroMicBtn.setAttribute("title", t("voice_search_title"));
+  }
+  if (chatFollowupMicBtn) {
+    chatFollowupMicBtn.setAttribute("aria-label", t("voice_input_aria"));
+    chatFollowupMicBtn.setAttribute("title", t("voice_input_title"));
+  }
+  const closeDefaultPageHintBtn = document.getElementById("closeDefaultPageHintBtn");
+  if (closeDefaultPageHintBtn) closeDefaultPageHintBtn.setAttribute("aria-label", t("settings_close"));
+  document.querySelectorAll(".copy-thread-btn").forEach((btn) => {
+    btn.setAttribute("aria-label", t("copy_thread_aria"));
+  });
   [apiStatus, codeStatus, notebookStatus].forEach((el) => {
     if (!el) return;
     const key = el.dataset.i18nStatus || "status_ready";
@@ -761,22 +1041,43 @@ function formatChatErrorForUi(err) {
   return msg;
 }
 
-/** Starter prompts for in-chat follow-up chips (uses chat history). */
-const CHAT_FOLLOWUP_STARTER_PROMPTS = {
-  summarize:
-    "Summarize your last answer in short bullet points. Highlight the key terms I should remember.\n\n",
-  quiz:
-    "Based on our conversation so far, give me a short quiz: questions, answer choices, and correct answers with brief explanations.\n\n",
-  steps:
-    "Explain that again step-by-step, with smaller steps and a simple example where it helps.\n\n",
+const STARTER_CHIP_LABEL_KEYS = {
+  summarize: "chip_summarize",
+  quiz: "chip_quiz",
+  steps: "chip_steps",
+  readAloud: "chip_listen",
+};
+
+const STARTER_PROMPT_KEYS = {
+  summarize: "starter_prompt_summarize",
+  quiz: "starter_prompt_quiz",
+  steps: "starter_prompt_steps",
+};
+
+const EMPTY_PROMPT_SPECS = {
+  chat: [
+    { label: "empty_chat_1", send: "empty_chat_1_send" },
+    { label: "empty_chat_2", send: "empty_chat_2_send" },
+    { label: "empty_chat_3", send: "empty_chat_3_send" },
+  ],
+  code: [
+    { label: "empty_code_1", send: "empty_code_1_send" },
+    { label: "empty_code_2", send: "empty_code_2_send" },
+    { label: "empty_code_3", send: "empty_code_3_send" },
+  ],
+  notebook: [
+    { label: "empty_nb_1", hint: "empty_nb_1_hint" },
+    { label: "empty_nb_2", hint: "empty_nb_2_hint" },
+    { label: "empty_nb_3", hint: "empty_nb_3_hint" },
+  ],
 };
 
 /**
  * Starter chips send the prompt immediately (same path as Ask / Send).
  * Optional `customStarters`: map of data-starter key -> handler (runs instead of sending a prompt).
  */
-function wireStarterChipsAsSend(container, promptMap, sendFn, busyButton, customStarters = null) {
-  if (!container || !promptMap || typeof sendFn !== "function") return;
+function wireStarterChipsAsSend(container, sendFn, busyButton, customStarters = null) {
+  if (!container || typeof sendFn !== "function") return;
   container.addEventListener("click", (e) => {
     const chip = e.target.closest(".starter-chip[data-starter]");
     if (!chip || !container.contains(chip)) return;
@@ -786,9 +1087,9 @@ function wireStarterChipsAsSend(container, promptMap, sendFn, busyButton, custom
       customStarters[key]();
       return;
     }
-    const prompt = promptMap[key];
-    if (typeof prompt !== "string") return;
-    sendFn(prompt);
+    const promptKey = STARTER_PROMPT_KEYS[key];
+    if (!promptKey) return;
+    sendFn(t(promptKey));
   });
 }
 
@@ -1235,6 +1536,68 @@ async function copyPlainText(text) {
   }
 }
 
+function formatThreadPlainText(history) {
+  if (!Array.isArray(history) || history.length === 0) return "";
+  const blocks = [];
+  for (const item of history) {
+    if (!item || typeof item !== "object") continue;
+    const role = item.role === "assistant" ? "assistant" : "user";
+    const label = role === "assistant" ? t("assistant") : t("you");
+    let body = String(item.content || "").trim();
+    if (role === "assistant" && body) {
+      body = getAssistantCopyFormats(body).plain;
+    } else if (role === "user" && !body && item.imageBase64) {
+      body = t("attached_image");
+    }
+    if (!body) continue;
+    blocks.push(`${label}:\n${body}`);
+  }
+  return blocks.join("\n\n");
+}
+
+async function copyThreadHistory(history) {
+  const text = formatThreadPlainText(history);
+  if (!text.trim()) {
+    showToast(t("toast_thread_empty"));
+    return false;
+  }
+  const ok = await copyPlainText(text);
+  showToast(ok ? t("toast_thread_copied") : t("status_failed"));
+  return ok;
+}
+
+function enhanceMarkdownCodeBlocks(rootEl) {
+  if (!rootEl) return;
+  rootEl.querySelectorAll(".bubble-md pre").forEach((pre) => {
+    if (pre.closest(".code-block-wrap")) return;
+    const codeEl = pre.querySelector("code");
+    const text = (codeEl || pre).innerText || "";
+    if (!String(text).trim()) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "code-block-wrap";
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "code-block-copy";
+    btn.textContent = t("copy_code");
+    btn.setAttribute("aria-label", t("copy_code_aria"));
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ok = await copyPlainText(text);
+      const prev = btn.textContent;
+      btn.textContent = ok ? t("copied") : t("status_failed");
+      setTimeout(() => {
+        btn.textContent = prev;
+      }, 2000);
+    });
+    wrap.appendChild(btn);
+  });
+}
+
 /** Copy assistant reply: clean plain text; rich HTML too when the browser supports it. */
 async function copyAssistantOutput(markdownRaw) {
   const { plain, html } = getAssistantCopyFormats(markdownRaw);
@@ -1289,12 +1652,14 @@ function syncLearnLayout() {
   const showThread = chatSessionOpen || chatHistory.length > 0;
   chatSearchShell.classList.toggle("hidden", showThread);
   chatAnswerShell.classList.toggle("hidden", !showThread);
+  chatCopyThreadBtn?.classList.toggle("hidden", chatHistory.length === 0);
 }
 
 function syncCodeLayout() {
   const showThread = codeSessionOpen || codeHistory.length > 0;
   codeSearchShell.classList.toggle("hidden", showThread);
   codeAnswerShell.classList.toggle("hidden", !showThread);
+  codeCopyThreadBtn?.classList.toggle("hidden", codeHistory.length === 0);
 }
 
 function wireAssistantCopy(bubble, rawText) {
@@ -1436,6 +1801,7 @@ function fillAssistantBubbleBody(bubble, text) {
     body.className = "bubble-text bubble-md";
     body.innerHTML = rendered.html;
     bubble.appendChild(body);
+    enhanceMarkdownCodeBlocks(body);
   }
   wireAssistantCopy(bubble, text);
   mountAssistantFeedback(bubble, text);
@@ -1815,6 +2181,8 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       history.push(userRow);
       history.push({ role: "assistant", content: output });
       saveSessionState();
+      if (mode === "learn") syncLearnLayout();
+      else if (mode === "code") syncCodeLayout();
       setStatus(statusEl, "status_ready");
       return true;
     }
@@ -1838,6 +2206,8 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     history.push(userRow);
     history.push({ role: "assistant", content: finalText });
     saveSessionState();
+    if (mode === "learn") syncLearnLayout();
+    else if (mode === "code") syncCodeLayout();
     setStatus(statusEl, "status_ready");
     return true;
   } catch (error) {
@@ -1884,13 +2254,30 @@ function shouldOfferPwaInstallBar() {
   return true;
 }
 
+function refreshPwaInstallSubText() {
+  const sub = document.getElementById("pwaInstallSub");
+  const bar = document.getElementById("pwaInstallBar");
+  if (!sub || !bar || bar.classList.contains("hidden")) return;
+  if (deferredInstallPrompt) {
+    sub.textContent = t("pwa_sub_install");
+  } else if (isLikelyIOSBrowser()) {
+    sub.textContent = t("pwa_sub_ios");
+  } else {
+    sub.textContent = t("pwa_sub_desktop");
+  }
+}
+
 function refreshPwaInstallBarUi() {
   const bar = document.getElementById("pwaInstallBar");
   const installBtn = document.getElementById("pwaInstallBtn");
   const iosBtn = document.getElementById("pwaIosHelpBtn");
+  const helpBtn = document.getElementById("pwaInstallHelpBtn");
   if (!bar || bar.classList.contains("hidden")) return;
   installBtn?.classList.toggle("hidden", !deferredInstallPrompt);
-  iosBtn?.classList.toggle("hidden", !isLikelyIOSBrowser());
+  const ios = isLikelyIOSBrowser();
+  iosBtn?.classList.toggle("hidden", !ios);
+  const showHelp = !deferredInstallPrompt && !ios;
+  helpBtn?.classList.toggle("hidden", !showHelp);
 }
 
 async function registerServiceWorkerIfEligible() {
@@ -1911,11 +2298,14 @@ function wirePwaInstallBar() {
   const installBtn = document.getElementById("pwaInstallBtn");
   const iosBtn = document.getElementById("pwaIosHelpBtn");
   const iosSteps = document.getElementById("pwaIosSteps");
+  const helpBtn = document.getElementById("pwaInstallHelpBtn");
+  const helpSteps = document.getElementById("pwaInstallHelpSteps");
 
   dismiss?.addEventListener("click", () => {
     localStorage.setItem(PWA_INSTALL_BAR_DISMISSED_KEY, "1");
     bar?.classList.add("hidden");
     iosSteps?.classList.add("hidden");
+    helpSteps?.classList.add("hidden");
   });
 
   installBtn?.addEventListener("click", async () => {
@@ -1928,11 +2318,20 @@ function wirePwaInstallBar() {
     }
     deferredInstallPrompt = null;
     installBtn.classList.add("hidden");
+    helpSteps?.classList.add("hidden");
+    refreshPwaInstallBarUi();
   });
 
   iosBtn?.addEventListener("click", () => {
     if (!iosSteps) return;
+    helpSteps?.classList.add("hidden");
     iosSteps.classList.toggle("hidden");
+  });
+
+  helpBtn?.addEventListener("click", () => {
+    if (!helpSteps) return;
+    iosSteps?.classList.add("hidden");
+    helpSteps.classList.toggle("hidden");
   });
 }
 
@@ -2079,6 +2478,7 @@ function showApp(session) {
 function showAuth(message = "") {
   document.getElementById("pwaInstallBar")?.classList.add("hidden");
   document.getElementById("pwaIosSteps")?.classList.add("hidden");
+  document.getElementById("pwaInstallHelpSteps")?.classList.add("hidden");
   authCard.classList.remove("hidden");
   appCard.classList.add("hidden");
   authStatus.textContent = message;
@@ -2246,13 +2646,45 @@ const chatSearchFlow = wireSearchFlow({
   clearVisionAttachment: LEARN_VISION_ENABLED ? clearLearnChatVisionAttachment : undefined,
 });
 
-wireStarterChipsAsSend(
-  chatFollowupChips,
-  CHAT_FOLLOWUP_STARTER_PROMPTS,
-  chatSearchFlow.sendFromFollowup,
-  chatFollowupSubmit,
-  { readAloud: readLastAssistantAloud },
-);
+wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
+  readAloud: readLastAssistantAloud,
+});
+
+function wireEmptyStatePrompts() {
+  document.querySelectorAll(".empty-prompt-chip[data-empty-scope]").forEach((chip) => {
+    if (chip.dataset.emptyWired === "1") return;
+    chip.dataset.emptyWired = "1";
+    chip.addEventListener("click", () => {
+      const scope = chip.getAttribute("data-empty-scope");
+      const idx = Number(chip.getAttribute("data-empty-idx"));
+      const spec = EMPTY_PROMPT_SPECS[scope]?.[idx];
+      if (!spec) return;
+      if (scope === "chat") {
+        chatSearchInput.value = t(spec.send);
+        chatSearchSubmit.click();
+        return;
+      }
+      if (scope === "code") {
+        codeSearchInput.value = t(spec.send);
+        codeSearchSubmit.click();
+        return;
+      }
+      if (scope === "notebook" && spec.hint) {
+        showToast(t(spec.hint));
+        docFileInput?.click();
+      }
+    });
+  });
+}
+
+function wireCopyThreadButtons() {
+  chatCopyThreadBtn?.addEventListener("click", () => {
+    void copyThreadHistory(chatHistory);
+  });
+  codeCopyThreadBtn?.addEventListener("click", () => {
+    void copyThreadHistory(codeHistory);
+  });
+}
 
 wireLearnVoiceMic({ micBtn: chatHeroMicBtn, inputEl: chatSearchInput, submitBtn: chatSearchSubmit });
 wireLearnVoiceMic({ micBtn: chatFollowupMicBtn, inputEl: chatFollowupInput, submitBtn: chatFollowupSubmit });
@@ -2286,7 +2718,7 @@ function wireLearnChatImageAttach() {
       showToast(t("toast_image_attached"));
       chatFollowupInput?.focus();
     } catch (err) {
-      showToast(err.message || "Could not read image");
+      showToast(err.message || t("toast_image_read_fail"));
     }
   });
 }
@@ -2305,7 +2737,9 @@ if (LEARN_VISION_ENABLED) {
 
 docFileInput.addEventListener("change", () => {
   const f = docFileInput.files?.[0];
-  docFileMeta.textContent = f ? `Selected: ${f.name} (${Math.round(f.size / 1024)} KB)` : "";
+  docFileMeta.textContent = f
+    ? t("doc_selected", { name: f.name, kb: String(Math.round(f.size / 1024)) })
+    : "";
 });
 
 docAnalyzeBtn.addEventListener("click", async () => {
@@ -2338,7 +2772,7 @@ docAnalyzeBtn.addEventListener("click", async () => {
   } catch (error) {
     appendBubble(notebookThread, "assistant", `${t("error_prefix")}: ${error.message}`, { mode: "notebook", studyMode: "explain" });
     setStatus(notebookStatus, "status_failed");
-    showToast(error.message || "Document analysis failed");
+    showToast(error.message || t("toast_doc_analysis_failed"));
   } finally {
     docAnalyzeBtn.disabled = false;
   }
@@ -2419,6 +2853,8 @@ syncLearnLayout();
 syncCodeLayout();
 wireSettingsUi();
 wireDefaultPageHintModal();
+wireEmptyStatePrompts();
+wireCopyThreadButtons();
 maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
 initAuth();

@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=pwa-install-1" />
+    <link rel="stylesheet" href="./styles.css?v=polish-empty-copy-i18n-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -50,6 +50,7 @@
               Install
             </button>
             <button type="button" id="pwaIosHelpBtn" class="ghost-btn tiny-btn hidden">iPhone / iPad</button>
+            <button type="button" id="pwaInstallHelpBtn" class="ghost-btn tiny-btn hidden">How to install</button>
             <button type="button" id="pwaInstallDismiss" class="ghost-btn tiny-btn pwa-install-dismiss" aria-label="Dismiss">
               Not now
             </button>
@@ -59,6 +60,7 @@
           <strong>Safari on iPhone or iPad:</strong> tap the Share button <span aria-hidden="true">(□↑)</span>, then
           <strong>Add to Home Screen</strong>, then Add. You will get our branded icon on your home screen.
         </div>
+        <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
       <section class="auth card auth-card" id="authCard">
         <header class="app-head auth-head">
@@ -107,12 +109,12 @@
         <button id="googleLoginBtn" class="primary-btn auth-google-btn" type="button">Continue with Google</button>
         <p id="authStatus" class="muted auth-status"></p>
 
-        <footer class="app-fine-print auth-fine-print" role="note" aria-label="Disclaimer">
-          <p>
+        <footer class="app-fine-print auth-fine-print" role="note" id="authDisclaimerFooter" aria-label="Disclaimer">
+          <p class="fine-print-line" data-i18n="disclaimer_mistakes">
             Student AI Hub can make mistakes. Check important facts and follow your instructor&rsquo;s policies on using
             AI.
           </p>
-          <p>
+          <p class="fine-print-line" data-i18n="disclaimer_honor">
             For study help and practice only &mdash; follow your honor code; don&rsquo;t submit AI output when your course
             forbids it.
           </p>
@@ -230,6 +232,14 @@
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted" id="chatSearchHint">Press Enter to search. Shift+Enter for a new line.</p>
+            <div id="chatEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="chatEmptyPromptsLabel">
+              <p class="empty-prompts-label muted" id="chatEmptyPromptsLabel">Try asking:</p>
+              <div class="empty-prompts-chips starter-chips">
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="chat" data-empty-idx="0"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="chat" data-empty-idx="1"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="chat" data-empty-idx="2"></button>
+              </div>
+            </div>
           </div>
 
           <div id="chatAnswerShell" class="answer-shell hidden">
@@ -307,6 +317,9 @@
                 <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Ask</button>
               </div>
               <div class="followup-meta">
+                <button type="button" id="chatCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
+                  Copy conversation
+                </button>
                 <span id="apiStatus" class="muted">Ready</span>
               </div>
             </div>
@@ -348,6 +361,14 @@
               <button id="codeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted" id="codeSearchHint">Tip: include error messages and what you expected.</p>
+            <div id="codeEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="codeEmptyPromptsLabel">
+              <p class="empty-prompts-label muted" id="codeEmptyPromptsLabel">Try pasting or asking:</p>
+              <div class="empty-prompts-chips starter-chips">
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="code" data-empty-idx="0"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="code" data-empty-idx="1"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="code" data-empty-idx="2"></button>
+              </div>
+            </div>
           </div>
 
           <div id="codeAnswerShell" class="answer-shell hidden">
@@ -358,6 +379,9 @@
                 <button id="codeFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
               </div>
               <div class="followup-meta">
+                <button type="button" id="codeCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
+                  Copy conversation
+                </button>
                 <span id="codeStatus" class="muted">Ready</span>
               </div>
             </div>
@@ -369,6 +393,14 @@
             Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study
             plan - similar to a lightweight notebook assistant.
           </p>
+          <div id="notebookEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="notebookEmptyPromptsLabel">
+            <p class="empty-prompts-label muted" id="notebookEmptyPromptsLabel">Works well with:</p>
+            <div class="empty-prompts-chips starter-chips">
+              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="0"></button>
+              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="1"></button>
+              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="2"></button>
+            </div>
+          </div>
           <div class="upload-row">
             <input id="docFileInput" type="file" accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf" />
             <button id="docAnalyzeBtn" class="primary-btn" type="button">Analyze document</button>
@@ -380,12 +412,12 @@
           </div>
         </section>
 
-        <footer class="app-fine-print" role="note" aria-label="Disclaimer">
-          <p>
+        <footer class="app-fine-print" role="note" id="appDisclaimerFooter" aria-label="Disclaimer">
+          <p class="fine-print-line" data-i18n="disclaimer_mistakes">
             Student AI Hub can make mistakes. Check important facts and follow your instructor&rsquo;s policies on using
             AI.
           </p>
-          <p>
+          <p class="fine-print-line" data-i18n="disclaimer_honor">
             For study help and practice only &mdash; follow your honor code; don&rsquo;t submit AI output when your course
             forbids it.
           </p>
@@ -459,6 +491,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=i18n-polish-2"></script>
+    <script src="./app.js?v=polish-empty-copy-i18n-1"></script>
   </body>
 </html>
