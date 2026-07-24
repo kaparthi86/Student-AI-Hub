@@ -193,6 +193,88 @@ body::before {
   padding-bottom: 22px;
 }
 
+/*
+ * Logged-in hub: Student AI Hub is ONE primary full-bleed shell.
+ * Auth keeps the floating .card; the wallpaper is no longer a second "screen".
+ */
+body:has(#appCard:not(.hidden)) {
+  background: linear-gradient(180deg, #0d1124 0%, #0b1020 48%, #090d1a 100%);
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+}
+
+body:has(#appCard:not(.hidden))::before {
+  opacity: 0.025;
+}
+
+body:has(#appCard:not(.hidden)) .bg-glow {
+  opacity: 0.16;
+  animation: none;
+}
+
+.container:has(#appCard:not(.hidden)) {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.container:has(#appCard:not(.hidden)) #betaBanner:not(.hidden),
+.container:has(#appCard:not(.hidden)) #pwaInstallBar:not(.hidden) {
+  width: min(100% - 36px, 960px);
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.container:has(#appCard:not(.hidden)) #appCard.card {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: linear-gradient(
+    180deg,
+    #0d1124 0%,
+    #0b1020 45%,
+    #0a0e1c 100%
+  );
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: max(18px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(18px, env(safe-area-inset-left, 0px), calc((100% - 960px) / 2));
+  padding-right: max(18px, env(safe-area-inset-right, 0px), calc((100% - 960px) / 2));
+  box-sizing: border-box;
+}
+
+/* Nested thread is scroll area only — not a second inset card */
+#appCard .chat-thread {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+#appCard .chat-thread.perplexity-thread,
+#appCard .chat-thread.notebook-thread {
+  border-radius: 0;
+}
+
 /* Login screen matches in-app shell (brand, greeting, disclaimer) */
 .auth-card {
   padding-bottom: 22px;
@@ -1700,14 +1782,9 @@ textarea {
     flex: 1 1 0;
     min-height: 0;
     max-height: none;
-    border: 1px solid transparent;
-    background:
-      linear-gradient(rgba(10, 14, 32, 0.94), rgba(10, 14, 32, 0.94)) padding-box,
-      linear-gradient(130deg, rgba(122, 109, 255, 0.38), rgba(62, 184, 248, 0.28), rgba(122, 109, 255, 0.25))
-        border-box;
-    box-shadow:
-      0 14px 44px rgba(5, 12, 40, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border: none;
+    background: transparent;
+    box-shadow: none;
   }
 
   #appCard .followup-bar {
