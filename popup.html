@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Student Coach Quick Ask</title>
+    <title>Student AI Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,20 +14,39 @@
   </head>
   <body>
     <main class="wrap">
-      <h1>Ask Student Coach</h1>
-      <textarea id="promptInput" rows="4" placeholder="Type a question..."></textarea>
+      <header class="popup-brand" aria-label="Student AI Hub">
+        <svg class="popup-mark" viewBox="0 0 40 40" width="28" height="28" aria-hidden="true">
+          <rect width="40" height="40" rx="11" fill="url(#popupGrad)" />
+          <path
+            d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+            fill="white"
+            fill-opacity="0.92"
+          />
+          <defs>
+            <linearGradient id="popupGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#2F6FED" />
+              <stop offset="1" stop-color="#1D5BD8" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1>Student AI Hub</h1>
+      </header>
+      <textarea id="promptInput" rows="4" placeholder="Ask anything..."></textarea>
       <div class="row">
         <button id="askBtn" type="button">Ask</button>
         <button id="openBtn" type="button" class="secondary">Open site</button>
       </div>
-      <label class="label" for="baseUrlInput">Target URL</label>
-      <div class="row row--targets">
-        <button id="targetProdBtn" type="button" class="secondary">Use Prod</button>
-        <button id="targetLocalBtn" type="button" class="secondary">Use Localhost</button>
-      </div>
-      <input id="baseUrlInput" type="url" />
+      <details class="popup-advanced">
+        <summary>Advanced</summary>
+        <label class="label" for="baseUrlInput">Target URL</label>
+        <div class="row row--targets">
+          <button id="targetProdBtn" type="button" class="secondary">Use Prod</button>
+          <button id="targetLocalBtn" type="button" class="secondary">Use Localhost</button>
+        </div>
+        <input id="baseUrlInput" type="url" />
+      </details>
       <p id="status" class="status"></p>
     </main>
     <script src="./popup.js"></script>
   </body>
-  </html>
+</html>
