@@ -22,7 +22,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css?v=world-class-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=world-class-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=fix-logout-analyze-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -419,7 +419,6 @@
               >
               <input
                 id="docFileInput"
-                class="sr-only"
                 type="file"
                 accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf"
               />
@@ -435,7 +434,9 @@
           </div>
           <div class="notebook-selected-row">
             <p id="docFileMeta" class="muted"></p>
-            <button id="docAnalyzeBtn" class="primary-btn hidden" type="button">Analyze document</button>
+            <button id="docAnalyzeBtn" class="primary-btn" type="button" disabled aria-disabled="true" title="Choose a notes file first">
+              Analyze document
+            </button>
           </div>
           <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
           <div class="actions">
@@ -522,6 +523,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=polish-empty-copy-i18n-1"></script>
+    <script src="./app.js?v=fix-logout-analyze-1"></script>
   </body>
 </html>
