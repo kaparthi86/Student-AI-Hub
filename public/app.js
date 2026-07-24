@@ -1655,6 +1655,7 @@ function setMainTab(next) {
   panelChat.classList.toggle("hidden", mainTab !== "chat");
   panelCode.classList.toggle("hidden", mainTab !== "code");
   panelNotebook.classList.toggle("hidden", mainTab !== "notebook");
+  if (mainTab === "notebook") syncNotebookAnalyzeVisibility();
 }
 
 function syncLearnLayout() {
@@ -2581,18 +2582,24 @@ function closeAccountMenu() {
 }
 function toggleAccountMenu() {
   if (!accountMenuPanel || !accountMenuBtn) return;
-  const open = accountMenuPanel.classList.contains("hidden");
-  accountMenuPanel.classList.toggle("hidden", !open);
-  accountMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  const willOpen = accountMenuPanel.classList.contains("hidden");
+  accountMenuPanel.classList.toggle("hidden", !willOpen);
+  accountMenuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 accountMenuBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
   e.stopPropagation();
   toggleAccountMenu();
 });
-document.addEventListener("click", (e) => {
+accountMenuPanel?.addEventListener("click", (e) => {
+  // Keep item clicks inside the menu from being treated as "outside".
+  e.stopPropagation();
+});
+// Close when clicking/tapping outside the account menu.
+document.addEventListener("pointerdown", (e) => {
   if (!accountMenuPanel || accountMenuPanel.classList.contains("hidden")) return;
-  const root = accountMenuBtn?.closest(".account-menu");
-  if (root && !root.contains(e.target)) closeAccountMenu();
+  if (e.target.closest?.(".account-menu")) return;
+  closeAccountMenu();
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeAccountMenu();
@@ -2600,9 +2607,14 @@ document.addEventListener("keydown", (e) => {
 
 const notebookDropzone = document.getElementById("notebookDropzone");
 function syncNotebookAnalyzeVisibility() {
-  const f = docFileInput?.files?.[0];
-  if (!docAnalyzeBtn) return;
-  docAnalyzeBtn.classList.toggle("hidden", !f);
+  const f = docFileInput?.files?.[0] || null;
+  if (docAnalyzeBtn) {
+    // Keep Analyze visible; disable until a file is chosen (hiding felt "not enabled").
+    docAnalyzeBtn.classList.remove("hidden");
+    docAnalyzeBtn.disabled = !f;
+    docAnalyzeBtn.setAttribute("aria-disabled", f ? "false" : "true");
+    docAnalyzeBtn.title = f ? "" : "Choose a notes file first";
+  }
   if (notebookDropzone) notebookDropzone.classList.toggle("has-file", Boolean(f));
 }
 notebookDropzone?.addEventListener("dragover", (e) => {
@@ -2617,16 +2629,41 @@ notebookDropzone?.addEventListener("drop", (e) => {
   notebookDropzone.classList.remove("is-dragover");
   const file = e.dataTransfer?.files?.[0];
   if (!file || !docFileInput) return;
-  const dt = new DataTransfer();
-  dt.items.add(file);
-  docFileInput.files = dt.files;
+  try {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    docFileInput.files = dt.files;
+  } catch (_) {
+    /* DataTransfer may be unavailable in older WebViews */
+  }
   docFileInput.dispatchEvent(new Event("change", { bubbles: true }));
 });
+notebookDropzone?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    docFileInput?.click();
+  }
+});
 
-logoutBtn.addEventListener("click", async () => {
+async function handleLogout() {
   closeAccountMenu();
-  if (!supabaseClient) return;
-  await supabaseClient.auth.signOut();
+  if (!supabaseClient) {
+    showAuth("Signed out.");
+    return;
+  }
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+  } catch (err) {
+    showAuth(describeAuthFailure(err));
+    return;
+  }
+  showAuth();
+}
+logoutBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  void handleLogout();
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -2797,19 +2834,22 @@ if (LEARN_VISION_ENABLED) {
   wireLearnChatImageAttach();
 }
 
-docFileInput.addEventListener("change", () => {
+docFileInput?.addEventListener("change", () => {
   const f = docFileInput.files?.[0];
-  docFileMeta.textContent = f
-    ? t("doc_selected", { name: f.name, kb: String(Math.round(f.size / 1024)) })
-    : "";
+  if (docFileMeta) {
+    docFileMeta.textContent = f
+      ? t("doc_selected", { name: f.name, kb: String(Math.round(f.size / 1024)) })
+      : "";
+  }
   syncNotebookAnalyzeVisibility();
 });
 
 syncNotebookAnalyzeVisibility();
-docAnalyzeBtn.addEventListener("click", async () => {
-  const file = docFileInput.files?.[0];
+docAnalyzeBtn?.addEventListener("click", async () => {
+  const file = docFileInput?.files?.[0];
   if (!file) {
     setStatus(notebookStatus, "choose_file_first");
+    syncNotebookAnalyzeVisibility();
     return;
   }
 
@@ -2838,7 +2878,7 @@ docAnalyzeBtn.addEventListener("click", async () => {
     setStatus(notebookStatus, "status_failed");
     showToast(error.message || t("toast_doc_analysis_failed"));
   } finally {
-    docAnalyzeBtn.disabled = false;
+    syncNotebookAnalyzeVisibility();
   }
 });
 
