@@ -1,16 +1,16 @@
 :root {
-  --bg: #0c0d10;
-  --bg2: #14161c;
-  --surface: #1a1d24;
-  --card: rgba(26, 29, 36, 0.78);
-  --text: #f4f5f7;
-  --muted: #9aa3b2;
+  --bg: #121211;
+  --bg2: #1a1918;
+  --surface: #222120;
+  --card: rgba(34, 33, 32, 0.86);
+  --text: #f5f4f2;
+  --muted: #a39e96;
   --primary: #5b8cff;
   --primary-2: #3d9bff;
-  --border: rgba(255, 255, 255, 0.12);
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-bg-strong: rgba(20, 22, 28, 0.78);
-  --glass-bg-soft: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.11);
+  --glass-bg: rgba(255, 255, 255, 0.055);
+  --glass-bg-strong: rgba(28, 27, 26, 0.88);
+  --glass-bg-soft: rgba(255, 255, 255, 0.035);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-border-strong: rgba(255, 255, 255, 0.18);
   --glass-blur: 18px;
@@ -56,11 +56,9 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 70% 50% at 18% 12%, rgba(91, 140, 255, 0.42) 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 88% 8%, rgba(91, 140, 255, 0.34) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 50% at 70% 78%, rgba(70, 90, 200, 0.22) 0%, transparent 55%),
-    radial-gradient(circle at 40% 60%, rgba(30, 50, 100, 0.35) 0%, transparent 40%),
-    linear-gradient(145deg, #0a0b0e 0%, var(--bg) 42%, var(--bg2) 100%);
+    radial-gradient(ellipse 55% 40% at 18% 0%, rgba(255, 248, 240, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 88% 12%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    linear-gradient(180deg, #0e0e0d 0%, var(--bg) 42%, var(--bg2) 100%);
   background-attachment: fixed;
   color: var(--text);
   overflow-x: clip;
@@ -98,13 +96,13 @@ body::before {
 .bg-glow.one {
   top: -120px;
   left: -100px;
-  background: rgba(91, 140, 255, 0.42);
+  background: rgba(255, 244, 230, 0.07);
 }
 
 .bg-glow.two {
   right: -110px;
   bottom: -130px;
-  background: rgba(80, 100, 130, 0.34);
+  background: rgba(180, 170, 155, 0.06);
   animation-delay: -6s;
 }
 
@@ -113,7 +111,7 @@ body::before {
   height: 280px;
   top: 42%;
   left: 55%;
-  background: rgba(100, 140, 255, 0.22);
+  background: rgba(255, 255, 255, 0.035);
   animation-delay: -11s;
   animation-duration: 22s;
 }
@@ -200,7 +198,7 @@ body::before {
  * Auth keeps the floating .card; the wallpaper is no longer a second "screen".
  */
 body:has(#appCard:not(.hidden)) {
-  background: linear-gradient(180deg, #12141a 0%, #0c0d10 48%, #0a0b0e 100%);
+  background: linear-gradient(180deg, #1a1918 0%, #121211 48%, #0e0e0d 100%);
   background-attachment: fixed;
   overscroll-behavior-y: none;
 }
@@ -247,9 +245,9 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   backdrop-filter: none;
   background: linear-gradient(
     180deg,
-    #12141a 0%,
-    #0c0d10 45%,
-    #0a0b0e 100%
+    #1a1918 0%,
+    #121211 45%,
+    #0e0e0d 100%
   );
   min-height: 100dvh;
   min-height: 100vh;
@@ -559,7 +557,7 @@ textarea {
   gap: 0;
   border-radius: 999px;
   border: 1px solid rgba(160, 182, 255, 0.45);
-  background: rgba(6, 10, 28, 0.55);
+  background: rgba(18, 17, 16, 0.55);
   box-shadow: 0 12px 40px rgba(5, 12, 40, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
@@ -568,22 +566,22 @@ textarea {
 .search-bar--branded {
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(8, 12, 30, 0.88), rgba(8, 12, 30, 0.88)) padding-box,
+    linear-gradient(rgba(18, 17, 16, 0.88), rgba(18, 17, 16, 0.88)) padding-box,
     linear-gradient(125deg, rgba(91, 140, 255, 0.55), rgba(61, 155, 255, 0.4), rgba(91, 140, 255, 0.35)) border-box;
   box-shadow:
     0 14px 44px rgba(5, 12, 40, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 0 40px rgba(91, 140, 255, 0.08);
+    0 0 28px rgba(0, 0, 0, 0.28);
 }
 
 .search-bar--branded.search-bar--code {
   background:
-    linear-gradient(rgba(8, 12, 30, 0.88), rgba(8, 12, 30, 0.88)) padding-box,
+    linear-gradient(rgba(18, 17, 16, 0.88), rgba(18, 17, 16, 0.88)) padding-box,
     linear-gradient(125deg, rgba(91, 140, 255, 0.5), rgba(91, 140, 255, 0.45)) border-box;
   box-shadow:
     0 14px 44px rgba(5, 12, 40, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 0 36px rgba(91, 140, 255, 0.1);
+    0 0 24px rgba(0, 0, 0, 0.22);
 }
 
 /* Learn Ask hero: flex row — WebKit stretches mic/Ask with textarea more reliably than grid */
@@ -755,7 +753,7 @@ textarea {
   padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid rgba(160, 182, 255, 0.35);
-  background: rgba(6, 10, 28, 0.55);
+  background: rgba(18, 17, 16, 0.55);
 }
 
 .learn-chat-attach-thumb {
@@ -942,7 +940,7 @@ textarea {
   position: sticky;
   bottom: 0;
   padding-top: 4px;
-  background: linear-gradient(180deg, transparent, rgba(11, 16, 32, 0.92) 28%);
+  background: linear-gradient(180deg, transparent, rgba(18, 17, 16, 0.92) 28%);
 }
 
 .followup-meta {
@@ -1503,7 +1501,7 @@ textarea {
     background: linear-gradient(
       180deg,
       rgba(13, 17, 36, 0.98) 0%,
-      rgba(11, 16, 32, 1) 45%,
+      rgba(18, 17, 16, 1) 45%,
       rgba(10, 14, 28, 1) 100%
     );
   }
@@ -1712,13 +1710,13 @@ textarea {
     border-radius: 999px;
     border: 1px solid transparent;
     background:
-      linear-gradient(rgba(8, 12, 30, 0.92), rgba(8, 12, 30, 0.92)) padding-box,
+      linear-gradient(rgba(18, 17, 16, 0.92), rgba(18, 17, 16, 0.92)) padding-box,
       linear-gradient(125deg, rgba(91, 140, 255, 0.55), rgba(61, 155, 255, 0.42), rgba(91, 140, 255, 0.35))
         border-box;
     box-shadow:
       0 14px 40px rgba(5, 12, 40, 0.42),
       inset 0 1px 0 rgba(255, 255, 255, 0.09),
-      0 0 36px rgba(91, 140, 255, 0.08);
+      0 0 24px rgba(0, 0, 0, 0.22);
     overflow: hidden;
   }
 
@@ -1792,7 +1790,7 @@ textarea {
   #appCard .followup-bar {
     flex-shrink: 0;
     position: relative;
-    background: linear-gradient(180deg, transparent 0%, rgba(11, 16, 32, 0.88) 45%);
+    background: linear-gradient(180deg, transparent 0%, rgba(18, 17, 16, 0.88) 45%);
   }
 
   .primary-btn,

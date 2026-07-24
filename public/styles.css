@@ -1,16 +1,16 @@
 :root {
-  --bg: #0c0d10;
-  --bg2: #14161c;
-  --surface: #1a1d24;
-  --card: rgba(26, 29, 36, 0.78);
-  --text: #f4f5f7;
-  --muted: #9aa3b2;
+  --bg: #121211;
+  --bg2: #1a1918;
+  --surface: #222120;
+  --card: rgba(34, 33, 32, 0.86);
+  --text: #f5f4f2;
+  --muted: #a39e96;
   --primary: #5b8cff;
   --primary-2: #3d9bff;
-  --border: rgba(255, 255, 255, 0.12);
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-bg-strong: rgba(20, 22, 28, 0.78);
-  --glass-bg-soft: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.11);
+  --glass-bg: rgba(255, 255, 255, 0.055);
+  --glass-bg-strong: rgba(28, 27, 26, 0.88);
+  --glass-bg-soft: rgba(255, 255, 255, 0.035);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-border-strong: rgba(255, 255, 255, 0.18);
   --glass-blur: 18px;
@@ -60,9 +60,9 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 55% 40% at 12% 0%, rgba(91, 140, 255, 0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 35% at 92% 8%, rgba(91, 140, 255, 0.06) 0%, transparent 50%),
-    linear-gradient(180deg, #0a0b0e 0%, var(--bg) 42%, var(--bg2) 100%);
+    radial-gradient(ellipse 55% 40% at 18% 0%, rgba(255, 248, 240, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 88% 12%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    linear-gradient(180deg, #0e0e0d 0%, var(--bg) 42%, var(--bg2) 100%);
   background-attachment: fixed;
   color: var(--text);
   overflow-x: clip;
@@ -95,13 +95,13 @@ body::before {
 .bg-glow.one {
   top: -120px;
   left: -100px;
-  background: rgba(91, 140, 255, 0.16);
+  background: rgba(255, 244, 230, 0.07);
 }
 
 .bg-glow.two {
   right: -110px;
   bottom: -130px;
-  background: rgba(80, 100, 130, 0.14);
+  background: rgba(180, 170, 155, 0.06);
   animation-delay: -6s;
 }
 
@@ -110,7 +110,7 @@ body::before {
   height: 280px;
   top: 42%;
   left: 55%;
-  background: rgba(91, 140, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
   animation-delay: -11s;
   animation-duration: 22s;
 }
@@ -280,7 +280,7 @@ body::before {
  * Auth keeps the floating .card; the wallpaper is no longer a second "screen".
  */
 body:has(#appCard:not(.hidden)) {
-  background: linear-gradient(180deg, #12141a 0%, #0c0d10 48%, #0a0b0e 100%);
+  background: linear-gradient(180deg, #1a1918 0%, #121211 48%, #0e0e0d 100%);
   background-attachment: fixed;
   overscroll-behavior-y: none;
 }
@@ -290,7 +290,7 @@ body:has(#appCard:not(.hidden))::before {
 }
 
 body:has(#appCard:not(.hidden)) .bg-glow {
-  opacity: 0.16;
+  opacity: 0.08;
   animation: none;
 }
 
@@ -327,9 +327,9 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   backdrop-filter: none;
   background: linear-gradient(
     180deg,
-    #12141a 0%,
-    #0c0d10 45%,
-    #0a0b0e 100%
+    #1a1918 0%,
+    #121211 45%,
+    #0e0e0d 100%
   );
   min-height: 100dvh;
   min-height: 100vh;
@@ -686,7 +686,7 @@ textarea:focus {
   gap: 0;
   border-radius: 999px;
   border: 1px solid rgba(160, 182, 255, 0.45);
-  background: rgba(14, 16, 22, 0.42);
+  background: rgba(20, 19, 18, 0.42);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), var(--glass-highlight);
@@ -703,14 +703,14 @@ textarea:focus {
 .search-bar--branded {
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(18, 20, 26, 0.55), rgba(18, 20, 26, 0.55)) padding-box,
+    linear-gradient(rgba(28, 27, 26, 0.55), rgba(28, 27, 26, 0.55)) padding-box,
     linear-gradient(125deg, rgba(91, 140, 255, 0.65), rgba(61, 155, 255, 0.5), rgba(91, 140, 255, 0.4)) border-box;
   -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
   box-shadow:
     0 14px 44px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 40px rgba(91, 140, 255, 0.1);
+    0 0 28px rgba(0, 0, 0, 0.28);
 }
 
 .search-bar--branded:focus-within {
@@ -718,17 +718,17 @@ textarea:focus {
     var(--glass-focus),
     0 16px 48px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 48px rgba(61, 155, 255, 0.16);
+    0 0 28px rgba(0, 0, 0, 0.25);
 }
 
 .search-bar--branded.search-bar--code {
   background:
-    linear-gradient(rgba(18, 20, 26, 0.55), rgba(18, 20, 26, 0.55)) padding-box,
+    linear-gradient(rgba(28, 27, 26, 0.55), rgba(28, 27, 26, 0.55)) padding-box,
     linear-gradient(125deg, rgba(91, 140, 255, 0.55), rgba(91, 140, 255, 0.5)) border-box;
   box-shadow:
     0 14px 44px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 36px rgba(91, 140, 255, 0.12);
+    0 0 24px rgba(0, 0, 0, 0.22);
 }
 
 /* Learn Ask hero: flex row — WebKit stretches mic/Ask with textarea more reliably than grid */
@@ -906,7 +906,7 @@ textarea:focus {
   padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid rgba(160, 182, 255, 0.35);
-  background: rgba(12, 13, 16, 0.55);
+  background: rgba(18, 17, 16, 0.55);
 }
 
 .learn-chat-attach-thumb {
@@ -1135,7 +1135,7 @@ textarea:focus {
   right: 8px;
   z-index: 1;
   border: 1px solid rgba(160, 182, 255, 0.35);
-  background: rgba(12, 13, 16, 0.55);
+  background: rgba(18, 17, 16, 0.55);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   color: #e4e9f2;
@@ -1182,7 +1182,7 @@ textarea:focus {
   position: sticky;
   bottom: 0;
   padding-top: 4px;
-  background: linear-gradient(180deg, transparent, rgba(12, 13, 16, 0.55) 22%, rgba(12, 13, 16, 0.78) 100%);
+  background: linear-gradient(180deg, transparent, rgba(18, 17, 16, 0.55) 22%, rgba(18, 17, 16, 0.78) 100%);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
@@ -1875,7 +1875,7 @@ textarea:focus {
     overflow: visible;
     box-shadow:
       0 10px 36px rgba(0, 0, 0, 0.48),
-      0 4px 14px rgba(91, 140, 255, 0.14),
+      0 4px 14px rgba(0, 0, 0, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
@@ -1963,13 +1963,13 @@ textarea:focus {
     border-radius: 999px;
     border: 1px solid transparent;
     background:
-      linear-gradient(rgba(14, 16, 22, 0.92), rgba(14, 16, 22, 0.92)) padding-box,
+      linear-gradient(rgba(20, 19, 18, 0.92), rgba(20, 19, 18, 0.92)) padding-box,
       linear-gradient(125deg, rgba(91, 140, 255, 0.55), rgba(61, 155, 255, 0.42), rgba(91, 140, 255, 0.35))
         border-box;
     box-shadow:
       0 14px 40px rgba(0, 0, 0, 0.42),
       inset 0 1px 0 rgba(255, 255, 255, 0.09),
-      0 0 36px rgba(91, 140, 255, 0.08);
+      0 0 24px rgba(0, 0, 0, 0.22);
     overflow: hidden;
   }
 
@@ -2043,7 +2043,7 @@ textarea:focus {
   #appCard .followup-bar {
     flex-shrink: 0;
     position: relative;
-    background: linear-gradient(180deg, transparent 0%, rgba(12, 13, 16, 0.92) 45%);
+    background: linear-gradient(180deg, transparent 0%, rgba(18, 17, 16, 0.92) 45%);
   }
 
   .primary-btn,
