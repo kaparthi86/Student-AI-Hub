@@ -842,7 +842,14 @@ function applyTranslations() {
   };
   Object.entries(byIdText).forEach(([id, key]) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = t(key);
+    if (!el) return;
+    if (id === "googleLoginBtn") {
+      const label = el.querySelector("span:last-child") || el.querySelector("span");
+      if (label) label.textContent = t(key);
+      else el.textContent = t(key);
+      return;
+    }
+    el.textContent = t(key);
   });
   if (chatSearchInput) chatSearchInput.placeholder = t("chat_placeholder");
   if (chatFollowupInput) chatFollowupInput.placeholder = t("chat_followup");
@@ -2564,7 +2571,60 @@ googleLoginBtn.addEventListener("click", async () => {
   }
 });
 
+
+const accountMenuBtn = document.getElementById("accountMenuBtn");
+const accountMenuPanel = document.getElementById("accountMenuPanel");
+function closeAccountMenu() {
+  if (!accountMenuPanel || !accountMenuBtn) return;
+  accountMenuPanel.classList.add("hidden");
+  accountMenuBtn.setAttribute("aria-expanded", "false");
+}
+function toggleAccountMenu() {
+  if (!accountMenuPanel || !accountMenuBtn) return;
+  const open = accountMenuPanel.classList.contains("hidden");
+  accountMenuPanel.classList.toggle("hidden", !open);
+  accountMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+accountMenuBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleAccountMenu();
+});
+document.addEventListener("click", (e) => {
+  if (!accountMenuPanel || accountMenuPanel.classList.contains("hidden")) return;
+  const root = accountMenuBtn?.closest(".account-menu");
+  if (root && !root.contains(e.target)) closeAccountMenu();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAccountMenu();
+});
+
+const notebookDropzone = document.getElementById("notebookDropzone");
+function syncNotebookAnalyzeVisibility() {
+  const f = docFileInput?.files?.[0];
+  if (!docAnalyzeBtn) return;
+  docAnalyzeBtn.classList.toggle("hidden", !f);
+  if (notebookDropzone) notebookDropzone.classList.toggle("has-file", Boolean(f));
+}
+notebookDropzone?.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  notebookDropzone.classList.add("is-dragover");
+});
+notebookDropzone?.addEventListener("dragleave", () => {
+  notebookDropzone.classList.remove("is-dragover");
+});
+notebookDropzone?.addEventListener("drop", (e) => {
+  e.preventDefault();
+  notebookDropzone.classList.remove("is-dragover");
+  const file = e.dataTransfer?.files?.[0];
+  if (!file || !docFileInput) return;
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  docFileInput.files = dt.files;
+  docFileInput.dispatchEvent(new Event("change", { bubbles: true }));
+});
+
 logoutBtn.addEventListener("click", async () => {
+  closeAccountMenu();
   if (!supabaseClient) return;
   await supabaseClient.auth.signOut();
 });
@@ -2742,8 +2802,10 @@ docFileInput.addEventListener("change", () => {
   docFileMeta.textContent = f
     ? t("doc_selected", { name: f.name, kb: String(Math.round(f.size / 1024)) })
     : "";
+  syncNotebookAnalyzeVisibility();
 });
 
+syncNotebookAnalyzeVisibility();
 docAnalyzeBtn.addEventListener("click", async () => {
   const file = docFileInput.files?.[0];
   if (!file) {
@@ -2824,6 +2886,7 @@ function wireSettingsUi() {
   syncForm();
 
   openSettingsBtn?.addEventListener("click", () => {
+    closeAccountMenu();
     syncForm();
     settingsModal?.classList.remove("hidden");
   });

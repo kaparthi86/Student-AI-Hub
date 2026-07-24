@@ -18,15 +18,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=soft-paper-1" />
+    <link rel="stylesheet" href="./styles.css?v=world-class-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=world-class-1" />
   </head>
   <body>
-    <div class="bg-glow one"></div>
-    <div class="bg-glow two"></div>
-    <div class="bg-glow three" aria-hidden="true"></div>
+    <div class="bg-glow one" aria-hidden="true"></div>
+    <div class="bg-glow two" aria-hidden="true"></div>
 
     <main class="container">
       <div id="betaBanner" class="beta-banner hidden" role="status" aria-live="polite"></div>
@@ -95,7 +95,27 @@
           </div>
         </header>
 
-        <button id="googleLoginBtn" class="primary-btn auth-google-btn" type="button">Continue with Google</button>
+        <button id="googleLoginBtn" class="auth-google-btn google-btn" type="button">
+          <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
+            <path
+              fill="#4285F4"
+              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
+            />
+            <path
+              fill="#34A853"
+              d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
+            />
+            <path
+              fill="#EA4335"
+              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
         <p id="authStatus" class="muted auth-status"></p>
 
         <footer class="app-fine-print auth-fine-print" role="note" id="authDisclaimerFooter" aria-label="Disclaimer">
@@ -135,9 +155,22 @@
                 <span class="brand-kicker">Learn &middot; Code &middot; Notebook</span>
               </div>
             </div>
-            <div class="head-actions">
-              <button id="openSettingsBtn" class="ghost-btn" type="button">Settings</button>
-              <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+            <div class="head-actions account-menu">
+              <button
+                type="button"
+                id="accountMenuBtn"
+                class="ghost-btn icon-btn"
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="accountMenuPanel"
+              >
+                <span aria-hidden="true">···</span>
+              </button>
+              <div id="accountMenuPanel" class="account-menu-panel hidden" role="menu">
+                <button id="openSettingsBtn" class="account-menu-item" type="button" role="menuitem">Settings</button>
+                <button id="logoutBtn" class="account-menu-item" type="button" role="menuitem">Logout</button>
+              </div>
             </div>
           </div>
           <div class="app-greeting" hidden>
@@ -377,24 +410,33 @@
           </div>
         </section>
 
-        <section id="panelNotebook" class="panel hidden">
-          <p class="muted notebook-hint" id="notebookHint">
-            Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study
-            plan - similar to a lightweight notebook assistant.
-          </p>
-          <div id="notebookEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="notebookEmptyPromptsLabel">
-            <p class="empty-prompts-label muted" id="notebookEmptyPromptsLabel">Works well with:</p>
-            <div class="empty-prompts-chips starter-chips">
-              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="0"></button>
-              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="1"></button>
-              <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="2"></button>
+        <section id="panelNotebook" class="panel notebook-panel hidden">
+          <div id="notebookEmptyState" class="notebook-empty">
+            <label class="notebook-dropzone" id="notebookDropzone" for="docFileInput">
+              <span class="notebook-dropzone-title" id="notebookDropTitle">Drop notes or choose a file</span>
+              <span class="notebook-dropzone-sub muted" id="notebookHint"
+                >.txt, .md, .csv, .json, .pdf — summary, key ideas, quiz, and a study plan</span
+              >
+              <input
+                id="docFileInput"
+                class="sr-only"
+                type="file"
+                accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf"
+              />
+            </label>
+            <div id="notebookEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="notebookEmptyPromptsLabel">
+              <p class="empty-prompts-label muted" id="notebookEmptyPromptsLabel">Works well with:</p>
+              <div class="empty-prompts-chips starter-chips">
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="0"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="1"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="notebook" data-empty-idx="2"></button>
+              </div>
             </div>
           </div>
-          <div class="upload-row">
-            <input id="docFileInput" type="file" accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf" />
-            <button id="docAnalyzeBtn" class="primary-btn" type="button">Analyze document</button>
+          <div class="notebook-selected-row">
+            <p id="docFileMeta" class="muted"></p>
+            <button id="docAnalyzeBtn" class="primary-btn hidden" type="button">Analyze document</button>
           </div>
-          <p id="docFileMeta" class="muted"></p>
           <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
           <div class="actions">
             <span id="notebookStatus" class="muted status-line" data-i18n-status="status_ready"></span>
