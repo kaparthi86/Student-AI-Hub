@@ -571,7 +571,7 @@ textarea {
   box-shadow:
     0 14px 44px rgba(5, 12, 40, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 0 40px rgba(91, 140, 255, 0.08);
+    0 0 28px rgba(0, 0, 0, 0.28);
 }
 
 .search-bar--branded.search-bar--code {
@@ -581,7 +581,7 @@ textarea {
   box-shadow:
     0 14px 44px rgba(5, 12, 40, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 0 36px rgba(91, 140, 255, 0.1);
+    0 0 24px rgba(0, 0, 0, 0.22);
 }
 
 /* Learn Ask hero: flex row — WebKit stretches mic/Ask with textarea more reliably than grid */
