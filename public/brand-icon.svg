@@ -7,8 +7,8 @@
   />
   <defs>
     <linearGradient id="brandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7a6dff" />
-      <stop offset="1" stop-color="#3eb8f8" />
+      <stop stop-color="#5b8cff" />
+      <stop offset="1" stop-color="#3d9bff" />
     </linearGradient>
   </defs>
 </svg>
