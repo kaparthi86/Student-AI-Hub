@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=glass-shell-1" />
+    <link rel="stylesheet" href="./styles.css?v=world-class-polish-1" />
   </head>
   <body>
     <div class="bg-glow one"></div>
@@ -63,50 +63,38 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-      <section class="auth card auth-card" id="authCard">
+      <section class="auth auth-shell" id="authCard">
         <header class="app-head auth-head">
-          <div class="app-head-top">
-            <div class="app-brand" aria-label="Student AI Hub">
-              <span class="brand-mark" aria-hidden="true">
-                <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
-                  <path
-                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
-                    fill="white"
-                    fill-opacity="0.92"
-                  />
-                  <defs>
-                    <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#7a6dff" />
-                      <stop offset="1" stop-color="#3eb8f8" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </span>
-              <div class="brand-wordmark">
-                <span class="brand-title">Student AI <span class="brand-hub">Hub</span></span>
-                <span class="brand-kicker">Learn &middot; Code &middot; Notebook</span>
-              </div>
+          <div class="app-brand" aria-label="Student AI Hub">
+            <span class="brand-mark" aria-hidden="true">
+              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
+                <path
+                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                  fill="white"
+                  fill-opacity="0.92"
+                />
+                <defs>
+                  <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#7a6dff" />
+                    <stop offset="1" stop-color="#3eb8f8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <div class="brand-wordmark">
+              <span class="brand-title">Student AI <span class="brand-hub">Hub</span></span>
+              <span class="brand-kicker">Learn &middot; Code &middot; Notebook</span>
             </div>
-            <button
-              type="button"
-              class="ghost-btn auth-head-placeholder"
-              tabindex="-1"
-              aria-hidden="true"
-              disabled
-            >
-              Logout
-            </button>
           </div>
           <div class="app-greeting auth-greeting">
-            <h2 class="auth-signin-title" id="authSigninTitle">Sign in</h2>
+            <h2 class="auth-signin-title" id="authSigninTitle">Sign in to continue</h2>
             <p class="muted app-tagline" id="authSigninTagline">
-              Continue with Google to use Ask, Code, and Notebook. Free for students &mdash; learn faster, code smarter.
+              Free for students &mdash; Ask, Code, and Notebook in one place.
             </p>
           </div>
         </header>
 
-        <p class="eyebrow auth-eyebrow" id="authEyebrow">Free for students</p>
         <button id="googleLoginBtn" class="primary-btn auth-google-btn" type="button">Continue with Google</button>
         <p id="authStatus" class="muted auth-status"></p>
 
@@ -152,7 +140,7 @@
               <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
             </div>
           </div>
-          <div class="app-greeting">
+          <div class="app-greeting" hidden>
             <h2><span id="welcomePrefix">Welcome</span> <span id="userName">Student</span></h2>
             <p class="muted app-tagline" id="appTaglineMain">Ask a question, get an answer, keep the conversation going.</p>
           </div>
@@ -232,7 +220,7 @@
               </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <p class="search-hint muted" id="chatSearchHint">Press Enter to search. Shift+Enter for a new line.</p>
+            <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
             <div id="chatEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="chatEmptyPromptsLabel">
               <p class="empty-prompts-label muted" id="chatEmptyPromptsLabel">Try asking:</p>
               <div class="empty-prompts-chips starter-chips">
@@ -321,7 +309,7 @@
                 <button type="button" id="chatCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
                   Copy conversation
                 </button>
-                <span id="apiStatus" class="muted">Ready</span>
+                <span id="apiStatus" class="muted status-line" data-i18n-status="status_ready"></span>
               </div>
             </div>
           </div>
@@ -361,7 +349,7 @@
               ></textarea>
               <button id="codeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <p class="search-hint muted" id="codeSearchHint">Tip: include error messages and what you expected.</p>
+            <p class="search-hint muted" id="codeSearchHint" hidden>Tip: include error messages and what you expected.</p>
             <div id="codeEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="codeEmptyPromptsLabel">
               <p class="empty-prompts-label muted" id="codeEmptyPromptsLabel">Try pasting or asking:</p>
               <div class="empty-prompts-chips starter-chips">
@@ -383,7 +371,7 @@
                 <button type="button" id="codeCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
                   Copy conversation
                 </button>
-                <span id="codeStatus" class="muted">Ready</span>
+                <span id="codeStatus" class="muted status-line" data-i18n-status="status_ready"></span>
               </div>
             </div>
           </div>
@@ -409,7 +397,7 @@
           <p id="docFileMeta" class="muted"></p>
           <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
           <div class="actions">
-            <span id="notebookStatus" class="muted">Ready</span>
+            <span id="notebookStatus" class="muted status-line" data-i18n-status="status_ready"></span>
           </div>
         </section>
 

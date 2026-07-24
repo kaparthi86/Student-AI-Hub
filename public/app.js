@@ -146,8 +146,8 @@ const UI_LANG_LABELS = {
 
 const I18N = {
   en: {
-    signin_title: "Sign in",
-    signin_tagline: "Continue with Google to use Ask, Code, and Notebook. Free for students - learn faster, code smarter.",
+    signin_title: "Sign in to continue",
+    signin_tagline: "Free for students - Ask, Code, and Notebook in one place.",
     free_for_students: "Free for students",
     continue_google: "Continue with Google",
     settings: "Settings",
@@ -304,8 +304,8 @@ const I18N = {
       "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
   },
   es: {
-    signin_title: "Iniciar sesin",
-    signin_tagline: "Contina con Google para usar Ask, Code y Notebook. Gratis para estudiantes: aprende ms rpido y programa mejor.",
+    signin_title: "Inicia sesin para continuar",
+    signin_tagline: "Gratis para estudiantes - Ask, Code y Notebook en un solo lugar.",
     free_for_students: "Gratis para estudiantes",
     continue_google: "Continuar con Google",
     settings: "Configuracin",
@@ -459,8 +459,8 @@ const I18N = {
       "Agrega nuestro icono a la pantalla de inicio o escritorio para acceso rapido hasta la app movil.",
   },
   hi: {
-    signin_title: "Sign in karein",
-    signin_tagline: "Google ke saath continue karke Ask, Code aur Notebook use karein. Students ke liye free.",
+    signin_title: "Continue karne ke liye sign in karein",
+    signin_tagline: "Students ke liye free - Ask, Code aur Notebook ek jagah.",
     free_for_students: "Students ke liye free",
     continue_google: "Google ke saath jari rakhen",
     settings: "Settings",
@@ -615,8 +615,8 @@ const I18N = {
     pwa_install_sub_default: "Mobile app aane tak home screen ya desktop par quick access ke liye icon add karein.",
   },
   te: {
-    signin_title: "Sign in cheyyandi",
-    signin_tagline: "Google tho continue ayi Ask, Code mariyu Notebook use cheyyandi. Students ki free.",
+    signin_title: "Continue cheyyadaniki sign in cheyyandi",
+    signin_tagline: "Students ki free - Ask, Code mariyu Notebook oka chota.",
     free_for_students: "Students ki free",
     continue_google: "Google to continue cheyyandi",
     settings: "Settings",
@@ -798,7 +798,6 @@ function applyTranslations() {
   const byIdText = {
     authSigninTitle: "signin_title",
     authSigninTagline: "signin_tagline",
-    authEyebrow: "free_for_students",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
     logoutBtn: "logout",
@@ -903,14 +902,17 @@ function applyTranslations() {
   [apiStatus, codeStatus, notebookStatus].forEach((el) => {
     if (!el) return;
     const key = el.dataset.i18nStatus || "status_ready";
-    el.textContent = t(key);
+    setStatus(el, key);
   });
 }
 
 function setStatus(el, key) {
   if (!el) return;
   el.dataset.i18nStatus = key;
-  el.textContent = t(key);
+  const idle = key === "status_ready";
+  el.textContent = idle ? "" : t(key);
+  el.classList.toggle("is-busy", !idle);
+  el.hidden = idle;
 }
 
 /** @type {{ mime: string, base64: string, dataUrl: string } | null} */
