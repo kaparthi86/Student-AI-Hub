@@ -21,8 +21,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=world-class-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=fix-logout-analyze-1" />
+    <link rel="stylesheet" href="./styles.css?v=notebook-multifile-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=notebook-multifile-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -413,16 +413,31 @@
         <section id="panelNotebook" class="panel notebook-panel hidden">
           <div id="notebookEmptyState" class="notebook-empty">
             <label class="notebook-dropzone" id="notebookDropzone" for="docFileInput">
-              <span class="notebook-dropzone-title" id="notebookDropTitle">Drop notes or choose a file</span>
+              <span class="notebook-dropzone-title" id="notebookDropTitle">Drop notes or choose files</span>
               <span class="notebook-dropzone-sub muted" id="notebookHint"
-                >.txt, .md, .csv, .json, .pdf — summary, key ideas, quiz, and a study plan</span
+                >Up to 5 files · .txt, .md, .csv, .json, .pdf — summary, key ideas, quiz, and a study plan</span
               >
               <input
                 id="docFileInput"
                 type="file"
+                multiple
                 accept=".txt,.md,.csv,.json,.pdf,text/plain,text/markdown,application/pdf"
               />
             </label>
+            <div id="notebookSources" class="notebook-sources" aria-live="polite"></div>
+            <div class="notebook-selected-row">
+              <p id="docFileMeta" class="muted"></p>
+              <button
+                id="docAnalyzeBtn"
+                class="primary-btn"
+                type="button"
+                disabled
+                aria-disabled="true"
+                title="Choose notes files first"
+              >
+                Analyze notes
+              </button>
+            </div>
             <div id="notebookEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="notebookEmptyPromptsLabel">
               <p class="empty-prompts-label muted" id="notebookEmptyPromptsLabel">Works well with:</p>
               <div class="empty-prompts-chips starter-chips">
@@ -432,15 +447,57 @@
               </div>
             </div>
           </div>
-          <div class="notebook-selected-row">
-            <p id="docFileMeta" class="muted"></p>
-            <button id="docAnalyzeBtn" class="primary-btn" type="button" disabled aria-disabled="true" title="Choose a notes file first">
-              Analyze document
-            </button>
-          </div>
-          <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
-          <div class="actions">
-            <span id="notebookStatus" class="muted status-line" data-i18n-status="status_ready"></span>
+
+          <div id="notebookAnswerShell" class="answer-shell hidden">
+            <div id="notebookActiveSources" class="notebook-active-sources muted" aria-live="polite"></div>
+            <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
+            <div class="followup-bar">
+              <div
+                id="notebookFollowupChips"
+                class="starter-chips starter-chips--inline"
+                role="group"
+                aria-label="Quick notebook follow-ups"
+              >
+                <button type="button" class="starter-chip" data-starter="summarize">Summarize</button>
+                <button type="button" class="starter-chip" data-starter="quiz">Quiz me</button>
+                <button type="button" class="starter-chip" data-starter="steps">Explain step-by-step</button>
+                <button type="button" class="starter-chip" data-starter="studyPlan">Study plan</button>
+                <button type="button" class="starter-chip" data-starter="readAloud">Listen Mode</button>
+              </div>
+              <div class="search-bar search-bar--branded search-bar--learn-hero">
+                <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI Hub">
+                  <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="11" fill="url(#searchBrandGradNotebook)" />
+                    <path
+                      d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                      fill="white"
+                      fill-opacity="0.88"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="searchBrandGradNotebook"
+                        x1="8"
+                        y1="6"
+                        x2="34"
+                        y2="36"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stop-color="#2F6FED" />
+                        <stop offset="1" stop-color="#1D5BD8" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </span>
+                <textarea id="notebookFollowupInput" rows="1" placeholder="Ask a follow-up about your notes..."></textarea>
+                <button id="notebookFollowupSubmit" class="search-submit primary-btn" type="button">Ask</button>
+              </div>
+              <div class="followup-meta">
+                <button type="button" id="notebookCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
+                  Copy conversation
+                </button>
+                <span id="notebookStatus" class="muted status-line" data-i18n-status="status_ready"></span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -523,6 +580,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="./config.js"></script>
-    <script src="./app.js?v=fix-logout-analyze-1"></script>
+    <script src="./app.js?v=notebook-multifile-1"></script>
   </body>
 </html>

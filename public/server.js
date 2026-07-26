@@ -78,6 +78,7 @@ const envFileExists = fs.existsSync(envPath);
 
 const MAX_DOC_CHARS = 45000;
 const MAX_CHAT_HISTORY = 24;
+const MAX_NOTEBOOK_FILES = 5;
 
 /** Exact-replay cache (per-user key): skips provider calls for identical payloads within TTL. */
 const RESPONSE_CACHE_TTL_MS = Math.max(0, Number(process.env.HF_RESPONSE_CACHE_TTL_SEC || 0) * 1000);
@@ -626,11 +627,11 @@ function truncateForPrompt(text, maxChars) {
 }
 
 /** Static system first (prefix-cache friendly); variable document only in the user message. */
-const NOTEBOOK_SYSTEM_STATIC = `You create accurate student study materials. Never invent facts not present in the document. Prefer Markdown.
+const NOTEBOOK_SYSTEM_STATIC = `You create accurate student study materials. Never invent facts not present in the source materials. Prefer Markdown.
 
 You are "Study Notebook", a notebook-style study assistant.
 
-Using ONLY the document content in the user message (between DOCUMENT START and DOCUMENT END), produce structured study notes for students:
+Using ONLY the source materials in the user message, produce structured study notes for students:
 1) Executive summary (5-8 bullets)
 2) Key concepts and definitions (bullet list)
 3) Important formulas / steps / algorithms (if any; else say "None obvious")
@@ -639,16 +640,86 @@ Using ONLY the document content in the user message (between DOCUMENT START and 
 
 Rules:
 - If information is missing, say "Not in document" instead of guessing.
+- When multiple documents are provided, synthesize across them and mention the source file name when a point is document-specific.
 - Use clear Markdown headings (##) for each section.
-- The user message includes the file name and extracted document text.`;
+- The user message includes file names and extracted document text.`;
+
+const NOTEBOOK_FOLLOWUP_SYSTEM = `You are "Study Notebook", a document-grounded study coach for students.
+Answer ONLY using the SOURCE MATERIALS provided below.
+If the answer is not supported by those materials, say "Not in document" instead of guessing.
+Prefer clear, concise Markdown. Do not invent facts, citations, or page numbers.
+When multiple sources are present, synthesize across them and name the source file when helpful.`;
 
 function notebookUserContent(docName, docText) {
-  const body = truncateForPrompt(docText, MAX_DOC_CHARS);
-  return `Document name: "${docName}"
+  return notebookUserContentFromSources([{ name: docName, text: docText }]);
+}
 
---- DOCUMENT START ---
-${body}
---- DOCUMENT END ---`;
+/**
+ * Build a multi-document prompt body and a reusable documentContext string for follow-ups.
+ * @param {{ name: string, text: string }[]} sourceDocs
+ */
+function buildNotebookCorpus(sourceDocs) {
+  const list = Array.isArray(sourceDocs) ? sourceDocs.filter((d) => d && String(d.text || "").trim()) : [];
+  if (!list.length) {
+    return { documentContext: "", userContent: "", sources: [], charsUsed: 0, corpusHash: "" };
+  }
+
+  let remaining = MAX_DOC_CHARS;
+  const parts = [];
+  const sources = [];
+  let charsUsed = 0;
+
+  list.forEach((doc, idx) => {
+    const name = String(doc.name || `document-${idx + 1}`).slice(0, 240);
+    const full = String(doc.text || "");
+    if (!full.trim() || remaining <= 0) {
+      sources.push({ name, chars: 0, included: Boolean(full.trim()) });
+      return;
+    }
+    const slice = full.slice(0, remaining);
+    const truncated = slice.length < full.length;
+    remaining -= slice.length;
+    charsUsed += slice.length;
+    sources.push({ name, chars: slice.length, truncated });
+    parts.push(
+      `--- DOCUMENT ${idx + 1} START ---\nName: "${name}"\nText:\n${slice}${
+        truncated ? "\n\n[Document truncated for length.]" : ""
+      }\n--- DOCUMENT ${idx + 1} END ---`
+    );
+  });
+
+  const documentContext = parts.join("\n\n");
+  const names = sources.map((s) => s.name).join(", ");
+  const userContent = `Documents uploaded (${sources.length}): ${names}\n\n${documentContext}`;
+  const corpusHash = crypto.createHash("sha256").update(documentContext).digest("hex");
+  return { documentContext, userContent, sources, charsUsed, corpusHash };
+}
+
+function notebookUserContentFromSources(sourceDocs) {
+  return buildNotebookCorpus(sourceDocs).userContent;
+}
+
+function collectNotebookUploadFiles(req) {
+  const out = [];
+  if (Array.isArray(req.files)) {
+    out.push(...req.files);
+  } else if (req.files && typeof req.files === "object") {
+    if (Array.isArray(req.files.documents)) out.push(...req.files.documents);
+    if (Array.isArray(req.files.document)) out.push(...req.files.document);
+  }
+  if (req.file) out.push(req.file);
+
+  const deduped = [];
+  const seen = new Set();
+  for (const f of out) {
+    if (!f?.buffer) continue;
+    const key = `${f.originalname || "upload"}:${f.size || f.buffer.length}:${f.mimetype || ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(f);
+    if (deduped.length >= MAX_NOTEBOOK_FILES) break;
+  }
+  return deduped;
 }
 
 async function callChatCompletion(messages, options = {}) {
@@ -904,7 +975,8 @@ app.post("/api/ai", requireSession, async (req, res) => {
 
 app.post("/api/chat", requireSession, async (req, res) => {
   try {
-    const mode = req.body?.mode === "code" ? "code" : "learn";
+    const modeRaw = String(req.body?.mode || "").trim().toLowerCase();
+    const mode = modeRaw === "code" ? "code" : modeRaw === "notebook" ? "notebook" : "learn";
     const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
       ? String(req.body.studyMode).toLowerCase()
       : "explain";
@@ -924,6 +996,19 @@ app.post("/api/chat", requireSession, async (req, res) => {
       });
     }
 
+    let documentContext = "";
+    if (mode === "notebook") {
+      documentContext = String(req.body?.documentContext || "")
+        .replace(/\u0000/g, "")
+        .trim()
+        .slice(0, MAX_DOC_CHARS + 4000);
+      if (!documentContext) {
+        return res.status(400).json({
+          error: "documentContext is required for notebook follow-ups. Analyze your notes first.",
+        });
+      }
+    }
+
     const historyApi = learnVisionOn
       ? normalizeMultimodalChatHistory(req.body?.history)
       : normalizeChatMessages(req.body?.history);
@@ -941,15 +1026,21 @@ app.post("/api/chat", requireSession, async (req, res) => {
       return res.status(400).json({ error: "message is required." });
     }
 
-    const system = `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}`;
+    const system =
+      mode === "notebook"
+        ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
+        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}`;
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
     const modelForRequest = pickChatModelForMessages(coreMessages);
     const messages = [{ role: "system", content: system }, ...coreMessages];
     const cacheUserKey = req.user?.id || "";
-    const promptCacheKey = `${cacheUserKey}:${mode}:${studyMode}`;
+    const promptCacheKey =
+      mode === "notebook"
+        ? `${cacheUserKey}:notebook:${crypto.createHash("sha256").update(documentContext).digest("hex").slice(0, 24)}:${studyMode}`
+        : `${cacheUserKey}:${mode}:${studyMode}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
-    const maxOutTokens = visionTurn ? 1100 : 720;
+    const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : 720;
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {
@@ -1053,42 +1144,77 @@ app.post("/api/chat", requireSession, async (req, res) => {
   }
 });
 
-app.post("/api/doc-insights", requireSession, upload.single("document"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file uploaded (field name: document)." });
-
-    let text;
+app.post(
+  "/api/doc-insights",
+  requireSession,
+  upload.fields([
+    { name: "documents", maxCount: MAX_NOTEBOOK_FILES },
+    { name: "document", maxCount: MAX_NOTEBOOK_FILES },
+  ]),
+  async (req, res) => {
     try {
-      text = await extractTextFromUpload(req.file);
-    } catch (e) {
-      return res.status(400).json({ error: e.message || "Could not read file." });
-    }
-
-    if (!text) return res.status(400).json({ error: "Could not extract text from this file." });
-
-    const name = req.file.originalname || "document";
-    const docHash = crypto.createHash("sha256").update(req.file.buffer).digest("hex");
-    const uid = req.user?.id || "";
-    const cacheUserKey = `${uid}:${docHash}`;
-
-    const output = await callChatCompletion(
-      [
-        { role: "system", content: NOTEBOOK_SYSTEM_STATIC },
-        { role: "user", content: notebookUserContent(name, text) },
-      ],
-      {
-        max_tokens: 1400,
-        temperature: 0.35,
-        cacheUserKey,
-        promptCacheKey: `notebook:${docHash.slice(0, 40)}`,
+      const files = collectNotebookUploadFiles(req);
+      if (!files.length) {
+        return res.status(400).json({
+          error: `No file uploaded. Use field "documents" (up to ${MAX_NOTEBOOK_FILES} files) or "document".`,
+        });
       }
-    );
 
-    return res.json({ output, docName: name, charsUsed: Math.min(text.length, MAX_DOC_CHARS) });
-  } catch (error) {
-    return res.status(500).json({ error: error.message || "Unexpected error" });
+      const extracted = [];
+      const failures = [];
+      for (const file of files) {
+        const name = file.originalname || "document";
+        try {
+          const text = await extractTextFromUpload(file);
+          if (!text) {
+            failures.push({ name, error: "Could not extract text from this file." });
+            continue;
+          }
+          extracted.push({ name, text });
+        } catch (e) {
+          failures.push({ name, error: e.message || "Could not read file." });
+        }
+      }
+
+      if (!extracted.length) {
+        return res.status(400).json({
+          error: failures[0]?.error || "Could not extract text from the uploaded files.",
+          failures,
+        });
+      }
+
+      const corpus = buildNotebookCorpus(extracted);
+      const uid = req.user?.id || "";
+      const cacheUserKey = `${uid}:${corpus.corpusHash}`;
+
+      const output = await callChatCompletion(
+        [
+          { role: "system", content: NOTEBOOK_SYSTEM_STATIC },
+          { role: "user", content: corpus.userContent },
+        ],
+        {
+          max_tokens: 1400,
+          temperature: 0.35,
+          cacheUserKey,
+          promptCacheKey: `notebook:${corpus.corpusHash.slice(0, 40)}`,
+        }
+      );
+
+      const docNames = corpus.sources.map((s) => s.name);
+      return res.json({
+        output,
+        docName: docNames[0] || "document",
+        docNames,
+        sources: corpus.sources,
+        charsUsed: corpus.charsUsed,
+        documentContext: corpus.documentContext,
+        failures: failures.length ? failures : undefined,
+      });
+    } catch (error) {
+      return res.status(500).json({ error: error.message || "Unexpected error" });
+    }
   }
-});
+);
 
 app.post("/api/weak-topic-recap", requireSession, async (req, res) => {
   try {
