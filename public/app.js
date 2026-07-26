@@ -52,6 +52,16 @@ const docAnalyzeBtn = document.getElementById("docAnalyzeBtn");
 const docFileMeta = document.getElementById("docFileMeta");
 const notebookThread = document.getElementById("notebookThread");
 const notebookStatus = document.getElementById("notebookStatus");
+const notebookEmptyState = document.getElementById("notebookEmptyState");
+const notebookEmptyPrompts = document.getElementById("notebookEmptyPrompts");
+const notebookAnswerShell = document.getElementById("notebookAnswerShell");
+const notebookSourcesEl = document.getElementById("notebookSources");
+const notebookActiveSources = document.getElementById("notebookActiveSources");
+const notebookFollowupChips = document.getElementById("notebookFollowupChips");
+const notebookFollowupInput = document.getElementById("notebookFollowupInput");
+const notebookFollowupSubmit = document.getElementById("notebookFollowupSubmit");
+const notebookCopyThreadBtn = document.getElementById("notebookCopyThreadBtn");
+const NOTEBOOK_MAX_FILES = 5;
 
 let mainTab = "chat";
 let supabaseClient = null;
@@ -123,6 +133,7 @@ async function fetchAuthed(url, init = {}) {
 
 const chatHistory = [];
 const codeHistory = [];
+const notebookHistory = [];
 const FEEDBACK_REASONS = ["too_vague", "incorrect", "too_long", "not_my_level", "other"];
 const USER_PREFS_KEY = "student_ai_user_prefs_v1";
 const CHAT_SESSION_KEY = "student_ai_sessions_v1";
@@ -133,6 +144,13 @@ const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 let deferredInstallPrompt = null;
 let chatSessionOpen = false;
 let codeSessionOpen = false;
+let notebookSessionOpen = false;
+/** @type {File[]} */
+let notebookFiles = [];
+/** Combined extracted text used for grounded notebook follow-ups. */
+let notebookDocumentContext = "";
+/** @type {{ name: string, chars?: number }[]} */
+let notebookSourceMeta = [];
 let defaultPageHintOfferedThisLoad = false;
 let activeUiLanguage = "en";
 
@@ -168,7 +186,26 @@ const I18N = {
     code_followup: "Follow-up...",
     notebook_hint:
       "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study plan - similar to a lightweight notebook assistant.",
-    analyze_doc: "Analyze document",
+    analyze_doc: "Analyze notes",
+    notebook_drop_title: "Drop notes or choose files",
+    notebook_drop_hint: "Up to 5 files · .txt, .md, .csv, .json, .pdf - summary, key ideas, quiz, and a study plan",
+    notebook_followup: "Ask a follow-up about your notes...",
+    notebook_sources_aria: "Selected notebook sources",
+    notebook_remove_source: "Remove {name}",
+    notebook_active_sources: "Studying: {names}",
+    notebook_files_selected: "{count} files selected ({kb} KB)",
+    choose_files_first: "Choose at least one notes file first",
+    notebook_max_files: "You can analyze up to {max} files at a time.",
+    toast_analyze_first: "Analyze your notes before asking follow-ups.",
+    chip_study_plan: "Study plan",
+    starter_prompt_study_plan:
+      "Using only my uploaded notes, give a focused revision plan for the next 3 days with concrete tasks.\n\n",
+    starter_prompt_notebook_summarize:
+      "Using only my uploaded notes, summarize the most important ideas in short bullet points I should remember.\n\n",
+    starter_prompt_notebook_quiz:
+      "Using only my uploaded notes, quiz me with short questions and answer keys. If something is not in the notes, say Not in document.\n\n",
+    starter_prompt_notebook_steps:
+      "Using only my uploaded notes, explain the hardest idea step-by-step with a simple example.\n\n",
     status_ready: "Ready",
     status_generating: "Generating...",
     status_streaming: "Streaming...",
@@ -181,7 +218,7 @@ const I18N = {
     settings_saved_toast: "Preferences saved",
     opening_google_login: "Opening Google login...",
     choose_file_first: "Choose a file first",
-    reading_summarizing: "Reading and summarizing...",
+    reading_summarizing: "Reading and summarizing your notes...",
     language_hint: "Switch interface language to {lang}?",
     language_hint_desc: "You can always change this later in Settings.",
     keep_english: "Keep English",
@@ -298,6 +335,7 @@ const I18N = {
       "For study help and practice only  follow your honor code; don't submit AI output when your course forbids it.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Selected: {name} ({kb} KB)",
+    docs_selected: "Selected: {count} files ({kb} KB)",
     toast_image_read_fail: "Could not read image",
     toast_doc_analysis_failed: "Document analysis failed",
     pwa_install_sub_default:
@@ -326,7 +364,26 @@ const I18N = {
     code_followup: "Seguimiento...",
     notebook_hint:
       "Sube apuntes (.txt, .md, .csv, .json, .pdf). Obtendrs resumen, conceptos clave, preguntas tipo quiz y un plan de estudio.",
-    analyze_doc: "Analizar documento",
+    analyze_doc: "Analizar apuntes",
+    notebook_drop_title: "Suelta apuntes o elige archivos",
+    notebook_drop_hint: "Hasta 5 archivos · .txt, .md, .csv, .json, .pdf",
+    notebook_followup: "Haz una pregunta sobre tus apuntes...",
+    notebook_sources_aria: "Fuentes del cuaderno seleccionadas",
+    notebook_remove_source: "Quitar {name}",
+    notebook_active_sources: "Estudiando: {names}",
+    notebook_files_selected: "{count} archivos seleccionados ({kb} KB)",
+    choose_files_first: "Elige al menos un archivo primero",
+    notebook_max_files: "Puedes analizar hasta {max} archivos a la vez.",
+    toast_analyze_first: "Analiza tus apuntes antes de hacer preguntas de seguimiento.",
+    chip_study_plan: "Plan de estudio",
+    starter_prompt_study_plan:
+      "Usando solo mis apuntes, dame un plan de repaso de 3 dias con tareas concretas.\n\n",
+    starter_prompt_notebook_summarize:
+      "Usando solo mis apuntes, resume las ideas mas importantes en viñetas.\n\n",
+    starter_prompt_notebook_quiz:
+      "Usando solo mis apuntes, hazme un quiz breve con respuestas. Si no esta en los apuntes, di Not in document.\n\n",
+    starter_prompt_notebook_steps:
+      "Usando solo mis apuntes, explica la idea mas dificil paso a paso con un ejemplo simple.\n\n",
     status_ready: "Listo",
     status_generating: "Generando...",
     status_streaming: "Transmitiendo...",
@@ -453,6 +510,7 @@ const I18N = {
       "Solo para estudiar y practicar  respeta tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     disclaimer_aria: "Aviso legal",
     doc_selected: "Seleccionado: {name} ({kb} KB)",
+    docs_selected: "Seleccionados: {count} archivos ({kb} KB)",
     toast_image_read_fail: "No se pudo leer la imagen",
     toast_doc_analysis_failed: "Fallo el analisis del documento",
     pwa_install_sub_default:
@@ -481,7 +539,26 @@ const I18N = {
     code_followup: "Follow-up...",
     notebook_hint:
       "Notes upload karein (.txt, .md, .csv, .json, .pdf). Aapko summary, key concepts, quiz aur study plan milega.",
-    analyze_doc: "Document analyze karein",
+    analyze_doc: "Notes analyze karein",
+    notebook_drop_title: "Notes drop karein ya files chunein",
+    notebook_drop_hint: "5 files tak · .txt, .md, .csv, .json, .pdf",
+    notebook_followup: "Apne notes par follow-up poochhein...",
+    notebook_sources_aria: "Chune gaye notebook sources",
+    notebook_remove_source: "{name} hataein",
+    notebook_active_sources: "Padh rahe hain: {names}",
+    notebook_files_selected: "{count} files selected ({kb} KB)",
+    choose_files_first: "Pehle kam se kam ek notes file chunein",
+    notebook_max_files: "Ek saath {max} files tak analyze kar sakte hain.",
+    toast_analyze_first: "Follow-up se pehle notes analyze karein.",
+    chip_study_plan: "Study plan",
+    starter_prompt_study_plan:
+      "Sirf mere uploaded notes se, agle 3 din ka focused revision plan do.\n\n",
+    starter_prompt_notebook_summarize:
+      "Sirf mere uploaded notes se, important ideas short bullets mein summarize karo.\n\n",
+    starter_prompt_notebook_quiz:
+      "Sirf mere uploaded notes se quiz do with answers. Agar notes mein nahi hai to Not in document kaho.\n\n",
+    starter_prompt_notebook_steps:
+      "Sirf mere uploaded notes se sabse mushkil idea step-by-step explain karo.\n\n",
     status_ready: "Ready",
     status_generating: "Generate ho raha hai...",
     status_streaming: "Streaming...",
@@ -610,6 +687,7 @@ const I18N = {
       "Sirf study aur practice ke liye  honor code follow karein; course mana kare to AI output submit na karein.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Chuna gaya: {name} ({kb} KB)",
+    docs_selected: "Chuni gayi: {count} files ({kb} KB)",
     toast_image_read_fail: "Image read nahi ho saki",
     toast_doc_analysis_failed: "Document analysis fail",
     pwa_install_sub_default: "Mobile app aane tak home screen ya desktop par quick access ke liye icon add karein.",
@@ -637,7 +715,26 @@ const I18N = {
     code_followup: "Follow-up...",
     notebook_hint:
       "Notes upload cheyyandi (.txt, .md, .csv, .json, .pdf). Summary, key concepts, quiz mariyu study plan vastayi.",
-    analyze_doc: "Document analyze cheyyandi",
+    analyze_doc: "Notes analyze cheyyandi",
+    notebook_drop_title: "Notes drop cheyyandi leda files select cheyyandi",
+    notebook_drop_hint: "5 files varaku · .txt, .md, .csv, .json, .pdf",
+    notebook_followup: "Mee notes gurinchi follow-up adagandi...",
+    notebook_sources_aria: "Select chesina notebook sources",
+    notebook_remove_source: "{name} remove cheyyandi",
+    notebook_active_sources: "Chaduvutunnam: {names}",
+    notebook_files_selected: "{count} files select chesaru ({kb} KB)",
+    choose_files_first: "Mungata okka notes file aina select cheyyandi",
+    notebook_max_files: "Okasari {max} files varaku analyze cheyavachu.",
+    toast_analyze_first: "Follow-ups mundu notes analyze cheyyandi.",
+    chip_study_plan: "Study plan",
+    starter_prompt_study_plan:
+      "Nenu upload chesina notes matrame use chesi, next 3 days focused revision plan ivvandi.\n\n",
+    starter_prompt_notebook_summarize:
+      "Nenu upload chesina notes matrame use chesi, important ideas short bullets lo summarize cheyyandi.\n\n",
+    starter_prompt_notebook_quiz:
+      "Nenu upload chesina notes matrame use chesi quiz ivvandi. Notes lo lekapothe Not in document ani cheppandi.\n\n",
+    starter_prompt_notebook_steps:
+      "Nenu upload chesina notes matrame use chesi, kastamaina idea ni step-by-step explain cheyyandi.\n\n",
     status_ready: "Ready",
     status_generating: "Generate avutondi...",
     status_streaming: "Streaming...",
@@ -765,6 +862,7 @@ const I18N = {
       "Study mariyu practice kosame  honor code follow avvandi; course mana cheste AI output submit cheyyakandi.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Select chesaru: {name} ({kb} KB)",
+    docs_selected: "Select chesina files: {count} ({kb} KB)",
     toast_image_read_fail: "Image read avvaledu",
     toast_doc_analysis_failed: "Document analysis fail ayyindi",
     pwa_install_sub_default: "Mobile app varaku home screen leda desktop lo quick access kosam icon add cheyyandi.",
@@ -836,9 +934,12 @@ function applyTranslations() {
     dismissDefaultPageHintBtn: "pwa_not_now",
     chatCopyThreadBtn: "copy_thread",
     codeCopyThreadBtn: "copy_thread",
+    notebookCopyThreadBtn: "copy_thread",
     chatEmptyPromptsLabel: "empty_try_ask",
     codeEmptyPromptsLabel: "empty_try_code",
     notebookEmptyPromptsLabel: "empty_try_notebook",
+    notebookDropTitle: "notebook_drop_title",
+    notebookHint: "notebook_drop_hint",
   };
   Object.entries(byIdText).forEach(([id, key]) => {
     const el = document.getElementById(id);
@@ -855,6 +956,7 @@ function applyTranslations() {
   if (chatFollowupInput) chatFollowupInput.placeholder = t("chat_followup");
   if (codeSearchInput) codeSearchInput.placeholder = t("code_placeholder");
   if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
+  if (notebookFollowupInput) notebookFollowupInput.placeholder = t("notebook_followup");
   const pwaIosSteps = document.getElementById("pwaIosSteps");
   if (pwaIosSteps) pwaIosSteps.textContent = t("pwa_ios_steps");
   const pwaInstallHelpSteps = document.getElementById("pwaInstallHelpSteps");
@@ -877,6 +979,8 @@ function applyTranslations() {
     if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
   });
   if (chatFollowupChips) chatFollowupChips.setAttribute("aria-label", t("chips_followup_aria"));
+  if (notebookFollowupChips) notebookFollowupChips.setAttribute("aria-label", t("chips_followup_aria"));
+  if (notebookSourcesEl) notebookSourcesEl.setAttribute("aria-label", t("notebook_sources_aria"));
   document.querySelectorAll(".starter-chip[data-starter]").forEach((chip) => {
     const starter = chip.getAttribute("data-starter");
     const labelKey = STARTER_CHIP_LABEL_KEYS[starter];
@@ -1055,12 +1159,21 @@ const STARTER_CHIP_LABEL_KEYS = {
   quiz: "chip_quiz",
   steps: "chip_steps",
   readAloud: "chip_listen",
+  studyPlan: "chip_study_plan",
 };
 
 const STARTER_PROMPT_KEYS = {
   summarize: "starter_prompt_summarize",
   quiz: "starter_prompt_quiz",
   steps: "starter_prompt_steps",
+  studyPlan: "starter_prompt_study_plan",
+};
+
+const NOTEBOOK_STARTER_PROMPT_KEYS = {
+  summarize: "starter_prompt_notebook_summarize",
+  quiz: "starter_prompt_notebook_quiz",
+  steps: "starter_prompt_notebook_steps",
+  studyPlan: "starter_prompt_study_plan",
 };
 
 const EMPTY_PROMPT_SPECS = {
@@ -1085,7 +1198,7 @@ const EMPTY_PROMPT_SPECS = {
  * Starter chips send the prompt immediately (same path as Ask / Send).
  * Optional `customStarters`: map of data-starter key -> handler (runs instead of sending a prompt).
  */
-function wireStarterChipsAsSend(container, sendFn, busyButton, customStarters = null) {
+function wireStarterChipsAsSend(container, sendFn, busyButton, customStarters = null, promptKeyMap = null) {
   if (!container || typeof sendFn !== "function") return;
   container.addEventListener("click", (e) => {
     const chip = e.target.closest(".starter-chip[data-starter]");
@@ -1096,7 +1209,8 @@ function wireStarterChipsAsSend(container, sendFn, busyButton, customStarters = 
       customStarters[key]();
       return;
     }
-    const promptKey = STARTER_PROMPT_KEYS[key];
+    const map = promptKeyMap || STARTER_PROMPT_KEYS;
+    const promptKey = map[key];
     if (!promptKey) return;
     sendFn(t(promptKey));
   });
@@ -1123,7 +1237,7 @@ function getLastAssistantMarkdownFromHistory(history) {
 }
 
 /** Read-aloud chip: Web Speech API, last assistant reply only. Tap again while playing to stop. */
-function readLastAssistantAloud() {
+function readLastAssistantAloud(history = chatHistory) {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     showToast(t("toast_read_aloud_not_supported"));
     return;
@@ -1133,19 +1247,19 @@ function readLastAssistantAloud() {
     showToast(t("toast_stopped"));
     return;
   }
-  const raw = getLastAssistantMarkdownFromHistory(chatHistory);
+  const raw = getLastAssistantMarkdownFromHistory(history);
   if (!String(raw).trim()) {
     showToast(t("toast_no_assistant_reply"));
     return;
   }
   const { plain } = getAssistantCopyFormats(raw);
-  const text = String(plain || "").trim();
-  if (!text) {
+  const spoken = String(plain || "").trim();
+  if (!spoken) {
     showToast(t("toast_nothing_to_read"));
     return;
   }
   const maxChars = 32000;
-  const toSpeak = text.length > maxChars ? `${text.slice(0, maxChars)}\n\n(Truncated for speech.)` : text;
+  const toSpeak = spoken.length > maxChars ? `${spoken.slice(0, maxChars)}\n\n(Truncated for speech.)` : spoken;
   const u = new SpeechSynthesisUtterance(toSpeak);
   u.rate = 1;
   u.onerror = () => showToast(t("toast_speech_playback_failed"));
@@ -1410,8 +1524,12 @@ function saveSessionState() {
     const payload = {
       chatHistory: chatOut,
       codeHistory,
+      notebookHistory,
       chatSessionOpen,
       codeSessionOpen,
+      notebookSessionOpen,
+      notebookDocumentContext,
+      notebookSourceMeta,
     };
     localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(payload));
   } catch {
@@ -1461,10 +1579,29 @@ function restoreSessionStateIfEnabled() {
     if (Array.isArray(parsed.codeHistory)) {
       codeHistory.splice(0, codeHistory.length, ...parsed.codeHistory.filter((x) => x && typeof x.content === "string"));
     }
+    if (Array.isArray(parsed.notebookHistory)) {
+      notebookHistory.splice(
+        0,
+        notebookHistory.length,
+        ...parsed.notebookHistory.filter((x) => x && typeof x.content === "string"),
+      );
+    }
+    notebookDocumentContext =
+      typeof parsed.notebookDocumentContext === "string" ? parsed.notebookDocumentContext : "";
+    notebookSourceMeta = Array.isArray(parsed.notebookSourceMeta)
+      ? parsed.notebookSourceMeta
+          .filter((s) => s && typeof s.name === "string")
+          .map((s) => ({ name: s.name, chars: Number(s.chars) || 0 }))
+      : [];
     chatSessionOpen = parsed.chatSessionOpen === true || chatHistory.length > 0;
     codeSessionOpen = parsed.codeSessionOpen === true || codeHistory.length > 0;
+    notebookSessionOpen =
+      parsed.notebookSessionOpen === true ||
+      notebookHistory.length > 0 ||
+      Boolean(notebookDocumentContext);
     renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
     renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
+    renderThreadFromHistory(notebookThread, notebookHistory, "notebook", "explain");
   } catch {
     /* ignore malformed storage */
   }
@@ -1655,7 +1792,10 @@ function setMainTab(next) {
   panelChat.classList.toggle("hidden", mainTab !== "chat");
   panelCode.classList.toggle("hidden", mainTab !== "code");
   panelNotebook.classList.toggle("hidden", mainTab !== "notebook");
-  if (mainTab === "notebook") syncNotebookAnalyzeVisibility();
+  if (mainTab === "notebook") {
+    syncNotebookAnalyzeVisibility();
+    syncNotebookLayout();
+  }
 }
 
 function syncLearnLayout() {
@@ -1670,6 +1810,21 @@ function syncCodeLayout() {
   codeSearchShell.classList.toggle("hidden", showThread);
   codeAnswerShell.classList.toggle("hidden", !showThread);
   codeCopyThreadBtn?.classList.toggle("hidden", codeHistory.length === 0);
+}
+
+function syncNotebookLayout() {
+  const showThread = notebookSessionOpen || notebookHistory.length > 0;
+  notebookEmptyPrompts?.classList.toggle("hidden", showThread);
+  notebookAnswerShell?.classList.toggle("hidden", !showThread);
+  notebookCopyThreadBtn?.classList.toggle("hidden", notebookHistory.length === 0);
+  if (notebookActiveSources) {
+    const names = notebookSourceMeta.map((s) => s.name).filter(Boolean);
+    notebookActiveSources.textContent = names.length
+      ? t("notebook_active_sources", { names: names.join(", ") })
+      : "";
+  }
+  // Keep dropzone available so students can add/replace sources after a session starts.
+  if (notebookEmptyState) notebookEmptyState.classList.toggle("notebook-empty--compact", showThread);
 }
 
 function wireAssistantCopy(bubble, rawText) {
@@ -2057,6 +2212,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   const attach = LEARN_VISION_ENABLED ? visionAttachment : null;
   const trimmed = typeof message === "string" ? message.trim() : "";
   if (!trimmed && !attach) return false;
+  if (mode === "notebook" && !notebookDocumentContext) {
+    showToast(t("toast_analyze_first"));
+    return false;
+  }
 
   appendBubble(threadEl, "user", trimmed, { imageDataUrl: attach?.dataUrl });
 
@@ -2087,6 +2246,13 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   if (mode === "learn" && attach) {
     chatBody.imageBase64 = attach.base64;
     chatBody.imageMime = attach.mime;
+  }
+  if (mode === "notebook") {
+    if (!notebookDocumentContext) {
+      showToast(t("toast_analyze_first"));
+      return false;
+    }
+    chatBody.documentContext = notebookDocumentContext;
   }
 
   sendBtn.disabled = true;
@@ -2193,6 +2359,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       saveSessionState();
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
+      else if (mode === "notebook") syncNotebookLayout();
       setStatus(statusEl, "status_ready");
       return true;
     }
@@ -2218,6 +2385,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     saveSessionState();
     if (mode === "learn") syncLearnLayout();
     else if (mode === "code") syncCodeLayout();
+    else if (mode === "notebook") syncNotebookLayout();
     setStatus(statusEl, "status_ready");
     return true;
   } catch (error) {
@@ -2606,17 +2774,97 @@ document.addEventListener("keydown", (e) => {
 });
 
 const notebookDropzone = document.getElementById("notebookDropzone");
-function syncNotebookAnalyzeVisibility() {
-  const f = docFileInput?.files?.[0] || null;
-  if (docAnalyzeBtn) {
-    // Keep Analyze visible; disable until a file is chosen (hiding felt "not enabled").
-    docAnalyzeBtn.classList.remove("hidden");
-    docAnalyzeBtn.disabled = !f;
-    docAnalyzeBtn.setAttribute("aria-disabled", f ? "false" : "true");
-    docAnalyzeBtn.title = f ? "" : "Choose a notes file first";
-  }
-  if (notebookDropzone) notebookDropzone.classList.toggle("has-file", Boolean(f));
+
+function notebookFileKey(file) {
+  return `${file?.name || "file"}:${file?.size || 0}:${file?.lastModified || 0}`;
 }
+
+function getNotebookSelectedFiles() {
+  return notebookFiles.slice();
+}
+
+function updateNotebookFileMeta() {
+  if (!docFileMeta) return;
+  const files = getNotebookSelectedFiles();
+  if (!files.length) {
+    docFileMeta.textContent = "";
+    return;
+  }
+  const kb = String(Math.round(files.reduce((sum, f) => sum + (f.size || 0), 0) / 1024));
+  if (files.length === 1) {
+    docFileMeta.textContent = t("doc_selected", { name: files[0].name, kb });
+    return;
+  }
+  docFileMeta.textContent = t("docs_selected", { count: String(files.length), kb });
+}
+
+function renderNotebookSourceChips() {
+  if (!notebookSourcesEl) return;
+  notebookSourcesEl.innerHTML = "";
+  getNotebookSelectedFiles().forEach((file, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "notebook-source-chip";
+    const label = document.createElement("span");
+    label.textContent = file.name;
+    label.title = file.name;
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "notebook-source-remove";
+    removeBtn.setAttribute("aria-label", t("notebook_remove_source", { name: file.name }));
+    removeBtn.textContent = "×";
+    removeBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      notebookFiles.splice(idx, 1);
+      notebookDocumentContext = "";
+      notebookSourceMeta = notebookFiles.map((f) => ({ name: f.name, chars: 0 }));
+      syncNotebookAnalyzeVisibility();
+      syncNotebookLayout();
+    });
+    chip.appendChild(label);
+    chip.appendChild(removeBtn);
+    notebookSourcesEl.appendChild(chip);
+  });
+}
+
+function syncNotebookAnalyzeVisibility() {
+  const files = getNotebookSelectedFiles();
+  const hasFiles = files.length > 0;
+  if (docAnalyzeBtn) {
+    docAnalyzeBtn.classList.remove("hidden");
+    docAnalyzeBtn.disabled = !hasFiles;
+    docAnalyzeBtn.setAttribute("aria-disabled", hasFiles ? "false" : "true");
+    docAnalyzeBtn.title = hasFiles ? "" : t("choose_files_first");
+  }
+  if (notebookDropzone) notebookDropzone.classList.toggle("has-file", hasFiles);
+  renderNotebookSourceChips();
+  updateNotebookFileMeta();
+}
+
+function addNotebookFiles(fileList) {
+  const incoming = Array.from(fileList || []).filter(Boolean);
+  if (!incoming.length) return;
+  const existing = new Set(notebookFiles.map(notebookFileKey));
+  let skipped = 0;
+  for (const file of incoming) {
+    if (notebookFiles.length >= NOTEBOOK_MAX_FILES) {
+      skipped += 1;
+      continue;
+    }
+    const key = notebookFileKey(file);
+    if (existing.has(key)) continue;
+    existing.add(key);
+    notebookFiles.push(file);
+  }
+  if (skipped > 0) {
+    showToast(t("notebook_max_files", { max: String(NOTEBOOK_MAX_FILES) }));
+  }
+  notebookDocumentContext = "";
+  notebookSourceMeta = notebookFiles.map((f) => ({ name: f.name, chars: 0 }));
+  syncNotebookAnalyzeVisibility();
+  syncNotebookLayout();
+}
+
 notebookDropzone?.addEventListener("dragover", (e) => {
   e.preventDefault();
   notebookDropzone.classList.add("is-dragover");
@@ -2627,16 +2875,7 @@ notebookDropzone?.addEventListener("dragleave", () => {
 notebookDropzone?.addEventListener("drop", (e) => {
   e.preventDefault();
   notebookDropzone.classList.remove("is-dragover");
-  const file = e.dataTransfer?.files?.[0];
-  if (!file || !docFileInput) return;
-  try {
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    docFileInput.files = dt.files;
-  } catch (_) {
-    /* DataTransfer may be unavailable in older WebViews */
-  }
-  docFileInput.dispatchEvent(new Event("change", { bubbles: true }));
+  addNotebookFiles(e.dataTransfer?.files);
 });
 notebookDropzone?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
@@ -2746,7 +2985,7 @@ const chatSearchFlow = wireSearchFlow({
 });
 
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
-  readAloud: readLastAssistantAloud,
+  readAloud: () => readLastAssistantAloud(chatHistory),
 });
 
 function wireEmptyStatePrompts() {
@@ -2782,6 +3021,9 @@ function wireCopyThreadButtons() {
   });
   codeCopyThreadBtn?.addEventListener("click", () => {
     void copyThreadHistory(codeHistory);
+  });
+  notebookCopyThreadBtn?.addEventListener("click", () => {
+    void copyThreadHistory(notebookHistory);
   });
 }
 
@@ -2835,33 +3077,83 @@ if (LEARN_VISION_ENABLED) {
 }
 
 docFileInput?.addEventListener("change", () => {
-  const f = docFileInput.files?.[0];
-  if (docFileMeta) {
-    docFileMeta.textContent = f
-      ? t("doc_selected", { name: f.name, kb: String(Math.round(f.size / 1024)) })
-      : "";
+  addNotebookFiles(docFileInput.files);
+  try {
+    docFileInput.value = "";
+  } catch {
+    /* ignore */
   }
-  syncNotebookAnalyzeVisibility();
 });
+
+function sendNotebookFollowup(raw, activeBtn = notebookFollowupSubmit) {
+  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  if (!trimmed) return;
+  if (!notebookDocumentContext) {
+    showToast(t("toast_analyze_first"));
+    return;
+  }
+  notebookSessionOpen = true;
+  syncNotebookLayout();
+  void sendChatMessage(
+    "notebook",
+    trimmed,
+    notebookHistory,
+    notebookThread,
+    notebookStatus,
+    activeBtn || notebookFollowupSubmit,
+    "explain",
+  );
+  if (notebookFollowupInput) {
+    notebookFollowupInput.value = "";
+    notebookFollowupInput.focus();
+  }
+}
+
+notebookFollowupSubmit?.addEventListener("click", () => {
+  sendNotebookFollowup(notebookFollowupInput?.value || "", notebookFollowupSubmit);
+});
+notebookFollowupInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendNotebookFollowup(notebookFollowupInput.value, notebookFollowupSubmit);
+  }
+});
+
+wireStarterChipsAsSend(
+  notebookFollowupChips,
+  (prompt) => sendNotebookFollowup(prompt, notebookFollowupSubmit),
+  notebookFollowupSubmit,
+  {
+    readAloud: () => readLastAssistantAloud(notebookHistory),
+  },
+  NOTEBOOK_STARTER_PROMPT_KEYS,
+);
 
 syncNotebookAnalyzeVisibility();
 docAnalyzeBtn?.addEventListener("click", async () => {
-  const file = docFileInput?.files?.[0];
-  if (!file) {
-    setStatus(notebookStatus, "choose_file_first");
+  const files = getNotebookSelectedFiles();
+  if (!files.length) {
+    setStatus(notebookStatus, "choose_files_first");
     syncNotebookAnalyzeVisibility();
     return;
   }
 
+  notebookHistory.splice(0, notebookHistory.length);
   notebookThread.innerHTML = "";
-  appendBubble(notebookThread, "user", `Analyze uploaded file: ${file.name}`);
+  const names = files.map((f) => f.name).join(", ");
+  const userLine =
+    files.length === 1
+      ? `Analyze uploaded file: ${names}`
+      : `Analyze uploaded files (${files.length}): ${names}`;
+  appendBubble(notebookThread, "user", userLine);
 
   docAnalyzeBtn.disabled = true;
+  if (notebookFollowupSubmit) notebookFollowupSubmit.disabled = true;
   setStatus(notebookStatus, "reading_summarizing");
 
   try {
     const form = new FormData();
-    form.append("document", file);
+    files.forEach((file) => form.append("documents", file));
     const response = await fetchAuthed("/api/doc-insights", {
       method: "POST",
       headers: {},
@@ -2869,15 +3161,44 @@ docAnalyzeBtn?.addEventListener("click", async () => {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Request failed");
+
+    notebookDocumentContext = typeof data.documentContext === "string" ? data.documentContext : "";
+    notebookSourceMeta = Array.isArray(data.sources)
+      ? data.sources.map((s) => ({ name: s.name || "document", chars: Number(s.chars) || 0 }))
+      : Array.isArray(data.docNames)
+        ? data.docNames.map((name) => ({ name, chars: 0 }))
+        : files.map((f) => ({ name: f.name, chars: 0 }));
+
+    if (!notebookDocumentContext) {
+      throw new Error("Analysis succeeded but no document context was returned for follow-ups.");
+    }
+
     const note = data.output || "No response.";
-    const meta = data.charsUsed != null ? `\n\n_(Used up to ${data.charsUsed} characters from the document.)_` : "";
-    appendBubble(notebookThread, "assistant", `${note}${meta}`, { mode: "notebook", studyMode: "explain" });
+    const meta =
+      data.charsUsed != null
+        ? `\n\n_(Used up to ${data.charsUsed} characters from ${files.length} document${files.length > 1 ? "s" : ""}.)_`
+        : "";
+    const assistantText = `${note}${meta}`;
+    appendBubble(notebookThread, "assistant", assistantText, { mode: "notebook", studyMode: "explain" });
+    notebookHistory.push({ role: "user", content: userLine });
+    notebookHistory.push({ role: "assistant", content: assistantText });
+    notebookSessionOpen = true;
+    saveSessionState();
+    syncNotebookLayout();
     setStatus(notebookStatus, "status_ready");
+    if (Array.isArray(data.failures) && data.failures.length) {
+      const failedNames = data.failures.map((f) => f.name).filter(Boolean).join(", ");
+      if (failedNames) showToast(`${t("error_prefix")}: ${failedNames}`);
+    }
   } catch (error) {
-    appendBubble(notebookThread, "assistant", `${t("error_prefix")}: ${error.message}`, { mode: "notebook", studyMode: "explain" });
+    appendBubble(notebookThread, "assistant", `${t("error_prefix")}: ${error.message}`, {
+      mode: "notebook",
+      studyMode: "explain",
+    });
     setStatus(notebookStatus, "status_failed");
     showToast(error.message || t("toast_doc_analysis_failed"));
   } finally {
+    if (notebookFollowupSubmit) notebookFollowupSubmit.disabled = false;
     syncNotebookAnalyzeVisibility();
   }
 });
@@ -2956,6 +3277,8 @@ setMainTab("chat");
 restoreSessionStateIfEnabled();
 syncLearnLayout();
 syncCodeLayout();
+syncNotebookLayout();
+syncNotebookAnalyzeVisibility();
 wireSettingsUi();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
