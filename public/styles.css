@@ -2132,3 +2132,80 @@ pre {
     animation: none !important;
   }
 }
+
+/*
+ * Safari / WebKit performance: backdrop-filter, fixed backgrounds, and large
+ * animated blurs are intermittent jank sources (especially while chat streams).
+ */
+@supports (-webkit-touch-callout: none) {
+  :root {
+    --glass-blur: 0px;
+    --glass-blur-strong: 0px;
+  }
+
+  body,
+  body:has(#appCard:not(.hidden)) {
+    background-attachment: scroll;
+  }
+
+  .bg-glow {
+    display: none;
+  }
+
+  .card,
+  .search-bar,
+  .search-bar--branded,
+  .chat-thread,
+  .bubble,
+  .settings-card,
+  .toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .bubble {
+    background: #ffffff;
+    box-shadow: 0 1px 0 rgba(28, 27, 25, 0.06);
+    animation: none;
+  }
+
+  .msg.assistant .bubble,
+  .bubble--streaming {
+    animation: none !important;
+  }
+
+  .chat-thread {
+    background: rgba(28, 27, 25, 0.03);
+  }
+}
+
+/* Desktop Safari (no touch-callout-only) still pays for fixed + blur; tone down. */
+@media (hover: hover) and (pointer: fine) {
+  @supports (hanging-punctuation: first) {
+    body,
+    body:has(#appCard:not(.hidden)) {
+      background-attachment: scroll;
+    }
+
+    .bg-glow {
+      filter: none;
+      will-change: auto;
+      animation: none;
+      opacity: 0.04;
+      background: radial-gradient(circle, rgba(47, 111, 237, 0.16), transparent 70%);
+    }
+
+    .card,
+    .search-bar,
+    .search-bar--branded,
+    .chat-thread,
+    .bubble {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .bubble {
+      animation: none;
+    }
+  }
+}

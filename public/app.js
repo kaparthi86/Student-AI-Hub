@@ -2261,8 +2261,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   const streamUi = startStreamingAssistantBubble(threadEl);
   streamUi.bubble.dataset.mode = mode;
   streamUi.bubble.dataset.studyMode = normalizeStudyMode(studyMode);
-  /** Cap markdown re-renders during stream (~20/s) to keep long replies smooth on slow devices. */
-  const STREAM_MD_MIN_MS = 50;
+  /** Cap markdown re-renders during stream. Safari pays more for marked+DOMPurify+innerHTML. */
+  const safariStream = isSafariWebKit();
+  const STREAM_MD_MIN_MS = safariStream ? 180 : 50;
+  const streamPlainWhileTyping = safariStream;
   let rafId = 0;
   let throttleTimer = 0;
   let pendingFull = "";
@@ -2281,7 +2283,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   const paintPendingMarkdown = () => {
-    streamUi.setStreamingText(pendingFull);
+    streamUi.setStreamingText(pendingFull, { plain: streamPlainWhileTyping });
     lastStreamPaintAt = Date.now();
   };
 
@@ -2425,6 +2427,27 @@ function isLikelyIOSBrowser() {
   return false;
 }
 
+/** Safari / WebKit (desktop + iOS). Used for lighter streaming paints and CSS hooks. */
+function isSafariWebKit() {
+  try {
+    const ua = navigator.userAgent || "";
+    const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS|Android/i.test(ua);
+    const isIOSWebKit = isLikelyIOSBrowser() && /AppleWebKit/i.test(ua);
+    return isSafari || isIOSWebKit;
+  } catch {
+    return false;
+  }
+}
+
+function applySafariPerfClass() {
+  if (!isSafariWebKit()) return;
+  try {
+    document.documentElement.classList.add("is-safari");
+  } catch {
+    /* ignore */
+  }
+}
+
 function shouldOfferPwaInstallBar() {
   if (window.location.protocol === "file:") return false;
   if (isStandaloneWebAppDisplay()) return false;
@@ -2528,7 +2551,10 @@ function initPwaInstallSupport() {
     deferredInstallPrompt = null;
     document.getElementById("pwaInstallBar")?.classList.add("hidden");
   });
-  void registerServiceWorkerIfEligible();
+  // Defer SW registration so first paint/auth are not competing with SW install on Safari.
+  window.setTimeout(() => {
+    void registerServiceWorkerIfEligible();
+  }, 1800);
   wirePwaInstallBar();
 }
 
@@ -3269,16 +3295,12 @@ function wireSettingsUi() {
 }
 
 const prefsAtBoot = loadPrefs();
+applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
 
 initMarkdown();
 initPwaInstallSupport();
 setMainTab("chat");
-restoreSessionStateIfEnabled();
-syncLearnLayout();
-syncCodeLayout();
-syncNotebookLayout();
-syncNotebookAnalyzeVisibility();
 wireSettingsUi();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
@@ -3287,3 +3309,17 @@ maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
 initAuth();
 initBetaBanner();
+
+// Restore threads after first paint so Safari is not parsing Markdown during boot.
+const restoreAfterPaint = () => {
+  restoreSessionStateIfEnabled();
+  syncLearnLayout();
+  syncCodeLayout();
+  syncNotebookLayout();
+  syncNotebookAnalyzeVisibility();
+};
+if (typeof requestAnimationFrame === "function") {
+  requestAnimationFrame(() => requestAnimationFrame(restoreAfterPaint));
+} else {
+  window.setTimeout(restoreAfterPaint, 0);
+}
