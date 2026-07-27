@@ -555,3 +555,58 @@ html.is-safari .msg.assistant .bubble,
 html.is-safari .bubble--streaming {
   animation: none !important;
 }
+
+/* Standalone / installed app (PWA + Android WebView shell) */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  .bg-glow {
+    display: none;
+  }
+
+  #pwaInstallBar {
+    display: none !important;
+  }
+
+  .container:has(#appCard:not(.hidden)) #appCard.card {
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+}
+
+html.is-native-app #pwaInstallBar,
+html.is-native-app .bg-glow {
+  display: none !important;
+}
+
+html.is-native-app body {
+  overscroll-behavior-y: none;
+  background-attachment: scroll;
+}
+
+.legal-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.legal-links a:hover {
+  color: var(--primary);
+}
+
+/* Android/PWA: keep primary actions thumb-friendly */
+@media (max-width: 640px) {
+  .primary-btn,
+  .search-submit {
+    min-height: 46px;
+  }
+
+  .notebook-dropzone {
+    min-height: 160px;
+  }
+
+  .account-menu-item {
+    min-height: 44px;
+  }
+}

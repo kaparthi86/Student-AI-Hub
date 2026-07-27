@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F7F6F3" />
+    <title>Offline — Student AI Hub</title>
+    <style>
+      :root {
+        --bg: #f7f6f3;
+        --text: #1c1b19;
+        --muted: #6f6b63;
+        --primary: #2f6fed;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 28px 20px;
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        background: linear-gradient(180deg, #fbfaf7, var(--bg) 45%, #f1f0ec);
+        color: var(--text);
+      }
+      main {
+        width: min(100%, 420px);
+        text-align: center;
+      }
+      .mark {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #2f6fed, #1d5bd8);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      button {
+        border: none;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 18px;
+        min-height: 44px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">AI</div>
+      <h1>You're offline</h1>
+      <p>
+        Student AI Hub needs a connection for Ask, Code, and Notebook. Your last session may still open when you're
+        back online.
+      </p>
+      <button type="button" onclick="location.href='/'">Try again</button>
+    </main>
+  </body>
+</html>

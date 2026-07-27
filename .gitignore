@@ -1,0 +1,8 @@
+
+# Mobile / Capacitor
+www/
+node_modules/
+.idea/
+*.log
+.env
+.DS_Store

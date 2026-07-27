@@ -339,7 +339,7 @@ const I18N = {
     toast_image_read_fail: "Could not read image",
     toast_doc_analysis_failed: "Document analysis failed",
     pwa_install_sub_default:
-      "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
+      "Install for quick access on your phone or desktop.",
   },
   es: {
     signin_title: "Inicia sesin para continuar",
@@ -2536,6 +2536,47 @@ function wirePwaInstallBar() {
   });
 }
 
+
+/** Capacitor native shell bridge (Android Play app). Safe no-op on plain web. */
+async function initNativeMobileShell() {
+  try {
+    const cap = window.Capacitor;
+    if (!cap || typeof cap.isNativePlatform !== "function" || !cap.isNativePlatform()) return;
+    document.documentElement.classList.add("is-native-app");
+    const plugins = cap.Plugins || {};
+    const StatusBarPlugin = plugins.StatusBar;
+    const SplashScreenPlugin = plugins.SplashScreen;
+    const AppPlugin = plugins.App;
+    try {
+      await StatusBarPlugin?.setBackgroundColor?.({ color: "#F7F6F3" });
+      await StatusBarPlugin?.setStyle?.({ style: "DARK" });
+    } catch {
+      /* ignore */
+    }
+    try {
+      await SplashScreenPlugin?.hide?.();
+    } catch {
+      /* ignore */
+    }
+    AppPlugin?.addListener?.("backButton", ({ canGoBack }) => {
+      if (canGoBack) window.history.back();
+      else AppPlugin.exitApp?.();
+    });
+    AppPlugin?.addListener?.("appUrlOpen", ({ url }) => {
+      try {
+        const u = new URL(url);
+        if (String(u.host || "").includes("my-student-coach.com")) {
+          window.location.href = `${u.pathname}${u.search}${u.hash}`;
+        }
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch {
+    /* ignore missing native bridge */
+  }
+}
+
 function initPwaInstallSupport() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -3251,12 +3292,27 @@ async function initBetaBanner() {
 function hydratePromptFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search || "");
+    const tabRaw = String(params.get("tab") || "").trim().toLowerCase();
+    const tab = tabRaw === "code" || tabRaw === "notebook" || tabRaw === "chat" ? tabRaw : "";
     const q = String(params.get("q") || "").trim();
-    if (!q) return;
-    setMainTab("chat");
-    chatSearchInput.value = q.slice(0, 4000);
-    chatSearchInput.focus();
+    if (tab) setMainTab(tab);
+    if (q) {
+      if (!tab || tab === "chat") {
+        setMainTab("chat");
+        if (chatSearchInput) {
+          chatSearchInput.value = q.slice(0, 4000);
+          chatSearchInput.focus();
+        }
+      } else if (tab === "code" && codeSearchInput) {
+        codeSearchInput.value = q.slice(0, 4000);
+        codeSearchInput.focus();
+      }
+    }
+    if (!tab && !q) return;
     params.delete("q");
+    params.delete("tab");
+    params.delete("utm_source");
+    params.delete("utm_medium");
     const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash || ""}`;
     window.history.replaceState({}, "", next);
   } catch {
