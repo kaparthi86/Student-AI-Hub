@@ -520,10 +520,38 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))) .bg-glow {
     background: transparent;
     border: none;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: none;
   }
 
   .search-bar:not(.compact),
   .search-bar--branded {
     border-radius: var(--radius-lg) !important;
   }
+}
+
+/* JS-detected Safari / iOS WebKit: avoid paint-heavy glass while answering */
+html.is-safari .bg-glow {
+  display: none !important;
+}
+
+html.is-safari body,
+html.is-safari body:has(#appCard:not(.hidden)) {
+  background-attachment: scroll;
+}
+
+html.is-safari .card,
+html.is-safari .search-bar,
+html.is-safari .search-bar--branded,
+html.is-safari .chat-thread,
+html.is-safari .bubble {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html.is-safari .bubble,
+html.is-safari .msg.assistant .bubble,
+html.is-safari .bubble--streaming {
+  animation: none !important;
 }

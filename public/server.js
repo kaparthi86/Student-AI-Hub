@@ -493,6 +493,13 @@ app.use(
       if (filePath.endsWith(".webmanifest")) {
         res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
       }
+      if (filePath.endsWith("sw.js")) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        return;
+      }
+      if (/\.(?:css|js|png|jpg|jpeg|webp|svg|woff2?)$/i.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      }
     },
   })
 );
