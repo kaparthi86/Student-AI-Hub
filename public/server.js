@@ -511,6 +511,13 @@ app.get("/", (_req, res) => {
 app.get("/index.html", (_req, res) => {
   res.sendFile("index.html", { root: publicDir });
 });
+app.get("/share-target", (_req, res) => {
+  res.sendFile("share-target.html", { root: publicDir });
+});
+app.get("/.well-known/assetlinks.json", (_req, res) => {
+  res.type("application/json");
+  res.sendFile(".well-known/assetlinks.json", { root: publicDir });
+});
 
 function buildPrompt(mode, userInput) {
   if (mode === "code") {
