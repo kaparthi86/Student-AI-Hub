@@ -1408,17 +1408,21 @@ textarea:focus {
 
 .bubble-md {
   white-space: normal;
-  line-height: 1.65;
-  font-size: 15.5px;
+  line-height: 1.7;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .bubble-md--streaming {
   min-height: 1.35em;
-  line-height: 1.65;
+  line-height: 1.7;
   word-break: break-word;
   overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  white-space: pre-wrap;
+  font-size: 16px;
 }
 
 .bubble-md > :first-child {
@@ -1429,21 +1433,28 @@ textarea:focus {
   margin-bottom: 0;
 }
 
+/* Perplexity-like calm hierarchy */
+.bubble-md > p:first-child {
+  font-size: 1.05em;
+  line-height: 1.65;
+}
+
 .bubble-md h1,
 .bubble-md h2,
 .bubble-md h3 {
-  margin: 0.85em 0 0.4em;
+  margin: 1em 0 0.35em;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 
 .bubble-md h1 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .bubble-md h2 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .bubble-md h3 {
@@ -1451,13 +1462,13 @@ textarea:focus {
 }
 
 .bubble-md p {
-  margin: 0.55em 0;
+  margin: 0.6em 0;
 }
 
 .bubble-md ul,
 .bubble-md ol {
-  margin: 0.5em 0;
-  padding-left: 1.35em;
+  margin: 0.55em 0;
+  padding-left: 1.2em;
 }
 
 .bubble-md strong,
@@ -1467,7 +1478,11 @@ textarea:focus {
 }
 
 .bubble-md li {
-  margin: 0.25em 0;
+  margin: 0.35em 0;
+}
+
+.bubble-md li::marker {
+  color: var(--muted);
 }
 
 .bubble-md a {

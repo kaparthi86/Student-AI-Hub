@@ -316,7 +316,7 @@ const I18N = {
       "Summarize your last answer in short bullet points. Highlight the key terms I should remember.\n\n",
     starter_prompt_quiz:
       "Based on our conversation so far, give me a short quiz: questions, answer choices, and correct answers with brief explanations.\n\n",
-    starter_prompt_steps: "Explain that again step-by-step, with smaller steps and a simple example where it helps.\n\n",
+    starter_prompt_steps: "Explain that again as a clear numbered step-by-step list (1. 2. 3.). Keep each step short. Do not use ** bold asterisks. Add a simple example if it helps.\n\n",
     copy_thread: "Copy conversation",
     copy_thread_aria: "Copy entire conversation",
     toast_thread_copied: "Conversation copied",
@@ -1618,14 +1618,13 @@ function initMarkdown() {
 }
 
 /**
- * Clean model Markdown so students never see raw ** / * markers.
- * Prefer readable step-by-step structure; keep code fences intact.
+ * Polish model Markdown for a Perplexity-like reading experience.
+ * Keep structural Markdown for marked (headings/lists/code), strip decorative clutter.
  */
-function normalizeAssistantMarkdown(text) {
+function polishModelMarkdown(text) {
   let s = String(text ?? "").replace(/\r\n/g, "\n");
   if (!s.trim()) return "";
 
-  // Protect fenced code blocks while we rewrite emphasis outside them.
   const fences = [];
   s = s.replace(/```[\s\S]*?```/g, (block) => {
     const key = `@@CODEFENCE${fences.length}@@`;
@@ -1633,25 +1632,27 @@ function normalizeAssistantMarkdown(text) {
     return key;
   });
 
-  // Convert common bold step labels into numbered steps when missing a number.
   s = s.replace(
     /(^|\n)\s*\*\*\s*(?:step\s*)?(\d{1,2})\s*[:.)\-]\s*(.+?)\s*\*\*(?=\s|$)/gim,
     "$1$2. $3",
   );
   s = s.replace(/(^|\n)\s*\*\*\s*step\s*(\d{1,2})\s*\*\*\s*:?\s*/gim, "$1$2. ");
+  s = s.replace(/(^|\n)\s*step\s*(\d{1,2})\s*[:.)\-]\s*/gim, "$1$2. ");
+  s = s.replace(/(^|\n)(#{1,6})\s*\*\*(.+?)\*\*\s*(?=\n|$)/g, "$1$2 $3");
 
-  // Balanced bold/italic -> plain emphasis-free text (UI uses structure, not stars).
   s = s.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "$1");
   s = s.replace(/\*\*([^*\n]+?)\*\*/g, "$1");
+  s = s.replace(/__([^_\n]+?)__/g, "$1");
   s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?:;]|$)/g, "$1$2");
-
-  // Remove any leftover decorative asterisk runs used as bold markers.
+  s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,!?:;]|$)/g, "$1$2");
   s = s.replace(/\*{2,}/g, "");
+  s = s.replace(/#{4,}/g, "##");
 
-  // Soft-normalize "Step N -" / "Step N:" lines into numbered lists.
-  s = s.replace(/(^|\n)\s*step\s*(\d{1,2})\s*[:.)\-]\s*/gim, "$1$2. ");
+  s = s.replace(/(^|\n)\s*[\u2022\u00b7]\s+/g, "$1- ");
+  s = s.replace(/(^|\n)\s*[*+]\s+/g, "$1- ");
+  s = s.replace(/(^|\n)\s*-{3,}\s*(?=\n|$)/g, "$1");
+  s = s.replace(/<\/?[^>]+>/g, "");
 
-  // Restore fences
   fences.forEach((block, i) => {
     s = s.replace(`@@CODEFENCE${i}@@`, block);
   });
@@ -1659,9 +1660,36 @@ function normalizeAssistantMarkdown(text) {
   return s.replace(/\n{3,}/g, "\n\n").trim();
 }
 
-/** Streaming-safe readable text: no raw Markdown emphasis markers. */
+function normalizeAssistantMarkdown(text) {
+  return polishModelMarkdown(text);
+}
+
+/**
+ * Streaming display: never show raw # or * markdown chrome.
+ */
 function streamingPlainFromMarkdown(text) {
-  return normalizeAssistantMarkdown(text);
+  let s = polishModelMarkdown(text);
+  if (!s) return "";
+
+  const fences = [];
+  s = s.replace(/```[\s\S]*?```/g, (block) => {
+    const inner = block.replace(/^```[^\n]*\n?/, "").replace(/```$/, "").trim();
+    const key = `@@CODEFENCE${fences.length}@@`;
+    fences.push(inner);
+    return key;
+  });
+
+  s = s.replace(/(^|\n)\s{0,3}#{1,6}\s+/g, "$1");
+  s = s.replace(/(^|\n)\s*[-*+]\s+/g, "$1· ");
+  // Only strip leftover emphasis runs, not math like 2 * 3.
+  s = s.replace(/\*{2,}/g, "");
+  s = s.replace(/(^|\n)\s*#+\s*/g, "$1");
+
+  fences.forEach((block, i) => {
+    s = s.replace(`@@CODEFENCE${i}@@`, block);
+  });
+
+  return s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function normalizeCopyPlain(text) {
@@ -1815,20 +1843,20 @@ async function copyAssistantOutput(markdownRaw) {
 
 /** @returns {{ html: string } | { plain: string }} */
 function renderAssistantHtml(text) {
-  const raw = normalizeAssistantMarkdown(text);
+  const raw = polishModelMarkdown(text);
+  if (!raw) return { plain: "" };
   if (typeof marked === "undefined" || typeof DOMPurify === "undefined") {
-    return { plain: raw };
+    return { plain: streamingPlainFromMarkdown(raw) };
   }
   try {
     const html = marked.parse(raw);
     const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
-    // If sanitization somehow leaves asterisk noise, fall back to cleaned plain.
-    if (/\*{2,}/.test(clean)) {
-      return { plain: raw };
+    if (!String(clean || "").trim()) {
+      return { plain: streamingPlainFromMarkdown(raw) };
     }
     return { html: clean };
   } catch {
-    return { plain: raw };
+    return { plain: streamingPlainFromMarkdown(raw) };
   }
 }
 
@@ -2131,7 +2159,7 @@ function startStreamingAssistantBubble(container) {
     setStreamingText(text, { plain = false } = {}) {
       const raw = String(text ?? "");
       if (plain || typeof marked === "undefined" || typeof DOMPurify === "undefined") {
-        body.textContent = raw;
+        body.textContent = streamingPlainFromMarkdown(raw);
         scroll();
         return;
       }
