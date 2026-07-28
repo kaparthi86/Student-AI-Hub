@@ -1460,6 +1460,12 @@ textarea:focus {
   padding-left: 1.35em;
 }
 
+.bubble-md strong,
+.bubble-md b {
+  font-weight: 700;
+  color: var(--text);
+}
+
 .bubble-md li {
   margin: 0.25em 0;
 }
