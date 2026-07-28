@@ -650,12 +650,14 @@ Rules:
 - If information is missing, say "Not in document" instead of guessing.
 - When multiple documents are provided, synthesize across them and mention the source file name when a point is document-specific.
 - Use clear Markdown headings (##) for each section.
+- Prefer numbered lists for procedures. Do not wrap phrases in **bold asterisks**.
 - The user message includes file names and extracted document text.`;
 
 const NOTEBOOK_FOLLOWUP_SYSTEM = `You are "Study Notebook", a document-grounded study coach for students.
 Answer ONLY using the SOURCE MATERIALS provided below.
 If the answer is not supported by those materials, say "Not in document" instead of guessing.
-Prefer clear, concise Markdown. Do not invent facts, citations, or page numbers.
+Prefer clear numbered steps (1. 2. 3.) or short bullet lists. Do not use **bold asterisks**.
+Do not invent facts, citations, or page numbers.
 When multiple sources are present, synthesize across them and name the source file when helpful.`;
 
 function notebookUserContent(docName, docText) {
@@ -918,16 +920,16 @@ function pickChatModelForMessages(msgs) {
 
 function chatSystemBase(mode) {
   return mode === "code"
-    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code. Answer the question directly; do not open by restating or paraphrasing what they asked unless they are unclear."
-    : "You are a friendly study coach for students. Answer directly?start with useful content, not a reframed repeat of their question (avoid lines like 'So you want?' or 'We need to?'). Keep answers concise and actionable. Use Markdown when helpful.";
+    ? "You are a patient coding tutor for students. Keep answers concise. Use Markdown code fences for code only. For explanations, use a clear numbered step-by-step list (1. 2. 3.). Do not use bold with asterisks (**like this**). Do not open by restating or paraphrasing what they asked unless they are unclear."
+    : "You are a friendly study coach for students. Answer directly with useful content first. Prefer a clear numbered step-by-step structure (1. 2. 3.) when explaining how something works. Use short paragraphs or bullet lists when steps are not needed. Do not use bold with asterisks (**like this**). Avoid meta preambles like 'So you want' or 'We need to'.";
 }
 
 function modeStyleInstruction(studyMode) {
   const m = String(studyMode || "explain").trim().toLowerCase();
   if (m === "quiz") {
-    return "Mode: Quiz. Give 4-6 short questions first, then provide answer key with concise explanations.";
+    return "Mode: Quiz. Give 4-6 short numbered questions first, then an Answer key section with concise explanations. Do not wrap words in ** asterisks.";
   }
-  return "Mode: Explain. Give a clear explanation with a compact example. No meta preamble that only restates the topic.";
+  return "Mode: Explain. Teach with numbered steps when the topic has a sequence (1. 2. 3.), each step one short sentence or two. If a simple definition is enough, write plain sentences. Never decorate headings or phrases with **bold asterisks**.";
 }
 
 function normalizeUiLanguage(raw) {

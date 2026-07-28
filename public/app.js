@@ -1617,6 +1617,53 @@ function initMarkdown() {
   });
 }
 
+/**
+ * Clean model Markdown so students never see raw ** / * markers.
+ * Prefer readable step-by-step structure; keep code fences intact.
+ */
+function normalizeAssistantMarkdown(text) {
+  let s = String(text ?? "").replace(/\r\n/g, "\n");
+  if (!s.trim()) return "";
+
+  // Protect fenced code blocks while we rewrite emphasis outside them.
+  const fences = [];
+  s = s.replace(/```[\s\S]*?```/g, (block) => {
+    const key = `@@CODEFENCE${fences.length}@@`;
+    fences.push(block);
+    return key;
+  });
+
+  // Convert common bold step labels into numbered steps when missing a number.
+  s = s.replace(
+    /(^|\n)\s*\*\*\s*(?:step\s*)?(\d{1,2})\s*[:.)\-]\s*(.+?)\s*\*\*(?=\s|$)/gim,
+    "$1$2. $3",
+  );
+  s = s.replace(/(^|\n)\s*\*\*\s*step\s*(\d{1,2})\s*\*\*\s*:?\s*/gim, "$1$2. ");
+
+  // Balanced bold/italic -> plain emphasis-free text (UI uses structure, not stars).
+  s = s.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "$1");
+  s = s.replace(/\*\*([^*\n]+?)\*\*/g, "$1");
+  s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?:;]|$)/g, "$1$2");
+
+  // Remove any leftover decorative asterisk runs used as bold markers.
+  s = s.replace(/\*{2,}/g, "");
+
+  // Soft-normalize "Step N -" / "Step N:" lines into numbered lists.
+  s = s.replace(/(^|\n)\s*step\s*(\d{1,2})\s*[:.)\-]\s*/gim, "$1$2. ");
+
+  // Restore fences
+  fences.forEach((block, i) => {
+    s = s.replace(`@@CODEFENCE${i}@@`, block);
+  });
+
+  return s.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Streaming-safe readable text: no raw Markdown emphasis markers. */
+function streamingPlainFromMarkdown(text) {
+  return normalizeAssistantMarkdown(text);
+}
+
 function normalizeCopyPlain(text) {
   return String(text)
     .replace(/\r\n/g, "\n")
@@ -1768,13 +1815,17 @@ async function copyAssistantOutput(markdownRaw) {
 
 /** @returns {{ html: string } | { plain: string }} */
 function renderAssistantHtml(text) {
-  const raw = String(text);
+  const raw = normalizeAssistantMarkdown(text);
   if (typeof marked === "undefined" || typeof DOMPurify === "undefined") {
     return { plain: raw };
   }
   try {
     const html = marked.parse(raw);
     const clean = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+    // If sanitization somehow leaves asterisk noise, fall back to cleaned plain.
+    if (/\*{2,}/.test(clean)) {
+      return { plain: raw };
+    }
     return { html: clean };
   } catch {
     return { plain: raw };
@@ -2261,10 +2312,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   const streamUi = startStreamingAssistantBubble(threadEl);
   streamUi.bubble.dataset.mode = mode;
   streamUi.bubble.dataset.studyMode = normalizeStudyMode(studyMode);
-  /** Cap markdown re-renders during stream. Safari pays more for marked+DOMPurify+innerHTML. */
+  /** Stream as clean plain text (no raw **), then finalize to HTML. Avoids half-bold asterisk flicker. */
   const safariStream = isSafariWebKit();
-  const STREAM_MD_MIN_MS = safariStream ? 180 : 50;
-  const streamPlainWhileTyping = safariStream;
+  const STREAM_MD_MIN_MS = safariStream ? 180 : 70;
+  const streamPlainWhileTyping = true;
   let rafId = 0;
   let throttleTimer = 0;
   let pendingFull = "";
@@ -2283,7 +2334,8 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   const paintPendingMarkdown = () => {
-    streamUi.setStreamingText(pendingFull, { plain: streamPlainWhileTyping });
+    const visible = streamPlainWhileTyping ? streamingPlainFromMarkdown(pendingFull) : pendingFull;
+    streamUi.setStreamingText(visible, { plain: streamPlainWhileTyping });
     lastStreamPaintAt = Date.now();
   };
 
