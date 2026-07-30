@@ -165,8 +165,9 @@ const UI_LANG_LABELS = {
 const I18N = {
   en: {
     signin_title: "Sign in to continue",
-    signin_tagline: "Free for students - Ask, Code, and Notebook in one place.",
+    signin_tagline: "Free for students.",
     free_for_students: "Free for students",
+    brand_kicker: "Ask, learn, code & notebook in one place",
     continue_google: "Continue with Google",
     settings: "Settings",
     logout: "Logout",
@@ -343,8 +344,9 @@ const I18N = {
   },
   es: {
     signin_title: "Inicia sesin para continuar",
-    signin_tagline: "Gratis para estudiantes - Ask, Code y Notebook en un solo lugar.",
+    signin_tagline: "Gratis para estudiantes.",
     free_for_students: "Gratis para estudiantes",
+    brand_kicker: "Ask, learn, code y notebook en un solo lugar",
     continue_google: "Continuar con Google",
     settings: "Configuracin",
     logout: "Cerrar sesin",
@@ -518,8 +520,9 @@ const I18N = {
   },
   hi: {
     signin_title: "Continue karne ke liye sign in karein",
-    signin_tagline: "Students ke liye free - Ask, Code aur Notebook ek jagah.",
+    signin_tagline: "Students ke liye free.",
     free_for_students: "Students ke liye free",
+    brand_kicker: "Ask, learn, code aur notebook ek jagah",
     continue_google: "Google ke saath jari rakhen",
     settings: "Settings",
     logout: "Logout",
@@ -694,8 +697,9 @@ const I18N = {
   },
   te: {
     signin_title: "Continue cheyyadaniki sign in cheyyandi",
-    signin_tagline: "Students ki free - Ask, Code mariyu Notebook oka chota.",
+    signin_tagline: "Students ki free.",
     free_for_students: "Students ki free",
+    brand_kicker: "Ask, learn, code mariyu notebook oka chota",
     continue_google: "Google to continue cheyyandi",
     settings: "Settings",
     logout: "Logout",
@@ -896,6 +900,8 @@ function applyTranslations() {
   const byIdText = {
     authSigninTitle: "signin_title",
     authSigninTagline: "signin_tagline",
+    authBrandKicker: "brand_kicker",
+    appBrandKicker: "brand_kicker",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
     logoutBtn: "logout",
@@ -970,7 +976,7 @@ function applyTranslations() {
       hintList.appendChild(li);
     });
   }
-  document.querySelectorAll(".fine-print-line[data-i18n]").forEach((el) => {
+  document.querySelectorAll(".fine-print-line[data-i18n], .brand-kicker[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (key) el.textContent = t(key);
   });
