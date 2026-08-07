@@ -141,7 +141,10 @@ const CHAT_SESSION_KEY = "student_ai_sessions_v1";
 const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_v1";
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
+const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
 const HUB_WAITLIST_KEY = "ai_hub_waitlist_v1";
+/** Session fallback when localStorage is unavailable. */
+let honorCodeAckThisSession = false;
 /** @type {"hub" | "student" | null} */
 let activeSurface = null;
 /** @type {"health" | "finance" | null} */
@@ -217,6 +220,11 @@ const I18N = {
     disclaimer_hub: "For learning, wellness, and money planning help - not a substitute for professional medical, legal, or financial advice.",
     disclaimer_nonprofit: "AI Hub is non-profit work - built to help people learn and plan, not to sell your data or push ads.",
     disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
+    honor_title: "Study with integrity",
+    honor_lead: "Student AI is for learning and practice - not for handing in AI work as your own.",
+    honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
+    honor_ack: "I understand",
+    honor_back: "Back to Hub",
     continue_google: "Continue with Google",
     settings: "Settings",
     logout: "Logout",
@@ -439,6 +447,11 @@ const I18N = {
     disclaimer_hub: "Ayuda para aprendizaje, bienestar y planificacion financiera - no sustituye consejo medico, legal o financiero profesional.",
     disclaimer_nonprofit: "AI Hub es un proyecto sin fines de lucro: para ayudar a aprender y planificar, no para vender tus datos ni mostrar anuncios.",
     disclaimer_student: "En Student AI: solo para estudio y practica; sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
+    honor_title: "Estudia con integridad",
+    honor_lead: "Student AI es para aprender y practicar - no para entregar trabajo de IA como propio.",
+    honor_body: "Sigue el codigo de honor de tu escuela. No entregues salida de IA si tu curso lo prohibe. Verifica datos importantes - la IA puede equivocarse.",
+    honor_ack: "Entiendo",
+    honor_back: "Volver al Hub",
     continue_google: "Continuar con Google",
     settings: "Configuracin",
     logout: "Cerrar sesin",
@@ -658,6 +671,11 @@ const I18N = {
     disclaimer_hub: "Learning, wellness aur money planning help ke liye - ye professional medical, legal ya financial advice nahi hai.",
     disclaimer_nonprofit: "AI Hub non-profit kaam hai - seekhne aur plan karne mein madad ke liye, data bechne ya ads dikhane ke liye nahi.",
     disclaimer_student: "Student AI mein: sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
+    honor_title: "Imaandari se padhein",
+    honor_lead: "Student AI seekhne aur practice ke liye hai - AI ka kaam apna dikha kar submit karne ke liye nahi.",
+    honor_body: "Apne school ka honor code follow karein. Course mana kare to AI output submit na karein. Important facts check karein - AI galat ho sakta hai.",
+    honor_ack: "Samajh gaya",
+    honor_back: "Hub par wapas",
     continue_google: "Google ke saath jari rakhen",
     settings: "Settings",
     logout: "Logout",
@@ -878,6 +896,11 @@ const I18N = {
     disclaimer_hub: "Learning, wellness, money planning help kosam - idi professional medical, legal leda financial advice kadu.",
     disclaimer_nonprofit: "AI Hub non-profit work - learn cheyadaniki mariyu plan cheyadaniki, data ammakundaniki leda ads kosam kadu.",
     disclaimer_student: "Student AI lo: study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
+    honor_title: "Niti tho chadavandi",
+    honor_lead: "Student AI learn cheyadaniki mariyu practice kosame - AI output ni meekadi laaga submit cheyadaniki kadu.",
+    honor_body: "Me school honor code follow avvandi. Course mana chesthe AI output submit cheyyakandi. Important facts check cheyyandi - AI tappu cheyavachu.",
+    honor_ack: "Artham ayindi",
+    honor_back: "Hub ki back",
     continue_google: "Google to continue cheyyandi",
     settings: "Settings",
     logout: "Logout",
@@ -1129,6 +1152,11 @@ function applyTranslations() {
     pwaIosHelpBtn: "pwa_ios_help_btn",
     pwaInstallHelpBtn: "pwa_help_btn",
     pwaInstallDismiss: "pwa_not_now",
+    honorCodeTitle: "honor_title",
+    honorCodeLead: "honor_lead",
+    honorCodeBody: "honor_body",
+    honorCodeAckBtn: "honor_ack",
+    honorCodeBackBtn: "honor_back",
     defaultPageHintTitle: "default_title",
     closeDefaultPageHintBtn: "settings_close",
     defaultPageHintLead: "default_lead",
@@ -3056,8 +3084,76 @@ function hubPageUrlForBookmark() {
   }
 }
 
+function hasAcknowledgedHonorCode() {
+  if (honorCodeAckThisSession) return true;
+  try {
+    return localStorage.getItem(HONOR_CODE_ACK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function isHonorCodeModalOpen() {
+  const modal = document.getElementById("honorCodeModal");
+  return Boolean(modal && !modal.classList.contains("hidden"));
+}
+
+function hideHonorCodeModal() {
+  document.getElementById("honorCodeModal")?.classList.add("hidden");
+}
+
+function acknowledgeHonorCode() {
+  honorCodeAckThisSession = true;
+  try {
+    localStorage.setItem(HONOR_CODE_ACK_KEY, "1");
+  } catch {
+    /* ignore quota / private mode */
+  }
+  hideHonorCodeModal();
+  maybeOfferDefaultPageHint();
+}
+
+function maybeOfferHonorCodeModal() {
+  const modal = document.getElementById("honorCodeModal");
+  if (!modal || !appCard || appCard.classList.contains("hidden")) return false;
+  if (hasAcknowledgedHonorCode()) return false;
+  modal.classList.remove("hidden");
+  window.setTimeout(() => {
+    document.getElementById("honorCodeAckBtn")?.focus();
+  }, 40);
+  return true;
+}
+
+function wireHonorCodeModal() {
+  const modal = document.getElementById("honorCodeModal");
+  const ackBtn = document.getElementById("honorCodeAckBtn");
+  const backBtn = document.getElementById("honorCodeBackBtn");
+
+  ackBtn?.addEventListener("click", () => acknowledgeHonorCode());
+  backBtn?.addEventListener("click", () => {
+    hideHonorCodeModal();
+    showHubHome();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!isHonorCodeModalOpen()) return;
+    e.preventDefault();
+    hideHonorCodeModal();
+    showHubHome();
+  });
+
+  // Require an explicit choice; backdrop click does not dismiss.
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      document.getElementById("honorCodeAckBtn")?.focus();
+    }
+  });
+}
+
 function maybeOfferDefaultPageHint() {
   if (defaultPageHintOfferedThisLoad) return;
+  if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) return;
   const modal = document.getElementById("defaultPageHintModal");
   if (!modal || !appCard || appCard.classList.contains("hidden")) return;
   if (localStorage.getItem(DEFAULT_PAGE_HINT_DISMISSED_KEY) === "1") return;
@@ -3072,6 +3168,7 @@ function maybeOfferDefaultPageHint() {
 
   window.setTimeout(() => {
     if (!modal.classList.contains("hidden")) return;
+    if (isHonorCodeModalOpen()) return;
     modal.classList.remove("hidden");
     showStepsBtn?.focus();
   }, 700);
@@ -3232,7 +3329,9 @@ function showStudentWorkspace() {
   window.setTimeout(() => {
     maybeOfferPwaInstallBar();
   }, 850);
-  maybeOfferDefaultPageHint();
+  if (!maybeOfferHonorCodeModal()) {
+    maybeOfferDefaultPageHint();
+  }
 }
 
 function showApp(session) {
@@ -3573,6 +3672,10 @@ function wireSearchFlow({
   clearVisionAttachment,
 } = {}) {
   const run = (raw, activeBtn) => {
+    if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+      maybeOfferHonorCodeModal();
+      return;
+    }
     const attach = typeof getVisionAttachment === "function" ? getVisionAttachment() : null;
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
@@ -3736,6 +3839,10 @@ docFileInput?.addEventListener("change", () => {
 });
 
 function sendNotebookFollowup(raw, activeBtn = notebookFollowupSubmit) {
+  if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+    maybeOfferHonorCodeModal();
+    return;
+  }
   const trimmed = typeof raw === "string" ? raw.trim() : "";
   if (!trimmed) return;
   if (!notebookDocumentContext) {
@@ -3781,6 +3888,10 @@ wireStarterChipsAsSend(
 
 syncNotebookAnalyzeVisibility();
 docAnalyzeBtn?.addEventListener("click", async () => {
+  if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+    maybeOfferHonorCodeModal();
+    return;
+  }
   const files = getNotebookSelectedFiles();
   if (!files.length) {
     setStatus(notebookStatus, "choose_files_first");
@@ -3938,6 +4049,7 @@ initMarkdown();
 initPwaInstallSupport();
 setMainTab("chat");
 wireSettingsUi();
+wireHonorCodeModal();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
 wireCopyThreadButtons();
