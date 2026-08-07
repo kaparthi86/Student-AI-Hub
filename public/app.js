@@ -142,6 +142,8 @@ const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
+const MEMORY_VAULT_KEY = "ai_hub_student_memory_vault_v1";
+const MAX_MEMORY_CHARS = 4000;
 const HUB_WAITLIST_KEY = "ai_hub_waitlist_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
@@ -180,6 +182,28 @@ const I18N = {
     live_web_label: "Live web",
     live_web_hint: "Use current web sources when relevant",
     live_web_hint_off: "Answers use the model only (no live web)",
+    use_memory_label: "Use memory",
+    use_memory_hint: "Ground Ask answers in your Memory vault",
+    use_memory_hint_off: "Ask answers ignore your Memory vault",
+    memory_menu: "Memory",
+    memory_edit: "Edit memory",
+    memory_title: "Memory vault",
+    memory_lead:
+      "Save study context you choose. Ask uses it only when Use memory is on. Stored on this device - wipe anytime.",
+    memory_about: "About me",
+    memory_courses: "Courses",
+    memory_deadlines: "Deadlines",
+    memory_routines: "Routines",
+    memory_goals: "Goals",
+    memory_notes: "Notes",
+    memory_preview_label: "What Ask can see when Use memory is on",
+    memory_preview_empty: "(empty - add notes above, then Save)",
+    memory_save: "Save memory",
+    memory_wipe: "Wipe memory",
+    memory_saved_toast: "Memory saved on this device",
+    memory_wiped_toast: "Memory wiped",
+    memory_empty_toast: "Add something to Memory first",
+    memory_wipe_confirm: "Wipe all Memory vault notes on this device?",
     sources_label: "Sources",
     status_searching_web: "Searching the web...",
     tile_student_badge: "Available now",
@@ -407,6 +431,28 @@ const I18N = {
     live_web_label: "Web en vivo",
     live_web_hint: "Usa fuentes web actuales cuando ayude",
     live_web_hint_off: "Respuestas solo del modelo (sin web en vivo)",
+    use_memory_label: "Usar memoria",
+    use_memory_hint: "Usa tu boveda de memoria en Ask",
+    use_memory_hint_off: "Ask ignora tu boveda de memoria",
+    memory_menu: "Memoria",
+    memory_edit: "Editar memoria",
+    memory_title: "Boveda de memoria",
+    memory_lead:
+      "Guarda el contexto de estudio que elijas. Ask lo usa solo si Usar memoria esta activo. Se guarda en este dispositivo.",
+    memory_about: "Sobre mi",
+    memory_courses: "Cursos",
+    memory_deadlines: "Fechas limite",
+    memory_routines: "Rutinas",
+    memory_goals: "Metas",
+    memory_notes: "Notas",
+    memory_preview_label: "Lo que Ask puede ver con Usar memoria activo",
+    memory_preview_empty: "(vacio - agrega notas y guarda)",
+    memory_save: "Guardar memoria",
+    memory_wipe: "Borrar memoria",
+    memory_saved_toast: "Memoria guardada en este dispositivo",
+    memory_wiped_toast: "Memoria borrada",
+    memory_empty_toast: "Primero agrega algo a Memoria",
+    memory_wipe_confirm: "Borrar toda la boveda de memoria en este dispositivo?",
     sources_label: "Fuentes",
     status_searching_web: "Buscando en la web...",
     tile_student_badge: "Disponible ahora",
@@ -631,6 +677,28 @@ const I18N = {
     live_web_label: "Live web",
     live_web_hint: "Zarurat ho to current web sources use karein",
     live_web_hint_off: "Sirf model se jawab (live web off)",
+    use_memory_label: "Memory use karein",
+    use_memory_hint: "Ask mein apni Memory vault use karein",
+    use_memory_hint_off: "Ask aapki Memory ignore karega",
+    memory_menu: "Memory",
+    memory_edit: "Memory edit",
+    memory_title: "Memory vault",
+    memory_lead:
+      "Apna study context save karein. Ask tabhi use karega jab Memory use on ho. Is device par store hota hai.",
+    memory_about: "Mere bare mein",
+    memory_courses: "Courses",
+    memory_deadlines: "Deadlines",
+    memory_routines: "Routines",
+    memory_goals: "Goals",
+    memory_notes: "Notes",
+    memory_preview_label: "Jab Memory on ho to Ask ye dekh sakta hai",
+    memory_preview_empty: "(khali - pehle notes add karke Save karein)",
+    memory_save: "Memory save",
+    memory_wipe: "Memory wipe",
+    memory_saved_toast: "Memory is device par save ho gayi",
+    memory_wiped_toast: "Memory wipe ho gayi",
+    memory_empty_toast: "Pehle Memory mein kuch add karein",
+    memory_wipe_confirm: "Is device ki poori Memory vault wipe karein?",
     sources_label: "Sources",
     status_searching_web: "Web search ho rahi hai...",
     tile_student_badge: "Ab available",
@@ -856,6 +924,28 @@ const I18N = {
     live_web_label: "Live web",
     live_web_hint: "Need aithe current web sources use cheyyandi",
     live_web_hint_off: "Model matrame (live web off)",
+    use_memory_label: "Memory use cheyyandi",
+    use_memory_hint: "Ask lo mee Memory vault use cheyyandi",
+    use_memory_hint_off: "Ask mee Memory ni ignore chestundi",
+    memory_menu: "Memory",
+    memory_edit: "Memory edit",
+    memory_title: "Memory vault",
+    memory_lead:
+      "Meeru choose chesina study context save cheyyandi. Use memory on unte matrame Ask use chestundi. Ee device lo store avuthundi.",
+    memory_about: "Naa gurinchi",
+    memory_courses: "Courses",
+    memory_deadlines: "Deadlines",
+    memory_routines: "Routines",
+    memory_goals: "Goals",
+    memory_notes: "Notes",
+    memory_preview_label: "Use memory on unte Ask emi chudagalamu",
+    memory_preview_empty: "(khali - notes add chesi Save cheyyandi)",
+    memory_save: "Memory save",
+    memory_wipe: "Memory wipe",
+    memory_saved_toast: "Memory ee device lo save ayindi",
+    memory_wiped_toast: "Memory wipe ayindi",
+    memory_empty_toast: "Mundu Memory lo emaina add cheyyandi",
+    memory_wipe_confirm: "Ee device Memory vault antha wipe cheyala?",
     sources_label: "Sources",
     status_searching_web: "Web search avuthundi...",
     tile_student_badge: "Ippudu available",
@@ -1110,6 +1200,21 @@ function applyTranslations() {
     tileFinanceBadge: "tile_soon_badge",
     liveWebToggleLabel: "live_web_label",
     liveWebHint: "live_web_hint",
+    useMemoryToggleLabel: "use_memory_label",
+    editMemoryInlineBtn: "memory_edit",
+    openMemoryBtn: "memory_menu",
+    memoryVaultTitle: "memory_title",
+    memoryVaultLead: "memory_lead",
+    memoryAboutLabel: "memory_about",
+    memoryCoursesLabel: "memory_courses",
+    memoryDeadlinesLabel: "memory_deadlines",
+    memoryRoutinesLabel: "memory_routines",
+    memoryGoalsLabel: "memory_goals",
+    memoryNotesLabel: "memory_notes",
+    memoryPreviewLabel: "memory_preview_label",
+    saveMemoryVaultBtn: "memory_save",
+    wipeMemoryVaultBtn: "memory_wipe",
+    closeMemoryVaultBtn: "settings_close",
     tileStudentTitle: "tile_student_title",
     tileStudentSub: "tile_student_sub",
     tileStudentCta: "tile_student_cta",
@@ -1210,12 +1315,19 @@ function applyTranslations() {
   document.querySelectorAll(".open-settings-btn").forEach((el) => {
     el.textContent = t("settings");
   });
+  document.querySelectorAll(".open-memory-btn").forEach((el) => {
+    el.textContent = t("memory_menu");
+  });
   document.querySelectorAll(".logout-btn").forEach((el) => {
     el.textContent = t("logout");
   });
   syncHubWelcome();
   syncLiveWebToggleUi();
+  syncMemoryToggleUi();
+  updateMemoryPreview();
   syncHubResumeButton();
+  const closeMemoryVaultBtn = document.getElementById("closeMemoryVaultBtn");
+  if (closeMemoryVaultBtn) closeMemoryVaultBtn.setAttribute("aria-label", t("settings_close"));
   if (soonVertical) fillSoonModal(soonVertical);
   ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
@@ -1525,6 +1637,7 @@ function defaultPrefs() {
     restoreSessions: true,
     uiLanguage: "en",
     liveWeb: true,
+    useMemory: false,
   };
 }
 
@@ -1535,6 +1648,7 @@ function loadPrefs() {
       restoreSessions: parsed.restoreSessions !== false,
       uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
       liveWeb: parsed.liveWeb !== false,
+      useMemory: parsed.useMemory === true,
     };
   } catch {
     return defaultPrefs();
@@ -2558,6 +2672,186 @@ function setLiveWebEnabled(next) {
   syncLiveWebToggleUi();
 }
 
+function defaultMemoryVault() {
+  return {
+    about: "",
+    courses: "",
+    deadlines: "",
+    routines: "",
+    goals: "",
+    notes: "",
+  };
+}
+
+function loadMemoryVault() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MEMORY_VAULT_KEY) || "{}");
+    const base = defaultMemoryVault();
+    for (const key of Object.keys(base)) {
+      base[key] = typeof parsed[key] === "string" ? parsed[key] : "";
+    }
+    return base;
+  } catch {
+    return defaultMemoryVault();
+  }
+}
+
+function saveMemoryVault(vault) {
+  const next = defaultMemoryVault();
+  const src = vault && typeof vault === "object" ? vault : {};
+  for (const key of Object.keys(next)) {
+    next[key] = typeof src[key] === "string" ? src[key].replace(/\u0000/g, "").slice(0, 1200) : "";
+  }
+  localStorage.setItem(MEMORY_VAULT_KEY, JSON.stringify(next));
+  return next;
+}
+
+function wipeMemoryVault() {
+  localStorage.removeItem(MEMORY_VAULT_KEY);
+  const prefs = loadPrefs();
+  if (prefs.useMemory) {
+    prefs.useMemory = false;
+    savePrefs(prefs);
+  }
+}
+
+function formatMemoryVaultText(vault) {
+  const v = vault || loadMemoryVault();
+  const lines = [];
+  const pairs = [
+    ["About", v.about],
+    ["Courses", v.courses],
+    ["Deadlines", v.deadlines],
+    ["Routines", v.routines],
+    ["Goals", v.goals],
+    ["Notes", v.notes],
+  ];
+  for (const [label, value] of pairs) {
+    const trimmed = String(value || "").trim();
+    if (trimmed) lines.push(`${label}: ${trimmed}`);
+  }
+  return lines.join("\n").slice(0, MAX_MEMORY_CHARS);
+}
+
+function memoryVaultHasContent(vault) {
+  return Boolean(formatMemoryVaultText(vault || loadMemoryVault()));
+}
+
+function isMemoryUseEnabled() {
+  return loadPrefs().useMemory === true && memoryVaultHasContent();
+}
+
+function syncMemoryToggleUi() {
+  const btn = document.getElementById("useMemoryToggle");
+  const label = document.getElementById("useMemoryToggleLabel");
+  const editBtn = document.getElementById("editMemoryInlineBtn");
+  const hasContent = memoryVaultHasContent();
+  const prefOn = loadPrefs().useMemory === true;
+  const on = prefOn && hasContent;
+  if (btn) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.classList.toggle("is-empty", !hasContent);
+    btn.title = t(on ? "use_memory_hint" : "use_memory_hint_off");
+  }
+  if (label) label.textContent = t("use_memory_label");
+  if (editBtn) editBtn.textContent = t("memory_edit");
+}
+
+function setMemoryUseEnabled(next) {
+  if (next && !memoryVaultHasContent()) {
+    openMemoryVaultModal();
+    showToast(t("memory_empty_toast"));
+    syncMemoryToggleUi();
+    return;
+  }
+  const prefs = loadPrefs();
+  prefs.useMemory = Boolean(next);
+  savePrefs(prefs);
+  syncMemoryToggleUi();
+}
+
+function readMemoryVaultForm() {
+  return {
+    about: document.getElementById("memoryAbout")?.value || "",
+    courses: document.getElementById("memoryCourses")?.value || "",
+    deadlines: document.getElementById("memoryDeadlines")?.value || "",
+    routines: document.getElementById("memoryRoutines")?.value || "",
+    goals: document.getElementById("memoryGoals")?.value || "",
+    notes: document.getElementById("memoryNotes")?.value || "",
+  };
+}
+
+function fillMemoryVaultForm(vault) {
+  const v = vault || loadMemoryVault();
+  const map = {
+    memoryAbout: v.about,
+    memoryCourses: v.courses,
+    memoryDeadlines: v.deadlines,
+    memoryRoutines: v.routines,
+    memoryGoals: v.goals,
+    memoryNotes: v.notes,
+  };
+  Object.entries(map).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value || "";
+  });
+  updateMemoryPreview();
+}
+
+function updateMemoryPreview() {
+  const el = document.getElementById("memoryPreview");
+  if (!el) return;
+  const text = formatMemoryVaultText(readMemoryVaultForm());
+  el.textContent = text || t("memory_preview_empty");
+}
+
+function openMemoryVaultModal() {
+  closeAccountMenu();
+  fillMemoryVaultForm(loadMemoryVault());
+  document.getElementById("memoryVaultModal")?.classList.remove("hidden");
+  window.setTimeout(() => document.getElementById("memoryAbout")?.focus(), 40);
+}
+
+function hideMemoryVaultModal() {
+  document.getElementById("memoryVaultModal")?.classList.add("hidden");
+}
+
+function wireMemoryVaultModal() {
+  const modal = document.getElementById("memoryVaultModal");
+  document.querySelectorAll(".open-memory-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openMemoryVaultModal());
+  });
+  document.getElementById("editMemoryInlineBtn")?.addEventListener("click", () => openMemoryVaultModal());
+  document.getElementById("closeMemoryVaultBtn")?.addEventListener("click", () => hideMemoryVaultModal());
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) hideMemoryVaultModal();
+  });
+  ["memoryAbout", "memoryCourses", "memoryDeadlines", "memoryRoutines", "memoryGoals", "memoryNotes"].forEach(
+    (id) => {
+      document.getElementById(id)?.addEventListener("input", updateMemoryPreview);
+    },
+  );
+  document.getElementById("saveMemoryVaultBtn")?.addEventListener("click", () => {
+    saveMemoryVault(readMemoryVaultForm());
+    syncMemoryToggleUi();
+    updateMemoryPreview();
+    showToast(t("memory_saved_toast"));
+    hideMemoryVaultModal();
+  });
+  document.getElementById("wipeMemoryVaultBtn")?.addEventListener("click", () => {
+    if (!window.confirm(t("memory_wipe_confirm"))) return;
+    wipeMemoryVault();
+    fillMemoryVaultForm(defaultMemoryVault());
+    syncMemoryToggleUi();
+    showToast(t("memory_wiped_toast"));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!modal || modal.classList.contains("hidden")) return;
+    hideMemoryVaultModal();
+  });
+}
+
 function hostFromUrl(url) {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -2721,6 +3015,13 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
   if (mode === "learn" && isLiveWebEnabled()) {
     chatBody.liveWeb = true;
+  }
+  if (mode === "learn" && isMemoryUseEnabled()) {
+    const memoryText = formatMemoryVaultText(loadMemoryVault());
+    if (memoryText) {
+      chatBody.useMemory = true;
+      chatBody.memory = memoryText;
+    }
   }
   if (mode === "learn" && attach) {
     chatBody.imageBase64 = attach.base64;
@@ -4019,10 +4320,12 @@ function wireSettingsUi() {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
   saveSettingsBtn?.addEventListener("click", () => {
+    const current = loadPrefs();
     const prefs = {
       restoreSessions: prefRestoreSessions?.checked !== false,
       uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
-      liveWeb: loadPrefs().liveWeb !== false,
+      liveWeb: current.liveWeb !== false,
+      useMemory: current.useMemory === true,
     };
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
@@ -4036,10 +4339,14 @@ const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
 syncLiveWebToggleUi();
+syncMemoryToggleUi();
 syncHubResumeButton();
 void refreshLiveWebCapability();
 document.getElementById("liveWebToggle")?.addEventListener("click", () => {
   setLiveWebEnabled(!isLiveWebEnabled());
+});
+document.getElementById("useMemoryToggle")?.addEventListener("click", () => {
+  setMemoryUseEnabled(!(loadPrefs().useMemory === true && memoryVaultHasContent()));
 });
 document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
   showStudentWorkspace();
@@ -4049,6 +4356,7 @@ initMarkdown();
 initPwaInstallSupport();
 setMainTab("chat");
 wireSettingsUi();
+wireMemoryVaultModal();
 wireHonorCodeModal();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
