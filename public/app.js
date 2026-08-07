@@ -174,6 +174,15 @@ const I18N = {
     signin_tagline: "Free to start - pick Student AI today, more to come.",
     free_for_students: "Free for students",
     brand_kicker: "Ask, learn, code & notebook in one place",
+    live_web_label: "Live web",
+    live_web_hint: "Use current web sources when relevant",
+    live_web_hint_off: "Answers use the model only (no live web)",
+    sources_label: "Sources",
+    status_searching_web: "Searching the web...",
+    tile_student_badge: "Available now",
+    hub_hint: "Choose a workspace to get started",
+    resume_student: "Resume Student AI",
+    live_web_unavailable: "Live web needs a search key on the server",
     auth_brand_kicker: "Learning, health, and money - in one Hub",
     hub_brand: "AI Hub",
     hub_tagline: "Focused AI for learning, health, and money",
@@ -383,6 +392,15 @@ const I18N = {
     signin_tagline: "Empieza gratis: Student AI hoy, mas pronto.",
     free_for_students: "Gratis para estudiantes",
     brand_kicker: "Ask, learn, code y notebook en un solo lugar",
+    live_web_label: "Web en vivo",
+    live_web_hint: "Usa fuentes web actuales cuando ayude",
+    live_web_hint_off: "Respuestas solo del modelo (sin web en vivo)",
+    sources_label: "Fuentes",
+    status_searching_web: "Buscando en la web...",
+    tile_student_badge: "Disponible ahora",
+    hub_hint: "Elige un espacio para empezar",
+    resume_student: "Reanudar Student AI",
+    live_web_unavailable: "Web en vivo necesita una clave de busqueda en el servidor",
     auth_brand_kicker: "Aprendizaje, salud y dinero - en un Hub",
     hub_brand: "AI Hub",
     hub_tagline: "IA enfocada en aprendizaje, salud y dinero",
@@ -589,6 +607,15 @@ const I18N = {
     signin_tagline: "Free se shuru karein - aaj Student AI, jaldi aur bhi.",
     free_for_students: "Students ke liye free",
     brand_kicker: "Ask, learn, code aur notebook ek jagah",
+    live_web_label: "Live web",
+    live_web_hint: "Zarurat ho to current web sources use karein",
+    live_web_hint_off: "Sirf model se jawab (live web off)",
+    sources_label: "Sources",
+    status_searching_web: "Web search ho rahi hai...",
+    tile_student_badge: "Ab available",
+    hub_hint: "Shuru karne ke liye workspace chunen",
+    resume_student: "Student AI resume karein",
+    live_web_unavailable: "Live web ke liye server par search key chahiye",
     auth_brand_kicker: "Learning, health aur money - ek Hub mein",
     hub_brand: "AI Hub",
     hub_tagline: "Learning, health aur money ke liye focused AI",
@@ -796,6 +823,15 @@ const I18N = {
     signin_tagline: "Free ga start cheyyandi - ee roju Student AI, soon inkavi.",
     free_for_students: "Students ki free",
     brand_kicker: "Ask, learn, code mariyu notebook oka chota",
+    live_web_label: "Live web",
+    live_web_hint: "Need aithe current web sources use cheyyandi",
+    live_web_hint_off: "Model matrame (live web off)",
+    sources_label: "Sources",
+    status_searching_web: "Web search avuthundi...",
+    tile_student_badge: "Ippudu available",
+    hub_hint: "Start cheyadaniki workspace select cheyyandi",
+    resume_student: "Student AI resume cheyyandi",
+    live_web_unavailable: "Live web kosam server lo search key kavali",
     auth_brand_kicker: "Learning, health, money - oka Hub lo",
     hub_brand: "AI Hub",
     hub_tagline: "Learning, health, money kosam focused AI",
@@ -1030,6 +1066,11 @@ function applyTranslations() {
     appBrandKicker: "brand_kicker",
     hubBrandTitle: "hub_brand",
     hubTagline: "hub_tagline",
+    hubHint: "hub_hint",
+    hubResumeStudent: "resume_student",
+    tileStudentBadge: "tile_student_badge",
+    liveWebToggleLabel: "live_web_label",
+    liveWebHint: "live_web_hint",
     tileStudentTitle: "tile_student_title",
     tileStudentSub: "tile_student_sub",
     tileStudentCta: "tile_student_cta",
@@ -1129,6 +1170,8 @@ function applyTranslations() {
     el.textContent = t("logout");
   });
   syncHubWelcome();
+  syncLiveWebToggleUi();
+  syncHubResumeButton();
   if (soonVertical) fillSoonModal(soonVertical);
   ["authDisclaimerFooter", "appDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
@@ -1431,6 +1474,7 @@ function defaultPrefs() {
   return {
     restoreSessions: true,
     uiLanguage: "en",
+    liveWeb: true,
   };
 }
 
@@ -1440,6 +1484,7 @@ function loadPrefs() {
     return {
       restoreSessions: parsed.restoreSessions !== false,
       uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
+      liveWeb: parsed.liveWeb !== false,
     };
   } catch {
     return defaultPrefs();
@@ -1691,6 +1736,7 @@ function saveSessionState() {
   } catch {
     /* ignore quota issues */
   }
+  syncHubResumeButton();
 }
 
 function renderThreadFromHistory(container, history, mode, studyMode) {
@@ -1704,7 +1750,8 @@ function renderThreadFromHistory(container, history, mode, studyMode) {
     if (LEARN_VISION_ENABLED && role === "user" && item.imageMime && item.imageBase64) {
       imageDataUrl = `data:${item.imageMime};base64,${item.imageBase64}`;
     }
-    appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
+    const row = appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
+    if (role === "assistant" && item.sources) mountBubbleSources(row.bubble, item.sources);
   }
 }
 
@@ -2394,15 +2441,158 @@ function applyStreamDelta(json, full, onDelta) {
   return next;
 }
 
+
+let liveWebServerConfigured = null;
+
+async function refreshLiveWebCapability() {
+  try {
+    const res = await fetch("/api/health", { method: "GET" });
+    if (!res.ok) return;
+    const data = await res.json();
+    liveWebServerConfigured = Boolean(data?.liveWebConfigured);
+    syncLiveWebToggleUi();
+  } catch {
+    /* ignore */
+  }
+}
+
+function setLiveWebSearching(on) {
+  const btn = document.getElementById("liveWebToggle");
+  if (!btn) return;
+  btn.classList.toggle("is-searching", Boolean(on) && isLiveWebEnabled());
+}
+
+function syncHubResumeButton() {
+  const btn = document.getElementById("hubResumeStudent");
+  if (!btn) return;
+  const hasHistory = Array.isArray(chatHistory) && chatHistory.length > 0;
+  btn.classList.toggle("hidden", !hasHistory);
+  btn.textContent = t("resume_student");
+}
+
+function isLiveWebEnabled() {
+  return loadPrefs().liveWeb !== false;
+}
+
+function syncLiveWebToggleUi() {
+  const btn = document.getElementById("liveWebToggle");
+  const hint = document.getElementById("liveWebHint");
+  const label = document.getElementById("liveWebToggleLabel");
+  const follow = document.getElementById("liveWebFollowHint");
+  const on = isLiveWebEnabled();
+  if (btn) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.classList.toggle("is-unavailable", liveWebServerConfigured === false);
+    btn.title =
+      liveWebServerConfigured === false
+        ? t("live_web_unavailable")
+        : t(on ? "live_web_hint" : "live_web_hint_off");
+  }
+  if (label) label.textContent = t("live_web_label");
+  if (hint) {
+    hint.textContent =
+      liveWebServerConfigured === false
+        ? t("live_web_unavailable")
+        : t(on ? "live_web_hint" : "live_web_hint_off");
+  }
+  if (follow) {
+    follow.textContent = on ? t("live_web_label") : "";
+    follow.hidden = !on;
+  }
+}
+
+function setLiveWebEnabled(next) {
+  const prefs = loadPrefs();
+  prefs.liveWeb = Boolean(next);
+  savePrefs(prefs);
+  syncLiveWebToggleUi();
+}
+
+function hostFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeSources(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((s, i) => {
+      if (!s || typeof s !== "object") return null;
+      const url = String(s.url || "").trim();
+      if (!url) return null;
+      return {
+        title: String(s.title || url).trim().slice(0, 160),
+        url,
+        snippet: String(s.snippet || "").trim().slice(0, 420),
+        index: i + 1,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function mountBubbleSources(bubble, sources) {
+  if (!bubble) return;
+  bubble.querySelectorAll(".bubble-sources").forEach((el) => el.remove());
+  const list = normalizeSources(sources);
+  if (!list.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-sources";
+  const label = document.createElement("p");
+  label.className = "bubble-sources-label";
+  label.textContent = t("sources_label");
+  const ul = document.createElement("ul");
+  ul.className = "bubble-sources-list";
+  list.forEach((s) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.className = "bubble-source-link";
+    a.href = s.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    const num = document.createElement("span");
+    num.className = "bubble-source-num";
+    num.textContent = `[${s.index}]`;
+    const copy = document.createElement("span");
+    copy.className = "bubble-source-copy";
+    const title = document.createElement("span");
+    title.className = "bubble-source-title";
+    title.textContent = s.title;
+    const host = document.createElement("span");
+    host.className = "bubble-source-host";
+    host.textContent = hostFromUrl(s.url) || s.url;
+    copy.appendChild(title);
+    copy.appendChild(host);
+    a.appendChild(num);
+    a.appendChild(copy);
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+  wrap.appendChild(label);
+  wrap.appendChild(ul);
+  bubble.appendChild(wrap);
+}
+
 /**
  * Reads OpenAI-style SSE from /api/chat (stream: true). Invokes onDelta with the full text so far.
- * @returns {Promise<string>} final concatenated assistant text
+ * @returns {Promise<{ text: string, sources: Array }>}
  */
 async function consumeChatSseStream(response, onDelta) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let lineBuf = "";
   let full = "";
+  let sources = [];
+  const handlePayload = (json) => {
+    if (json && json.studentAiMeta && Array.isArray(json.studentAiMeta.sources)) {
+      sources = normalizeSources(json.studentAiMeta.sources);
+      return;
+    }
+    full = applyStreamDelta(json, full, onDelta);
+  };
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -2421,7 +2611,7 @@ async function consumeChatSseStream(response, onDelta) {
       } catch {
         continue;
       }
-      full = applyStreamDelta(json, full, onDelta);
+      handlePayload(json);
     }
   }
   if (lineBuf.trim()) {
@@ -2430,16 +2620,17 @@ async function consumeChatSseStream(response, onDelta) {
       const payload = line.slice(5).replace(/^\s*/, "");
       if (payload && payload !== "[DONE]") {
         try {
-          const json = JSON.parse(payload);
-          full = applyStreamDelta(json, full, onDelta);
+          handlePayload(JSON.parse(payload));
         } catch (e) {
           if (!(e instanceof SyntaxError)) throw e;
         }
       }
     }
   }
-  return full;
+  return { text: full, sources };
 }
+
+
 
 /** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn, studyMode = "explain", visionAttachment = null) {
@@ -2478,6 +2669,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     uiLanguage: activeUiLanguage,
     stream: true,
   };
+  if (mode === "learn" && isLiveWebEnabled()) {
+    chatBody.liveWeb = true;
+  }
   if (mode === "learn" && attach) {
     chatBody.imageBase64 = attach.base64;
     chatBody.imageMime = attach.mime;
@@ -2555,6 +2749,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   try {
+    if (mode === "learn" && isLiveWebEnabled()) {
+      setLiveWebSearching(true);
+      setStatus(statusEl, "status_searching_web");
+    }
     const response = await fetchAuthed("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2575,25 +2773,30 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     if (!response.body || !ct.includes("text/event-stream")) {
       streamUi.remove();
       let output = t("no_response");
+      let jsonSources = [];
       try {
         const data = await response.json();
         output = typeof data.output === "string" && data.output.trim() ? data.output.trim() : output;
+        jsonSources = normalizeSources(data.sources);
       } catch {
         try {
-          const t = await response.text();
-          if (t.trim()) output = t.trim().slice(0, 2000);
+          const rawText = await response.text();
+          if (rawText.trim()) output = rawText.trim().slice(0, 2000);
         } catch {
           /* keep default */
         }
       }
-      appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
+      const assistantBubble = appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
+      if (jsonSources.length) mountBubbleSources(assistantBubble.bubble, jsonSources);
       const userRow = { role: "user", content: trimmed };
       if (attach) {
         userRow.imageMime = attach.mime;
         userRow.imageBase64 = attach.base64;
       }
       history.push(userRow);
-      history.push({ role: "assistant", content: output });
+      const assistantRow = { role: "assistant", content: output };
+      if (jsonSources.length) assistantRow.sources = jsonSources;
+      history.push(assistantRow);
       saveSessionState();
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
@@ -2602,7 +2805,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       return true;
     }
 
-    const fullOut = await consumeChatSseStream(response, scheduleDelta);
+    const streamResult = await consumeChatSseStream(response, scheduleDelta);
+    const fullOut = streamResult?.text || "";
+    const streamSources = normalizeSources(streamResult?.sources);
+    setLiveWebSearching(false);
 
     cancelStreamPaintTimers();
 
@@ -2612,6 +2818,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     const streamPlainOnly = !String(fullOut || "").trim();
     streamUi.setStreamingText(finalText, { plain: streamPlainOnly });
     streamUi.finalize(finalText);
+    if (streamSources.length) mountBubbleSources(streamUi.bubble, streamSources);
 
     const userRow = { role: "user", content: trimmed };
     if (attach) {
@@ -2619,7 +2826,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       userRow.imageBase64 = attach.base64;
     }
     history.push(userRow);
-    history.push({ role: "assistant", content: finalText });
+    const assistantRow = { role: "assistant", content: finalText };
+    if (streamSources.length) assistantRow.sources = streamSources;
+    history.push(assistantRow);
     saveSessionState();
     if (mode === "learn") syncLearnLayout();
     else if (mode === "code") syncCodeLayout();
@@ -2627,6 +2836,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     setStatus(statusEl, "status_ready");
     return true;
   } catch (error) {
+    setLiveWebSearching(false);
     cancelStreamPaintTimers();
     if (streamUi.bubble.isConnected) {
       streamUi.showError(`${t("error_prefix")}: ${formatChatErrorForUi(error)}`);
@@ -2959,7 +3169,9 @@ function fillSoonModal(vertical) {
 function openSoonModal(vertical) {
   soonVertical = vertical === "finance" ? "finance" : "health";
   fillSoonModal(soonVertical);
-  document.getElementById("soonModal")?.classList.remove("hidden");
+  const modal = document.getElementById("soonModal");
+  modal?.classList.remove("hidden");
+  window.setTimeout(() => document.getElementById("soonNotifyBtn")?.focus(), 30);
 }
 
 function desiredVerticalFromUrl() {
@@ -2983,6 +3195,7 @@ function showHubHome() {
   hubCard?.classList.remove("hidden");
   activeSurface = "hub";
   syncHubWelcome();
+  syncHubResumeButton();
   document.title = "AI Hub";
 }
 
@@ -3676,6 +3889,7 @@ function wireSettingsUi() {
     const prefs = {
       restoreSessions: prefRestoreSessions?.checked !== false,
       uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
+      liveWeb: loadPrefs().liveWeb !== false,
     };
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
@@ -3688,6 +3902,15 @@ function wireSettingsUi() {
 const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
+syncLiveWebToggleUi();
+syncHubResumeButton();
+void refreshLiveWebCapability();
+document.getElementById("liveWebToggle")?.addEventListener("click", () => {
+  setLiveWebEnabled(!isLiveWebEnabled());
+});
+document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
+  showStudentWorkspace();
+});
 
 initMarkdown();
 initPwaInstallSupport();

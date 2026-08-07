@@ -22,8 +22,11 @@ Fill `.env`:
 - `HF_API_TOKEN` (optional for demo, required for real model output)
 - Optional: `HF_MODEL` (default in code: `deepseek-ai/DeepSeek-V4-Pro:fastest`)
 - Optional: `HF_CHAT_URL` (default: `https://router.huggingface.co/v1/chat/completions`)
+- Optional live web for Ask (pick one): `TAVILY_API_KEY`, or `BRAVE_SEARCH_API_KEY`, or `SERPER_API_KEY`
 - Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (see below)
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` are optional for server; **frontend auth uses `public/config.js`**
+
+See `.env.example` for a full template. With a search key set, Ask’s **Live web** toggle grounds answers in current web snippets and shows source links.
 
 Hugging Face tokens should include **Inference Providers** permissions (fine-grained token) per Hugging Face docs.
 
