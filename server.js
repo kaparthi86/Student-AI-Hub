@@ -85,7 +85,6 @@ const HF_CHAT_URL =
 const envFileExists = fs.existsSync(envPath);
 
 const MAX_DOC_CHARS = 45000;
-const MAX_MEMORY_CHARS = 4000;
 const MAX_CHAT_HISTORY = 24;
 const MAX_NOTEBOOK_FILES = 5;
 
@@ -1056,28 +1055,6 @@ function buildLiveWebSystemAppendix(sources) {
   ].join("\n");
 }
 
-function normalizeMemoryText(raw) {
-  return String(raw || "")
-    .replace(/\u0000/g, "")
-    .trim()
-    .slice(0, MAX_MEMORY_CHARS);
-}
-
-function buildMemorySystemAppendix(memoryText) {
-  const text = normalizeMemoryText(memoryText);
-  if (!text) return "";
-  return [
-    "The student opted in to share personal study memory below.",
-    "Use it only when relevant to tailor explanations, reminders, and examples.",
-    "Do not invent extra personal facts. Do not expose or repeat sensitive details unless needed to help.",
-    "If memory conflicts with the question, prefer the question and say what is unclear.",
-    "",
-    "--- STUDENT MEMORY ---",
-    text,
-    "--- END STUDENT MEMORY ---",
-  ].join("\n");
-}
-
 function chatSystemBase(mode) {
   const identity =
     'You are Student AI inside AI Hub. If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
@@ -1231,8 +1208,6 @@ app.post("/api/chat", requireSession, async (req, res) => {
     }
 
     const liveWebRequested = mode === "learn" && isTruthyFlag(req.body?.liveWeb);
-    const memoryRequested = mode === "learn" && isTruthyFlag(req.body?.useMemory);
-    const memoryText = memoryRequested ? normalizeMemoryText(req.body?.memory) : "";
     let webSources = [];
     if (liveWebRequested && LIVE_WEB_CONFIGURED) {
       webSources = await fetchLiveWebSources(lastMessage);
@@ -1247,9 +1222,6 @@ app.post("/api/chat", requireSession, async (req, res) => {
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
-    if (memoryText) {
-      system = `${system}\n\n${buildMemorySystemAppendix(memoryText)}`;
-    }
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
     const modelForRequest = pickChatModelForMessages(coreMessages);
     const messages = [{ role: "system", content: system }, ...coreMessages];
@@ -1257,19 +1229,14 @@ app.post("/api/chat", requireSession, async (req, res) => {
     const webHash = liveWebRequested
       ? crypto.createHash("sha256").update(JSON.stringify(webSources)).digest("hex").slice(0, 16)
       : "";
-    const memoryHash = memoryText
-      ? crypto.createHash("sha256").update(memoryText).digest("hex").slice(0, 16)
-      : "";
     const promptCacheKey =
       mode === "notebook"
         ? `${cacheUserKey}:notebook:${crypto.createHash("sha256").update(documentContext).digest("hex").slice(0, 24)}:${studyMode}`
-        : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}${
-            memoryHash ? `:mem:${memoryHash}` : ""
-          }`;
+        : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
     const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
-    const skipResponseCache = liveWebRequested || Boolean(memoryText);
+    const skipResponseCache = liveWebRequested;
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {

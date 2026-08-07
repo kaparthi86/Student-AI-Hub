@@ -23,8 +23,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=memory-vault-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=memory-vault-1" />
+    <link rel="stylesheet" href="./styles.css?v=honor-modal-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=honor-modal-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -150,7 +150,6 @@
               <span aria-hidden="true">···</span>
             </button>
             <div class="account-menu-panel hidden" role="menu">
-              <button class="account-menu-item open-memory-btn" type="button" role="menuitem">Memory</button>
               <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
               <button class="account-menu-item logout-btn" type="button" role="menuitem">Logout</button>
             </div>
@@ -263,9 +262,6 @@
                 <span aria-hidden="true">···</span>
               </button>
               <div id="accountMenuPanel" class="account-menu-panel hidden" role="menu">
-                <button id="openMemoryBtn" class="account-menu-item open-memory-btn" type="button" role="menuitem">
-                  Memory
-                </button>
                 <button id="openSettingsBtn" class="account-menu-item open-settings-btn" type="button" role="menuitem">
                   Settings
                 </button>
@@ -353,7 +349,7 @@
               </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <div class="live-web-row ask-context-row">
+            <div class="live-web-row">
               <button
                 type="button"
                 id="liveWebToggle"
@@ -363,19 +359,6 @@
               >
                 <span class="live-web-dot" aria-hidden="true"></span>
                 <span id="liveWebToggleLabel">Live web</span>
-              </button>
-              <button
-                type="button"
-                id="useMemoryToggle"
-                class="live-web-toggle memory-toggle"
-                aria-pressed="false"
-                title="Use your Memory vault in Ask answers"
-              >
-                <span class="live-web-dot" aria-hidden="true"></span>
-                <span id="useMemoryToggleLabel">Use memory</span>
-              </button>
-              <button type="button" class="ghost-btn tiny-btn memory-edit-btn" id="editMemoryInlineBtn">
-                Edit memory
               </button>
               <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
             </div>
@@ -753,67 +736,12 @@
         </div>
       </div>
     </div>
-
-    <div
-      id="memoryVaultModal"
-      class="settings-modal memory-vault-modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="memoryVaultTitle"
-      aria-describedby="memoryVaultLead"
-    >
-      <div class="settings-card memory-vault-card">
-        <div class="settings-head">
-          <h3 id="memoryVaultTitle">Memory vault</h3>
-          <button id="closeMemoryVaultBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">Close</button>
-        </div>
-        <p id="memoryVaultLead" class="memory-vault-lead muted">
-          Save study context you choose. Ask uses it only when Use memory is on. Stored on this device — wipe
-          anytime.
-        </p>
-        <div class="memory-vault-grid">
-          <label for="memoryAbout">
-            <span id="memoryAboutLabel">About me</span>
-            <textarea id="memoryAbout" rows="2" placeholder="e.g. CS sophomore, prefer short explanations"></textarea>
-          </label>
-          <label for="memoryCourses">
-            <span id="memoryCoursesLabel">Courses</span>
-            <textarea id="memoryCourses" rows="2" placeholder="e.g. Calc II, CS101, Writing 120"></textarea>
-          </label>
-          <label for="memoryDeadlines">
-            <span id="memoryDeadlinesLabel">Deadlines</span>
-            <textarea id="memoryDeadlines" rows="2" placeholder="e.g. Midterm Friday 5pm; lab due Sunday"></textarea>
-          </label>
-          <label for="memoryRoutines">
-            <span id="memoryRoutinesLabel">Routines</span>
-            <textarea id="memoryRoutines" rows="2" placeholder="e.g. Study 8-9pm weeknights"></textarea>
-          </label>
-          <label for="memoryGoals">
-            <span id="memoryGoalsLabel">Goals</span>
-            <textarea id="memoryGoals" rows="2" placeholder="e.g. Finish problem sets before Thursday"></textarea>
-          </label>
-          <label for="memoryNotes">
-            <span id="memoryNotesLabel">Notes</span>
-            <textarea id="memoryNotes" rows="3" placeholder="Anything else you want Ask to remember"></textarea>
-          </label>
-        </div>
-        <div class="memory-vault-preview-block">
-          <p id="memoryPreviewLabel" class="memory-preview-label muted">What Ask can see when Use memory is on</p>
-          <pre id="memoryPreview" class="memory-preview" aria-live="polite"></pre>
-        </div>
-        <div class="memory-vault-actions">
-          <button id="saveMemoryVaultBtn" class="primary-btn" type="button">Save memory</button>
-          <button id="wipeMemoryVaultBtn" class="ghost-btn" type="button">Wipe memory</button>
-        </div>
-      </div>
-    </div>
-
     <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=memory-vault-1"></script>
+    <script defer src="./app.js?v=honor-modal-1"></script>
   </body>
 </html>
