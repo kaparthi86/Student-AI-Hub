@@ -1147,3 +1147,46 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   margin-left: auto;
   margin-right: auto;
 }
+
+/* —— Trust footer: one system on login / Hub / Student —— */
+.trust-footer,
+.app-fine-print.trust-footer,
+.hub-fine-print.trust-footer,
+.auth-fine-print.trust-footer {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(28, 27, 25, 0.06);
+  text-align: center;
+}
+
+.trust-footer .fine-print-line {
+  margin: 0 auto 6px;
+  max-width: 34rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: rgba(111, 107, 99, 0.72);
+}
+
+.trust-footer .fine-print-line:last-child {
+  margin-bottom: 0;
+}
+
+#hubCard .trust-footer {
+  margin-top: 32px;
+}
+
+#authCard .trust-footer {
+  margin-top: 28px;
+}
+
+#appCard .trust-footer {
+  margin-top: 18px;
+}
+
+@media (max-width: 820px) {
+  .trust-footer .fine-print-line {
+    font-size: 0.7rem;
+    max-width: 28rem;
+  }
+}
