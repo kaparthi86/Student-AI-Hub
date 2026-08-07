@@ -211,6 +211,7 @@ const I18N = {
     toast_waitlist_finance: "You're on the list for Finance AI.",
     toast_waitlist_already: "You're already on the list for {vertical}.",
     nav_hub: "AI Hub",
+    nav_back_hub: "Back to AI Hub",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub can make mistakes. Check important facts.",
     disclaimer_hub: "For learning, wellness, and money planning help - not a substitute for professional medical, legal, or financial advice.",
@@ -432,6 +433,7 @@ const I18N = {
     toast_waitlist_finance: "Estas en la lista de Finance AI.",
     toast_waitlist_already: "Ya estas en la lista de {vertical}.",
     nav_hub: "AI Hub",
+    nav_back_hub: "Volver al Hub",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub puede equivocarse. Verifica datos importantes.",
     disclaimer_hub: "Ayuda para aprendizaje, bienestar y planificacion financiera - no sustituye consejo medico, legal o financiero profesional.",
@@ -650,6 +652,7 @@ const I18N = {
     toast_waitlist_finance: "Aap Finance AI list mein ho.",
     toast_waitlist_already: "Aap pehle se {vertical} list mein ho.",
     nav_hub: "AI Hub",
+    nav_back_hub: "Hub par wapas",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub galti kar sakta hai. Important facts check karein.",
     disclaimer_hub: "Learning, wellness aur money planning help ke liye - ye professional medical, legal ya financial advice nahi hai.",
@@ -869,6 +872,7 @@ const I18N = {
     toast_waitlist_finance: "Meeru Finance AI list lo unnaru.",
     toast_waitlist_already: "Meeru already {vertical} list lo unnaru.",
     nav_hub: "AI Hub",
+    nav_back_hub: "Hub ki back",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub tappu cheyagaladu. Important facts verify cheyyandi.",
     disclaimer_hub: "Learning, wellness, money planning help kosam - idi professional medical, legal leda financial advice kadu.",
@@ -1095,7 +1099,7 @@ function applyTranslations() {
     soonNotifyBtn: "soon_notify",
     soonBackBtn: "soon_back",
     soonModalCloseBtn: "soon_close",
-    backToHubBtn: "nav_hub",
+    backToHubBtn: "nav_back_hub",
     crumbStudent: "nav_student",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
@@ -1218,6 +1222,12 @@ function applyTranslations() {
   }
   const closeDefaultPageHintBtn = document.getElementById("closeDefaultPageHintBtn");
   if (closeDefaultPageHintBtn) closeDefaultPageHintBtn.setAttribute("aria-label", t("settings_close"));
+  const backToHubBtn = document.getElementById("backToHubBtn");
+  if (backToHubBtn) {
+    const hubLabel = t("nav_back_hub");
+    backToHubBtn.setAttribute("aria-label", hubLabel);
+    backToHubBtn.setAttribute("title", hubLabel);
+  }
   document.querySelectorAll(".copy-thread-btn").forEach((btn) => {
     btn.setAttribute("aria-label", t("copy_thread_aria"));
   });
