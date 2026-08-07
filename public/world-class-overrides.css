@@ -1130,3 +1130,20 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
     grid-template-rows: 1.1rem auto auto auto;
   }
 }
+
+.hub-fine-print {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(28, 27, 25, 0.06);
+  text-align: center;
+}
+
+.hub-fine-print .fine-print-line {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(111, 107, 99, 0.85);
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
