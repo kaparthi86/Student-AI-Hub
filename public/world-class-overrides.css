@@ -578,3 +578,239 @@ html.is-safari .msg.assistant .bubble,
 html.is-safari .bubble--streaming {
   animation: none !important;
 }
+
+/* —— AI Hub home —— */
+body:has(#hubCard:not(.hidden)) .bg-glow {
+  opacity: 0.1;
+}
+
+.hub-shell {
+  width: min(100%, 920px);
+  margin: min(8vh, 72px) auto 48px;
+  padding: 8px 4px 24px;
+  animation: hubRise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes hubRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hub-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 50;
+  overflow: visible;
+}
+
+.hub-hero {
+  text-align: center;
+  margin: 0 auto 36px;
+  max-width: 34rem;
+}
+
+.hub-hero-mark {
+  display: inline-flex;
+  margin-bottom: 18px;
+}
+
+.hub-hero-mark .brand-mark-svg {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+.hub-brand {
+  margin: 0;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: clamp(2.6rem, 7vw, 3.6rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.hub-brand::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+}
+
+.hub-tagline {
+  margin: 14px auto 0;
+  max-width: 28ch;
+  font-size: clamp(1.05rem, 2.4vw, 1.25rem);
+  line-height: 1.4;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.hub-welcome {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+}
+
+.hub-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.hub-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 188px;
+  padding: 22px 20px 18px;
+  text-align: left;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(28, 27, 25, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition:
+    transform var(--motion-fast, 160ms ease),
+    border-color var(--motion-fast, 160ms ease),
+    background var(--motion-fast, 160ms ease);
+}
+
+.hub-tile:hover,
+.hub-tile:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(47, 111, 237, 0.35);
+  outline: none;
+}
+
+.hub-tile--live {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(47, 111, 237, 0.07));
+  border-color: rgba(47, 111, 237, 0.28);
+}
+
+.hub-tile-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hub-tile-sub {
+  flex: 1;
+  color: var(--muted);
+  line-height: 1.4;
+  font-size: 0.98rem;
+}
+
+.hub-tile-cta {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d5bd8;
+}
+
+.hub-tile--soon .hub-tile-cta {
+  color: rgba(111, 107, 99, 0.85);
+}
+
+.hub-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.crumb-hub {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: rgba(28, 27, 25, 0.55);
+  cursor: pointer;
+}
+
+.crumb-hub:hover,
+.crumb-hub:focus-visible {
+  color: #1d5bd8;
+  outline: none;
+}
+
+.crumb-sep {
+  color: rgba(28, 27, 25, 0.28);
+  font-weight: 600;
+}
+
+.crumb-current {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+#appCard .hub-crumb .brand-kicker {
+  flex: 1 1 100%;
+  margin-top: 0;
+}
+
+.app-brand--crumb {
+  align-items: flex-start;
+}
+
+.soon-modal .soon-card {
+  width: min(100%, 420px);
+}
+
+.soon-body {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.soon-note {
+  margin: 0 0 22px;
+  font-size: 0.92rem;
+}
+
+.soon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 820px) {
+  .hub-shell {
+    margin-top: 28px;
+  }
+
+  .hub-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-tile {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-shell,
+  .hub-tile {
+    animation: none !important;
+    transition: none !important;
+  }
+}

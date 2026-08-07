@@ -9,12 +9,12 @@
     <meta name="theme-color" content="#F7F6F3" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Student AI" />
+    <meta name="apple-mobile-web-app-title" content="AI Hub" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=pwa-logo-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=ai-hub-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=pwa-logo-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=pwa-logo-1" />
-    <title>Student AI Hub</title>
+    <title>AI Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
@@ -23,8 +23,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=logo-tagline-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=logo-tagline-1" />
+    <link rel="stylesheet" href="./styles.css?v=ai-hub-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=ai-hub-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -32,7 +32,7 @@
 
     <main class="container">
       <div id="betaBanner" class="beta-banner hidden" role="status" aria-live="polite"></div>
-      <div id="pwaInstallBar" class="pwa-install-bar hidden" role="region" aria-label="Install Student AI Hub">
+      <div id="pwaInstallBar" class="pwa-install-bar hidden" role="region" aria-label="Install AI Hub">
         <div class="pwa-install-bar-row">
           <img
             class="pwa-install-bar-icon"
@@ -43,7 +43,7 @@
             decoding="async"
           />
           <div class="pwa-install-bar-copy">
-            <div class="pwa-install-bar-title" id="pwaInstallTitle">Install Student AI Hub</div>
+            <div class="pwa-install-bar-title" id="pwaInstallTitle">Install AI Hub</div>
             <p class="pwa-install-bar-sub muted" id="pwaInstallSub">
               Add our icon to your home screen or desktop for quick access until the mobile app ships.
             </p>
@@ -67,7 +67,7 @@
       </div>
       <section class="auth auth-shell" id="authCard">
         <header class="app-head auth-head">
-          <div class="app-brand" aria-label="Student AI Hub">
+          <div class="app-brand" aria-label="AI Hub">
             <span class="brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
@@ -85,15 +85,17 @@
               </svg>
             </span>
             <div class="brand-wordmark">
-              <span class="brand-title">Student AI <span class="brand-hub">Hub</span></span>
-              <span class="brand-kicker" id="authBrandKicker" data-i18n="brand_kicker"
-                >Ask, learn, code &amp; notebook in one place</span
+              <span class="brand-title" id="authBrandTitle">AI <span class="brand-hub">Hub</span></span>
+              <span class="brand-kicker" id="authBrandKicker" data-i18n="auth_brand_kicker"
+                >Learning, health, and money — in one Hub</span
               >
             </div>
           </div>
           <div class="app-greeting auth-greeting">
             <h2 class="auth-signin-title" id="authSigninTitle">Sign in to continue</h2>
-            <p class="muted app-tagline" id="authSigninTagline">Free for students.</p>
+            <p class="muted app-tagline" id="authSigninTagline">
+              Free to start — pick Student AI today, more to come.
+            </p>
           </div>
         </header>
 
@@ -121,21 +123,87 @@
         <p id="authStatus" class="muted auth-status"></p>
 
         <footer class="app-fine-print auth-fine-print" role="note" id="authDisclaimerFooter" aria-label="Disclaimer">
-          <p class="fine-print-line" data-i18n="disclaimer_mistakes">
-            Student AI Hub can make mistakes. Check important facts and follow your instructor&rsquo;s policies on using
-            AI.
+          <p class="fine-print-line" data-i18n="disclaimer_base">
+            AI Hub can make mistakes. Check important facts.
           </p>
-          <p class="fine-print-line" data-i18n="disclaimer_honor">
+          <p class="fine-print-line" data-i18n="disclaimer_student">
             For study help and practice only &mdash; follow your honor code; don&rsquo;t submit AI output when your course
             forbids it.
           </p>
         </footer>
       </section>
 
+      <section class="hub hub-shell hidden" id="hubCard" aria-label="AI Hub home">
+        <header class="hub-top">
+          <div class="hub-top-brand" aria-hidden="true"></div>
+          <div class="head-actions account-menu">
+            <button
+              type="button"
+              class="ghost-btn icon-btn account-menu-btn"
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <span aria-hidden="true">···</span>
+            </button>
+            <div class="account-menu-panel hidden" role="menu">
+              <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
+              <button class="account-menu-item logout-btn" type="button" role="menuitem">Logout</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="hub-hero">
+          <span class="brand-mark hub-hero-mark" aria-hidden="true">
+            <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="40" height="40" rx="12" fill="url(#hubBrandGrad)" />
+              <path
+                d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                fill="white"
+                fill-opacity="0.92"
+              />
+              <defs>
+                <linearGradient id="hubBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#2F6FED" />
+                  <stop offset="1" stop-color="#1D5BD8" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <h1 class="hub-brand" id="hubBrandTitle">AI Hub</h1>
+          <p class="hub-tagline" id="hubTagline">Focused AI for learning, health, and money</p>
+          <p class="hub-welcome muted hidden" id="hubWelcome"></p>
+        </div>
+
+        <div class="hub-tiles" role="list">
+          <button type="button" class="hub-tile hub-tile--live" data-vertical="student" role="listitem" id="tileStudent">
+            <span class="hub-tile-title" id="tileStudentTitle">Student AI</span>
+            <span class="hub-tile-sub" id="tileStudentSub">Ask, code, and study in one place</span>
+            <span class="hub-tile-cta" id="tileStudentCta">Open</span>
+          </button>
+          <button type="button" class="hub-tile hub-tile--soon" data-vertical="health" role="listitem" id="tileHealth">
+            <span class="hub-tile-title" id="tileHealthTitle">Health AI</span>
+            <span class="hub-tile-sub" id="tileHealthSub">Understand wellness in plain language</span>
+            <span class="hub-tile-cta" id="tileHealthCta">Coming soon</span>
+          </button>
+          <button
+            type="button"
+            class="hub-tile hub-tile--soon"
+            data-vertical="finance"
+            role="listitem"
+            id="tileFinance"
+          >
+            <span class="hub-tile-title" id="tileFinanceTitle">Finance AI</span>
+            <span class="hub-tile-sub" id="tileFinanceSub">Plan budgets and goals with clarity</span>
+            <span class="hub-tile-cta" id="tileFinanceCta">Coming soon</span>
+          </button>
+        </div>
+      </section>
+
       <section class="app app-shell card hidden" id="appCard">
         <header class="app-head">
           <div class="app-head-top">
-            <div class="app-brand" aria-label="Student AI Hub">
+            <div class="app-brand app-brand--crumb" aria-label="Student AI">
               <span class="brand-mark" aria-hidden="true">
                 <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="12" fill="url(#brandGrad)" />
@@ -152,18 +220,20 @@
                   </defs>
                 </svg>
               </span>
-              <div class="brand-wordmark">
-                <span class="brand-title">Student AI <span class="brand-hub">Hub</span></span>
+              <nav class="hub-crumb" aria-label="Breadcrumb">
+                <button type="button" class="crumb-hub" id="backToHubBtn">AI Hub</button>
+                <span class="crumb-sep" aria-hidden="true">/</span>
+                <span class="crumb-current" id="crumbStudent">Student AI</span>
                 <span class="brand-kicker" id="appBrandKicker" data-i18n="brand_kicker"
                   >Ask, learn, code &amp; notebook in one place</span
                 >
-              </div>
+              </nav>
             </div>
             <div class="head-actions account-menu">
               <button
                 type="button"
                 id="accountMenuBtn"
-                class="ghost-btn icon-btn"
+                class="ghost-btn icon-btn account-menu-btn"
                 aria-label="Account menu"
                 aria-haspopup="menu"
                 aria-expanded="false"
@@ -172,8 +242,10 @@
                 <span aria-hidden="true">···</span>
               </button>
               <div id="accountMenuPanel" class="account-menu-panel hidden" role="menu">
-                <button id="openSettingsBtn" class="account-menu-item" type="button" role="menuitem">Settings</button>
-                <button id="logoutBtn" class="account-menu-item" type="button" role="menuitem">Logout</button>
+                <button id="openSettingsBtn" class="account-menu-item open-settings-btn" type="button" role="menuitem">
+                  Settings
+                </button>
+                <button id="logoutBtn" class="account-menu-item logout-btn" type="button" role="menuitem">Logout</button>
               </div>
             </div>
           </div>
@@ -506,17 +578,39 @@
         </section>
 
         <footer class="app-fine-print" role="note" id="appDisclaimerFooter" aria-label="Disclaimer">
-          <p class="fine-print-line" data-i18n="disclaimer_mistakes">
-            Student AI Hub can make mistakes. Check important facts and follow your instructor&rsquo;s policies on using
-            AI.
+          <p class="fine-print-line" data-i18n="disclaimer_base">
+            AI Hub can make mistakes. Check important facts.
           </p>
-          <p class="fine-print-line" data-i18n="disclaimer_honor">
+          <p class="fine-print-line" data-i18n="disclaimer_student">
             For study help and practice only &mdash; follow your honor code; don&rsquo;t submit AI output when your course
             forbids it.
           </p>
         </footer>
       </section>
     </main>
+
+    <div
+      id="soonModal"
+      class="settings-modal soon-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="soonModalTitle"
+    >
+      <div class="settings-card soon-card">
+        <div class="settings-head">
+          <h3 id="soonModalTitle">Health AI</h3>
+          <button id="soonModalCloseBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">Close</button>
+        </div>
+        <p id="soonModalBody" class="soon-body">
+          We’re building a calm wellness guide — plain-language answers, habits, and clear limits.
+        </p>
+        <p id="soonModalNote" class="muted soon-note">Not medical advice. Never for emergencies.</p>
+        <div class="soon-actions">
+          <button id="soonNotifyBtn" class="primary-btn" type="button">Notify me</button>
+          <button id="soonBackBtn" class="ghost-btn" type="button">Back to Hub</button>
+        </div>
+      </div>
+    </div>
 
     <div
       id="defaultPageHintModal"
@@ -584,6 +678,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=logo-tagline-1"></script>
+    <script defer src="./app.js?v=ai-hub-1"></script>
   </body>
 </html>
