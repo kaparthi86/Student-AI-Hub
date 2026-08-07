@@ -1628,6 +1628,55 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.honor-code-modal {
+  z-index: 68;
+}
+
+.honor-code-card {
+  width: min(100%, 440px);
+}
+
+.honor-code-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.honor-code-lead {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.honor-code-body {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.honor-code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .honor-code-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .honor-code-actions .primary-btn,
+  .honor-code-actions .ghost-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .default-page-hint-modal {
   z-index: 65;
 }
