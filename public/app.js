@@ -214,6 +214,7 @@ const I18N = {
     nav_student: "Student AI",
     disclaimer_base: "AI Hub can make mistakes. Check important facts.",
     disclaimer_hub: "For learning, wellness, and money planning help - not a substitute for professional medical, legal, or financial advice.",
+    disclaimer_nonprofit: "AI Hub is non-profit work - built to help people learn and plan, not to sell your data or push ads.",
     disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
     continue_google: "Continue with Google",
     settings: "Settings",
@@ -434,6 +435,7 @@ const I18N = {
     nav_student: "Student AI",
     disclaimer_base: "AI Hub puede equivocarse. Verifica datos importantes.",
     disclaimer_hub: "Ayuda para aprendizaje, bienestar y planificacion financiera - no sustituye consejo medico, legal o financiero profesional.",
+    disclaimer_nonprofit: "AI Hub es un proyecto sin fines de lucro: para ayudar a aprender y planificar, no para vender tus datos ni mostrar anuncios.",
     disclaimer_student: "En Student AI: solo para estudio y practica; sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     continue_google: "Continuar con Google",
     settings: "Configuracin",
@@ -651,6 +653,7 @@ const I18N = {
     nav_student: "Student AI",
     disclaimer_base: "AI Hub galti kar sakta hai. Important facts check karein.",
     disclaimer_hub: "Learning, wellness aur money planning help ke liye - ye professional medical, legal ya financial advice nahi hai.",
+    disclaimer_nonprofit: "AI Hub non-profit kaam hai - seekhne aur plan karne mein madad ke liye, data bechne ya ads dikhane ke liye nahi.",
     disclaimer_student: "Student AI mein: sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
     continue_google: "Google ke saath jari rakhen",
     settings: "Settings",
@@ -869,6 +872,7 @@ const I18N = {
     nav_student: "Student AI",
     disclaimer_base: "AI Hub tappu cheyagaladu. Important facts verify cheyyandi.",
     disclaimer_hub: "Learning, wellness, money planning help kosam - idi professional medical, legal leda financial advice kadu.",
+    disclaimer_nonprofit: "AI Hub non-profit work - learn cheyadaniki mariyu plan cheyadaniki, data ammakundaniki leda ads kosam kadu.",
     disclaimer_student: "Student AI lo: study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
     continue_google: "Google to continue cheyyandi",
     settings: "Settings",
@@ -1181,7 +1185,7 @@ function applyTranslations() {
   syncLiveWebToggleUi();
   syncHubResumeButton();
   if (soonVertical) fillSoonModal(soonVertical);
-  ["authDisclaimerFooter", "appDisclaimerFooter"].forEach((id) => {
+  ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
     if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
   });
