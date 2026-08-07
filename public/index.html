@@ -23,8 +23,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=honor-modal-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=honor-modal-1" />
+    <link rel="stylesheet" href="./styles.css?v=google-ws-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=google-ws-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -150,6 +150,9 @@
               <span aria-hidden="true">···</span>
             </button>
             <div class="account-menu-panel hidden" role="menu">
+              <button class="account-menu-item open-google-ws-btn" type="button" role="menuitem">
+                Google Workspace
+              </button>
               <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
               <button class="account-menu-item logout-btn" type="button" role="menuitem">Logout</button>
             </div>
@@ -262,6 +265,9 @@
                 <span aria-hidden="true">···</span>
               </button>
               <div id="accountMenuPanel" class="account-menu-panel hidden" role="menu">
+                <button id="openGoogleWsBtn" class="account-menu-item open-google-ws-btn" type="button" role="menuitem">
+                  Google Workspace
+                </button>
                 <button id="openSettingsBtn" class="account-menu-item open-settings-btn" type="button" role="menuitem">
                   Settings
                 </button>
@@ -349,7 +355,7 @@
               </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <div class="live-web-row">
+            <div class="live-web-row ask-context-row">
               <button
                 type="button"
                 id="liveWebToggle"
@@ -360,6 +366,17 @@
                 <span class="live-web-dot" aria-hidden="true"></span>
                 <span id="liveWebToggleLabel">Live web</span>
               </button>
+              <button
+                type="button"
+                id="useGoogleWsToggle"
+                class="live-web-toggle"
+                aria-pressed="false"
+                title="Use synced Google Workspace context in Ask"
+              >
+                <span class="live-web-dot" aria-hidden="true"></span>
+                <span id="useGoogleWsToggleLabel">Use Google</span>
+              </button>
+              <button type="button" class="ghost-btn tiny-btn" id="manageGoogleWsInlineBtn">Manage</button>
               <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
             </div>
             <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
@@ -736,12 +753,56 @@
         </div>
       </div>
     </div>
+
+    <div
+      id="googleWsModal"
+      class="settings-modal google-ws-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="googleWsTitle"
+      aria-describedby="googleWsLead"
+    >
+      <div class="settings-card google-ws-card">
+        <div class="settings-head">
+          <h3 id="googleWsTitle">Google Workspace</h3>
+          <button id="closeGoogleWsBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">Close</button>
+        </div>
+        <p id="googleWsLead" class="google-ws-lead muted">
+          Optionally connect Calendar, Drive, and Gmail. AI Hub syncs a short snapshot you control — Ask uses it only
+          when Use Google is on.
+        </p>
+        <p id="googleWsStatusLine" class="google-ws-status" role="status">Not connected</p>
+        <div class="google-ws-toggles">
+          <label class="settings-checkbox">
+            <input id="gwIncludeCalendar" type="checkbox" checked />
+            <span id="gwIncludeCalendarLabel">Calendar</span>
+          </label>
+          <label class="settings-checkbox">
+            <input id="gwIncludeDrive" type="checkbox" checked />
+            <span id="gwIncludeDriveLabel">Drive</span>
+          </label>
+          <label class="settings-checkbox">
+            <input id="gwIncludeGmail" type="checkbox" checked />
+            <span id="gwIncludeGmailLabel">Gmail</span>
+          </label>
+        </div>
+        <p id="googleWsNote" class="muted google-ws-note">
+          Sign-in with Google is separate from this connect step. You can disconnect and wipe the snapshot anytime.
+        </p>
+        <div class="google-ws-actions">
+          <button id="googleWsConnectBtn" class="primary-btn" type="button">Connect Google</button>
+          <button id="googleWsSyncBtn" class="ghost-btn" type="button">Sync now</button>
+          <button id="googleWsDisconnectBtn" class="ghost-btn" type="button">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=honor-modal-1"></script>
+    <script defer src="./app.js?v=google-ws-1"></script>
   </body>
 </html>

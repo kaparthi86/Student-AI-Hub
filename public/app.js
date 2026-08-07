@@ -180,6 +180,33 @@ const I18N = {
     live_web_label: "Live web",
     live_web_hint: "Use current web sources when relevant",
     live_web_hint_off: "Answers use the model only (no live web)",
+    use_google_label: "Use Google",
+    use_google_hint: "Ground Ask in your synced Google Workspace snapshot",
+    use_google_hint_off: "Ask ignores Google Workspace",
+    use_google_need_connect: "Connect Google Workspace first",
+    use_google_need_sync: "Sync Google Workspace first",
+    google_ws_menu: "Google Workspace",
+    google_ws_manage: "Manage",
+    google_ws_title: "Google Workspace",
+    google_ws_lead:
+      "Optionally connect Calendar, Drive, and Gmail. AI Hub syncs a short snapshot you control - Ask uses it only when Use Google is on.",
+    google_ws_note:
+      "Sign-in with Google is separate from this connect step. You can disconnect and wipe the snapshot anytime.",
+    google_ws_status_disconnected: "Not connected",
+    google_ws_status_connected: "Connected as {email}",
+    google_ws_status_synced: "Connected as {email} - last sync {when}",
+    google_ws_not_configured: "Google Workspace is not configured on the server yet.",
+    google_ws_calendar: "Calendar",
+    google_ws_drive: "Drive",
+    google_ws_gmail: "Gmail",
+    google_ws_connect: "Connect Google",
+    google_ws_sync: "Sync now",
+    google_ws_disconnect: "Disconnect",
+    google_ws_connected_toast: "Google Workspace connected",
+    google_ws_synced_toast: "Google Workspace synced",
+    google_ws_disconnected_toast: "Google Workspace disconnected",
+    google_ws_error_toast: "Google Workspace error",
+    google_ws_disconnect_confirm: "Disconnect Google Workspace and wipe the synced snapshot?",
     sources_label: "Sources",
     status_searching_web: "Searching the web...",
     tile_student_badge: "Available now",
@@ -1110,6 +1137,19 @@ function applyTranslations() {
     tileFinanceBadge: "tile_soon_badge",
     liveWebToggleLabel: "live_web_label",
     liveWebHint: "live_web_hint",
+    useGoogleWsToggleLabel: "use_google_label",
+    manageGoogleWsInlineBtn: "google_ws_manage",
+    openGoogleWsBtn: "google_ws_menu",
+    googleWsTitle: "google_ws_title",
+    googleWsLead: "google_ws_lead",
+    googleWsNote: "google_ws_note",
+    gwIncludeCalendarLabel: "google_ws_calendar",
+    gwIncludeDriveLabel: "google_ws_drive",
+    gwIncludeGmailLabel: "google_ws_gmail",
+    googleWsConnectBtn: "google_ws_connect",
+    googleWsSyncBtn: "google_ws_sync",
+    googleWsDisconnectBtn: "google_ws_disconnect",
+    closeGoogleWsBtn: "settings_close",
     tileStudentTitle: "tile_student_title",
     tileStudentSub: "tile_student_sub",
     tileStudentCta: "tile_student_cta",
@@ -1210,12 +1250,19 @@ function applyTranslations() {
   document.querySelectorAll(".open-settings-btn").forEach((el) => {
     el.textContent = t("settings");
   });
+  document.querySelectorAll(".open-google-ws-btn").forEach((el) => {
+    el.textContent = t("google_ws_menu");
+  });
   document.querySelectorAll(".logout-btn").forEach((el) => {
     el.textContent = t("logout");
   });
   syncHubWelcome();
   syncLiveWebToggleUi();
+  syncGoogleWsToggleUi();
+  renderGoogleWsStatusLine(googleWsStatusCache);
   syncHubResumeButton();
+  const closeGoogleWsBtn = document.getElementById("closeGoogleWsBtn");
+  if (closeGoogleWsBtn) closeGoogleWsBtn.setAttribute("aria-label", t("settings_close"));
   if (soonVertical) fillSoonModal(soonVertical);
   ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
@@ -1525,6 +1572,7 @@ function defaultPrefs() {
     restoreSessions: true,
     uiLanguage: "en",
     liveWeb: true,
+    useGoogleWorkspace: false,
   };
 }
 
@@ -1535,6 +1583,7 @@ function loadPrefs() {
       restoreSessions: parsed.restoreSessions !== false,
       uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
       liveWeb: parsed.liveWeb !== false,
+      useGoogleWorkspace: parsed.useGoogleWorkspace === true,
     };
   } catch {
     return defaultPrefs();
@@ -2558,6 +2607,248 @@ function setLiveWebEnabled(next) {
   syncLiveWebToggleUi();
 }
 
+/** @type {null | { configured?: boolean, connected?: boolean, email?: string|null, has_snapshot?: boolean, last_sync_at?: string|null, include_calendar?: boolean, include_drive?: boolean, include_gmail?: boolean }} */
+let googleWsStatusCache = null;
+
+function isGoogleWorkspaceUseEnabled() {
+  return loadPrefs().useGoogleWorkspace === true && Boolean(googleWsStatusCache?.connected && googleWsStatusCache?.has_snapshot);
+}
+
+function syncGoogleWsToggleUi() {
+  const btn = document.getElementById("useGoogleWsToggle");
+  const label = document.getElementById("useGoogleWsToggleLabel");
+  const manage = document.getElementById("manageGoogleWsInlineBtn");
+  const on = isGoogleWorkspaceUseEnabled();
+  if (btn) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.classList.toggle("is-unavailable", googleWsStatusCache?.configured === false);
+    let title = t(on ? "use_google_hint" : "use_google_hint_off");
+    if (googleWsStatusCache?.configured === false) title = t("google_ws_not_configured");
+    else if (!googleWsStatusCache?.connected) title = t("use_google_need_connect");
+    else if (!googleWsStatusCache?.has_snapshot) title = t("use_google_need_sync");
+    btn.title = title;
+  }
+  if (label) label.textContent = t("use_google_label");
+  if (manage) manage.textContent = t("google_ws_manage");
+}
+
+function setGoogleWorkspaceUseEnabled(next) {
+  if (next) {
+    if (googleWsStatusCache?.configured === false) {
+      showToast(t("google_ws_not_configured"));
+      openGoogleWsModal();
+      return;
+    }
+    if (!googleWsStatusCache?.connected) {
+      showToast(t("use_google_need_connect"));
+      openGoogleWsModal();
+      return;
+    }
+    if (!googleWsStatusCache?.has_snapshot) {
+      showToast(t("use_google_need_sync"));
+      openGoogleWsModal();
+      return;
+    }
+  }
+  const prefs = loadPrefs();
+  prefs.useGoogleWorkspace = Boolean(next);
+  savePrefs(prefs);
+  syncGoogleWsToggleUi();
+}
+
+function formatGoogleWsWhen(iso) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return String(iso);
+  }
+}
+
+function renderGoogleWsStatusLine(status) {
+  const el = document.getElementById("googleWsStatusLine");
+  if (!el) return;
+  if (!status?.configured) {
+    el.textContent = t("google_ws_not_configured");
+    return;
+  }
+  if (!status.connected) {
+    el.textContent = t("google_ws_status_disconnected");
+    return;
+  }
+  const email = status.email || "Google";
+  if (status.last_sync_at) {
+    el.textContent = t("google_ws_status_synced")
+      .replace("{email}", email)
+      .replace("{when}", formatGoogleWsWhen(status.last_sync_at));
+  } else {
+    el.textContent = t("google_ws_status_connected").replace("{email}", email);
+  }
+}
+
+function fillGoogleWsForm(status) {
+  const cal = document.getElementById("gwIncludeCalendar");
+  const drive = document.getElementById("gwIncludeDrive");
+  const gmail = document.getElementById("gwIncludeGmail");
+  if (cal) cal.checked = status?.include_calendar !== false;
+  if (drive) drive.checked = status?.include_drive !== false;
+  if (gmail) gmail.checked = status?.include_gmail !== false;
+  const connectBtn = document.getElementById("googleWsConnectBtn");
+  const syncBtn = document.getElementById("googleWsSyncBtn");
+  const disconnectBtn = document.getElementById("googleWsDisconnectBtn");
+  const connected = Boolean(status?.connected);
+  if (connectBtn) {
+    connectBtn.disabled = status?.configured === false;
+    connectBtn.textContent = connected ? t("google_ws_connect") : t("google_ws_connect");
+    connectBtn.classList.toggle("hidden", connected);
+  }
+  if (syncBtn) syncBtn.disabled = !connected;
+  if (disconnectBtn) disconnectBtn.disabled = !connected;
+  renderGoogleWsStatusLine(status);
+}
+
+async function refreshGoogleWsStatus() {
+  try {
+    const res = await fetchAuthed("/api/google/status");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "status failed");
+    googleWsStatusCache = data;
+  } catch {
+    try {
+      const health = await fetch("/api/health").then((r) => r.json());
+      googleWsStatusCache = {
+        configured: Boolean(health.googleWorkspaceConfigured),
+        connected: false,
+        has_snapshot: false,
+      };
+    } catch {
+      googleWsStatusCache = { configured: false, connected: false, has_snapshot: false };
+    }
+  }
+  fillGoogleWsForm(googleWsStatusCache);
+  syncGoogleWsToggleUi();
+  return googleWsStatusCache;
+}
+
+function openGoogleWsModal() {
+  closeAccountMenu();
+  document.getElementById("googleWsModal")?.classList.remove("hidden");
+  void refreshGoogleWsStatus();
+}
+
+function hideGoogleWsModal() {
+  document.getElementById("googleWsModal")?.classList.add("hidden");
+}
+
+function readGoogleWsIncludes() {
+  return {
+    include_calendar: document.getElementById("gwIncludeCalendar")?.checked !== false,
+    include_drive: document.getElementById("gwIncludeDrive")?.checked !== false,
+    include_gmail: document.getElementById("gwIncludeGmail")?.checked !== false,
+  };
+}
+
+function wireGoogleWorkspaceUi() {
+  document.querySelectorAll(".open-google-ws-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openGoogleWsModal());
+  });
+  document.getElementById("manageGoogleWsInlineBtn")?.addEventListener("click", () => openGoogleWsModal());
+  document.getElementById("closeGoogleWsBtn")?.addEventListener("click", () => hideGoogleWsModal());
+  document.getElementById("googleWsModal")?.addEventListener("click", (e) => {
+    if (e.target?.id === "googleWsModal") hideGoogleWsModal();
+  });
+
+  document.getElementById("googleWsConnectBtn")?.addEventListener("click", async () => {
+    try {
+      const res = await fetchAuthed("/api/google/connect", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("google_ws_error_toast"));
+      if (!data.url) throw new Error(t("google_ws_error_toast"));
+      window.location.href = data.url;
+    } catch (err) {
+      showToast(err.message || t("google_ws_error_toast"));
+    }
+  });
+
+  document.getElementById("googleWsSyncBtn")?.addEventListener("click", async () => {
+    try {
+      const body = readGoogleWsIncludes();
+      const res = await fetchAuthed("/api/google/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("google_ws_error_toast"));
+      await refreshGoogleWsStatus();
+      showToast(t("google_ws_synced_toast"));
+    } catch (err) {
+      showToast(err.message || t("google_ws_error_toast"));
+    }
+  });
+
+  document.getElementById("googleWsDisconnectBtn")?.addEventListener("click", async () => {
+    if (!window.confirm(t("google_ws_disconnect_confirm"))) return;
+    try {
+      const res = await fetchAuthed("/api/google/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("google_ws_error_toast"));
+      const prefs = loadPrefs();
+      prefs.useGoogleWorkspace = false;
+      savePrefs(prefs);
+      await refreshGoogleWsStatus();
+      showToast(t("google_ws_disconnected_toast"));
+    } catch (err) {
+      showToast(err.message || t("google_ws_error_toast"));
+    }
+  });
+
+  ["gwIncludeCalendar", "gwIncludeDrive", "gwIncludeGmail"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", async () => {
+      if (!googleWsStatusCache?.connected) return;
+      try {
+        const res = await fetchAuthed("/api/google/includes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(readGoogleWsIncludes()),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || t("google_ws_error_toast"));
+        googleWsStatusCache = data;
+        fillGoogleWsForm(data);
+      } catch (err) {
+        showToast(err.message || t("google_ws_error_toast"));
+      }
+    });
+  });
+}
+
+function consumeGoogleWorkspaceQueryFlag() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const flag = params.get("google_workspace");
+    if (!flag) return;
+    if (flag === "connected") showToast(t("google_ws_connected_toast"));
+    if (flag === "error") {
+      const msg = params.get("message") || t("google_ws_error_toast");
+      showToast(msg);
+    }
+    params.delete("google_workspace");
+    params.delete("message");
+    const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState({}, "", next);
+    if (flag === "connected") {
+      window.setTimeout(() => openGoogleWsModal(), 200);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function hostFromUrl(url) {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -2721,6 +3012,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
   if (mode === "learn" && isLiveWebEnabled()) {
     chatBody.liveWeb = true;
+  }
+  if (mode === "learn" && isGoogleWorkspaceUseEnabled()) {
+    chatBody.useGoogleWorkspace = true;
   }
   if (mode === "learn" && attach) {
     chatBody.imageBase64 = attach.base64;
@@ -3338,6 +3632,7 @@ function showApp(session) {
   const display = getSessionDisplayName(session);
   if (userName) userName.textContent = display;
   syncHubWelcome(session);
+  void refreshGoogleWsStatus();
   const desired = desiredVerticalFromUrl();
   if (desired === "student") {
     showStudentWorkspace();
@@ -4019,10 +4314,12 @@ function wireSettingsUi() {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
   saveSettingsBtn?.addEventListener("click", () => {
+    const current = loadPrefs();
     const prefs = {
       restoreSessions: prefRestoreSessions?.checked !== false,
       uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
-      liveWeb: loadPrefs().liveWeb !== false,
+      liveWeb: current.liveWeb !== false,
+      useGoogleWorkspace: current.useGoogleWorkspace === true,
     };
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
@@ -4036,10 +4333,14 @@ const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
 syncLiveWebToggleUi();
+syncGoogleWsToggleUi();
 syncHubResumeButton();
 void refreshLiveWebCapability();
 document.getElementById("liveWebToggle")?.addEventListener("click", () => {
   setLiveWebEnabled(!isLiveWebEnabled());
+});
+document.getElementById("useGoogleWsToggle")?.addEventListener("click", () => {
+  setGoogleWorkspaceUseEnabled(!isGoogleWorkspaceUseEnabled());
 });
 document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
   showStudentWorkspace();
@@ -4049,14 +4350,17 @@ initMarkdown();
 initPwaInstallSupport();
 setMainTab("chat");
 wireSettingsUi();
+wireGoogleWorkspaceUi();
 wireHonorCodeModal();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
 wireCopyThreadButtons();
 maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
+consumeGoogleWorkspaceQueryFlag();
 initAuth();
 initBetaBanner();
+void refreshGoogleWsStatus();
 
 // Restore threads after first paint so Safari is not parsing Markdown during boot.
 const restoreAfterPaint = () => {

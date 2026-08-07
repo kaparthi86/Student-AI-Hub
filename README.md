@@ -23,10 +23,23 @@ Fill `.env`:
 - Optional: `HF_MODEL` (default in code: `deepseek-ai/DeepSeek-V4-Pro:fastest`)
 - Optional: `HF_CHAT_URL` (default: `https://router.huggingface.co/v1/chat/completions`)
 - Optional live web for Ask (pick one): `TAVILY_API_KEY`, or `BRAVE_SEARCH_API_KEY`, or `SERPER_API_KEY`
+- Optional Google Workspace connectors (Calendar + Drive + Gmail): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`, `GOOGLE_TOKEN_ENCRYPTION_KEY`, `APP_PUBLIC_URL`
 - Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (see below)
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` are optional for server; **frontend auth uses `public/config.js`**
 
 See `.env.example` for a full template. With a search key set, Ask’s **Live web** toggle grounds answers in current web snippets and shows source links.
+
+### Google Workspace (opt-in)
+
+Separate from Google sign-in. Users connect Calendar / Drive / Gmail from **Google Workspace** in the account menu, sync a short snapshot, then enable **Use Google** on Ask.
+
+1. In Google Cloud Console, create an OAuth **Web** client.
+2. Add redirect URI exactly matching `GOOGLE_OAUTH_REDIRECT_URI` (e.g. `https://your-domain/api/google/callback`).
+3. Enable Google Calendar API, Google Drive API, and Gmail API.
+4. Set the env vars above on the server and redeploy.
+5. Optional: run `supabase/google_workspace_connections.sql` so tokens persist in Supabase (otherwise encrypted file storage under `data/`).
+
+Gmail/Drive readonly scopes are sensitive — Google may require app verification before broad production use.
 
 Hugging Face tokens should include **Inference Providers** permissions (fine-grained token) per Hugging Face docs.
 

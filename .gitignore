@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/
+feedback.ndjson
+*.log
+.DS_Store
