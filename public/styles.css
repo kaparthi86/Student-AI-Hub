@@ -1628,6 +1628,73 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.google-ws-modal {
+  z-index: 67;
+}
+
+.google-ws-card {
+  width: min(100%, 520px);
+}
+
+.google-ws-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.google-ws-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.google-ws-status {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.google-ws-toggles {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.google-ws-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.google-ws-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .google-ws-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .google-ws-actions .primary-btn,
+  .google-ws-actions .ghost-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.ask-context-row #manageGoogleWsInlineBtn {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  color: #1d5bd8;
+}
+
 .honor-code-modal {
   z-index: 68;
 }

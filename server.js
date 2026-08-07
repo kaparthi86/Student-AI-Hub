@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const { Readable } = require("node:stream");
 const multer = require("multer");
+const { createGoogleWorkspace } = require("./lib/googleWorkspace");
 
 const envPath = path.join(__dirname, ".env");
 const envResult = dotenv.config({ path: envPath });
@@ -87,6 +88,27 @@ const envFileExists = fs.existsSync(envPath);
 const MAX_DOC_CHARS = 45000;
 const MAX_CHAT_HISTORY = 24;
 const MAX_NOTEBOOK_FILES = 5;
+
+const GOOGLE_CLIENT_ID = normalizeEnvString(process.env.GOOGLE_CLIENT_ID || "");
+const GOOGLE_CLIENT_SECRET = normalizeEnvString(process.env.GOOGLE_CLIENT_SECRET || "");
+const GOOGLE_OAUTH_REDIRECT_URI = normalizeEnvString(process.env.GOOGLE_OAUTH_REDIRECT_URI || "");
+const GOOGLE_TOKEN_ENCRYPTION_KEY = normalizeEnvString(
+  process.env.GOOGLE_TOKEN_ENCRYPTION_KEY || process.env.GOOGLE_CLIENT_SECRET || "",
+);
+
+let googleWorkspace = null;
+function getGoogleWorkspace() {
+  if (googleWorkspace) return googleWorkspace;
+  googleWorkspace = createGoogleWorkspace({
+    clientId: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    redirectUri: GOOGLE_OAUTH_REDIRECT_URI,
+    encryptionKey: GOOGLE_TOKEN_ENCRYPTION_KEY,
+    getSupabaseAdmin: getSupabaseAdminClient,
+    dataDir: path.join(__dirname, "data"),
+  });
+  return googleWorkspace;
+}
 
 /** Exact-replay cache (per-user key): skips provider calls for identical payloads within TTL. */
 const RESPONSE_CACHE_TTL_MS = Math.max(0, Number(process.env.HF_RESPONSE_CACHE_TTL_SEC || 0) * 1000);
@@ -1208,9 +1230,18 @@ app.post("/api/chat", requireSession, async (req, res) => {
     }
 
     const liveWebRequested = mode === "learn" && isTruthyFlag(req.body?.liveWeb);
+    const googleWorkspaceRequested = mode === "learn" && isTruthyFlag(req.body?.useGoogleWorkspace);
     let webSources = [];
     if (liveWebRequested && LIVE_WEB_CONFIGURED) {
       webSources = await fetchLiveWebSources(lastMessage);
+    }
+    let googleSnapshot = "";
+    if (googleWorkspaceRequested && req.user?.id) {
+      try {
+        googleSnapshot = await getGoogleWorkspace().getSnapshotForAsk(req.user.id);
+      } catch {
+        googleSnapshot = "";
+      }
     }
 
     let system =
@@ -1222,6 +1253,9 @@ app.post("/api/chat", requireSession, async (req, res) => {
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
+    if (googleWorkspaceRequested) {
+      system = `${system}\n\n${getGoogleWorkspace().buildWorkspaceSystemAppendix(googleSnapshot)}`;
+    }
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
     const modelForRequest = pickChatModelForMessages(coreMessages);
     const messages = [{ role: "system", content: system }, ...coreMessages];
@@ -1229,14 +1263,19 @@ app.post("/api/chat", requireSession, async (req, res) => {
     const webHash = liveWebRequested
       ? crypto.createHash("sha256").update(JSON.stringify(webSources)).digest("hex").slice(0, 16)
       : "";
+    const gwHash = googleWorkspaceRequested
+      ? crypto.createHash("sha256").update(googleSnapshot || "").digest("hex").slice(0, 16)
+      : "";
     const promptCacheKey =
       mode === "notebook"
         ? `${cacheUserKey}:notebook:${crypto.createHash("sha256").update(documentContext).digest("hex").slice(0, 24)}:${studyMode}`
-        : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
+        : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}${
+            gwHash ? `:gw:${gwHash}` : ""
+          }`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
     const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
-    const skipResponseCache = liveWebRequested;
+    const skipResponseCache = liveWebRequested || googleWorkspaceRequested;
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {
@@ -1580,6 +1619,95 @@ app.get("/api/feedback-summary", requireSession, async (_req, res) => {
   }
 });
 
+app.get("/api/google/status", requireSession, async (req, res) => {
+  try {
+    const status = await getGoogleWorkspace().getStatus(req.user.id);
+    return res.json(status);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Failed to load Google Workspace status" });
+  }
+});
+
+app.post("/api/google/connect", requireSession, async (req, res) => {
+  try {
+    const gw = getGoogleWorkspace();
+    if (!gw.configured) {
+      return res.status(503).json({
+        error:
+          "Google Workspace is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_OAUTH_REDIRECT_URI on the server.",
+      });
+    }
+    const url = gw.buildAuthUrl(req.user.id);
+    return res.json({ url });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Failed to start Google connect" });
+  }
+});
+
+app.get("/api/google/callback", async (req, res) => {
+  const appHome = normalizeEnvString(process.env.APP_PUBLIC_URL || "") || "/";
+  const fail = (msg) => {
+    const u = new URL(appHome, "http://local.invalid");
+    const dest =
+      appHome.startsWith("http")
+        ? `${appHome.replace(/\/+$/, "")}/?google_workspace=error&message=${encodeURIComponent(msg)}`
+        : `/?google_workspace=error&message=${encodeURIComponent(msg)}`;
+    return res.redirect(dest);
+  };
+  try {
+    const code = String(req.query.code || "");
+    const state = String(req.query.state || "");
+    if (req.query.error) {
+      return fail(String(req.query.error_description || req.query.error || "Google denied access"));
+    }
+    if (!code || !state) return fail("Missing OAuth code");
+    await getGoogleWorkspace().handleOAuthCallback(code, state);
+    const dest = appHome.startsWith("http")
+      ? `${appHome.replace(/\/+$/, "")}/?google_workspace=connected`
+      : "/?google_workspace=connected";
+    return res.redirect(dest);
+  } catch (error) {
+    return fail(error.message || "Google connect failed");
+  }
+});
+
+app.post("/api/google/sync", requireSession, async (req, res) => {
+  try {
+    const result = await getGoogleWorkspace().syncUser(req.user.id, {
+      include_calendar: req.body?.include_calendar,
+      include_drive: req.body?.include_drive,
+      include_gmail: req.body?.include_gmail,
+    });
+    return res.json({ ok: true, ...result });
+  } catch (error) {
+    const status = error.code === "not_connected" ? 400 : 500;
+    return res.status(status).json({ error: error.message || "Sync failed" });
+  }
+});
+
+app.post("/api/google/includes", requireSession, async (req, res) => {
+  try {
+    const status = await getGoogleWorkspace().updateIncludes(req.user.id, {
+      include_calendar: req.body?.include_calendar !== false,
+      include_drive: req.body?.include_drive !== false,
+      include_gmail: req.body?.include_gmail !== false,
+    });
+    return res.json(status);
+  } catch (error) {
+    const code = error.code === "not_connected" ? 400 : 500;
+    return res.status(code).json({ error: error.message || "Update failed" });
+  }
+});
+
+app.post("/api/google/disconnect", requireSession, async (req, res) => {
+  try {
+    await getGoogleWorkspace().revokeIfPossible(req.user.id);
+    return res.json({ ok: true, connected: false });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Disconnect failed" });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   const indexHtmlDeployed = fs.existsSync(indexHtmlPath);
   const prod = process.env.NODE_ENV === "production";
@@ -1590,6 +1718,7 @@ app.get("/api/health", (_req, res) => {
     indexHtmlDeployed,
     learnVisionEnabled: ENABLE_LEARN_VISION,
     liveWebConfigured: LIVE_WEB_CONFIGURED,
+    googleWorkspaceConfigured: getGoogleWorkspace().configured,
     supabaseUrlConfigured: Boolean(SUPABASE_URL),
     supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
