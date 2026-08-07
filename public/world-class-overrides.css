@@ -137,28 +137,48 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))) .bg-glow {
 }
 
 #appCard .workspace-wordmark {
-  gap: 2px;
+  gap: 4px;
 }
 
 #appCard .workspace-hub-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
   border: 0;
-  background: transparent;
-  padding: 0;
+  background: rgba(47, 111, 237, 0.08);
+  padding: 5px 10px 5px 8px;
   margin: 0;
+  border-radius: 999px;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: rgba(28, 27, 25, 0.48);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: #1d5bd8;
   cursor: pointer;
   text-align: left;
   width: fit-content;
+  min-height: 30px;
+  transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+}
+
+#appCard .workspace-hub-link::before {
+  content: "←";
+  font-size: 0.95em;
+  font-weight: 700;
+  line-height: 1;
 }
 
 #appCard .workspace-hub-link:hover,
 #appCard .workspace-hub-link:focus-visible {
-  color: #1d5bd8;
+  background: rgba(47, 111, 237, 0.14);
+  color: #1547b0;
   outline: none;
+  transform: translateX(-1px);
+}
+
+#appCard .workspace-hub-link:focus-visible {
+  box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.35);
 }
 
 #appCard .workspace-title {
