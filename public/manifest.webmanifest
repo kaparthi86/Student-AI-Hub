@@ -1,7 +1,7 @@
 {
-  "name": "Student AI Hub",
-  "short_name": "Student AI",
-  "description": "Ask questions, get coding help, and study with your notes.",
+  "name": "AI Hub",
+  "short_name": "AI Hub",
+  "description": "Focused AI for learning, health, and money. Start with Student AI.",
   "start_url": "/",
   "scope": "/",
   "id": "/",
@@ -9,7 +9,7 @@
   "background_color": "#F7F6F3",
   "theme_color": "#F7F6F3",
   "orientation": "any",
-  "categories": ["education", "productivity"],
+  "categories": ["education", "productivity", "lifestyle"],
   "icons": [
     {
       "src": "/icons/icon-192.png",

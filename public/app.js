@@ -2,6 +2,7 @@
 const LEARN_VISION_ENABLED = false;
 
 const authCard = document.getElementById("authCard");
+const hubCard = document.getElementById("hubCard");
 const appCard = document.getElementById("appCard");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
 const authStatus = document.getElementById("authStatus");
@@ -140,6 +141,11 @@ const CHAT_SESSION_KEY = "student_ai_sessions_v1";
 const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_v1";
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
+const HUB_WAITLIST_KEY = "ai_hub_waitlist_v1";
+/** @type {"hub" | "student" | null} */
+let activeSurface = null;
+/** @type {"health" | "finance" | null} */
+let soonVertical = null;
 
 let deferredInstallPrompt = null;
 let chatSessionOpen = false;
@@ -165,9 +171,48 @@ const UI_LANG_LABELS = {
 const I18N = {
   en: {
     signin_title: "Sign in to continue",
-    signin_tagline: "Free for students.",
+    signin_tagline: "Free to start - pick Student AI today, more to come.",
     free_for_students: "Free for students",
     brand_kicker: "Ask, learn, code & notebook in one place",
+    live_web_label: "Live web",
+    live_web_hint: "Use current web sources when relevant",
+    live_web_hint_off: "Answers use the model only (no live web)",
+    sources_label: "Sources",
+    status_searching_web: "Searching the web...",
+    tile_student_badge: "Available now",
+    hub_hint: "Choose a workspace to get started",
+    resume_student: "Resume Student AI",
+    live_web_unavailable: "Live web needs a search key on the server",
+    auth_brand_kicker: "Learning, health, and money - in one Hub",
+    hub_brand: "AI Hub",
+    hub_tagline: "Focused AI for learning, health, and money",
+    hub_welcome: "Welcome back, {name}",
+    tile_student_title: "Student AI",
+    tile_student_sub: "Ask, code, and study in one place",
+    tile_student_cta: "Open",
+    tile_health_title: "Health AI",
+    tile_health_sub: "Understand wellness in plain language",
+    tile_health_cta: "Coming soon",
+    tile_finance_title: "Finance AI",
+    tile_finance_sub: "Plan budgets and goals with clarity",
+    tile_finance_cta: "Coming soon",
+    soon_health_title: "Health AI",
+    soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
+    soon_health_note: "Not medical advice. Never for emergencies.",
+    soon_finance_title: "Finance AI",
+    soon_finance_body: "We're building a clear money-planning space - budgets, goals, and practical explanations.",
+    soon_finance_note: "Educational only. Not financial advice.",
+    soon_notify: "Notify me",
+    soon_back: "Back to Hub",
+    soon_signin_notify: "Sign in to get notified",
+    soon_close: "Close",
+    toast_waitlist_health: "You're on the list for Health AI.",
+    toast_waitlist_finance: "You're on the list for Finance AI.",
+    toast_waitlist_already: "You're already on the list for {vertical}.",
+    nav_hub: "AI Hub",
+    nav_student: "Student AI",
+    disclaimer_base: "AI Hub can make mistakes. Check important facts.",
+    disclaimer_student: "For study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
     continue_google: "Continue with Google",
     settings: "Settings",
     logout: "Logout",
@@ -230,7 +275,7 @@ const I18N = {
     attached_image: "Attached image",
     show_steps: "Yes, show me how",
     hide_steps: "Hide steps",
-    pwa_install_title: "Install Student AI Hub",
+    pwa_install_title: "Install AI Hub",
     pwa_install_btn: "Install",
     pwa_ios_help_btn: "iPhone / iPad",
     pwa_not_now: "Not now",
@@ -344,9 +389,48 @@ const I18N = {
   },
   es: {
     signin_title: "Inicia sesin para continuar",
-    signin_tagline: "Gratis para estudiantes.",
+    signin_tagline: "Empieza gratis: Student AI hoy, mas pronto.",
     free_for_students: "Gratis para estudiantes",
     brand_kicker: "Ask, learn, code y notebook en un solo lugar",
+    live_web_label: "Web en vivo",
+    live_web_hint: "Usa fuentes web actuales cuando ayude",
+    live_web_hint_off: "Respuestas solo del modelo (sin web en vivo)",
+    sources_label: "Fuentes",
+    status_searching_web: "Buscando en la web...",
+    tile_student_badge: "Disponible ahora",
+    hub_hint: "Elige un espacio para empezar",
+    resume_student: "Reanudar Student AI",
+    live_web_unavailable: "Web en vivo necesita una clave de busqueda en el servidor",
+    auth_brand_kicker: "Aprendizaje, salud y dinero - en un Hub",
+    hub_brand: "AI Hub",
+    hub_tagline: "IA enfocada en aprendizaje, salud y dinero",
+    hub_welcome: "Bienvenido de nuevo, {name}",
+    tile_student_title: "Student AI",
+    tile_student_sub: "Pregunta, programa y estudia en un solo lugar",
+    tile_student_cta: "Abrir",
+    tile_health_title: "Health AI",
+    tile_health_sub: "Entiende el bienestar en lenguaje claro",
+    tile_health_cta: "Proximamente",
+    tile_finance_title: "Finance AI",
+    tile_finance_sub: "Planifica presupuestos y metas con claridad",
+    tile_finance_cta: "Proximamente",
+    soon_health_title: "Health AI",
+    soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
+    soon_health_note: "No es consejo medico. Nunca para emergencias.",
+    soon_finance_title: "Finance AI",
+    soon_finance_body: "Estamos creando un espacio claro para planificar tu dinero: presupuestos, metas y explicaciones practicas.",
+    soon_finance_note: "Solo educativo. No es consejo financiero.",
+    soon_notify: "Avisame",
+    soon_back: "Volver al Hub",
+    soon_signin_notify: "Inicia sesion para que te avisemos",
+    soon_close: "Cerrar",
+    toast_waitlist_health: "Estas en la lista de Health AI.",
+    toast_waitlist_finance: "Estas en la lista de Finance AI.",
+    toast_waitlist_already: "Ya estas en la lista de {vertical}.",
+    nav_hub: "AI Hub",
+    nav_student: "Student AI",
+    disclaimer_base: "AI Hub puede equivocarse. Verifica datos importantes.",
+    disclaimer_student: "Solo para estudio y practica: sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     continue_google: "Continuar con Google",
     settings: "Configuracin",
     logout: "Cerrar sesin",
@@ -520,9 +604,48 @@ const I18N = {
   },
   hi: {
     signin_title: "Continue karne ke liye sign in karein",
-    signin_tagline: "Students ke liye free.",
+    signin_tagline: "Free se shuru karein - aaj Student AI, jaldi aur bhi.",
     free_for_students: "Students ke liye free",
     brand_kicker: "Ask, learn, code aur notebook ek jagah",
+    live_web_label: "Live web",
+    live_web_hint: "Zarurat ho to current web sources use karein",
+    live_web_hint_off: "Sirf model se jawab (live web off)",
+    sources_label: "Sources",
+    status_searching_web: "Web search ho rahi hai...",
+    tile_student_badge: "Ab available",
+    hub_hint: "Shuru karne ke liye workspace chunen",
+    resume_student: "Student AI resume karein",
+    live_web_unavailable: "Live web ke liye server par search key chahiye",
+    auth_brand_kicker: "Learning, health aur money - ek Hub mein",
+    hub_brand: "AI Hub",
+    hub_tagline: "Learning, health aur money ke liye focused AI",
+    hub_welcome: "Welcome back, {name}",
+    tile_student_title: "Student AI",
+    tile_student_sub: "Ask, code aur study ek jagah",
+    tile_student_cta: "Open",
+    tile_health_title: "Health AI",
+    tile_health_sub: "Wellness ko simple language mein samjhein",
+    tile_health_cta: "Coming soon",
+    tile_finance_title: "Finance AI",
+    tile_finance_sub: "Budget aur goals clear planning ke saath",
+    tile_finance_cta: "Coming soon",
+    soon_health_title: "Health AI",
+    soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
+    soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
+    soon_finance_title: "Finance AI",
+    soon_finance_body: "Hum clear money-planning space bana rahe hain - budgets, goals, practical explanations.",
+    soon_finance_note: "Sirf education. Financial advice nahi.",
+    soon_notify: "Notify me",
+    soon_back: "Hub par wapas",
+    soon_signin_notify: "Notify ke liye sign in karein",
+    soon_close: "Close",
+    toast_waitlist_health: "Aap Health AI list mein ho.",
+    toast_waitlist_finance: "Aap Finance AI list mein ho.",
+    toast_waitlist_already: "Aap pehle se {vertical} list mein ho.",
+    nav_hub: "AI Hub",
+    nav_student: "Student AI",
+    disclaimer_base: "AI Hub galti kar sakta hai. Important facts check karein.",
+    disclaimer_student: "Sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
     continue_google: "Google ke saath jari rakhen",
     settings: "Settings",
     logout: "Logout",
@@ -697,9 +820,48 @@ const I18N = {
   },
   te: {
     signin_title: "Continue cheyyadaniki sign in cheyyandi",
-    signin_tagline: "Students ki free.",
+    signin_tagline: "Free ga start cheyyandi - ee roju Student AI, soon inkavi.",
     free_for_students: "Students ki free",
     brand_kicker: "Ask, learn, code mariyu notebook oka chota",
+    live_web_label: "Live web",
+    live_web_hint: "Need aithe current web sources use cheyyandi",
+    live_web_hint_off: "Model matrame (live web off)",
+    sources_label: "Sources",
+    status_searching_web: "Web search avuthundi...",
+    tile_student_badge: "Ippudu available",
+    hub_hint: "Start cheyadaniki workspace select cheyyandi",
+    resume_student: "Student AI resume cheyyandi",
+    live_web_unavailable: "Live web kosam server lo search key kavali",
+    auth_brand_kicker: "Learning, health, money - oka Hub lo",
+    hub_brand: "AI Hub",
+    hub_tagline: "Learning, health, money kosam focused AI",
+    hub_welcome: "Welcome back, {name}",
+    tile_student_title: "Student AI",
+    tile_student_sub: "Ask, code, study oka chota",
+    tile_student_cta: "Open",
+    tile_health_title: "Health AI",
+    tile_health_sub: "Wellness ni simple language lo understand cheyyandi",
+    tile_health_cta: "Coming soon",
+    tile_finance_title: "Finance AI",
+    tile_finance_sub: "Budgets, goals clear ga plan cheyyandi",
+    tile_finance_cta: "Coming soon",
+    soon_health_title: "Health AI",
+    soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
+    soon_health_note: "Medical advice kadu. Emergencies ki kadu.",
+    soon_finance_title: "Finance AI",
+    soon_finance_body: "Clear money-planning space build chestunnam - budgets, goals, practical explanations.",
+    soon_finance_note: "Education only. Financial advice kadu.",
+    soon_notify: "Notify me",
+    soon_back: "Hub ki back",
+    soon_signin_notify: "Notify kosam sign in cheyyandi",
+    soon_close: "Close",
+    toast_waitlist_health: "Meeru Health AI list lo unnaru.",
+    toast_waitlist_finance: "Meeru Finance AI list lo unnaru.",
+    toast_waitlist_already: "Meeru already {vertical} list lo unnaru.",
+    nav_hub: "AI Hub",
+    nav_student: "Student AI",
+    disclaimer_base: "AI Hub tappu cheyagaladu. Important facts verify cheyyandi.",
+    disclaimer_student: "Study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
     continue_google: "Google to continue cheyyandi",
     settings: "Settings",
     logout: "Logout",
@@ -900,8 +1062,29 @@ function applyTranslations() {
   const byIdText = {
     authSigninTitle: "signin_title",
     authSigninTagline: "signin_tagline",
-    authBrandKicker: "brand_kicker",
+    authBrandKicker: "auth_brand_kicker",
     appBrandKicker: "brand_kicker",
+    hubBrandTitle: "hub_brand",
+    hubTagline: "hub_tagline",
+    hubHint: "hub_hint",
+    hubResumeStudent: "resume_student",
+    tileStudentBadge: "tile_student_badge",
+    liveWebToggleLabel: "live_web_label",
+    liveWebHint: "live_web_hint",
+    tileStudentTitle: "tile_student_title",
+    tileStudentSub: "tile_student_sub",
+    tileStudentCta: "tile_student_cta",
+    tileHealthTitle: "tile_health_title",
+    tileHealthSub: "tile_health_sub",
+    tileHealthCta: "tile_health_cta",
+    tileFinanceTitle: "tile_finance_title",
+    tileFinanceSub: "tile_finance_sub",
+    tileFinanceCta: "tile_finance_cta",
+    soonNotifyBtn: "soon_notify",
+    soonBackBtn: "soon_back",
+    soonModalCloseBtn: "soon_close",
+    backToHubBtn: "nav_hub",
+    crumbStudent: "nav_student",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
     logoutBtn: "logout",
@@ -980,6 +1163,16 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n");
     if (key) el.textContent = t(key);
   });
+  document.querySelectorAll(".open-settings-btn").forEach((el) => {
+    el.textContent = t("settings");
+  });
+  document.querySelectorAll(".logout-btn").forEach((el) => {
+    el.textContent = t("logout");
+  });
+  syncHubWelcome();
+  syncLiveWebToggleUi();
+  syncHubResumeButton();
+  if (soonVertical) fillSoonModal(soonVertical);
   ["authDisclaimerFooter", "appDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
     if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
@@ -1281,6 +1474,7 @@ function defaultPrefs() {
   return {
     restoreSessions: true,
     uiLanguage: "en",
+    liveWeb: true,
   };
 }
 
@@ -1290,6 +1484,7 @@ function loadPrefs() {
     return {
       restoreSessions: parsed.restoreSessions !== false,
       uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
+      liveWeb: parsed.liveWeb !== false,
     };
   } catch {
     return defaultPrefs();
@@ -1541,6 +1736,7 @@ function saveSessionState() {
   } catch {
     /* ignore quota issues */
   }
+  syncHubResumeButton();
 }
 
 function renderThreadFromHistory(container, history, mode, studyMode) {
@@ -1554,7 +1750,8 @@ function renderThreadFromHistory(container, history, mode, studyMode) {
     if (LEARN_VISION_ENABLED && role === "user" && item.imageMime && item.imageBase64) {
       imageDataUrl = `data:${item.imageMime};base64,${item.imageBase64}`;
     }
-    appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
+    const row = appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
+    if (role === "assistant" && item.sources) mountBubbleSources(row.bubble, item.sources);
   }
 }
 
@@ -2244,15 +2441,158 @@ function applyStreamDelta(json, full, onDelta) {
   return next;
 }
 
+
+let liveWebServerConfigured = null;
+
+async function refreshLiveWebCapability() {
+  try {
+    const res = await fetch("/api/health", { method: "GET" });
+    if (!res.ok) return;
+    const data = await res.json();
+    liveWebServerConfigured = Boolean(data?.liveWebConfigured);
+    syncLiveWebToggleUi();
+  } catch {
+    /* ignore */
+  }
+}
+
+function setLiveWebSearching(on) {
+  const btn = document.getElementById("liveWebToggle");
+  if (!btn) return;
+  btn.classList.toggle("is-searching", Boolean(on) && isLiveWebEnabled());
+}
+
+function syncHubResumeButton() {
+  const btn = document.getElementById("hubResumeStudent");
+  if (!btn) return;
+  const hasHistory = Array.isArray(chatHistory) && chatHistory.length > 0;
+  btn.classList.toggle("hidden", !hasHistory);
+  btn.textContent = t("resume_student");
+}
+
+function isLiveWebEnabled() {
+  return loadPrefs().liveWeb !== false;
+}
+
+function syncLiveWebToggleUi() {
+  const btn = document.getElementById("liveWebToggle");
+  const hint = document.getElementById("liveWebHint");
+  const label = document.getElementById("liveWebToggleLabel");
+  const follow = document.getElementById("liveWebFollowHint");
+  const on = isLiveWebEnabled();
+  if (btn) {
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.classList.toggle("is-unavailable", liveWebServerConfigured === false);
+    btn.title =
+      liveWebServerConfigured === false
+        ? t("live_web_unavailable")
+        : t(on ? "live_web_hint" : "live_web_hint_off");
+  }
+  if (label) label.textContent = t("live_web_label");
+  if (hint) {
+    hint.textContent =
+      liveWebServerConfigured === false
+        ? t("live_web_unavailable")
+        : t(on ? "live_web_hint" : "live_web_hint_off");
+  }
+  if (follow) {
+    follow.textContent = on ? t("live_web_label") : "";
+    follow.hidden = !on;
+  }
+}
+
+function setLiveWebEnabled(next) {
+  const prefs = loadPrefs();
+  prefs.liveWeb = Boolean(next);
+  savePrefs(prefs);
+  syncLiveWebToggleUi();
+}
+
+function hostFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeSources(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((s, i) => {
+      if (!s || typeof s !== "object") return null;
+      const url = String(s.url || "").trim();
+      if (!url) return null;
+      return {
+        title: String(s.title || url).trim().slice(0, 160),
+        url,
+        snippet: String(s.snippet || "").trim().slice(0, 420),
+        index: i + 1,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function mountBubbleSources(bubble, sources) {
+  if (!bubble) return;
+  bubble.querySelectorAll(".bubble-sources").forEach((el) => el.remove());
+  const list = normalizeSources(sources);
+  if (!list.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "bubble-sources";
+  const label = document.createElement("p");
+  label.className = "bubble-sources-label";
+  label.textContent = t("sources_label");
+  const ul = document.createElement("ul");
+  ul.className = "bubble-sources-list";
+  list.forEach((s) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.className = "bubble-source-link";
+    a.href = s.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    const num = document.createElement("span");
+    num.className = "bubble-source-num";
+    num.textContent = `[${s.index}]`;
+    const copy = document.createElement("span");
+    copy.className = "bubble-source-copy";
+    const title = document.createElement("span");
+    title.className = "bubble-source-title";
+    title.textContent = s.title;
+    const host = document.createElement("span");
+    host.className = "bubble-source-host";
+    host.textContent = hostFromUrl(s.url) || s.url;
+    copy.appendChild(title);
+    copy.appendChild(host);
+    a.appendChild(num);
+    a.appendChild(copy);
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+  wrap.appendChild(label);
+  wrap.appendChild(ul);
+  bubble.appendChild(wrap);
+}
+
 /**
  * Reads OpenAI-style SSE from /api/chat (stream: true). Invokes onDelta with the full text so far.
- * @returns {Promise<string>} final concatenated assistant text
+ * @returns {Promise<{ text: string, sources: Array }>}
  */
 async function consumeChatSseStream(response, onDelta) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let lineBuf = "";
   let full = "";
+  let sources = [];
+  const handlePayload = (json) => {
+    if (json && json.studentAiMeta && Array.isArray(json.studentAiMeta.sources)) {
+      sources = normalizeSources(json.studentAiMeta.sources);
+      return;
+    }
+    full = applyStreamDelta(json, full, onDelta);
+  };
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -2271,7 +2611,7 @@ async function consumeChatSseStream(response, onDelta) {
       } catch {
         continue;
       }
-      full = applyStreamDelta(json, full, onDelta);
+      handlePayload(json);
     }
   }
   if (lineBuf.trim()) {
@@ -2280,16 +2620,17 @@ async function consumeChatSseStream(response, onDelta) {
       const payload = line.slice(5).replace(/^\s*/, "");
       if (payload && payload !== "[DONE]") {
         try {
-          const json = JSON.parse(payload);
-          full = applyStreamDelta(json, full, onDelta);
+          handlePayload(JSON.parse(payload));
         } catch (e) {
           if (!(e instanceof SyntaxError)) throw e;
         }
       }
     }
   }
-  return full;
+  return { text: full, sources };
 }
+
+
 
 /** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn, studyMode = "explain", visionAttachment = null) {
@@ -2328,6 +2669,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     uiLanguage: activeUiLanguage,
     stream: true,
   };
+  if (mode === "learn" && isLiveWebEnabled()) {
+    chatBody.liveWeb = true;
+  }
   if (mode === "learn" && attach) {
     chatBody.imageBase64 = attach.base64;
     chatBody.imageMime = attach.mime;
@@ -2405,6 +2749,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   };
 
   try {
+    if (mode === "learn" && isLiveWebEnabled()) {
+      setLiveWebSearching(true);
+      setStatus(statusEl, "status_searching_web");
+    }
     const response = await fetchAuthed("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2425,25 +2773,30 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     if (!response.body || !ct.includes("text/event-stream")) {
       streamUi.remove();
       let output = t("no_response");
+      let jsonSources = [];
       try {
         const data = await response.json();
         output = typeof data.output === "string" && data.output.trim() ? data.output.trim() : output;
+        jsonSources = normalizeSources(data.sources);
       } catch {
         try {
-          const t = await response.text();
-          if (t.trim()) output = t.trim().slice(0, 2000);
+          const rawText = await response.text();
+          if (rawText.trim()) output = rawText.trim().slice(0, 2000);
         } catch {
           /* keep default */
         }
       }
-      appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
+      const assistantBubble = appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
+      if (jsonSources.length) mountBubbleSources(assistantBubble.bubble, jsonSources);
       const userRow = { role: "user", content: trimmed };
       if (attach) {
         userRow.imageMime = attach.mime;
         userRow.imageBase64 = attach.base64;
       }
       history.push(userRow);
-      history.push({ role: "assistant", content: output });
+      const assistantRow = { role: "assistant", content: output };
+      if (jsonSources.length) assistantRow.sources = jsonSources;
+      history.push(assistantRow);
       saveSessionState();
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
@@ -2452,7 +2805,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       return true;
     }
 
-    const fullOut = await consumeChatSseStream(response, scheduleDelta);
+    const streamResult = await consumeChatSseStream(response, scheduleDelta);
+    const fullOut = streamResult?.text || "";
+    const streamSources = normalizeSources(streamResult?.sources);
+    setLiveWebSearching(false);
 
     cancelStreamPaintTimers();
 
@@ -2462,6 +2818,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     const streamPlainOnly = !String(fullOut || "").trim();
     streamUi.setStreamingText(finalText, { plain: streamPlainOnly });
     streamUi.finalize(finalText);
+    if (streamSources.length) mountBubbleSources(streamUi.bubble, streamSources);
 
     const userRow = { role: "user", content: trimmed };
     if (attach) {
@@ -2469,7 +2826,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       userRow.imageBase64 = attach.base64;
     }
     history.push(userRow);
-    history.push({ role: "assistant", content: finalText });
+    const assistantRow = { role: "assistant", content: finalText };
+    if (streamSources.length) assistantRow.sources = streamSources;
+    history.push(assistantRow);
     saveSessionState();
     if (mode === "learn") syncLearnLayout();
     else if (mode === "code") syncCodeLayout();
@@ -2477,6 +2836,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     setStatus(statusEl, "status_ready");
     return true;
   } catch (error) {
+    setLiveWebSearching(false);
     cancelStreamPaintTimers();
     if (streamUi.bubble.isConnected) {
       streamUi.showError(`${t("error_prefix")}: ${formatChatErrorForUi(error)}`);
@@ -2752,26 +3112,134 @@ function wireDefaultPageHintModal() {
   });
 }
 
-function showApp(session) {
+function getSessionDisplayName(session) {
   const metadata = session?.user?.user_metadata || {};
   const email = session?.user?.email || "";
-  const display = metadata.full_name || metadata.name || email.split("@")[0] || "Student";
-  userName.textContent = display;
-  authCard.classList.add("hidden");
-  appCard.classList.remove("hidden");
+  return metadata.full_name || metadata.name || email.split("@")[0] || "there";
+}
+
+function syncHubWelcome(session) {
+  const el = document.getElementById("hubWelcome");
+  if (!el) return;
+  const name = userName?.textContent?.trim() || "there";
+  if (!name || name === "Student") {
+    el.classList.add("hidden");
+    el.textContent = "";
+    return;
+  }
+  el.textContent = t("hub_welcome").replace("{name}", name);
+  el.classList.remove("hidden");
+}
+
+function readWaitlist() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(HUB_WAITLIST_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeWaitlist(next) {
+  localStorage.setItem(HUB_WAITLIST_KEY, JSON.stringify(next || {}));
+}
+
+function hideSoonModal() {
+  const modal = document.getElementById("soonModal");
+  modal?.classList.add("hidden");
+  soonVertical = null;
+}
+
+function fillSoonModal(vertical) {
+  const title = document.getElementById("soonModalTitle");
+  const body = document.getElementById("soonModalBody");
+  const note = document.getElementById("soonModalNote");
+  if (!title || !body || !note) return;
+  if (vertical === "finance") {
+    title.textContent = t("soon_finance_title");
+    body.textContent = t("soon_finance_body");
+    note.textContent = t("soon_finance_note");
+  } else {
+    title.textContent = t("soon_health_title");
+    body.textContent = t("soon_health_body");
+    note.textContent = t("soon_health_note");
+  }
+}
+
+function openSoonModal(vertical) {
+  soonVertical = vertical === "finance" ? "finance" : "health";
+  fillSoonModal(soonVertical);
+  const modal = document.getElementById("soonModal");
+  modal?.classList.remove("hidden");
+  window.setTimeout(() => document.getElementById("soonNotifyBtn")?.focus(), 30);
+}
+
+function desiredVerticalFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const raw = (params.get("vertical") || params.get("v") || "").toLowerCase();
+    if (raw === "student" || raw === "health" || raw === "finance") return raw;
+    const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
+    if (hash === "student" || hash === "health" || hash === "finance") return hash;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function showHubHome() {
+  hideSoonModal();
+  closeAccountMenu();
+  authCard?.classList.add("hidden");
+  appCard?.classList.add("hidden");
+  hubCard?.classList.remove("hidden");
+  activeSurface = "hub";
+  syncHubWelcome();
+  syncHubResumeButton();
+  document.title = "AI Hub";
+}
+
+function showStudentWorkspace() {
+  hideSoonModal();
+  closeAccountMenu();
+  authCard?.classList.add("hidden");
+  hubCard?.classList.add("hidden");
+  appCard?.classList.remove("hidden");
+  activeSurface = "student";
+  document.title = "Student AI - AI Hub";
   window.setTimeout(() => {
     maybeOfferPwaInstallBar();
   }, 850);
   maybeOfferDefaultPageHint();
 }
 
+function showApp(session) {
+  const display = getSessionDisplayName(session);
+  if (userName) userName.textContent = display;
+  syncHubWelcome(session);
+  const desired = desiredVerticalFromUrl();
+  if (desired === "student") {
+    showStudentWorkspace();
+    return;
+  }
+  showHubHome();
+  if (desired === "health" || desired === "finance") {
+    openSoonModal(desired);
+  }
+}
+
 function showAuth(message = "") {
   document.getElementById("pwaInstallBar")?.classList.add("hidden");
   document.getElementById("pwaIosSteps")?.classList.add("hidden");
   document.getElementById("pwaInstallHelpSteps")?.classList.add("hidden");
-  authCard.classList.remove("hidden");
-  appCard.classList.add("hidden");
-  authStatus.textContent = message;
+  hideSoonModal();
+  closeAccountMenu();
+  authCard?.classList.remove("hidden");
+  hubCard?.classList.add("hidden");
+  appCard?.classList.add("hidden");
+  activeSurface = null;
+  if (authStatus) authStatus.textContent = message;
+  document.title = "AI Hub";
 }
 
 /** OAuth return URL without a #fragment (Supabase redirect allowlists match origin/path/query). */
@@ -2853,36 +3321,81 @@ googleLoginBtn.addEventListener("click", async () => {
 });
 
 
-const accountMenuBtn = document.getElementById("accountMenuBtn");
-const accountMenuPanel = document.getElementById("accountMenuPanel");
 function closeAccountMenu() {
-  if (!accountMenuPanel || !accountMenuBtn) return;
-  accountMenuPanel.classList.add("hidden");
-  accountMenuBtn.setAttribute("aria-expanded", "false");
+  document.querySelectorAll(".account-menu").forEach((menu) => {
+    const panel = menu.querySelector(".account-menu-panel");
+    const btn = menu.querySelector(".account-menu-btn");
+    panel?.classList.add("hidden");
+    btn?.setAttribute("aria-expanded", "false");
+  });
 }
-function toggleAccountMenu() {
-  if (!accountMenuPanel || !accountMenuBtn) return;
-  const willOpen = accountMenuPanel.classList.contains("hidden");
-  accountMenuPanel.classList.toggle("hidden", !willOpen);
-  accountMenuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+function toggleAccountMenu(menu) {
+  if (!menu) return;
+  const panel = menu.querySelector(".account-menu-panel");
+  const btn = menu.querySelector(".account-menu-btn");
+  if (!panel || !btn) return;
+  const willOpen = panel.classList.contains("hidden");
+  closeAccountMenu();
+  if (willOpen) {
+    panel.classList.remove("hidden");
+    btn.setAttribute("aria-expanded", "true");
+  }
 }
-accountMenuBtn?.addEventListener("click", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  toggleAccountMenu();
+document.querySelectorAll(".account-menu").forEach((menu) => {
+  const btn = menu.querySelector(".account-menu-btn");
+  const panel = menu.querySelector(".account-menu-panel");
+  btn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleAccountMenu(menu);
+  });
+  panel?.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
 });
-accountMenuPanel?.addEventListener("click", (e) => {
-  // Keep item clicks inside the menu from being treated as "outside".
-  e.stopPropagation();
-});
-// Close when clicking/tapping outside the account menu.
 document.addEventListener("pointerdown", (e) => {
-  if (!accountMenuPanel || accountMenuPanel.classList.contains("hidden")) return;
   if (e.target.closest?.(".account-menu")) return;
   closeAccountMenu();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeAccountMenu();
+  if (e.key === "Escape") {
+    closeAccountMenu();
+    hideSoonModal();
+  }
+});
+
+document.getElementById("backToHubBtn")?.addEventListener("click", () => {
+  showHubHome();
+});
+
+document.querySelectorAll(".hub-tile").forEach((tile) => {
+  tile.addEventListener("click", () => {
+    const vertical = tile.getAttribute("data-vertical");
+    if (vertical === "student") showStudentWorkspace();
+    else if (vertical === "health" || vertical === "finance") openSoonModal(vertical);
+  });
+});
+
+document.getElementById("soonModalCloseBtn")?.addEventListener("click", hideSoonModal);
+document.getElementById("soonBackBtn")?.addEventListener("click", () => {
+  hideSoonModal();
+  showHubHome();
+});
+document.getElementById("soonNotifyBtn")?.addEventListener("click", () => {
+  if (!soonVertical) return;
+  const list = readWaitlist();
+  const label = soonVertical === "finance" ? t("tile_finance_title") : t("tile_health_title");
+  if (list[soonVertical]) {
+    showToast(t("toast_waitlist_already").replace("{vertical}", label));
+    return;
+  }
+  list[soonVertical] = { at: new Date().toISOString() };
+  writeWaitlist(list);
+  showToast(soonVertical === "finance" ? t("toast_waitlist_finance") : t("toast_waitlist_health"));
+  hideSoonModal();
+});
+document.getElementById("soonModal")?.addEventListener("click", (e) => {
+  if (e.target?.id === "soonModal") hideSoonModal();
 });
 
 const notebookDropzone = document.getElementById("notebookDropzone");
@@ -3011,10 +3524,13 @@ async function handleLogout() {
   }
   showAuth();
 }
-logoutBtn?.addEventListener("click", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  void handleLogout();
+document.querySelectorAll(".logout-btn").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAccountMenu();
+    void handleLogout();
+  });
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -3358,10 +3874,12 @@ function wireSettingsUi() {
   };
   syncForm();
 
-  openSettingsBtn?.addEventListener("click", () => {
-    closeAccountMenu();
-    syncForm();
-    settingsModal?.classList.remove("hidden");
+  document.querySelectorAll(".open-settings-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      closeAccountMenu();
+      syncForm();
+      settingsModal?.classList.remove("hidden");
+    });
   });
   closeSettingsBtn?.addEventListener("click", () => settingsModal?.classList.add("hidden"));
   settingsModal?.addEventListener("click", (e) => {
@@ -3371,6 +3889,7 @@ function wireSettingsUi() {
     const prefs = {
       restoreSessions: prefRestoreSessions?.checked !== false,
       uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
+      liveWeb: loadPrefs().liveWeb !== false,
     };
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
@@ -3383,6 +3902,15 @@ function wireSettingsUi() {
 const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
+syncLiveWebToggleUi();
+syncHubResumeButton();
+void refreshLiveWebCapability();
+document.getElementById("liveWebToggle")?.addEventListener("click", () => {
+  setLiveWebEnabled(!isLiveWebEnabled());
+});
+document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
+  showStudentWorkspace();
+});
 
 initMarkdown();
 initPwaInstallSupport();

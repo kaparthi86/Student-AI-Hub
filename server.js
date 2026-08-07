@@ -71,6 +71,14 @@ const HF_MODEL_VISION = HF_MODEL_VISION_RAW ? ensureInferenceRoutingSuffix(HF_MO
 const ENABLE_LEARN_VISION = ["1", "true", "yes"].includes(
   String(process.env.ENABLE_LEARN_VISION || "").trim().toLowerCase()
 );
+
+/** Live web grounding for Ask (learn mode). Prefer Tavily; Brave/Serper also supported. */
+const TAVILY_API_KEY = normalizeEnvString(process.env.TAVILY_API_KEY || "");
+const BRAVE_SEARCH_API_KEY = normalizeEnvString(process.env.BRAVE_SEARCH_API_KEY || "");
+const SERPER_API_KEY = normalizeEnvString(process.env.SERPER_API_KEY || "");
+const LIVE_WEB_MAX_RESULTS = Math.max(1, Math.min(8, Number(process.env.LIVE_WEB_MAX_RESULTS || 5) || 5));
+const LIVE_WEB_CONFIGURED = Boolean(TAVILY_API_KEY || BRAVE_SEARCH_API_KEY || SERPER_API_KEY);
+
 /** OpenAI-compatible chat completions endpoint (Inference Providers / Router). */
 const HF_CHAT_URL =
   normalizeEnvString(process.env.HF_CHAT_URL) || "https://router.huggingface.co/v1/chat/completions";
@@ -157,12 +165,21 @@ function logUsageIfPresent(data, label) {
   console.log(`[${label}] usage:`, JSON.stringify({ ...u, cached_tokens_hint: cached }));
 }
 
-function sendSseSingleChunk(res, text) {
+function writeSseHeaders(res) {
+  if (res.headersSent) return;
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("X-Accel-Buffering", "no");
   if (typeof res.flushHeaders === "function") res.flushHeaders();
-  res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
+}
+
+function writeSseData(res, payload) {
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+function sendSseSingleChunk(res, text) {
+  writeSseHeaders(res);
+  writeSseData(res, { choices: [{ delta: { content: text } }] });
   res.write("data: [DONE]\n\n");
   res.end();
 }
@@ -172,10 +189,7 @@ function sendSseSingleChunk(res, text) {
  * client parses every data: line in one turn and streaming UI does not update incrementally.
  */
 async function replayCachedSseResponse(res, archivedUtf8) {
-  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("X-Accel-Buffering", "no");
-  if (typeof res.flushHeaders === "function") res.flushHeaders();
+  writeSseHeaders(res);
   const s = String(archivedUtf8);
   const step = 4096;
   for (let i = 0; i < s.length; i += step) {
@@ -186,14 +200,13 @@ async function replayCachedSseResponse(res, archivedUtf8) {
 }
 
 /** Tee provider SSE: stream to client and store raw bytes for identical replay (same cache key as stream hits). */
-function pipeProviderSseWithArchive(res, hfResBody, streamCacheHash) {
-  if (!RESPONSE_CACHE_TTL_MS || !hfResBody || typeof hfResBody.tee !== "function") return false;
+function pipeProviderSseWithArchive(res, hfResBody, streamCacheHash, { skipArchive = false } = {}) {
+  if (!hfResBody || typeof hfResBody.tee !== "function") return false;
+  if (!skipArchive && !RESPONSE_CACHE_TTL_MS) return false;
   try {
-    const [toClient, toArchive] = hfResBody.tee();
-    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache, no-transform");
-    res.setHeader("X-Accel-Buffering", "no");
-    if (typeof res.flushHeaders === "function") res.flushHeaders();
+    const useArchive = !skipArchive && RESPONSE_CACHE_TTL_MS > 0;
+    const [toClient, toArchive] = useArchive ? hfResBody.tee() : [hfResBody, null];
+    writeSseHeaders(res);
 
     const nodeClient = Readable.fromWeb(toClient);
     res.on("close", () => nodeClient.destroy());
@@ -202,20 +215,22 @@ function pipeProviderSseWithArchive(res, hfResBody, streamCacheHash) {
     });
     nodeClient.pipe(res);
 
-    (async () => {
-      try {
-        const reader = toArchive.getReader();
-        const chunks = [];
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value && value.byteLength) chunks.push(Buffer.from(value));
+    if (useArchive && toArchive) {
+      (async () => {
+        try {
+          const reader = toArchive.getReader();
+          const chunks = [];
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value && value.byteLength) chunks.push(Buffer.from(value));
+          }
+          if (chunks.length) completionCacheSet(streamCacheHash, Buffer.concat(chunks).toString("utf8"));
+        } catch {
+          /* ignore */
         }
-        if (chunks.length) completionCacheSet(streamCacheHash, Buffer.concat(chunks).toString("utf8"));
-      } catch {
-        /* ignore */
-      }
-    })();
+      })();
+    }
 
     return true;
   } catch {
@@ -918,6 +933,127 @@ function pickChatModelForMessages(msgs) {
   return HF_MODEL_VISION || HF_MODEL;
 }
 
+
+function isTruthyFlag(v) {
+  if (v === true || v === 1) return true;
+  const s = String(v || "").trim().toLowerCase();
+  return ["1", "true", "yes", "on"].includes(s);
+}
+
+function sanitizeWebSource(row) {
+  const title = String(row?.title || "").replace(/\s+/g, " ").trim().slice(0, 160);
+  const url = String(row?.url || "").trim().slice(0, 500);
+  const snippet = String(row?.snippet || "").replace(/\s+/g, " ").trim().slice(0, 420);
+  if (!url || !/^https?:\/\//i.test(url)) return null;
+  return { title: title || url, url, snippet };
+}
+
+async function searchWithTavily(query) {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: TAVILY_API_KEY,
+      query,
+      max_results: LIVE_WEB_MAX_RESULTS,
+      search_depth: "basic",
+      include_answer: false,
+    }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Tavily search failed: ${res.status} ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const rows = Array.isArray(data?.results) ? data.results : [];
+  return rows
+    .map((r) => sanitizeWebSource({ title: r.title, url: r.url, snippet: r.content || r.snippet }))
+    .filter(Boolean)
+    .slice(0, LIVE_WEB_MAX_RESULTS);
+}
+
+async function searchWithBrave(query) {
+  const url = new URL("https://api.search.brave.com/res/v1/web/search");
+  url.searchParams.set("q", query);
+  url.searchParams.set("count", String(LIVE_WEB_MAX_RESULTS));
+  const res = await fetch(url.href, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Subscription-Token": BRAVE_SEARCH_API_KEY,
+    },
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Brave search failed: ${res.status} ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const rows = Array.isArray(data?.web?.results) ? data.web.results : [];
+  return rows
+    .map((r) => sanitizeWebSource({ title: r.title, url: r.url, snippet: r.description }))
+    .filter(Boolean)
+    .slice(0, LIVE_WEB_MAX_RESULTS);
+}
+
+async function searchWithSerper(query) {
+  const res = await fetch("https://google.serper.dev/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": SERPER_API_KEY,
+    },
+    body: JSON.stringify({ q: query, num: LIVE_WEB_MAX_RESULTS }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Serper search failed: ${res.status} ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const rows = Array.isArray(data?.organic) ? data.organic : [];
+  return rows
+    .map((r) => sanitizeWebSource({ title: r.title, url: r.link, snippet: r.snippet }))
+    .filter(Boolean)
+    .slice(0, LIVE_WEB_MAX_RESULTS);
+}
+
+async function fetchLiveWebSources(query) {
+  const q = String(query || "").trim().slice(0, 400);
+  if (!q || !LIVE_WEB_CONFIGURED) return [];
+  try {
+    if (TAVILY_API_KEY) return await searchWithTavily(q);
+    if (BRAVE_SEARCH_API_KEY) return await searchWithBrave(q);
+    if (SERPER_API_KEY) return await searchWithSerper(q);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("Live web search failed:", err?.message || err);
+    return [];
+  }
+  return [];
+}
+
+function buildLiveWebSystemAppendix(sources) {
+  if (!sources.length) {
+    return [
+      "Live web was requested, but no fresh web results were available for this question.",
+      "Answer from general knowledge and say clearly when you are unsure or when facts may be outdated.",
+    ].join(" ");
+  }
+  const blocks = sources.map((s, i) => {
+    const n = i + 1;
+    return `[${n}] ${s.title}\nURL: ${s.url}\nSnippet: ${s.snippet || "(none)"}`;
+  });
+  return [
+    "You have fresh web search snippets below. Ground factual claims in them when relevant.",
+    "Cite sources inline like [1], [2] matching the numbers. Prefer primary/reputable sources.",
+    "If snippets conflict or are thin, say what is uncertain. Do not invent URLs.",
+    "Keep the calm study-coach tone. Do not dump raw search results.",
+    "",
+    "--- WEB RESULTS ---",
+    blocks.join("\n\n"),
+    "--- END WEB RESULTS ---",
+  ].join("\n");
+}
+
 function chatSystemBase(mode) {
   return mode === "code"
     ? [
@@ -1066,23 +1202,36 @@ app.post("/api/chat", requireSession, async (req, res) => {
       return res.status(400).json({ error: "message is required." });
     }
 
-    const system =
+    const liveWebRequested = mode === "learn" && isTruthyFlag(req.body?.liveWeb);
+    let webSources = [];
+    if (liveWebRequested && LIVE_WEB_CONFIGURED) {
+      webSources = await fetchLiveWebSources(lastMessage);
+    }
+
+    let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
           )}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
         : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}`;
+    if (liveWebRequested) {
+      system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
+    }
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
     const modelForRequest = pickChatModelForMessages(coreMessages);
     const messages = [{ role: "system", content: system }, ...coreMessages];
     const cacheUserKey = req.user?.id || "";
+    const webHash = liveWebRequested
+      ? crypto.createHash("sha256").update(JSON.stringify(webSources)).digest("hex").slice(0, 16)
+      : "";
     const promptCacheKey =
       mode === "notebook"
         ? `${cacheUserKey}:notebook:${crypto.createHash("sha256").update(documentContext).digest("hex").slice(0, 24)}:${studyMode}`
-        : `${cacheUserKey}:${mode}:${studyMode}`;
+        : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
-    const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : 720;
+    const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
+    const skipResponseCache = liveWebRequested;
 
     const wantsStream = req.body?.stream === true;
     if (wantsStream) {
@@ -1101,11 +1250,11 @@ app.post("/api/chat", requireSession, async (req, res) => {
       const demoLine = () => {
         const demo =
           "Demo mode: add HF_API_TOKEN in .env next to server.js, then restart the server.";
-        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-        res.setHeader("Cache-Control", "no-cache, no-transform");
-        res.setHeader("X-Accel-Buffering", "no");
-        if (typeof res.flushHeaders === "function") res.flushHeaders();
-        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: demo } }] })}\n\n`);
+        writeSseHeaders(res);
+        if (liveWebRequested) {
+          writeSseData(res, { studentAiMeta: { sources: webSources, liveWeb: true } });
+        }
+        writeSseData(res, { choices: [{ delta: { content: demo } }] });
         res.write("data: [DONE]\n\n");
         res.end();
       };
@@ -1115,7 +1264,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
         return;
       }
 
-      if (RESPONSE_CACHE_TTL_MS) {
+      if (!skipResponseCache && RESPONSE_CACHE_TTL_MS) {
         const hit = completionCacheGet(streamCacheHash);
         if (hit) {
           await replayCachedSseResponse(res, hit);
@@ -1153,14 +1302,14 @@ app.post("/api/chat", requireSession, async (req, res) => {
         return res.status(502).json({ error: "Model API returned an empty response body." });
       }
 
-      if (pipeProviderSseWithArchive(res, hfRes.body, streamCacheHash)) {
-        return;
+      writeSseHeaders(res);
+      if (liveWebRequested) {
+        writeSseData(res, { studentAiMeta: { sources: webSources, liveWeb: true } });
       }
 
-      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache, no-transform");
-      res.setHeader("X-Accel-Buffering", "no");
-      if (typeof res.flushHeaders === "function") res.flushHeaders();
+      if (pipeProviderSseWithArchive(res, hfRes.body, streamCacheHash, { skipArchive: skipResponseCache })) {
+        return;
+      }
 
       const nodeReadable = Readable.fromWeb(hfRes.body);
       res.on("close", () => {
@@ -1180,7 +1329,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
       promptCacheKey,
       model: modelForRequest,
     });
-    return res.json({ output });
+    return res.json({ output, sources: liveWebRequested ? webSources : undefined, liveWeb: liveWebRequested || undefined });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
@@ -1435,6 +1584,7 @@ app.get("/api/health", (_req, res) => {
     betaMessage: betaBannerText(),
     indexHtmlDeployed,
     learnVisionEnabled: ENABLE_LEARN_VISION,
+    liveWebConfigured: LIVE_WEB_CONFIGURED,
     supabaseUrlConfigured: Boolean(SUPABASE_URL),
     supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
