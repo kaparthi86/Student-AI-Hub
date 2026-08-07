@@ -901,13 +901,24 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   }
 }
 
-/* —— Live web (Ask) —— */
+/* —— Live web + Memory (Ask) —— */
 .live-web-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 14px;
   margin-top: 12px;
+}
+
+.ask-context-row .memory-edit-btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  color: #1d5bd8;
+}
+
+.ask-context-row .memory-toggle[aria-pressed="false"].is-empty {
+  opacity: 0.78;
 }
 
 .live-web-toggle {
