@@ -368,6 +368,7 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))):not(:has(#hubC
 
 .landing-legal {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   margin-bottom: 16px;
 }
@@ -380,6 +381,17 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))):not(:has(#hubC
 }
 
 .landing-legal a:hover {
+  text-decoration: underline;
+}
+
+.support-contact-line a {
+  color: var(--primary-2);
+  text-decoration: none;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.support-contact-line a:hover {
   text-decoration: underline;
 }
 
