@@ -2310,16 +2310,16 @@ async function submitAssistantFeedback(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    let msg = "Could not submit feedback.";
-    try {
-      const data = await res.json();
-      if (data?.error) msg = data.error;
-    } catch {
-      /* ignore */
-    }
-    throw new Error(msg);
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
   }
+  if (!res.ok) {
+    throw new Error(data?.error || "Could not submit feedback.");
+  }
+  return data || { ok: true };
 }
 
 function mountAssistantFeedback(bubble, rawText) {
@@ -2367,7 +2367,7 @@ function mountAssistantFeedback(bubble, rawText) {
     up.disabled = true;
     down.disabled = true;
     try {
-      await submitAssistantFeedback({
+      const result = await submitAssistantFeedback({
         type: "message_feedback",
         rating: 1,
         reason: "helpful",
@@ -2376,7 +2376,18 @@ function mountAssistantFeedback(bubble, rawText) {
         assistantMessage: String(rawText || "").slice(0, 8000),
         createdAt: new Date().toISOString(),
       });
-      lock(t("feedback_thanks"));
+      if (result?.stored === "supabase") {
+        lock(t("feedback_thanks"));
+      } else {
+        lock(`${t("feedback_thanks")} (${result?.stored || "file"})`);
+        if (result?.warning) {
+          try {
+            console.warn("[feedback]", result.warning);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
     } catch (e) {
       status.textContent = e.message || t("status_failed");
       up.disabled = false;
@@ -2394,7 +2405,7 @@ function mountAssistantFeedback(bubble, rawText) {
     if (!btn || !reasons.contains(btn)) return;
     const reason = btn.getAttribute("data-reason") || "other";
     try {
-      await submitAssistantFeedback({
+      const result = await submitAssistantFeedback({
         type: "message_feedback",
         rating: -1,
         reason,
@@ -2403,7 +2414,18 @@ function mountAssistantFeedback(bubble, rawText) {
         assistantMessage: String(rawText || "").slice(0, 8000),
         createdAt: new Date().toISOString(),
       });
-      lock(t("feedback_thanks_reason"));
+      if (result?.stored === "supabase") {
+        lock(t("feedback_thanks_reason"));
+      } else {
+        lock(`${t("feedback_thanks_reason")} (${result?.stored || "file"})`);
+        if (result?.warning) {
+          try {
+            console.warn("[feedback]", result.warning);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
     } catch (e2) {
       status.textContent = e2.message || t("status_failed");
     }
