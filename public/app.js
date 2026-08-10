@@ -246,7 +246,7 @@ const I18N = {
       "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study plan - similar to a lightweight notebook assistant.",
     analyze_doc: "Analyze notes",
     notebook_drop_title: "Drop notes or choose files",
-    notebook_drop_hint: "Up to 5 files · .txt, .md, .csv, .json, .pdf - summary, key ideas, quiz, and a study plan",
+    notebook_drop_hint: "Up to 5 files - .txt, .md, .csv, .json, .pdf - summary, key ideas, quiz, and a study plan",
     notebook_followup: "Ask a follow-up about your notes...",
     notebook_sources_aria: "Selected notebook sources",
     notebook_remove_source: "Remove {name}",
@@ -483,7 +483,7 @@ const I18N = {
       "Sube apuntes (.txt, .md, .csv, .json, .pdf). Obtendrs resumen, conceptos clave, preguntas tipo quiz y un plan de estudio.",
     analyze_doc: "Analizar apuntes",
     notebook_drop_title: "Suelta apuntes o elige archivos",
-    notebook_drop_hint: "Hasta 5 archivos · .txt, .md, .csv, .json, .pdf",
+    notebook_drop_hint: "Hasta 5 archivos - .txt, .md, .csv, .json, .pdf",
     notebook_followup: "Haz una pregunta sobre tus apuntes...",
     notebook_sources_aria: "Fuentes del cuaderno seleccionadas",
     notebook_remove_source: "Quitar {name}",
@@ -716,7 +716,7 @@ const I18N = {
       "Notes upload karein (.txt, .md, .csv, .json, .pdf). Aapko summary, key concepts, quiz aur study plan milega.",
     analyze_doc: "Notes analyze karein",
     notebook_drop_title: "Notes drop karein ya files chunein",
-    notebook_drop_hint: "5 files tak · .txt, .md, .csv, .json, .pdf",
+    notebook_drop_hint: "5 files tak - .txt, .md, .csv, .json, .pdf",
     notebook_followup: "Apne notes par follow-up poochhein...",
     notebook_sources_aria: "Chune gaye notebook sources",
     notebook_remove_source: "{name} hataein",
@@ -950,7 +950,7 @@ const I18N = {
       "Notes upload cheyyandi (.txt, .md, .csv, .json, .pdf). Summary, key concepts, quiz mariyu study plan vastayi.",
     analyze_doc: "Notes analyze cheyyandi",
     notebook_drop_title: "Notes drop cheyyandi leda files select cheyyandi",
-    notebook_drop_hint: "5 files varaku · .txt, .md, .csv, .json, .pdf",
+    notebook_drop_hint: "5 files varaku - .txt, .md, .csv, .json, .pdf",
     notebook_followup: "Mee notes gurinchi follow-up adagandi...",
     notebook_sources_aria: "Select chesina notebook sources",
     notebook_remove_source: "{name} remove cheyyandi",
@@ -2032,10 +2032,13 @@ function normalizeAssistantMarkdown(text) {
 
 /**
  * Streaming display: never show raw # or * markdown chrome.
+ * Keep ASCII-only list markers so encoding issues never show "?" for bullets.
  */
 function streamingPlainFromMarkdown(text) {
   let s = polishModelMarkdown(text);
   if (!s) return "";
+  // Drop replacement chars from bad encodings / partial UTF-8.
+  s = s.replace(/\uFFFD/g, "");
 
   const fences = [];
   s = s.replace(/```[\s\S]*?```/g, (block) => {
@@ -2044,12 +2047,19 @@ function streamingPlainFromMarkdown(text) {
     fences.push(inner);
     return key;
   });
+  // Hide an unfinished fence while tokens are still arriving.
+  s = s.replace(/```[\s\S]*$/g, (block) => {
+    const inner = block.replace(/^```[^\n]*\n?/, "").trim();
+    return inner ? `\n${inner}` : "";
+  });
 
   s = s.replace(/(^|\n)\s{0,3}#{1,6}\s+/g, "$1");
-  s = s.replace(/(^|\n)\s*[-*+]\s+/g, "$1· ");
+  s = s.replace(/(^|\n)\s*[-*+]\s+/g, "$1- ");
   // Only strip leftover emphasis runs, not math like 2 * 3.
   s = s.replace(/\*{2,}/g, "");
   s = s.replace(/(^|\n)\s*#+\s*/g, "$1");
+  // Lone emphasis markers left by partial tokens.
+  s = s.replace(/(^|[\s(])[*_]{1,2}(?=[\s).,!?:;]|$)/g, "$1");
 
   fences.forEach((block, i) => {
     s = s.replace(`@@CODEFENCE${i}@@`, block);
@@ -2527,7 +2537,9 @@ function startStreamingAssistantBubble(container) {
     setStreamingText(text, { plain = false } = {}) {
       const raw = String(text ?? "");
       if (plain || typeof marked === "undefined" || typeof DOMPurify === "undefined") {
-        body.textContent = streamingPlainFromMarkdown(raw);
+        // Caller already runs streamingPlainFromMarkdown when plain streaming;
+        // only re-strip if raw markdown markers are still present.
+        body.textContent = /[*#`]/.test(raw) ? streamingPlainFromMarkdown(raw) : raw.replace(/\uFFFD/g, "");
         scroll();
         return;
       }
@@ -2747,7 +2759,7 @@ function mountBubbleSources(bubble, sources) {
  */
 async function consumeChatSseStream(response, onDelta) {
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8", { fatal: false });
   let lineBuf = "";
   let full = "";
   let sources = [];
@@ -2758,10 +2770,7 @@ async function consumeChatSseStream(response, onDelta) {
     }
     full = applyStreamDelta(json, full, onDelta);
   };
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    lineBuf += decoder.decode(value, { stream: true });
+  const consumeLines = () => {
     let nl;
     while ((nl = lineBuf.indexOf("\n")) >= 0) {
       const rawLine = lineBuf.slice(0, nl);
@@ -2778,7 +2787,16 @@ async function consumeChatSseStream(response, onDelta) {
       }
       handlePayload(json);
     }
+  };
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    lineBuf += decoder.decode(value, { stream: true });
+    consumeLines();
   }
+  // Flush any buffered multibyte UTF-8 sequence at end of stream.
+  lineBuf += decoder.decode();
+  consumeLines();
   if (lineBuf.trim()) {
     const line = lineBuf.replace(/\r$/, "");
     if (line.startsWith("data:")) {
