@@ -365,16 +365,26 @@ const I18N = {
     empty_nb_2_hint: "Upload a .md or .txt study guide for a structured recap and study plan.",
     empty_nb_3: "CSV data table",
     empty_nb_3_hint: "Upload a .csv file to summarize columns, patterns, and practice questions.",
-    chip_summarize: "Summarize",
+    chip_summarize: "Shorter",
     chip_quiz: "Quiz me",
     chip_steps: "Step-by-step",
-    chip_listen: "Listen mode",
+    chip_listen: "Listen",
+    chip_simpler: "Simpler",
+    chip_example: "Example",
+    chip_study_next: "What next?",
     chips_followup_aria: "Quick follow-ups and read aloud",
     starter_prompt_summarize:
-      "Summarize your last answer in short bullet points. Highlight the key terms I should remember.\n\n",
+      "Make your last answer shorter: keep only the key points in tight bullets I can remember.\n\n",
     starter_prompt_quiz:
       "Based on our conversation so far, give me a short quiz: questions, answer choices, and correct answers with brief explanations.\n\n",
-    starter_prompt_steps: "Explain that again as a clear numbered step-by-step list (1. 2. 3.). Keep each step short. Do not use ** bold asterisks. Add a simple example if it helps.\n\n",
+    starter_prompt_steps:
+      "Explain that again as a clear numbered step-by-step list (1. 2. 3.). Keep each step short. Do not use ** bold asterisks. Add a simple example if it helps.\n\n",
+    starter_prompt_simpler:
+      "Explain the same idea more simply, like I am 15. Keep the answer-first style. Use a short everyday analogy.\n\n",
+    starter_prompt_example:
+      "Give one clear worked example for your last answer. Show the steps briefly, then state what to notice.\n\n",
+    starter_prompt_study_next:
+      "Based on what we just covered, tell me what I should practice next in 3 short steps. Keep it concrete.\n\n",
     copy_thread: "Copy conversation",
     copy_thread_aria: "Copy entire conversation",
     toast_thread_copied: "Conversation copied",
@@ -589,16 +599,25 @@ const I18N = {
     empty_nb_2_hint: "Sube un .md o .txt para un repaso estructurado y plan de estudio.",
     empty_nb_3: "Tabla CSV",
     empty_nb_3_hint: "Sube un .csv para resumir columnas, patrones y preguntas de practica.",
-    chip_summarize: "Resumir",
+    chip_summarize: "Mas corto",
     chip_quiz: "Quiz",
     chip_steps: "Paso a paso",
     chip_listen: "Modo escuchar",
+    chip_simpler: "Mas simple",
+    chip_example: "Ejemplo",
+    chip_study_next: "Que sigue?",
     chips_followup_aria: "Seguimientos rapidos y lectura en voz alta",
     starter_prompt_summarize:
       "Resume tu ultima respuesta en vietas cortas. Destaca los terminos clave que debo recordar.\n\n",
     starter_prompt_quiz:
       "Segun nuestra conversacion, dame un quiz corto: preguntas, opciones y respuestas correctas con explicacion breve.\n\n",
     starter_prompt_steps: "Explica de nuevo paso a paso, con pasos mas pequeos y un ejemplo simple si ayuda.\n\n",
+    starter_prompt_simpler:
+      "Explica la misma idea de forma mas simple, como si tuviera 15 anos. Empieza con la respuesta directa.\n\n",
+    starter_prompt_example:
+      "Dame un ejemplo trabajado claro de tu ultima respuesta. Muestra pasos breves y que debo notar.\n\n",
+    starter_prompt_study_next:
+      "Segun lo que acabamos de ver, dime que practicar despues en 3 pasos concretos.\n\n",
     copy_thread: "Copiar conversacion",
     copy_thread_aria: "Copiar toda la conversacion",
     toast_thread_copied: "Conversacion copiada",
@@ -815,16 +834,25 @@ const I18N = {
     empty_nb_2_hint: ".md ya .txt study guide upload karein structured recap ke liye.",
     empty_nb_3: "CSV table",
     empty_nb_3_hint: ".csv upload karein columns aur patterns summarize karne ke liye.",
-    chip_summarize: "Summarize",
+    chip_summarize: "Shorter",
     chip_quiz: "Quiz",
     chip_steps: "Step-by-step",
-    chip_listen: "Listen mode",
+    chip_listen: "Listen",
+    chip_simpler: "Simple",
+    chip_example: "Example",
+    chip_study_next: "Aage kya?",
     chips_followup_aria: "Quick follow-ups aur read aloud",
     starter_prompt_summarize:
       "Apne last answer ko short bullets mein summarize karo. Key terms highlight karo.\n\n",
     starter_prompt_quiz:
       "Ab tak ki conversation se chhota quiz do: questions, choices, sahi jawab aur short explanation.\n\n",
     starter_prompt_steps: "Dobara step-by-step samjhao, chhote steps aur simple example ke saath.\n\n",
+    starter_prompt_simpler:
+      "Wahi idea simple bhasha mein samjhao, 15 saal ke level par. Pehle seedha jawab do.\n\n",
+    starter_prompt_example:
+      "Last answer ka ek clear worked example do. Short steps, phir kya notice karna hai.\n\n",
+    starter_prompt_study_next:
+      "Abhi jo cover kiya uske baad main kya practice karun - 3 concrete steps.\n\n",
     copy_thread: "Conversation copy",
     copy_thread_aria: "Poori conversation copy karein",
     toast_thread_copied: "Conversation copy ho gayi",
@@ -1039,16 +1067,25 @@ const I18N = {
     empty_nb_2_hint: ".md leda .txt study guide upload cheste structured recap vastundi.",
     empty_nb_3: "CSV table",
     empty_nb_3_hint: ".csv upload cheste columns, patterns summarize avutayi.",
-    chip_summarize: "Summarize",
+    chip_summarize: "Shorter",
     chip_quiz: "Quiz",
     chip_steps: "Step-by-step",
-    chip_listen: "Listen mode",
+    chip_listen: "Listen",
+    chip_simpler: "Simple",
+    chip_example: "Example",
+    chip_study_next: "Tarvata enti?",
     chips_followup_aria: "Quick follow-ups mariyu read aloud",
     starter_prompt_summarize:
       "Mee last answer ni short bullets lo summarize cheyyandi. Gurtupettukovalasina key terms highlight cheyyandi.\n\n",
     starter_prompt_quiz:
       "Mana conversation nunchi chinna quiz ivvandi: questions, choices, correct answers mariyu short explanation.\n\n",
     starter_prompt_steps: "Malli step-by-step explain cheyyandi, chinna steps mariyu simple example tho.\n\n",
+    starter_prompt_simpler:
+      "Ade idea ni simple ga explain cheyyandi, 15 years level. Mundu direct answer ivvandi.\n\n",
+    starter_prompt_example:
+      "Last answer ki oka clear worked example ivvandi. Short steps, tarvata emi notice cheyalo.\n\n",
+    starter_prompt_study_next:
+      "Ippudu cover chesindanni batti nenu tarvata emi practice cheyyali - 3 concrete steps.\n\n",
     copy_thread: "Conversation copy",
     copy_thread_aria: "Mottam conversation copy cheyyandi",
     toast_thread_copied: "Conversation copy ayyindi",
@@ -1224,6 +1261,7 @@ function applyTranslations() {
   if (chatFollowupChips) chatFollowupChips.setAttribute("aria-label", t("chips_followup_aria"));
   if (notebookFollowupChips) notebookFollowupChips.setAttribute("aria-label", t("chips_followup_aria"));
   if (notebookSourcesEl) notebookSourcesEl.setAttribute("aria-label", t("notebook_sources_aria"));
+  refreshAllSmartFollowupChips();
   document.querySelectorAll(".starter-chip[data-starter]").forEach((chip) => {
     const starter = chip.getAttribute("data-starter");
     const labelKey = STARTER_CHIP_LABEL_KEYS[starter];
@@ -1409,6 +1447,9 @@ const STARTER_CHIP_LABEL_KEYS = {
   steps: "chip_steps",
   readAloud: "chip_listen",
   studyPlan: "chip_study_plan",
+  simpler: "chip_simpler",
+  example: "chip_example",
+  studyNext: "chip_study_next",
 };
 
 const STARTER_PROMPT_KEYS = {
@@ -1416,6 +1457,9 @@ const STARTER_PROMPT_KEYS = {
   quiz: "starter_prompt_quiz",
   steps: "starter_prompt_steps",
   studyPlan: "starter_prompt_study_plan",
+  simpler: "starter_prompt_simpler",
+  example: "starter_prompt_example",
+  studyNext: "starter_prompt_study_next",
 };
 
 const NOTEBOOK_STARTER_PROMPT_KEYS = {
@@ -1423,7 +1467,76 @@ const NOTEBOOK_STARTER_PROMPT_KEYS = {
   quiz: "starter_prompt_notebook_quiz",
   steps: "starter_prompt_notebook_steps",
   studyPlan: "starter_prompt_study_plan",
+  simpler: "starter_prompt_simpler",
+  example: "starter_prompt_example",
 };
+
+function analyzeAssistantForFollowups(raw) {
+  const text = String(raw || "");
+  return {
+    hasSteps: /^\s*\d+\.\s/m.test(text),
+    isLong: text.length > 900,
+    hasCode: /```/.test(text),
+    isShort: text.length > 0 && text.length < 280,
+  };
+}
+
+/**
+ * Pick a small set of follow-ups based on the last assistant answer.
+ * Always ends with Listen when speech is available in the UI.
+ */
+function pickSmartFollowupKeys(analysis, scope) {
+  const a = analysis || analyzeAssistantForFollowups("");
+  const keys = ["simpler", "example", "quiz"];
+  if (!a.hasSteps) keys.push("steps");
+  else if (scope === "notebook") keys.push("studyPlan");
+  else keys.push("studyNext");
+  if (a.isLong || a.hasCode) keys.push("summarize");
+  // Cap content chips, then Listen.
+  const content = [];
+  for (const key of keys) {
+    if (content.includes(key)) continue;
+    content.push(key);
+    if (content.length >= 4) break;
+  }
+  content.push("readAloud");
+  return content;
+}
+
+function renderSmartFollowupChips(container, history, scope) {
+  if (!container) return;
+  const last = getLastAssistantMarkdownFromHistory(history);
+  const analysis = analyzeAssistantForFollowups(last);
+  const keys = pickSmartFollowupKeys(analysis, scope);
+  const prev = Array.from(container.querySelectorAll(".starter-chip[data-starter]"))
+    .map((el) => el.getAttribute("data-starter"))
+    .join(",");
+  if (prev === keys.join(",") && container.querySelector(".starter-chip")) {
+    // Labels may still need i18n refresh.
+    container.querySelectorAll(".starter-chip[data-starter]").forEach((chip) => {
+      const key = chip.getAttribute("data-starter");
+      const labelKey = STARTER_CHIP_LABEL_KEYS[key];
+      if (labelKey) chip.textContent = t(labelKey);
+    });
+    return;
+  }
+  container.replaceChildren();
+  keys.forEach((key) => {
+    const labelKey = STARTER_CHIP_LABEL_KEYS[key];
+    if (!labelKey) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "starter-chip";
+    btn.dataset.starter = key;
+    btn.textContent = t(labelKey);
+    container.appendChild(btn);
+  });
+}
+
+function refreshAllSmartFollowupChips() {
+  renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
+}
 
 const EMPTY_PROMPT_SPECS = {
   chat: [
@@ -2135,6 +2248,7 @@ function syncLearnLayout() {
   chatSearchShell.classList.toggle("hidden", showThread);
   chatAnswerShell.classList.toggle("hidden", !showThread);
   chatCopyThreadBtn?.classList.toggle("hidden", chatHistory.length === 0);
+  if (showThread) renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
 }
 
 function syncCodeLayout() {
@@ -2157,6 +2271,7 @@ function syncNotebookLayout() {
   }
   // Keep dropzone available so students can add/replace sources after a session starts.
   if (notebookEmptyState) notebookEmptyState.classList.toggle("notebook-empty--compact", showThread);
+  if (showThread) renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
 }
 
 function wireAssistantCopy(bubble, rawText) {
@@ -2852,6 +2967,8 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       else if (mode === "code") syncCodeLayout();
       else if (mode === "notebook") syncNotebookLayout();
       setStatus(statusEl, "status_ready");
+      if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+      if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
       return true;
     }
 
@@ -2884,6 +3001,8 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     else if (mode === "code") syncCodeLayout();
     else if (mode === "notebook") syncNotebookLayout();
     setStatus(statusEl, "status_ready");
+    if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+    if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
     return true;
   } catch (error) {
     setLiveWebSearching(false);
@@ -3740,6 +3859,7 @@ const chatSearchFlow = wireSearchFlow({
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
   readAloud: () => readLastAssistantAloud(chatHistory),
 });
+renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
 
 function wireEmptyStatePrompts() {
   document.querySelectorAll(".empty-prompt-chip[data-empty-scope]").forEach((chip) => {
@@ -3885,6 +4005,7 @@ wireStarterChipsAsSend(
   },
   NOTEBOOK_STARTER_PROMPT_KEYS,
 );
+renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
 
 syncNotebookAnalyzeVisibility();
 docAnalyzeBtn?.addEventListener("click", async () => {
