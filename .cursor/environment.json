@@ -1,0 +1,11 @@
+{
+  "name": "Student AI Hub",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "dev-server",
+      "command": "PORT=3001 npm run dev"
+    }
+  ],
+  "ports": [3001]
+}
