@@ -298,7 +298,17 @@ async function persistFeedbackRow({
   clientCreatedAt,
 }) {
   const admin = getSupabaseAdminClient();
-  if (!admin || !userId) return { stored: null, error: new Error("no admin client or user") };
+  if (!admin) {
+    return {
+      stored: null,
+      error: new Error(
+        "SUPABASE_SERVICE_ROLE_KEY is not set on the server. Feedback cannot be written to Supabase.",
+      ),
+    };
+  }
+  if (!userId) {
+    return { stored: null, error: new Error("Missing authenticated user id for feedback insert.") };
+  }
 
   const row = {
     user_id: userId,
@@ -311,7 +321,14 @@ async function persistFeedbackRow({
   };
 
   const { error } = await admin.from("assistant_feedback").insert(row);
-  if (error) return { stored: null, error };
+  if (error) {
+    const msg = String(error.message || error);
+    const hint =
+      /Could not find the table|relation .* does not exist|schema cache/i.test(msg)
+        ? " Run supabase/assistant_feedback.sql in the Supabase SQL Editor."
+        : "";
+    return { stored: null, error: new Error(`${msg}${hint}`) };
+  }
   return { stored: "supabase", error: null };
 }
 
@@ -1500,20 +1517,39 @@ app.post("/api/feedback", requireSession, async (req, res) => {
 
     if (dbResult.error) {
       // eslint-disable-next-line no-console
-      console.warn("[feedback] Supabase insert failed, using file fallback:", dbResult.error.message || dbResult.error);
+      console.warn(
+        "[feedback] Supabase insert failed, using file fallback:",
+        dbResult.error.message || dbResult.error,
+      );
     }
 
     try {
       await fs.promises.appendFile(feedbackLogPath, line, "utf8");
-      return res.json({ ok: true, stored: "project" });
+      return res.json({
+        ok: true,
+        stored: "project",
+        warning:
+          dbResult.error?.message ||
+          "Saved to server file only. Set SUPABASE_SERVICE_ROLE_KEY and create public.assistant_feedback to see rows in Supabase.",
+      });
     } catch (e1) {
       try {
         await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
-        return res.json({ ok: true, stored: "tmp" });
+        return res.json({
+          ok: true,
+          stored: "tmp",
+          warning:
+            dbResult.error?.message ||
+            "Saved to /tmp only (ephemeral on Render). Configure Supabase feedback table + service role key.",
+        });
       } catch (e2) {
         // eslint-disable-next-line no-console
         console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
-        return res.json({ ok: true, stored: "none" });
+        return res.json({
+          ok: true,
+          stored: "none",
+          warning: dbResult.error?.message || "Feedback was not persisted.",
+        });
       }
     }
   } catch (error) {
@@ -1618,6 +1654,8 @@ app.get("/api/health", (_req, res) => {
     liveWebConfigured: LIVE_WEB_CONFIGURED,
     supabaseUrlConfigured: Boolean(SUPABASE_URL),
     supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
+    /** Needed to write thumbs feedback into public.assistant_feedback (never expose this key to the browser). */
+    feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
     supabaseAnonKeyIsSecretNotAllowed: SUPABASE_ANON_KEY.startsWith("sb_secret_"),
   };
