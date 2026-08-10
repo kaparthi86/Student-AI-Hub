@@ -11,20 +11,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="AI Hub" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=world-class-hub-2" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=pwa-logo-1" />
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=pwa-logo-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=launch-landing-1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>AI Hub</title>
+    <meta
+      name="description"
+      content="AI Hub — start with Student AI. Free study help for Ask, Code, and Notebook. Learning and practice, not a homework shortcut."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=reply-type-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=reply-type-1" />
+    <link rel="stylesheet" href="./styles.css?v=launch-landing-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=launch-landing-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -36,7 +40,7 @@
         <div class="pwa-install-bar-row">
           <img
             class="pwa-install-bar-icon"
-            src="./icons/icon-192.png?v=pwa-logo-1"
+            src="./icons/icon-192.png?v=launch-landing-1"
             width="40"
             height="40"
             alt=""
@@ -65,64 +69,151 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-      <section class="auth auth-shell" id="authCard">
-        <header class="app-head auth-head">
-          <div class="app-brand" aria-label="AI Hub">
-            <span class="brand-mark" aria-hidden="true">
-              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
-                <path
-                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
-                  fill="white"
-                  fill-opacity="0.92"
-                />
-                <defs>
-                  <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#2F6FED" />
-                    <stop offset="1" stop-color="#1D5BD8" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
-            <div class="brand-wordmark">
-              <span class="brand-title" id="authBrandTitle">AI <span class="brand-hub">Hub</span></span>
-              <span class="brand-kicker" id="authBrandKicker" data-i18n="auth_brand_kicker"
-                >Learning, health, and money — in one Hub</span
-              >
+      <section class="auth auth-shell landing" id="authCard" aria-label="AI Hub">
+        <div class="landing-hero">
+          <div class="landing-hero-visual" aria-hidden="true">
+            <svg class="landing-hero-scene" viewBox="0 0 960 720" xmlns="http://www.w3.org/2000/svg" focusable="false">
+              <defs>
+                <linearGradient id="landingDeskGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#E8EEF8" />
+                  <stop offset="55%" stop-color="#F3F1EC" />
+                  <stop offset="100%" stop-color="#E4E0D8" />
+                </linearGradient>
+                <linearGradient id="landingPageGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FFFEFB" />
+                  <stop offset="100%" stop-color="#F4F2EC" />
+                </linearGradient>
+                <filter id="landingSoft" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.2" />
+                </filter>
+              </defs>
+              <rect width="960" height="720" fill="url(#landingDeskGrad)" />
+              <ellipse cx="720" cy="120" rx="220" ry="90" fill="rgba(255,255,255,0.55)" />
+              <path
+                d="M80 150h520c18 0 32 14 32 32v420c0 18-14 32-32 32H80c-18 0-32-14-32-32V182c0-18 14-32 32-32z"
+                fill="url(#landingPageGrad)"
+                stroke="rgba(28,27,25,0.08)"
+              />
+              <path d="M340 150v484" stroke="rgba(28,27,25,0.06)" stroke-width="2" />
+              <g class="landing-note-lines" stroke="rgba(47,111,237,0.22)" stroke-width="3" stroke-linecap="round">
+                <path d="M120 230h180" />
+                <path d="M120 270h150" />
+                <path d="M120 310h170" />
+                <path d="M120 350h130" />
+                <path d="M380 230h180" />
+                <path d="M380 270h160" />
+                <path d="M380 310h140" />
+                <path d="M380 350h170" />
+                <path d="M380 390h120" />
+              </g>
+              <g transform="translate(620 210)">
+                <rect width="260" height="340" rx="18" fill="#FFFFFF" stroke="rgba(28,27,25,0.10)" />
+                <rect x="24" y="28" width="120" height="14" rx="7" fill="#2F6FED" fill-opacity="0.9" />
+                <rect x="24" y="64" width="200" height="10" rx="5" fill="rgba(28,27,25,0.12)" />
+                <rect x="24" y="88" width="170" height="10" rx="5" fill="rgba(28,27,25,0.10)" />
+                <rect x="24" y="130" width="212" height="88" rx="12" fill="rgba(47,111,237,0.08)" />
+                <rect x="40" y="150" width="160" height="8" rx="4" fill="rgba(28,27,25,0.14)" />
+                <rect x="40" y="170" width="140" height="8" rx="4" fill="rgba(28,27,25,0.10)" />
+                <rect x="40" y="190" width="150" height="8" rx="4" fill="rgba(28,27,25,0.10)" />
+                <rect x="24" y="240" width="180" height="10" rx="5" fill="rgba(28,27,25,0.10)" />
+                <rect x="24" y="268" width="150" height="10" rx="5" fill="rgba(28,27,25,0.08)" />
+                <rect x="24" y="296" width="190" height="10" rx="5" fill="rgba(28,27,25,0.08)" />
+              </g>
+              <g class="landing-pen" transform="translate(540 470) rotate(-18)">
+                <rect width="14" height="120" rx="4" fill="#1C1B19" />
+                <rect y="100" width="14" height="28" fill="#2F6FED" />
+                <path d="M0 128h14l-7 18z" fill="#6F6B63" />
+              </g>
+            </svg>
+          </div>
+          <div class="landing-hero-content">
+            <div class="landing-brand" aria-label="AI Hub">
+              <span class="brand-mark landing-brand-mark" aria-hidden="true">
+                <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.92"
+                  />
+                  <defs>
+                    <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+              <h1 class="landing-brand-title" id="authBrandTitle">AI <span class="brand-hub">Hub</span></h1>
+            </div>
+            <p class="landing-headline" id="authSigninTitle">Student AI for learning and practice</p>
+            <p class="landing-support" id="authSigninTagline">
+              Free Ask, Code, and Notebook - study help that stays on your side of the honor code.
+            </p>
+            <div class="landing-cta">
+              <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn" type="button">
+                <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
+                  <path
+                    fill="#4285F4"
+                    d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
+                  />
+                </svg>
+                <span>Join with Google</span>
+              </button>
+              <p id="authStatus" class="muted auth-status landing-auth-status"></p>
             </div>
           </div>
-          <div class="app-greeting auth-greeting">
-            <h2 class="auth-signin-title" id="authSigninTitle">Sign in to continue</h2>
-            <p class="muted app-tagline" id="authSigninTagline">
-              Free to start — pick Student AI today, more to come.
+        </div>
+
+        <section class="landing-below" aria-label="About Student AI">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">Built for real study sessions</h2>
+            <p class="landing-section-lead">
+              Open Student AI after you sign in - three tools, one focused workspace.
+            </p>
+            <ul class="landing-tools">
+              <li>
+                <strong>Ask</strong>
+                <span>Clear explanations and follow-ups when a topic will not click.</span>
+              </li>
+              <li>
+                <strong>Code</strong>
+                <span>Debug and learn programming with the error context you paste in.</span>
+              </li>
+              <li>
+                <strong>Notebook</strong>
+                <span>Upload notes and get a summary, key ideas, quiz, and study plan.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="landing-integrity" aria-label="Academic integrity">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">Study with integrity</h2>
+            <p class="landing-section-lead">
+              Student AI is for learning and practice - not for handing in AI work as your own. Follow your honor code.
             </p>
           </div>
-        </header>
+        </section>
 
-        <button id="googleLoginBtn" class="auth-google-btn google-btn" type="button">
-          <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
-            <path
-              fill="#4285F4"
-              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
-            />
-            <path
-              fill="#34A853"
-              d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
-            />
-            <path
-              fill="#EA4335"
-              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
-            />
-          </svg>
-          <span>Continue with Google</span>
-        </button>
-        <p id="authStatus" class="muted auth-status"></p>
-
-        <footer class="app-fine-print auth-fine-print" role="note" id="authDisclaimerFooter" aria-label="Disclaimer">
+        <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo" id="authDisclaimerFooter">
+          <nav class="landing-legal" aria-label="Legal">
+            <a href="./privacy.html">Privacy</a>
+            <a href="./terms.html">Terms</a>
+          </nav>
           <p class="fine-print-line" data-i18n="disclaimer_base">
             AI Hub can make mistakes. Check important facts.
           </p>
@@ -735,6 +826,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=feedback-store-1"></script>
+    <script defer src="./app.js?v=launch-landing-1"></script>
   </body>
 </html>

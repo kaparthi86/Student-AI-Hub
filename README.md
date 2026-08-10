@@ -23,7 +23,7 @@ Fill `.env`:
 - Optional: `HF_MODEL` (default in code: `deepseek-ai/DeepSeek-V4-Pro:fastest`)
 - Optional: `HF_CHAT_URL` (default: `https://router.huggingface.co/v1/chat/completions`)
 - Optional live web for Ask (pick one): `TAVILY_API_KEY`, or `BRAVE_SEARCH_API_KEY`, or `SERPER_API_KEY`
-- Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (see below)
+- Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (public launch defaults leave this off)
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` are optional for server; **frontend auth uses `public/config.js`**
 - For thumbs feedback in Supabase: set **`SUPABASE_SERVICE_ROLE_KEY`** on the server and run `supabase/assistant_feedback.sql`
 
@@ -93,16 +93,16 @@ The app does **not** hardcode a hostname. Google OAuth uses `window.location.ori
 
 No change to `public/config.js` is required for the domain itself (only Supabase URL/key stay as they are). Redeploy after DNS is optional unless you are also shipping code changes.
 
-## Private beta testing URL (~20 people)
+## Deploy / launch URL
 
-Use a **single HTTPS URL** everyone shares (e.g. Render). That URL is your **testing link**; keep the repo private or share the link only with your cohort.
+Use a **single HTTPS URL** everyone shares (e.g. Render + custom domain). That URL is your public link.
 
 ### What you do once (host)
 
 1. Push the project to **GitHub** (do not commit `.env`; set secrets in the host UI).
-2. Deploy (e.g. **Render ? New ? Blueprint**, pick `render.yaml`). The blueprint sets **`BETA_TESTING=1`** so the app shows a **private beta banner** (optional **`BETA_MESSAGE`** in Render **Environment** overrides the default text).
-3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE` (e.g. *"CS101 pilot � report bugs to you@school.edu"*).
-4. Copy the live URL, e.g. `https://student-ai-hub.onrender.com` � **that is the only link you send** (up to ~20 testers is fine on free tier for light use; first request after sleep may take ~30s).
+2. Deploy (e.g. **Render → New → Blueprint**, pick `render.yaml`). Public launch defaults set **`BETA_TESTING=0`** (no banner). For an invite-only cohort, set **`BETA_TESTING=1`** and optional **`BETA_MESSAGE`** in Render **Environment**.
+3. In Render **Environment**, set **`HF_API_TOKEN`** (required for real AI). Optional: `HF_MODEL`, `HF_CHAT_URL`, `BETA_MESSAGE`.
+4. Copy the live URL, e.g. `https://www.my-student-coach.com` — share that link. Free-tier hosting can cold-start (~30s); upgrade before a large inbound wave.
 
 ### Supabase + Google (required for login on that URL)
 
@@ -115,21 +115,21 @@ In **Google Cloud Console** (OAuth client used by Supabase): add **Authorized Ja
 
 `public/config.js` should point at the same Supabase project you configured.
 
-### Message you can paste to testers
+### Message you can paste
 
-> We are running a **short private beta** (about 20 people) of Student AI Hub.  
-> **Link:** `https://YOUR-SERVICE.onrender.com`  
-> Sign in with **Google**. Ask learning questions, use **Code** for programming help, or upload a study file under **Notebook**.  
-> This is a test build: answers can be wrong, and the app may change or restart. Do not submit AI output if your course forbids it.
+> **AI Hub** is open — start with **Student AI**.  
+> **Link:** `https://www.my-student-coach.com`  
+> Join with **Google**. Use **Ask**, **Code**, or **Notebook** for study help.  
+> AI can be wrong - check important facts. Follow your honor code; do not submit AI output if your course forbids it.
 
 ### Checks
 
-- Open `https://YOUR-SERVICE.onrender.com/api/health` � `"hfConfigured": true` when the token is set; **`betaMessage`** is non-empty when beta mode is on.
+- Open `/api/health` — `"hfConfigured": true` when the token is set; **`betaMessage`** is empty for public launch (non-empty only when beta mode is on).
 - Confirm **`"indexHtmlDeployed": true`**. If it is **`false`**, the server cannot see `public/index.html` (you will see a startup log about a missing file, and `/` returns Not Found). Fix it by:
   1. Locally: `git add public` then `git commit` and `git push` so GitHub contains `public/index.html`, `public/app.js`, `public/styles.css`, and `public/config.js`.
-  2. Render **Settings ? Root Directory**: leave **empty** unless the app really lives in a subfolder (then Root Directory must be that folder, and `public/` must be inside it).
+  2. Render **Settings → Root Directory**: leave **empty** unless the app really lives in a subfolder (then Root Directory must be that folder, and `public/` must be inside it).
   3. Trigger **Manual Deploy** on Render after the push.
-- Confirm the amber **beta banner** appears at the top after load.
+- Confirm `/` shows the marketing landing (AI Hub + Join with Google) and that `/privacy.html` + `/terms.html` load.
 
 ### Optional: tunnel instead of deploy
 
@@ -146,4 +146,4 @@ For a **very short** test you can use `npx localtunnel --port 3001` or [ngrok](h
 - If `HF_API_TOKEN` is missing, API returns a demo message so UI still works.
 - PDF support uses `pdf-parse` (best-effort text extraction).
 - Large documents are truncated server-side for safety; increase `MAX_DOC_CHARS` in `server.js` if needed.
-- For a wider public launch, add rate limits and server-side auth checks for `/api/chat`, `/api/doc-insights`, and `/api/ai`; turn off **`BETA_TESTING`** or clear **`BETA_MESSAGE`** when you are ready to drop the banner.
+- Public launch checklist: marketing landing on `/`, Privacy + Terms pages, **`BETA_TESTING=0`**, paid/always-on hosting before a large wave, `SUPABASE_SERVICE_ROLE_KEY` + feedback table for thumbs votes, and HF quota/spend alerts. Rate limits and server-side session auth are already in `server.js`.
