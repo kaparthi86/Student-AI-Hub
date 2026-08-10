@@ -25,10 +25,27 @@ Fill `.env`:
 - Optional live web for Ask (pick one): `TAVILY_API_KEY`, or `BRAVE_SEARCH_API_KEY`, or `SERPER_API_KEY`
 - Optional: **`BETA_TESTING=1`** and **`BETA_MESSAGE=...`** to show a top banner for invite-only testing (see below)
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `.env` are optional for server; **frontend auth uses `public/config.js`**
+- For thumbs feedback in Supabase: set **`SUPABASE_SERVICE_ROLE_KEY`** on the server and run `supabase/assistant_feedback.sql`
 
 See `.env.example` for a full template. With a search key set, Ask’s **Live web** toggle grounds answers in current web snippets and shows source links.
 
 Hugging Face tokens should include **Inference Providers** permissions (fine-grained token) per Hugging Face docs.
+
+### Assistant feedback (Supabase)
+
+Helpful / Not helpful votes only appear in Supabase when **both** are true:
+
+1. `SUPABASE_SERVICE_ROLE_KEY` is set on the host (Render Environment / `.env`) — never in `public/config.js`
+2. Table `public.assistant_feedback` exists (run `supabase/assistant_feedback.sql` in SQL Editor)
+
+Otherwise the API still returns success, but rows are written to `feedback.ndjson` on the server (or `/tmp`, which is ephemeral on Render). Check `/api/health` → `feedbackSupabaseConfigured: true`, then submit a vote and query:
+
+```sql
+select id, rating, reason, mode, study_mode, created_at
+from public.assistant_feedback
+order by created_at desc
+limit 50;
+```
 
 ## 2) Frontend auth config
 
