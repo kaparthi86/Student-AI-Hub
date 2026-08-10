@@ -358,7 +358,7 @@ body:has(#appCard:not(.hidden)) .bg-glow {
 }
 
 /* Login: calm product screen (not a floating card on wallpaper) */
-.auth-shell {
+.auth-shell:not(.landing) {
   width: min(100%, 440px);
   margin: min(12vh, 96px) auto 40px;
   padding: 8px 4px 22px;

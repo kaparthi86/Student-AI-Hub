@@ -1,5 +1,5 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
-# Deploy URL is your private testing link for ~20 people (set BETA_MESSAGE in dashboard for custom copy).
+# Public launch defaults: beta banner off. Upgrade plan before a large inbound wave.
 services:
   - type: web
     name: student-ai-hub
@@ -19,8 +19,8 @@ services:
         sync: false
       - key: HF_CHAT_URL
         sync: false
-      # Private beta banner (optional custom text in dashboard).
+      # Public launch: leave off. Set to "1" only for invite-only cohorts.
       - key: BETA_TESTING
-        value: "1"
+        value: "0"
       - key: BETA_MESSAGE
         sync: false
