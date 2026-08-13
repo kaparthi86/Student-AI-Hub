@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=support-contact-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=support-contact-1" />
+    <link rel="stylesheet" href="./styles.css?v=practice-polish-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=practice-polish-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -375,6 +375,7 @@
           <button class="tab active" data-tab="chat" type="button" id="tabChat">Ask</button>
           <button class="tab" data-tab="code" type="button" id="tabCode">Code</button>
           <button class="tab" data-tab="notebook" type="button" id="tabNotebook">Notebook</button>
+          <button class="tab" data-tab="practice" type="button" id="tabPractice">Practice</button>
         </div>
 
         <section id="panelChat" class="panel perplexity-panel">
@@ -700,6 +701,94 @@
           </div>
         </section>
 
+        <section id="panelPractice" class="panel practice-panel hidden" aria-label="Practice">
+          <div id="practiceEmpty" class="practice-empty practice-hero">
+            <p class="search-title" id="practiceTitle">Practice</p>
+            <p class="muted practice-lead" id="practiceLead">
+              A short check, then one clear next step - for learning, not shortcuts.
+            </p>
+            <button type="button" id="practiceFromNotesBtn" class="primary-btn practice-primary-cta" disabled>
+              Practice from my notes
+            </button>
+            <p class="practice-alt-row">
+              <button type="button" id="practiceFromAskBtn" class="text-link-btn">
+                Or practice from last Ask
+              </button>
+            </p>
+            <div class="practice-topic-row search-bar search-bar--branded search-bar--learn-hero">
+              <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI">
+                <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="11" fill="url(#searchBrandGradPractice)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.88"
+                  />
+                  <defs>
+                    <linearGradient
+                      id="searchBrandGradPractice"
+                      x1="8"
+                      y1="6"
+                      x2="34"
+                      y2="36"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+              <label class="sr-only" for="practiceTopicInput">Topic</label>
+              <input
+                id="practiceTopicInput"
+                type="text"
+                maxlength="200"
+                placeholder="Or type a topic..."
+              />
+              <button type="button" id="practiceTopicStartBtn" class="search-submit primary-btn">Start</button>
+            </div>
+            <p id="practiceEmptyStatus" class="muted status-line" data-i18n-status="status_ready"></p>
+          </div>
+
+          <div id="practiceActive" class="practice-active hidden">
+            <div class="practice-progress-row">
+              <p id="practiceProgress" class="practice-progress">Question 1 of 5</p>
+              <p id="practiceTopicLabel" class="muted practice-topic-label"></p>
+            </div>
+            <p id="practiceQuestion" class="practice-question"></p>
+            <div class="practice-answer-bar search-bar search-bar--branded search-bar--learn-hero">
+              <label class="sr-only" for="practiceAnswerInput">Your answer</label>
+              <textarea
+                id="practiceAnswerInput"
+                rows="3"
+                placeholder="Answer in your own words..."
+              ></textarea>
+              <button type="button" id="practiceSubmitAnswer" class="search-submit primary-btn">Check</button>
+            </div>
+            <div class="practice-active-meta">
+              <button type="button" id="practiceSkipBtn" class="ghost-btn tiny-btn">Skip</button>
+              <p id="practiceActiveStatus" class="muted status-line"></p>
+            </div>
+            <div id="practiceFeedback" class="practice-feedback hidden" aria-live="polite"></div>
+          </div>
+
+          <div id="practiceSummary" class="practice-summary hidden">
+            <p class="search-title" id="practiceSummaryTitle">Practice complete</p>
+            <p id="practiceEncouragement" class="practice-encouragement"></p>
+            <p id="practiceScore" class="practice-score"></p>
+            <div id="practiceMistakes" class="practice-mistakes"></div>
+            <div class="practice-next-step">
+              <p class="practice-next-kicker" id="practiceNextLabel">Next best step</p>
+              <p id="practiceNextStep"></p>
+            </div>
+            <div class="practice-summary-actions">
+              <button type="button" id="practiceAgainBtn" class="primary-btn">Practice again</button>
+              <button type="button" id="practiceBackNotebookBtn" class="ghost-btn">Back to Notebook</button>
+            </div>
+          </div>
+        </section>
+
         <footer class="app-fine-print" role="note" id="appDisclaimerFooter" aria-label="Disclaimer">
           <p class="fine-print-line" data-i18n="disclaimer_base">
             AI Hub can make mistakes. Check important facts.
@@ -835,6 +924,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=launch-landing-1"></script>
+    <script defer src="./app.js?v=practice-polish-1"></script>
   </body>
 </html>

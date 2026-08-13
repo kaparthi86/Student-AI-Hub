@@ -1882,10 +1882,10 @@ textarea:focus {
     padding: 10px 14px;
   }
 
-  /* iOS-style segmented control: only the app uses .tabs (Ask / Code / Notebook) */
+  /* iOS-style segmented control: Ask / Code / Notebook / Practice */
   .tabs {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     margin: 8px 0 10px;
     padding: 5px;
