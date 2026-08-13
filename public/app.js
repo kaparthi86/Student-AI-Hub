@@ -19,6 +19,7 @@ const toastStack = document.getElementById("toastStack");
 const panelChat = document.getElementById("panelChat");
 const panelCode = document.getElementById("panelCode");
 const panelNotebook = document.getElementById("panelNotebook");
+const panelPractice = document.getElementById("panelPractice");
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -234,6 +235,35 @@ const I18N = {
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
+    tab_practice: "Practice",
+    practice_title: "Practice loop",
+    practice_lead: "Quiz yourself, review mistakes, get one clear next step - for learning, not shortcuts.",
+    practice_from_notes: "Practice from my notes",
+    practice_from_ask: "Practice from last Ask",
+    practice_topic_placeholder: "Or type a topic (e.g. quadratic equations)",
+    practice_start: "Start",
+    practice_check: "Check answer",
+    practice_skip: "Skip",
+    practice_again: "Practice again",
+    practice_back_notebook: "Back to Notebook",
+    practice_summary_title: "Practice complete",
+    practice_next_label: "Next best step",
+    practice_entry_btn: "Practice from these notes",
+    practice_entry_hint: "Short quiz, mistake review, then one next step.",
+    practice_answer_placeholder: "Answer in your own words...",
+    practice_progress: "Question {n} of {total}",
+    practice_score: "You got {correct} of {total} right.",
+    practice_need_notes: "Analyze notes in Notebook first.",
+    practice_need_ask: "Ask a question first, then practice that topic.",
+    practice_need_topic: "Enter a topic to practice.",
+    practice_building: "Building your practice set...",
+    practice_checking: "Checking your answer...",
+    practice_wrapping: "Building your next step...",
+    practice_correct: "Nice - you got the idea.",
+    practice_miss: "Not quite - here is the key point.",
+    practice_key_point: "Key point: {point}",
+    practice_no_mistakes: "No major misses - solid practice.",
+    practice_mistake_relearn: "Relearn: {tip}",
     chat_title: "What do you want to learn today?",
     chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
     chat_hint: "Press Enter to search. Shift+Enter for a new line.",
@@ -1169,6 +1199,20 @@ function applyTranslations() {
     tabChat: "tab_ask",
     tabCode: "tab_code",
     tabNotebook: "tab_notebook",
+    tabPractice: "tab_practice",
+    practiceTitle: "practice_title",
+    practiceLead: "practice_lead",
+    practiceFromNotesBtn: "practice_from_notes",
+    practiceFromAskBtn: "practice_from_ask",
+    practiceTopicStartBtn: "practice_start",
+    practiceSubmitAnswer: "practice_check",
+    practiceSkipBtn: "practice_skip",
+    practiceAgainBtn: "practice_again",
+    practiceBackNotebookBtn: "practice_back_notebook",
+    practiceSummaryTitle: "practice_summary_title",
+    practiceNextLabel: "practice_next_label",
+    notebookPracticeBtn: "practice_entry_btn",
+    notebookPracticeHint: "practice_entry_hint",
     chatSearchTitle: "chat_title",
     chatSearchHint: "chat_hint",
     codeSearchTitle: "code_title",
@@ -1227,6 +1271,10 @@ function applyTranslations() {
   if (codeSearchInput) codeSearchInput.placeholder = t("code_placeholder");
   if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
   if (notebookFollowupInput) notebookFollowupInput.placeholder = t("notebook_followup");
+  const practiceTopicInputEl = document.getElementById("practiceTopicInput");
+  if (practiceTopicInputEl) practiceTopicInputEl.placeholder = t("practice_topic_placeholder");
+  const practiceAnswerInputEl = document.getElementById("practiceAnswerInput");
+  if (practiceAnswerInputEl) practiceAnswerInputEl.placeholder = t("practice_answer_placeholder");
   const pwaIosSteps = document.getElementById("pwaIosSteps");
   if (pwaIosSteps) pwaIosSteps.textContent = t("pwa_ios_steps");
   const pwaInstallHelpSteps = document.getElementById("pwaInstallHelpSteps");
@@ -2237,7 +2285,14 @@ function renderAssistantHtml(text) {
 }
 
 function setMainTab(next) {
-  mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
+  mainTab =
+    next === "code"
+      ? "code"
+      : next === "notebook"
+        ? "notebook"
+        : next === "practice"
+          ? "practice"
+          : "chat";
   if (mainTab !== "chat") stopAllLearnVoice();
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
@@ -2247,9 +2302,13 @@ function setMainTab(next) {
   panelChat.classList.toggle("hidden", mainTab !== "chat");
   panelCode.classList.toggle("hidden", mainTab !== "code");
   panelNotebook.classList.toggle("hidden", mainTab !== "notebook");
+  panelPractice?.classList.toggle("hidden", mainTab !== "practice");
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
     syncNotebookLayout();
+  }
+  if (mainTab === "practice") {
+    syncPracticeEmptyActions();
   }
 }
 
@@ -4107,6 +4166,7 @@ docAnalyzeBtn?.addEventListener("click", async () => {
     notebookSessionOpen = true;
     saveSessionState();
     syncNotebookLayout();
+    syncPracticeEmptyActions();
     setStatus(notebookStatus, "status_ready");
     if (Array.isArray(data.failures) && data.failures.length) {
       const failedNames = data.failures.map((f) => f.name).filter(Boolean).join(", ");
@@ -4124,6 +4184,349 @@ docAnalyzeBtn?.addEventListener("click", async () => {
     syncNotebookAnalyzeVisibility();
   }
 });
+
+
+/* ---- Practice loop (quiz -> mistakes -> next best step) ---- */
+const practiceEmpty = document.getElementById("practiceEmpty");
+const practiceActive = document.getElementById("practiceActive");
+const practiceSummary = document.getElementById("practiceSummary");
+const practiceFromNotesBtn = document.getElementById("practiceFromNotesBtn");
+const practiceFromAskBtn = document.getElementById("practiceFromAskBtn");
+const practiceTopicInput = document.getElementById("practiceTopicInput");
+const practiceTopicStartBtn = document.getElementById("practiceTopicStartBtn");
+const practiceEmptyStatus = document.getElementById("practiceEmptyStatus");
+const practiceProgress = document.getElementById("practiceProgress");
+const practiceTopicLabel = document.getElementById("practiceTopicLabel");
+const practiceQuestion = document.getElementById("practiceQuestion");
+const practiceAnswerInput = document.getElementById("practiceAnswerInput");
+const practiceSubmitAnswer = document.getElementById("practiceSubmitAnswer");
+const practiceSkipBtn = document.getElementById("practiceSkipBtn");
+const practiceFeedback = document.getElementById("practiceFeedback");
+const practiceActiveStatus = document.getElementById("practiceActiveStatus");
+const practiceEncouragement = document.getElementById("practiceEncouragement");
+const practiceScore = document.getElementById("practiceScore");
+const practiceMistakes = document.getElementById("practiceMistakes");
+const practiceNextStep = document.getElementById("practiceNextStep");
+const practiceAgainBtn = document.getElementById("practiceAgainBtn");
+const practiceBackNotebookBtn = document.getElementById("practiceBackNotebookBtn");
+const notebookPracticeBtn = document.getElementById("notebookPracticeBtn");
+
+let practiceState = {
+  topic: "",
+  source: "",
+  documentContext: "",
+  questions: [],
+  index: 0,
+  results: [],
+  busy: false,
+  lastStartOpts: null,
+};
+
+function syncPracticeEmptyActions() {
+  if (practiceFromNotesBtn) {
+    const ready = Boolean(notebookDocumentContext);
+    practiceFromNotesBtn.disabled = !ready;
+    practiceFromNotesBtn.title = ready ? "" : t("practice_need_notes");
+  }
+}
+
+function showPracticeView(which) {
+  practiceEmpty?.classList.toggle("hidden", which !== "empty");
+  practiceActive?.classList.toggle("hidden", which !== "active");
+  practiceSummary?.classList.toggle("hidden", which !== "summary");
+}
+
+function lastAskTopicGuess() {
+  for (let i = chatHistory.length - 1; i >= 0; i -= 1) {
+    const row = chatHistory[i];
+    if (row && row.role === "user" && typeof row.content === "string" && row.content.trim()) {
+      return row.content.trim().slice(0, 160);
+    }
+  }
+  return "";
+}
+
+async function practiceApi(body) {
+  const res = await fetchAuthed("/api/practice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, uiLanguage: activeUiLanguage }),
+  });
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+  if (!res.ok) throw new Error(data?.error || "Practice request failed.");
+  return data || {};
+}
+
+function renderPracticeQuestion() {
+  const q = practiceState.questions[practiceState.index];
+  if (!q) return;
+  if (practiceProgress) {
+    practiceProgress.textContent = t("practice_progress", {
+      n: String(practiceState.index + 1),
+      total: String(practiceState.questions.length),
+    });
+  }
+  if (practiceTopicLabel) practiceTopicLabel.textContent = practiceState.topic || "";
+  if (practiceQuestion) practiceQuestion.textContent = q.prompt;
+  if (practiceAnswerInput) {
+    practiceAnswerInput.value = "";
+    practiceAnswerInput.focus();
+  }
+  practiceFeedback?.classList.add("hidden");
+  practiceFeedback?.classList.remove("is-correct", "is-miss");
+  if (practiceFeedback) practiceFeedback.innerHTML = "";
+  if (practiceActiveStatus) practiceActiveStatus.textContent = "";
+  if (practiceSubmitAnswer) practiceSubmitAnswer.disabled = false;
+  if (practiceSkipBtn) practiceSkipBtn.disabled = false;
+}
+
+async function startPracticeSession(opts) {
+  if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+    maybeOfferHonorCodeModal();
+    return;
+  }
+  const source = opts?.source || "topic";
+  const documentContext = source === "notebook" ? String(notebookDocumentContext || "") : "";
+  const topic = String(opts?.topic || "").trim();
+  if (source === "notebook" && !documentContext) {
+    showToast(t("practice_need_notes"));
+    setMainTab("notebook");
+    return;
+  }
+  if (source === "ask" && !topic) {
+    showToast(t("practice_need_ask"));
+    setMainTab("chat");
+    return;
+  }
+  if (source === "topic" && !topic) {
+    showToast(t("practice_need_topic"));
+    return;
+  }
+
+  practiceState.busy = true;
+  practiceState.lastStartOpts = { source, topic, documentContext };
+  setMainTab("practice");
+  showPracticeView("empty");
+  if (practiceEmptyStatus) setStatus(practiceEmptyStatus, "practice_building");
+  if (practiceFromNotesBtn) practiceFromNotesBtn.disabled = true;
+  if (practiceFromAskBtn) practiceFromAskBtn.disabled = true;
+  if (practiceTopicStartBtn) practiceTopicStartBtn.disabled = true;
+
+  try {
+    const data = await practiceApi({
+      action: "start",
+      documentContext: documentContext || undefined,
+      topic: topic || undefined,
+    });
+    const questions = Array.isArray(data.questions) ? data.questions : [];
+    if (questions.length < 3) throw new Error("Could not build a practice set.");
+    practiceState = {
+      ...practiceState,
+      topic: String(data.topic || topic || "Practice"),
+      source,
+      documentContext,
+      questions,
+      index: 0,
+      results: [],
+      busy: false,
+    };
+    showPracticeView("active");
+    renderPracticeQuestion();
+    if (practiceEmptyStatus) setStatus(practiceEmptyStatus, "status_ready");
+  } catch (e) {
+    practiceState.busy = false;
+    showToast(e.message || t("status_failed"));
+    if (practiceEmptyStatus) {
+      practiceEmptyStatus.textContent = e.message || t("status_failed");
+    }
+  } finally {
+    syncPracticeEmptyActions();
+    if (practiceFromAskBtn) practiceFromAskBtn.disabled = false;
+    if (practiceTopicStartBtn) practiceTopicStartBtn.disabled = false;
+  }
+}
+
+function showInlinePracticeFeedback(check) {
+  if (!practiceFeedback) return;
+  const ok = Boolean(check?.correct);
+  practiceFeedback.classList.remove("hidden", "is-correct", "is-miss");
+  practiceFeedback.classList.add(ok ? "is-correct" : "is-miss");
+  const title = ok ? t("practice_correct") : t("practice_miss");
+  const feedback = String(check?.feedback || "").trim();
+  const key = String(check?.key_point || "").trim();
+  practiceFeedback.innerHTML = "";
+  const p1 = document.createElement("p");
+  p1.textContent = feedback ? (title + " " + feedback) : title;
+  practiceFeedback.appendChild(p1);
+  if (key) {
+    const p2 = document.createElement("p");
+    p2.textContent = t("practice_key_point", { point: key });
+    practiceFeedback.appendChild(p2);
+  }
+}
+
+async function advancePracticeAfterCheck(check, answer) {
+  const q = practiceState.questions[practiceState.index];
+  practiceState.results.push({
+    question: q?.prompt || "",
+    prompt: q?.prompt || "",
+    answer,
+    correct: Boolean(check?.correct),
+    feedback: String(check?.feedback || ""),
+    key_point: String(check?.key_point || ""),
+  });
+  showInlinePracticeFeedback(check);
+  if (practiceSubmitAnswer) practiceSubmitAnswer.disabled = true;
+  if (practiceSkipBtn) practiceSkipBtn.disabled = true;
+  await new Promise((r) => setTimeout(r, 700));
+  practiceState.index += 1;
+  if (practiceState.index >= practiceState.questions.length) {
+    await finishPracticeSession();
+  } else {
+    renderPracticeQuestion();
+  }
+}
+
+async function submitPracticeAnswer(opts) {
+  const skip = Boolean(opts && opts.skip);
+  if (practiceState.busy) return;
+  const q = practiceState.questions[practiceState.index];
+  if (!q) return;
+  const answer = skip ? "(skipped)" : String(practiceAnswerInput?.value || "").trim();
+  if (!skip && !answer) {
+    showToast(t("practice_answer_placeholder"));
+    return;
+  }
+  practiceState.busy = true;
+  if (practiceActiveStatus) setStatus(practiceActiveStatus, "practice_checking");
+  if (practiceSubmitAnswer) practiceSubmitAnswer.disabled = true;
+  if (practiceSkipBtn) practiceSkipBtn.disabled = true;
+  try {
+    let check;
+    if (skip) {
+      check = {
+        correct: false,
+        feedback: "Skipped - come back to this idea after a quick review.",
+        key_point: q.rubric || "",
+      };
+    } else {
+      check = await practiceApi({
+        action: "check",
+        question: { prompt: q.prompt, rubric: q.rubric || "" },
+        answer,
+      });
+    }
+    practiceState.busy = false;
+    await advancePracticeAfterCheck(check, answer);
+  } catch (e) {
+    practiceState.busy = false;
+    showToast(e.message || t("status_failed"));
+    if (practiceSubmitAnswer) practiceSubmitAnswer.disabled = false;
+    if (practiceSkipBtn) practiceSkipBtn.disabled = false;
+    if (practiceActiveStatus) practiceActiveStatus.textContent = e.message || "";
+  }
+}
+
+async function finishPracticeSession() {
+  practiceState.busy = true;
+  if (practiceActiveStatus) setStatus(practiceActiveStatus, "practice_wrapping");
+  try {
+    const data = await practiceApi({
+      action: "wrapup",
+      results: practiceState.results,
+    });
+    const correct = practiceState.results.filter((r) => r.correct).length;
+    const total = practiceState.results.length;
+    if (practiceScore) {
+      practiceScore.textContent = t("practice_score", {
+        correct: String(correct),
+        total: String(total),
+      });
+    }
+    if (practiceEncouragement) {
+      practiceEncouragement.textContent = String(data.encouragement || "").trim();
+    }
+    if (practiceNextStep) {
+      practiceNextStep.textContent = String(data.next_best_step || "").trim();
+    }
+    if (practiceMistakes) {
+      practiceMistakes.innerHTML = "";
+      const mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
+      if (!mistakes.length) {
+        const p = document.createElement("p");
+        p.className = "muted";
+        p.textContent = t("practice_no_mistakes");
+        practiceMistakes.appendChild(p);
+      } else {
+        mistakes.forEach((m) => {
+          const wrap = document.createElement("div");
+          wrap.className = "practice-mistake";
+          const strong = document.createElement("strong");
+          strong.textContent = String(m.question || "").trim() || "Missed question";
+          wrap.appendChild(strong);
+          if (m.what_went_wrong) {
+            const pp = document.createElement("p");
+            pp.textContent = String(m.what_went_wrong);
+            wrap.appendChild(pp);
+          }
+          if (m.relearn) {
+            const p2 = document.createElement("p");
+            p2.textContent = t("practice_mistake_relearn", { tip: String(m.relearn) });
+            wrap.appendChild(p2);
+          }
+          practiceMistakes.appendChild(wrap);
+        });
+      }
+    }
+    showPracticeView("summary");
+  } catch (e) {
+    showToast(e.message || t("status_failed"));
+  } finally {
+    practiceState.busy = false;
+    if (practiceActiveStatus) practiceActiveStatus.textContent = "";
+  }
+}
+
+practiceFromNotesBtn?.addEventListener("click", () => {
+  startPracticeSession({ source: "notebook", topic: "My notes" });
+});
+practiceFromAskBtn?.addEventListener("click", () => {
+  const topic = lastAskTopicGuess();
+  startPracticeSession({ source: "ask", topic });
+});
+practiceTopicStartBtn?.addEventListener("click", () => {
+  startPracticeSession({ source: "topic", topic: practiceTopicInput?.value || "" });
+});
+practiceTopicInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    startPracticeSession({ source: "topic", topic: practiceTopicInput?.value || "" });
+  }
+});
+practiceSubmitAnswer?.addEventListener("click", () => submitPracticeAnswer());
+practiceSkipBtn?.addEventListener("click", () => submitPracticeAnswer({ skip: true }));
+practiceAnswerInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    submitPracticeAnswer();
+  }
+});
+practiceAgainBtn?.addEventListener("click", () => {
+  const opts = practiceState.lastStartOpts;
+  if (opts) startPracticeSession(opts);
+  else showPracticeView("empty");
+});
+practiceBackNotebookBtn?.addEventListener("click", () => setMainTab("notebook"));
+notebookPracticeBtn?.addEventListener("click", () => {
+  startPracticeSession({ source: "notebook", topic: "My notes" });
+});
+syncPracticeEmptyActions();
+
 
 async function initBetaBanner() {
   const el = document.getElementById("betaBanner");

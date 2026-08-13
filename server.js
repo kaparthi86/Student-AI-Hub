@@ -1129,6 +1129,95 @@ function modeStyleInstruction(studyMode) {
   ].join(" ");
 }
 
+function extractJsonObject(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    /* continue */
+  }
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced && fenced[1]) {
+    try {
+      return JSON.parse(fenced[1].trim());
+    } catch {
+      /* continue */
+    }
+  }
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+const PRACTICE_START_SYSTEM = `You create short honor-code-first practice checks for students.
+Return ONLY valid JSON (no markdown, no commentary) with this exact shape:
+{"topic":"short topic label","questions":[{"id":1,"prompt":"question text","rubric":"brief ideal answer points"}]}
+Rules:
+- Exactly 5 questions, mix easy and medium.
+- Questions should check understanding and practice, not help students cheat on graded exams.
+- Keep prompts short (1-2 sentences). Rubric is for the grader only (key points).
+- If source materials are provided, use ONLY those materials. If a fact is missing, avoid inventing it.
+- No **bold asterisks**.`;
+
+const PRACTICE_CHECK_SYSTEM = `You grade one student practice answer for learning (not high-stakes testing).
+Return ONLY valid JSON:
+{"correct":true,"feedback":"1-2 short sentences","key_point":"the main idea to remember"}
+Rules:
+- correct=true if the student got the core idea, even if wording differs.
+- Be encouraging but honest. No **bold asterisks**.
+- Do not reveal a full essay answer; keep feedback brief.`;
+
+const PRACTICE_WRAPUP_SYSTEM = `You summarize a short practice session for a student.
+Return ONLY valid JSON:
+{"mistakes":[{"question":"...","what_went_wrong":"...","relearn":"..."}],"next_best_step":"one concrete next action","encouragement":"one short line"}
+Rules:
+- Include at most 3 mistakes (the most important). If none, mistakes=[].
+- next_best_step must be a single actionable study step.
+- Honor-code first: frame as learning/practice, not exam shortcuts.
+- No **bold asterisks**.`;
+
+function demoPracticeStart(topic) {
+  const label = String(topic || "General review").slice(0, 80);
+  return {
+    topic: label,
+    questions: [
+      {
+        id: 1,
+        prompt: `In your own words, what is the main idea of "${label}"?`,
+        rubric: "States the core concept clearly in one or two sentences.",
+      },
+      {
+        id: 2,
+        prompt: `Give one real example that shows "${label}" in use.`,
+        rubric: "Provides a concrete, relevant example.",
+      },
+      {
+        id: 3,
+        prompt: `What is a common mistake students make with "${label}"?`,
+        rubric: "Names a plausible misconception and why it is wrong.",
+      },
+      {
+        id: 4,
+        prompt: `Explain one step or detail someone must get right for "${label}".`,
+        rubric: "Mentions a specific critical step or detail.",
+      },
+      {
+        id: 5,
+        prompt: `How would you check that you understand "${label}"?`,
+        rubric: "Suggests a quick self-check or question.",
+      },
+    ],
+  };
+}
+
 function normalizeUiLanguage(raw) {
   const v = String(raw || "").trim().toLowerCase();
   if (["en", "es", "hi", "te"].includes(v)) return v;
@@ -1191,6 +1280,192 @@ app.post("/api/ai", requireSession, async (req, res) => {
       promptCacheKey: `${uid}:${mode}:ai`,
     });
     return res.json({ output });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.post("/api/practice", requireSession, async (req, res) => {
+  try {
+    const action = String(req.body?.action || "").trim().toLowerCase();
+    const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
+    const cacheUserKey = req.user?.id || "";
+    const documentContext = String(req.body?.documentContext || "")
+      .replace(/\u0000/g, "")
+      .trim()
+      .slice(0, MAX_DOC_CHARS + 4000);
+    const topic = String(req.body?.topic || "").trim().slice(0, 200);
+
+    if (!["start", "check", "wrapup"].includes(action)) {
+      return res.status(400).json({ error: "action must be start, check, or wrapup." });
+    }
+
+    if (action === "start") {
+      if (!documentContext && !topic) {
+        return res.status(400).json({
+          error: "Provide documentContext (from Notebook) or a topic to start Practice.",
+        });
+      }
+      if (!HF_API_TOKEN) {
+        return res.json({ ok: true, ...demoPracticeStart(topic || "Your notes") });
+      }
+      const userParts = [
+        documentContext
+          ? `Create 5 practice questions from these SOURCE MATERIALS only:\n---\n${documentContext}\n---`
+          : `Create 5 practice questions on this topic: ${topic}`,
+        uiLanguageInstruction(uiLanguage),
+      ];
+      const raw = await callChatCompletion(
+        [
+          { role: "system", content: PRACTICE_START_SYSTEM },
+          { role: "user", content: userParts.join("\n\n") },
+        ],
+        {
+          max_tokens: 900,
+          temperature: 0.4,
+          cacheUserKey,
+          promptCacheKey: `${cacheUserKey}:practice:start:${crypto
+            .createHash("sha256")
+            .update(documentContext || topic)
+            .digest("hex")
+            .slice(0, 24)}`,
+        },
+      );
+      const parsed = extractJsonObject(raw);
+      const questions = Array.isArray(parsed?.questions) ? parsed.questions : [];
+      const cleaned = questions
+        .map((q, i) => ({
+          id: Number(q?.id) || i + 1,
+          prompt: String(q?.prompt || "").trim().slice(0, 500),
+          rubric: String(q?.rubric || "").trim().slice(0, 400),
+        }))
+        .filter((q) => q.prompt)
+        .slice(0, 5);
+      if (cleaned.length < 3) {
+        return res.status(502).json({ error: "Could not build a practice set. Try again." });
+      }
+      return res.json({
+        ok: true,
+        topic: String(parsed?.topic || topic || "Practice").trim().slice(0, 120),
+        questions: cleaned,
+      });
+    }
+
+    if (action === "check") {
+      const prompt = String(req.body?.question?.prompt || req.body?.prompt || "").trim().slice(0, 500);
+      const rubric = String(req.body?.question?.rubric || req.body?.rubric || "").trim().slice(0, 400);
+      const answer = String(req.body?.answer || "").trim().slice(0, 2000);
+      if (!prompt || !answer) {
+        return res.status(400).json({ error: "question prompt and answer are required." });
+      }
+      if (!HF_API_TOKEN) {
+        const looksThin = answer.length < 12;
+        return res.json({
+          ok: true,
+          correct: !looksThin,
+          feedback: looksThin
+            ? "Demo mode: add a bit more detail so we can check your understanding."
+            : "Demo mode: looks like a reasonable attempt. Add HF_API_TOKEN for real grading.",
+          key_point: rubric || "Restate the core idea in your own words.",
+        });
+      }
+      const raw = await callChatCompletion(
+        [
+          { role: "system", content: PRACTICE_CHECK_SYSTEM },
+          {
+            role: "user",
+            content: [
+              `Question: ${prompt}`,
+              `Rubric: ${rubric || "(use general understanding)"}`,
+              `Student answer: ${answer}`,
+              uiLanguageInstruction(uiLanguage),
+            ].join("\n"),
+          },
+        ],
+        {
+          max_tokens: 280,
+          temperature: 0.2,
+          cacheUserKey,
+          promptCacheKey: `${cacheUserKey}:practice:check`,
+        },
+      );
+      const parsed = extractJsonObject(raw) || {};
+      return res.json({
+        ok: true,
+        correct: Boolean(parsed.correct),
+        feedback: String(parsed.feedback || "Thanks — review the key point and try a clearer answer next time.")
+          .trim()
+          .slice(0, 500),
+        key_point: String(parsed.key_point || rubric || "").trim().slice(0, 300),
+      });
+    }
+
+    // wrapup
+    const results = Array.isArray(req.body?.results) ? req.body.results.slice(0, 8) : [];
+    if (!results.length) {
+      return res.status(400).json({ error: "results array is required for wrapup." });
+    }
+    const compact = results.map((r, i) => ({
+      n: i + 1,
+      question: String(r?.question || r?.prompt || "").trim().slice(0, 300),
+      answer: String(r?.answer || "").trim().slice(0, 400),
+      correct: Boolean(r?.correct),
+      feedback: String(r?.feedback || "").trim().slice(0, 300),
+    }));
+    if (!HF_API_TOKEN) {
+      const misses = compact.filter((r) => !r.correct);
+      return res.json({
+        ok: true,
+        mistakes: misses.slice(0, 3).map((m) => ({
+          question: m.question,
+          what_went_wrong: m.feedback || "This one still needs another pass.",
+          relearn: "Re-read your notes on this idea, then retry the question in your own words.",
+        })),
+        next_best_step:
+          misses.length > 0
+            ? "Revisit the missed ideas in Notebook or Ask, then run Practice again."
+            : "Raise the difficulty: explain the topic to a friend or invent two new quiz questions.",
+        encouragement: "Nice work completing a practice loop.",
+      });
+    }
+    const raw = await callChatCompletion(
+      [
+        { role: "system", content: PRACTICE_WRAPUP_SYSTEM },
+        {
+          role: "user",
+          content: `Practice results JSON:\n${JSON.stringify(compact)}\n\n${uiLanguageInstruction(uiLanguage)}`,
+        },
+      ],
+      {
+        max_tokens: 500,
+        temperature: 0.35,
+        cacheUserKey,
+        promptCacheKey: `${cacheUserKey}:practice:wrapup`,
+      },
+    );
+    const parsed = extractJsonObject(raw) || {};
+    const mistakes = Array.isArray(parsed.mistakes)
+      ? parsed.mistakes
+          .map((m) => ({
+            question: String(m?.question || "").trim().slice(0, 300),
+            what_went_wrong: String(m?.what_went_wrong || "").trim().slice(0, 300),
+            relearn: String(m?.relearn || "").trim().slice(0, 300),
+          }))
+          .filter((m) => m.question || m.what_went_wrong)
+          .slice(0, 3)
+      : [];
+    return res.json({
+      ok: true,
+      mistakes,
+      next_best_step: String(
+        parsed.next_best_step || "Review the missed ideas once, then retry Practice.",
+      )
+        .trim()
+        .slice(0, 300),
+      encouragement: String(parsed.encouragement || "Good effort — practice beats cramming.")
+        .trim()
+        .slice(0, 200),
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
