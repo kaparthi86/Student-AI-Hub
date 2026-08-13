@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=practice-loop-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=practice-loop-1" />
+    <link rel="stylesheet" href="./styles.css?v=practice-polish-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=practice-polish-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -654,14 +654,6 @@
 
           <div id="notebookAnswerShell" class="answer-shell hidden">
             <div id="notebookActiveSources" class="notebook-active-sources muted" aria-live="polite"></div>
-            <div class="practice-entry-row">
-              <button type="button" id="notebookPracticeBtn" class="primary-btn practice-entry-btn">
-                Practice from these notes
-              </button>
-              <p class="muted practice-entry-hint" id="notebookPracticeHint">
-                Short quiz, mistake review, then one next step.
-              </p>
-            </div>
             <div id="notebookThread" class="chat-thread notebook-thread" aria-live="polite"></div>
             <div class="followup-bar">
               <div
@@ -710,28 +702,51 @@
         </section>
 
         <section id="panelPractice" class="panel practice-panel hidden" aria-label="Practice">
-          <div id="practiceEmpty" class="practice-empty">
-            <p class="search-title" id="practiceTitle">Practice loop</p>
+          <div id="practiceEmpty" class="practice-empty practice-hero">
+            <p class="search-title" id="practiceTitle">Practice</p>
             <p class="muted practice-lead" id="practiceLead">
-              Quiz yourself, review mistakes, get one clear next step — for learning, not shortcuts.
+              A short check, then one clear next step - for learning, not shortcuts.
             </p>
-            <div class="practice-start-actions">
-              <button type="button" id="practiceFromNotesBtn" class="primary-btn" disabled>
-                Practice from my notes
+            <button type="button" id="practiceFromNotesBtn" class="primary-btn practice-primary-cta" disabled>
+              Practice from my notes
+            </button>
+            <p class="practice-alt-row">
+              <button type="button" id="practiceFromAskBtn" class="text-link-btn">
+                Or practice from last Ask
               </button>
-              <button type="button" id="practiceFromAskBtn" class="ghost-btn">
-                Practice from last Ask
-              </button>
-            </div>
-            <div class="practice-topic-row">
+            </p>
+            <div class="practice-topic-row search-bar search-bar--branded search-bar--learn-hero">
+              <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI">
+                <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="11" fill="url(#searchBrandGradPractice)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.88"
+                  />
+                  <defs>
+                    <linearGradient
+                      id="searchBrandGradPractice"
+                      x1="8"
+                      y1="6"
+                      x2="34"
+                      y2="36"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
               <label class="sr-only" for="practiceTopicInput">Topic</label>
               <input
                 id="practiceTopicInput"
                 type="text"
                 maxlength="200"
-                placeholder="Or type a topic (e.g. quadratic equations)"
+                placeholder="Or type a topic..."
               />
-              <button type="button" id="practiceTopicStartBtn" class="primary-btn">Start</button>
+              <button type="button" id="practiceTopicStartBtn" class="search-submit primary-btn">Start</button>
             </div>
             <p id="practiceEmptyStatus" class="muted status-line" data-i18n-status="status_ready"></p>
           </div>
@@ -742,27 +757,29 @@
               <p id="practiceTopicLabel" class="muted practice-topic-label"></p>
             </div>
             <p id="practiceQuestion" class="practice-question"></p>
-            <label class="sr-only" for="practiceAnswerInput">Your answer</label>
-            <textarea
-              id="practiceAnswerInput"
-              rows="4"
-              placeholder="Answer in your own words..."
-            ></textarea>
-            <div class="practice-active-actions">
-              <button type="button" id="practiceSubmitAnswer" class="primary-btn">Check answer</button>
+            <div class="practice-answer-bar search-bar search-bar--branded search-bar--learn-hero">
+              <label class="sr-only" for="practiceAnswerInput">Your answer</label>
+              <textarea
+                id="practiceAnswerInput"
+                rows="3"
+                placeholder="Answer in your own words..."
+              ></textarea>
+              <button type="button" id="practiceSubmitAnswer" class="search-submit primary-btn">Check</button>
+            </div>
+            <div class="practice-active-meta">
               <button type="button" id="practiceSkipBtn" class="ghost-btn tiny-btn">Skip</button>
+              <p id="practiceActiveStatus" class="muted status-line"></p>
             </div>
             <div id="practiceFeedback" class="practice-feedback hidden" aria-live="polite"></div>
-            <p id="practiceActiveStatus" class="muted status-line"></p>
           </div>
 
           <div id="practiceSummary" class="practice-summary hidden">
             <p class="search-title" id="practiceSummaryTitle">Practice complete</p>
             <p id="practiceEncouragement" class="practice-encouragement"></p>
-            <div id="practiceScore" class="practice-score"></div>
+            <p id="practiceScore" class="practice-score"></p>
             <div id="practiceMistakes" class="practice-mistakes"></div>
             <div class="practice-next-step">
-              <h3 id="practiceNextLabel">Next best step</h3>
+              <p class="practice-next-kicker" id="practiceNextLabel">Next best step</p>
               <p id="practiceNextStep"></p>
             </div>
             <div class="practice-summary-actions">
@@ -907,6 +924,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=practice-loop-1"></script>
+    <script defer src="./app.js?v=practice-polish-1"></script>
   </body>
 </html>

@@ -236,13 +236,14 @@ const I18N = {
     tab_code: "Code",
     tab_notebook: "Notebook",
     tab_practice: "Practice",
-    practice_title: "Practice loop",
-    practice_lead: "Quiz yourself, review mistakes, get one clear next step - for learning, not shortcuts.",
+    chip_practice: "Practice",
+    practice_title: "Practice",
+    practice_lead: "A short check, then one clear next step - for learning, not shortcuts.",
     practice_from_notes: "Practice from my notes",
-    practice_from_ask: "Practice from last Ask",
-    practice_topic_placeholder: "Or type a topic (e.g. quadratic equations)",
+    practice_from_ask: "Or practice from last Ask",
+    practice_topic_placeholder: "Or type a topic...",
     practice_start: "Start",
-    practice_check: "Check answer",
+    practice_check: "Check",
     practice_skip: "Skip",
     practice_again: "Practice again",
     practice_back_notebook: "Back to Notebook",
@@ -1211,8 +1212,7 @@ function applyTranslations() {
     practiceBackNotebookBtn: "practice_back_notebook",
     practiceSummaryTitle: "practice_summary_title",
     practiceNextLabel: "practice_next_label",
-    notebookPracticeBtn: "practice_entry_btn",
-    notebookPracticeHint: "practice_entry_hint",
+
     chatSearchTitle: "chat_title",
     chatSearchHint: "chat_hint",
     codeSearchTitle: "code_title",
@@ -1492,6 +1492,7 @@ function formatChatErrorForUi(err) {
 const STARTER_CHIP_LABEL_KEYS = {
   summarize: "chip_summarize",
   quiz: "chip_quiz",
+  practice: "chip_practice",
   steps: "chip_steps",
   readAloud: "chip_listen",
   studyPlan: "chip_study_plan",
@@ -1535,7 +1536,7 @@ function analyzeAssistantForFollowups(raw) {
  */
 function pickSmartFollowupKeys(analysis, scope) {
   const a = analysis || analyzeAssistantForFollowups("");
-  const keys = ["simpler", "example", "quiz"];
+  const keys = ["simpler", "example", "practice"];
   if (!a.hasSteps) keys.push("steps");
   else if (scope === "notebook") keys.push("studyPlan");
   else keys.push("studyNext");
@@ -3957,6 +3958,14 @@ const chatSearchFlow = wireSearchFlow({
 
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
   readAloud: () => readLastAssistantAloud(chatHistory),
+  practice: () => {
+    const topic = lastAskTopicGuess();
+    if (!topic) {
+      showToast(t("practice_need_ask"));
+      return;
+    }
+    startPracticeSession({ source: "ask", topic });
+  },
 });
 renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
 
@@ -4101,6 +4110,13 @@ wireStarterChipsAsSend(
   notebookFollowupSubmit,
   {
     readAloud: () => readLastAssistantAloud(notebookHistory),
+    practice: () => {
+      if (!notebookDocumentContext) {
+        showToast(t("practice_need_notes"));
+        return;
+      }
+      startPracticeSession({ source: "notebook", topic: "My notes" });
+    },
   },
   NOTEBOOK_STARTER_PROMPT_KEYS,
 );
@@ -4209,7 +4225,6 @@ const practiceMistakes = document.getElementById("practiceMistakes");
 const practiceNextStep = document.getElementById("practiceNextStep");
 const practiceAgainBtn = document.getElementById("practiceAgainBtn");
 const practiceBackNotebookBtn = document.getElementById("practiceBackNotebookBtn");
-const notebookPracticeBtn = document.getElementById("notebookPracticeBtn");
 
 let practiceState = {
   topic: "",
@@ -4272,7 +4287,13 @@ function renderPracticeQuestion() {
     });
   }
   if (practiceTopicLabel) practiceTopicLabel.textContent = practiceState.topic || "";
-  if (practiceQuestion) practiceQuestion.textContent = q.prompt;
+  if (practiceQuestion) {
+    practiceQuestion.textContent = q.prompt;
+    practiceQuestion.style.animation = "none";
+    // retrigger enter motion
+    void practiceQuestion.offsetWidth;
+    practiceQuestion.style.animation = "";
+  }
   if (practiceAnswerInput) {
     practiceAnswerInput.value = "";
     practiceAnswerInput.focus();
@@ -4454,6 +4475,12 @@ async function finishPracticeSession() {
     if (practiceNextStep) {
       practiceNextStep.textContent = String(data.next_best_step || "").trim();
     }
+    const nextWrap = document.querySelector(".practice-next-step");
+    if (nextWrap) {
+      nextWrap.style.animation = "none";
+      void nextWrap.offsetWidth;
+      nextWrap.style.animation = "";
+    }
     if (practiceMistakes) {
       practiceMistakes.innerHTML = "";
       const mistakes = Array.isArray(data.mistakes) ? data.mistakes : [];
@@ -4522,9 +4549,6 @@ practiceAgainBtn?.addEventListener("click", () => {
   else showPracticeView("empty");
 });
 practiceBackNotebookBtn?.addEventListener("click", () => setMainTab("notebook"));
-notebookPracticeBtn?.addEventListener("click", () => {
-  startPracticeSession({ source: "notebook", topic: "My notes" });
-});
 syncPracticeEmptyActions();
 
 
