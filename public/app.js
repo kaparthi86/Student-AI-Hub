@@ -19,7 +19,7 @@ const toastStack = document.getElementById("toastStack");
 const panelChat = document.getElementById("panelChat");
 const panelCode = document.getElementById("panelCode");
 const panelNotebook = document.getElementById("panelNotebook");
-const panelPractice = document.getElementById("panelPractice");
+const practiceDock = document.getElementById("practiceDock");
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -235,28 +235,19 @@ const I18N = {
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
-    tab_practice: "Practice",
     chip_practice: "Practice",
-    practice_title: "Practice",
-    practice_lead: "A short check, then one clear next step - for learning, not shortcuts.",
-    practice_from_notes: "Practice from my notes",
-    practice_from_ask: "Or practice from last Ask",
-    practice_topic_placeholder: "Or type a topic...",
-    practice_start: "Start",
+    practice_this_topic: "Practice this topic",
     practice_check: "Check",
     practice_skip: "Skip",
     practice_again: "Practice again",
-    practice_back_notebook: "Back to Notebook",
+    practice_done: "Done",
     practice_summary_title: "Practice complete",
     practice_next_label: "Next best step",
-    practice_entry_btn: "Practice from these notes",
-    practice_entry_hint: "Short quiz, mistake review, then one next step.",
     practice_answer_placeholder: "Answer in your own words...",
     practice_progress: "Question {n} of {total}",
     practice_score: "You got {correct} of {total} right.",
     practice_need_notes: "Analyze notes in Notebook first.",
     practice_need_ask: "Ask a question first, then practice that topic.",
-    practice_need_topic: "Enter a topic to practice.",
     practice_building: "Building your practice set...",
     practice_checking: "Checking your answer...",
     practice_wrapping: "Building your next step...",
@@ -274,10 +265,10 @@ const I18N = {
     code_hint: "Tip: include error messages and what you expected.",
     code_followup: "Follow-up...",
     notebook_hint:
-      "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, quiz questions, and a study plan - similar to a lightweight notebook assistant.",
+      "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, practice checks, and a study plan - similar to a lightweight notebook assistant.",
     analyze_doc: "Analyze notes",
     notebook_drop_title: "Drop notes or choose files",
-    notebook_drop_hint: "Up to 5 files - .txt, .md, .csv, .json, .pdf - summary, key ideas, quiz, and a study plan",
+    notebook_drop_hint: "Up to 5 files - .txt, .md, .csv, .json, .pdf - summary, key ideas, practice checks, and a study plan",
     notebook_followup: "Ask a follow-up about your notes...",
     notebook_sources_aria: "Selected notebook sources",
     notebook_remove_source: "Remove {name}",
@@ -391,7 +382,7 @@ const I18N = {
     empty_code_3: "Big-O of binary search",
     empty_code_3_send: "What is the time complexity of binary search and why? Keep it beginner-friendly.",
     empty_nb_1: "PDF lecture notes",
-    empty_nb_1_hint: "Upload a PDF of lecture notes to get a summary, key concepts, and quiz questions.",
+    empty_nb_1_hint: "Upload a PDF of lecture notes to get a summary, key concepts, and practice checks.",
     empty_nb_2: "Markdown study guide",
     empty_nb_2_hint: "Upload a .md or .txt study guide for a structured recap and study plan.",
     empty_nb_3: "CSV data table",
@@ -1200,16 +1191,10 @@ function applyTranslations() {
     tabChat: "tab_ask",
     tabCode: "tab_code",
     tabNotebook: "tab_notebook",
-    tabPractice: "tab_practice",
-    practiceTitle: "practice_title",
-    practiceLead: "practice_lead",
-    practiceFromNotesBtn: "practice_from_notes",
-    practiceFromAskBtn: "practice_from_ask",
-    practiceTopicStartBtn: "practice_start",
     practiceSubmitAnswer: "practice_check",
     practiceSkipBtn: "practice_skip",
     practiceAgainBtn: "practice_again",
-    practiceBackNotebookBtn: "practice_back_notebook",
+    practiceDoneBtn: "practice_done",
     practiceSummaryTitle: "practice_summary_title",
     practiceNextLabel: "practice_next_label",
 
@@ -1271,8 +1256,6 @@ function applyTranslations() {
   if (codeSearchInput) codeSearchInput.placeholder = t("code_placeholder");
   if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
   if (notebookFollowupInput) notebookFollowupInput.placeholder = t("notebook_followup");
-  const practiceTopicInputEl = document.getElementById("practiceTopicInput");
-  if (practiceTopicInputEl) practiceTopicInputEl.placeholder = t("practice_topic_placeholder");
   const practiceAnswerInputEl = document.getElementById("practiceAnswerInput");
   if (practiceAnswerInputEl) practiceAnswerInputEl.placeholder = t("practice_answer_placeholder");
   const pwaIosSteps = document.getElementById("pwaIosSteps");
@@ -1491,7 +1474,6 @@ function formatChatErrorForUi(err) {
 
 const STARTER_CHIP_LABEL_KEYS = {
   summarize: "chip_summarize",
-  quiz: "chip_quiz",
   practice: "chip_practice",
   steps: "chip_steps",
   readAloud: "chip_listen",
@@ -1503,7 +1485,6 @@ const STARTER_CHIP_LABEL_KEYS = {
 
 const STARTER_PROMPT_KEYS = {
   summarize: "starter_prompt_summarize",
-  quiz: "starter_prompt_quiz",
   steps: "starter_prompt_steps",
   studyPlan: "starter_prompt_study_plan",
   simpler: "starter_prompt_simpler",
@@ -1513,7 +1494,6 @@ const STARTER_PROMPT_KEYS = {
 
 const NOTEBOOK_STARTER_PROMPT_KEYS = {
   summarize: "starter_prompt_notebook_summarize",
-  quiz: "starter_prompt_notebook_quiz",
   steps: "starter_prompt_notebook_steps",
   studyPlan: "starter_prompt_study_plan",
   simpler: "starter_prompt_simpler",
@@ -1678,8 +1658,7 @@ function readLastAssistantAloud(history = chatHistory) {
 }
 
 function normalizeStudyMode(raw) {
-  const v = String(raw || "").trim().toLowerCase();
-  return v === "quiz" ? v : "explain";
+  return "explain";
 }
 
 function defaultPrefs() {
@@ -2286,14 +2265,7 @@ function renderAssistantHtml(text) {
 }
 
 function setMainTab(next) {
-  mainTab =
-    next === "code"
-      ? "code"
-      : next === "notebook"
-        ? "notebook"
-        : next === "practice"
-          ? "practice"
-          : "chat";
+  mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
   if (mainTab !== "chat") stopAllLearnVoice();
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
@@ -2303,13 +2275,12 @@ function setMainTab(next) {
   panelChat.classList.toggle("hidden", mainTab !== "chat");
   panelCode.classList.toggle("hidden", mainTab !== "code");
   panelNotebook.classList.toggle("hidden", mainTab !== "notebook");
-  panelPractice?.classList.toggle("hidden", mainTab !== "practice");
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
     syncNotebookLayout();
   }
-  if (mainTab === "practice") {
-    syncPracticeEmptyActions();
+  if (practiceDock && !practiceDock.classList.contains("hidden")) {
+    placePracticeDock();
   }
 }
 
@@ -2509,6 +2480,7 @@ function fillAssistantBubbleBody(bubble, text) {
   }
   wireAssistantCopy(bubble, text);
   mountAssistantFeedback(bubble, text);
+  mountAssistantPractice(bubble, text);
 }
 
 /** @returns {{ wrap: HTMLDivElement, bubble: HTMLDivElement }} */
@@ -4182,7 +4154,6 @@ docAnalyzeBtn?.addEventListener("click", async () => {
     notebookSessionOpen = true;
     saveSessionState();
     syncNotebookLayout();
-    syncPracticeEmptyActions();
     setStatus(notebookStatus, "status_ready");
     if (Array.isArray(data.failures) && data.failures.length) {
       const failedNames = data.failures.map((f) => f.name).filter(Boolean).join(", ");
@@ -4202,14 +4173,49 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 });
 
 
-/* ---- Practice loop (quiz -> mistakes -> next best step) ---- */
-const practiceEmpty = document.getElementById("practiceEmpty");
+/* ---- Practice loop under topic (no separate tab) ---- */
+function mountAssistantPractice(bubble, rawText) {
+  bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
+  const mode = bubble.dataset.mode || "learn";
+  if (mode !== "learn" && mode !== "notebook") return;
+  const wrap = document.createElement("div");
+  wrap.className = "assistant-practice";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "text-link-btn assistant-practice-btn";
+  btn.textContent = t("practice_this_topic");
+  btn.addEventListener("click", () => {
+    if (mode === "notebook") {
+      startPracticeSession({ source: "notebook", topic: "My notes" });
+      return;
+    }
+    startPracticeSession({ source: "ask", topic: topicFromAskContext(bubble, rawText) });
+  });
+  wrap.appendChild(btn);
+  bubble.appendChild(wrap);
+}
+
+function topicFromAskContext(bubble, rawText) {
+  const msg = bubble.closest(".msg");
+  const thread = msg && msg.parentElement;
+  if (thread) {
+    const rows = Array.from(thread.querySelectorAll(".msg"));
+    const idx = rows.indexOf(msg);
+    for (let i = idx - 1; i >= 0; i -= 1) {
+      if (!rows[i].classList.contains("user")) continue;
+      const plain = rows[i].querySelector(".bubble-text");
+      const t0 = plain ? plain.textContent.trim() : "";
+      if (t0) return t0.slice(0, 160);
+    }
+  }
+  const guess = lastAskTopicGuess();
+  if (guess) return guess;
+  const line = String(rawText || "").trim().split(/\n/)[0] || "";
+  return line.replace(/^#+\s*/, "").slice(0, 160) || "This topic";
+}
+
 const practiceActive = document.getElementById("practiceActive");
 const practiceSummary = document.getElementById("practiceSummary");
-const practiceFromNotesBtn = document.getElementById("practiceFromNotesBtn");
-const practiceFromAskBtn = document.getElementById("practiceFromAskBtn");
-const practiceTopicInput = document.getElementById("practiceTopicInput");
-const practiceTopicStartBtn = document.getElementById("practiceTopicStartBtn");
 const practiceEmptyStatus = document.getElementById("practiceEmptyStatus");
 const practiceProgress = document.getElementById("practiceProgress");
 const practiceTopicLabel = document.getElementById("practiceTopicLabel");
@@ -4224,7 +4230,7 @@ const practiceScore = document.getElementById("practiceScore");
 const practiceMistakes = document.getElementById("practiceMistakes");
 const practiceNextStep = document.getElementById("practiceNextStep");
 const practiceAgainBtn = document.getElementById("practiceAgainBtn");
-const practiceBackNotebookBtn = document.getElementById("practiceBackNotebookBtn");
+const practiceDoneBtn = document.getElementById("practiceDoneBtn");
 
 let practiceState = {
   topic: "",
@@ -4237,18 +4243,35 @@ let practiceState = {
   lastStartOpts: null,
 };
 
-function syncPracticeEmptyActions() {
-  if (practiceFromNotesBtn) {
-    const ready = Boolean(notebookDocumentContext);
-    practiceFromNotesBtn.disabled = !ready;
-    practiceFromNotesBtn.title = ready ? "" : t("practice_need_notes");
-  }
+function placePracticeDock() {
+  if (!practiceDock) return;
+  const host = mainTab === "notebook" ? notebookAnswerShell : chatAnswerShell;
+  if (!host) return;
+  const followup = host.querySelector(".followup-bar");
+  if (followup) host.insertBefore(practiceDock, followup);
+  else host.appendChild(practiceDock);
+  practiceDock.classList.remove("hidden");
+  document.querySelectorAll(".answer-shell > .followup-bar").forEach((bar) => {
+    bar.classList.toggle("hidden", bar.parentElement === host);
+  });
+}
+
+function closePracticeDock() {
+  if (!practiceDock) return;
+  practiceDock.classList.add("hidden");
+  practiceActive?.classList.add("hidden");
+  practiceSummary?.classList.add("hidden");
+  practiceEmptyStatus?.classList.add("hidden");
+  document.querySelectorAll(".answer-shell > .followup-bar").forEach((bar) => {
+    bar.classList.remove("hidden");
+  });
+  practiceState.busy = false;
 }
 
 function showPracticeView(which) {
-  practiceEmpty?.classList.toggle("hidden", which !== "empty");
-  practiceActive?.classList.toggle("hidden", which !== "active");
+  practiceActive?.classList.toggle("hidden", which !== "active" && which !== "loading");
   practiceSummary?.classList.toggle("hidden", which !== "summary");
+  if (practiceEmptyStatus) practiceEmptyStatus.classList.toggle("hidden", which !== "loading");
 }
 
 function lastAskTopicGuess() {
@@ -4268,11 +4291,7 @@ async function practiceApi(body) {
     body: JSON.stringify({ ...body, uiLanguage: activeUiLanguage }),
   });
   let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = null;
-  }
+  try { data = await res.json(); } catch { data = null; }
   if (!res.ok) throw new Error(data?.error || "Practice request failed.");
   return data || {};
 }
@@ -4290,7 +4309,6 @@ function renderPracticeQuestion() {
   if (practiceQuestion) {
     practiceQuestion.textContent = q.prompt;
     practiceQuestion.style.animation = "none";
-    // retrigger enter motion
     void practiceQuestion.offsetWidth;
     practiceQuestion.style.animation = "";
   }
@@ -4311,7 +4329,7 @@ async function startPracticeSession(opts) {
     maybeOfferHonorCodeModal();
     return;
   }
-  const source = opts?.source || "topic";
+  const source = opts?.source || "ask";
   const documentContext = source === "notebook" ? String(notebookDocumentContext || "") : "";
   const topic = String(opts?.topic || "").trim();
   if (source === "notebook" && !documentContext) {
@@ -4319,24 +4337,22 @@ async function startPracticeSession(opts) {
     setMainTab("notebook");
     return;
   }
-  if (source === "ask" && !topic) {
+  if (source !== "notebook" && !topic) {
     showToast(t("practice_need_ask"));
     setMainTab("chat");
-    return;
-  }
-  if (source === "topic" && !topic) {
-    showToast(t("practice_need_topic"));
     return;
   }
 
   practiceState.busy = true;
   practiceState.lastStartOpts = { source, topic, documentContext };
-  setMainTab("practice");
-  showPracticeView("empty");
-  if (practiceEmptyStatus) setStatus(practiceEmptyStatus, "practice_building");
-  if (practiceFromNotesBtn) practiceFromNotesBtn.disabled = true;
-  if (practiceFromAskBtn) practiceFromAskBtn.disabled = true;
-  if (practiceTopicStartBtn) practiceTopicStartBtn.disabled = true;
+  if (source === "notebook") setMainTab("notebook");
+  else setMainTab("chat");
+  placePracticeDock();
+  showPracticeView("loading");
+  if (practiceEmptyStatus) {
+    practiceEmptyStatus.classList.remove("hidden");
+    setStatus(practiceEmptyStatus, "practice_building");
+  }
 
   try {
     const data = await practiceApi({
@@ -4358,17 +4374,14 @@ async function startPracticeSession(opts) {
     };
     showPracticeView("active");
     renderPracticeQuestion();
-    if (practiceEmptyStatus) setStatus(practiceEmptyStatus, "status_ready");
+    if (practiceEmptyStatus) {
+      setStatus(practiceEmptyStatus, "status_ready");
+      practiceEmptyStatus.classList.add("hidden");
+    }
   } catch (e) {
     practiceState.busy = false;
     showToast(e.message || t("status_failed"));
-    if (practiceEmptyStatus) {
-      practiceEmptyStatus.textContent = e.message || t("status_failed");
-    }
-  } finally {
-    syncPracticeEmptyActions();
-    if (practiceFromAskBtn) practiceFromAskBtn.disabled = false;
-    if (practiceTopicStartBtn) practiceTopicStartBtn.disabled = false;
+    closePracticeDock();
   }
 }
 
@@ -4382,7 +4395,7 @@ function showInlinePracticeFeedback(check) {
   const key = String(check?.key_point || "").trim();
   practiceFeedback.innerHTML = "";
   const p1 = document.createElement("p");
-  p1.textContent = feedback ? (title + " " + feedback) : title;
+  p1.textContent = feedback ? title + " " + feedback : title;
   practiceFeedback.appendChild(p1);
   if (key) {
     const p2 = document.createElement("p");
@@ -4406,11 +4419,8 @@ async function advancePracticeAfterCheck(check, answer) {
   if (practiceSkipBtn) practiceSkipBtn.disabled = true;
   await new Promise((r) => setTimeout(r, 700));
   practiceState.index += 1;
-  if (practiceState.index >= practiceState.questions.length) {
-    await finishPracticeSession();
-  } else {
-    renderPracticeQuestion();
-  }
+  if (practiceState.index >= practiceState.questions.length) await finishPracticeSession();
+  else renderPracticeQuestion();
 }
 
 async function submitPracticeAnswer(opts) {
@@ -4457,24 +4467,14 @@ async function finishPracticeSession() {
   practiceState.busy = true;
   if (practiceActiveStatus) setStatus(practiceActiveStatus, "practice_wrapping");
   try {
-    const data = await practiceApi({
-      action: "wrapup",
-      results: practiceState.results,
-    });
+    const data = await practiceApi({ action: "wrapup", results: practiceState.results });
     const correct = practiceState.results.filter((r) => r.correct).length;
     const total = practiceState.results.length;
     if (practiceScore) {
-      practiceScore.textContent = t("practice_score", {
-        correct: String(correct),
-        total: String(total),
-      });
+      practiceScore.textContent = t("practice_score", { correct: String(correct), total: String(total) });
     }
-    if (practiceEncouragement) {
-      practiceEncouragement.textContent = String(data.encouragement || "").trim();
-    }
-    if (practiceNextStep) {
-      practiceNextStep.textContent = String(data.next_best_step || "").trim();
-    }
+    if (practiceEncouragement) practiceEncouragement.textContent = String(data.encouragement || "").trim();
+    if (practiceNextStep) practiceNextStep.textContent = String(data.next_best_step || "").trim();
     const nextWrap = document.querySelector(".practice-next-step");
     if (nextWrap) {
       nextWrap.style.animation = "none";
@@ -4519,22 +4519,6 @@ async function finishPracticeSession() {
   }
 }
 
-practiceFromNotesBtn?.addEventListener("click", () => {
-  startPracticeSession({ source: "notebook", topic: "My notes" });
-});
-practiceFromAskBtn?.addEventListener("click", () => {
-  const topic = lastAskTopicGuess();
-  startPracticeSession({ source: "ask", topic });
-});
-practiceTopicStartBtn?.addEventListener("click", () => {
-  startPracticeSession({ source: "topic", topic: practiceTopicInput?.value || "" });
-});
-practiceTopicInput?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    startPracticeSession({ source: "topic", topic: practiceTopicInput?.value || "" });
-  }
-});
 practiceSubmitAnswer?.addEventListener("click", () => submitPracticeAnswer());
 practiceSkipBtn?.addEventListener("click", () => submitPracticeAnswer({ skip: true }));
 practiceAnswerInput?.addEventListener("keydown", (e) => {
@@ -4546,11 +4530,8 @@ practiceAnswerInput?.addEventListener("keydown", (e) => {
 practiceAgainBtn?.addEventListener("click", () => {
   const opts = practiceState.lastStartOpts;
   if (opts) startPracticeSession(opts);
-  else showPracticeView("empty");
 });
-practiceBackNotebookBtn?.addEventListener("click", () => setMainTab("notebook"));
-syncPracticeEmptyActions();
-
+practiceDoneBtn?.addEventListener("click", () => closePracticeDock());
 
 async function initBetaBanner() {
   const el = document.getElementById("betaBanner");

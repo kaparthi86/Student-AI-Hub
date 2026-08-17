@@ -675,7 +675,7 @@ Using ONLY the source materials in the user message, produce structured study no
 1) Executive summary (5-8 bullets)
 2) Key concepts and definitions (bullet list)
 3) Important formulas / steps / algorithms (if any; else say "None obvious")
-4) 8 quiz questions with answers (mix easy/medium)
+4) 5 short practice-check questions with brief answers (mix easy/medium; for learning, not graded exams)
 5) A 7-day study plan (short daily tasks)
 
 Rules:

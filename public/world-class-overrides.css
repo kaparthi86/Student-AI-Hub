@@ -616,7 +616,7 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))):not(:has(#hubC
 /* Segmented tabs — same on all breakpoints */
 .tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin: 10px 0 14px;
   padding: 4px;
@@ -1535,53 +1535,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   margin-right: auto;
 }
 
-/* Practice loop — Soft paper, Ask-aligned */
-#tabPractice {
-  letter-spacing: -0.01em;
-}
-
-@media (max-width: 640px) {
-  #tabPractice {
-    display: none;
-  }
-
-  .tabs {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.practice-panel {
-  width: min(100%, 640px);
-  margin: 0 auto;
-  padding: min(10vh, 56px) 4px 28px;
-}
-
-.practice-hero {
-  animation: practice-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.practice-empty .search-title,
-.practice-summary .search-title {
-  margin: 0 0 10px;
-}
-
-.practice-lead {
-  margin: 0 0 22px;
-  max-width: 34ch;
-  font-size: 1.05rem;
-  line-height: 1.5;
-}
-
-.practice-primary-cta {
-  display: inline-flex;
-  margin-bottom: 12px;
-  padding: 12px 18px;
-}
-
-.practice-alt-row {
-  margin: 0 0 22px;
-}
-
+/* Practice dock — under-topic Soft paper */
 .text-link-btn {
   border: none;
   background: none;
@@ -1604,22 +1558,56 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   text-decoration: none;
 }
 
-.practice-topic-row {
-  width: 100%;
-  max-width: 520px;
-  margin-bottom: 10px;
+.assistant-practice {
+  margin-top: 10px;
+  padding-top: 2px;
 }
 
-.practice-topic-row input {
+.assistant-practice-btn {
+  font-size: 0.92rem;
+}
+
+.practice-dock {
+  width: min(100%, 640px);
+  margin: 8px auto 14px;
+  padding: 18px 0 8px;
+  border-top: 1px solid rgba(28, 27, 25, 0.06);
+  animation: practice-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.practice-dock.hidden {
+  display: none !important;
+}
+
+.practice-summary .search-title {
+  margin: 0 0 10px;
+}
+
+.practice-answer-bar.search-bar--learn-hero > textarea {
   flex: 1 1 auto;
   min-width: 0;
-  width: 100%;
+  width: auto;
+  padding: 12px 14px;
   border: none;
   background: transparent;
+  box-shadow: none;
+  min-height: 4.5em;
+  padding-top: 14px;
+  padding-bottom: 14px;
   color: var(--text);
   font: inherit;
   font-size: 15px;
+  line-height: 1.45;
+  resize: none;
+  max-height: 9em;
   outline: none;
+}
+
+.practice-answer-bar.search-bar--learn-hero {
+  width: 100%;
+  margin-bottom: 8px;
+  align-items: stretch;
+  border-radius: 22px;
 }
 
 .practice-progress-row {
@@ -1652,29 +1640,6 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   letter-spacing: 0.004em;
   color: #1c1b19;
   animation: practice-question-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.practice-answer-bar {
-  width: 100%;
-  margin-bottom: 8px;
-  align-items: flex-end;
-}
-
-.practice-answer-bar textarea {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 15px;
-  line-height: 1.45;
-  resize: none;
-  min-height: 3.2em;
-  max-height: 9em;
-  outline: none;
-  padding: 8px 0;
 }
 
 .practice-active-meta {
@@ -1787,6 +1752,10 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   align-items: center;
 }
 
+.practice-dock-status {
+  margin-top: 8px;
+}
+
 @keyframes practice-rise {
   from {
     opacity: 0;
@@ -1832,7 +1801,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .practice-hero,
+  .practice-dock,
   .practice-question,
   .practice-feedback,
   .practice-next-step {
