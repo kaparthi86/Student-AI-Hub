@@ -1627,6 +1627,163 @@ function getLastAssistantMarkdownFromHistory(history) {
   return "";
 }
 
+/** Cache voices; Chrome often returns [] until voiceschanged. */
+let cachedSpeechVoices = [];
+function refreshSpeechVoices() {
+  try {
+    cachedSpeechVoices = window.speechSynthesis?.getVoices?.() || [];
+  } catch {
+    cachedSpeechVoices = [];
+  }
+  return cachedSpeechVoices;
+}
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  refreshSpeechVoices();
+  try {
+    window.speechSynthesis.addEventListener("voiceschanged", refreshSpeechVoices);
+  } catch {
+    window.speechSynthesis.onvoiceschanged = refreshSpeechVoices;
+  }
+}
+
+function speechLangForUi() {
+  const ui = typeof activeUiLanguage === "string" ? activeUiLanguage : "en";
+  if (ui === "es") return "es";
+  if (ui === "hi") return "hi";
+  if (ui === "te") return "te";
+  return "en";
+}
+
+/**
+ * Prefer natural / neural voices over default robotic ones.
+ * Score by locale match + known high-quality voice names.
+ */
+function pickPreferredSpeechVoice(langPrefix) {
+  const voices = refreshSpeechVoices();
+  if (!voices.length) return null;
+  const want = String(langPrefix || "en").toLowerCase();
+  const preferredNameHints = [
+    "google us english",
+    "google uk english female",
+    "google uk english male",
+    "microsoft aria",
+    "microsoft jenny",
+    "microsoft guy",
+    "microsoft ana",
+    "microsoft sabina",
+    "microsoft pablo",
+    "samantha",
+    "karen",
+    "moira",
+    "tessa",
+    "fiona",
+    "daniel",
+    "natural",
+    "neural",
+    "enhanced",
+    "premium",
+  ];
+  const scored = voices.map((v) => {
+    const lang = String(v.lang || "").toLowerCase();
+    const name = String(v.name || "").toLowerCase();
+    let score = 0;
+    if (lang === want || lang.startsWith(want + "-")) score += 40;
+    else if (lang.startsWith(want)) score += 25;
+    else if (want === "en" && lang.startsWith("en")) score += 20;
+    else score -= 50;
+    for (const hint of preferredNameHints) {
+      if (name.includes(hint)) {
+        score += 30;
+        break;
+      }
+    }
+    // Soft preference for local voices when quality is similar (less latency).
+    if (v.localService) score += 3;
+    // Avoid obviously compressed/novelty voices.
+    if (/whisper|zarvox|bad news|good news|bells|organ|cellos|junior|trinoids/i.test(name)) score -= 40;
+    return { v, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0] && scored[0].score > 0 ? scored[0].v : voices.find((v) => String(v.lang || "").toLowerCase().startsWith(want)) || null;
+}
+
+/** Make assistant text sound natural when spoken. */
+function prepareTextForSpeech(rawPlain) {
+  let s = String(rawPlain || "");
+  // Drop fenced code; speaking code is usually noise.
+  s = s.replace(/```[\s\S]*?```/g, " Code example omitted. ");
+  s = s.replace(/`([^`]+)`/g, "$1");
+  // Links: keep label, drop URL noise.
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, "$1");
+  s = s.replace(/https?:\/\/\S+/g, " link ");
+  // Markdown leftovers.
+  s = s.replace(/^#{1,6}\s+/gm, "");
+  s = s.replace(/^\s*[-*+]\s+/gm, "");
+  s = s.replace(/^\s*\d+\.\s+/gm, "");
+  s = s.replace(/\*\*([^*]+)\*\*/g, "$1");
+  s = s.replace(/\*([^*]+)\*/g, "$1");
+  s = s.replace(/_{1,2}([^_]+)_{1,2}/g, "$1");
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+
+function chunkTextForSpeech(text, maxLen = 420) {
+  const src = String(text || "").trim();
+  if (!src) return [];
+  if (src.length <= maxLen) return [src];
+  const parts = [];
+  // Avoid lookbehind for broader Safari support: keep punctuation with the sentence.
+  const sentences = src.replace(/([.!?])\s+/g, "$1\n").split("\n");
+  let buf = "";
+  for (const sentence of sentences) {
+    if (!sentence) continue;
+    if ((buf + " " + sentence).trim().length <= maxLen) {
+      buf = (buf ? buf + " " : "") + sentence;
+      continue;
+    }
+    if (buf) parts.push(buf);
+    if (sentence.length <= maxLen) {
+      buf = sentence;
+    } else {
+      for (let i = 0; i < sentence.length; i += maxLen) {
+        parts.push(sentence.slice(i, i + maxLen));
+      }
+      buf = "";
+    }
+  }
+  if (buf) parts.push(buf);
+  return parts.length ? parts : [src.slice(0, maxLen)];
+}
+
+function speakTextChunks(chunks, voice, langTag) {
+  const list = Array.isArray(chunks) ? chunks.filter(Boolean) : [];
+  if (!list.length) return;
+  let i = 0;
+  const speakNext = () => {
+    if (i >= list.length) return;
+    const u = new SpeechSynthesisUtterance(list[i]);
+    i += 1;
+    if (voice) u.voice = voice;
+    u.lang = langTag || voice?.lang || "en-US";
+    // Slightly slower + neutral pitch reads clearer as a study coach.
+    u.rate = 0.92;
+    u.pitch = 1;
+    u.volume = 1;
+    u.onend = () => speakNext();
+    u.onerror = () => {
+      if (i === 1) showToast(t("toast_speech_playback_failed"));
+    };
+    window.speechSynthesis.speak(u);
+  };
+  // Chrome sometimes needs a cancel + tiny delay before a fresh queue.
+  try {
+    window.speechSynthesis.cancel();
+  } catch {
+    /* ignore */
+  }
+  setTimeout(speakNext, 40);
+}
+
 /** Read-aloud chip: Web Speech API, last assistant reply only. Tap again while playing to stop. */
 function readLastAssistantAloud(history = chatHistory) {
   if (typeof window === "undefined" || !window.speechSynthesis) {
@@ -1644,17 +1801,26 @@ function readLastAssistantAloud(history = chatHistory) {
     return;
   }
   const { plain } = getAssistantCopyFormats(raw);
-  const spoken = String(plain || "").trim();
+  const spoken = prepareTextForSpeech(plain);
   if (!spoken) {
     showToast(t("toast_nothing_to_read"));
     return;
   }
-  const maxChars = 32000;
-  const toSpeak = spoken.length > maxChars ? `${spoken.slice(0, maxChars)}\n\n(Truncated for speech.)` : spoken;
-  const u = new SpeechSynthesisUtterance(toSpeak);
-  u.rate = 1;
-  u.onerror = () => showToast(t("toast_speech_playback_failed"));
-  window.speechSynthesis.speak(u);
+  const maxChars = 12000;
+  const clipped =
+    spoken.length > maxChars ? spoken.slice(0, maxChars) + " Truncated for speech." : spoken;
+  const langPrefix = speechLangForUi();
+  const voice = pickPreferredSpeechVoice(langPrefix);
+  const langTag =
+    voice?.lang ||
+    (langPrefix === "es"
+      ? "es-ES"
+      : langPrefix === "hi"
+        ? "hi-IN"
+        : langPrefix === "te"
+          ? "te-IN"
+          : "en-US");
+  speakTextChunks(chunkTextForSpeech(clipped), voice, langTag);
 }
 
 function normalizeStudyMode(raw) {
