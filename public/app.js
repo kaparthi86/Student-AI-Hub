@@ -1655,34 +1655,38 @@ function speechLangForUi() {
 }
 
 /**
- * Prefer natural / neural voices over default robotic ones.
- * Score by locale match + known high-quality voice names.
+ * Prefer calm, soft natural voices for a sober study-coach tone.
+ * Score by locale match + soft/neural voice names; demote bright or novelty voices.
  */
 function pickPreferredSpeechVoice(langPrefix) {
   const voices = refreshSpeechVoices();
   if (!voices.length) return null;
   const want = String(langPrefix || "en").toLowerCase();
-  const preferredNameHints = [
-    "google us english",
-    "google uk english female",
-    "google uk english male",
+  // Soft / sober first (calm female + neural), then solid neutrals.
+  const softNameHints = [
     "microsoft aria",
     "microsoft jenny",
-    "microsoft guy",
     "microsoft ana",
     "microsoft sabina",
-    "microsoft pablo",
+    "google uk english female",
     "samantha",
     "karen",
     "moira",
     "tessa",
     "fiona",
-    "daniel",
+    "victoria",
+    "serena",
     "natural",
     "neural",
     "enhanced",
     "premium",
   ];
+  const okNameHints = [
+    "google us english",
+    "microsoft catherine",
+    "microsoft zira",
+  ];
+  const brightOrHarsh = /guy|daniel|david|mark|fred|ralph|alex|jorge|pablo|male|whisper|zarvox|bad news|good news|bells|organ|cellos|junior|trinoids|zarvox|bubbles/i;
   const scored = voices.map((v) => {
     const lang = String(v.lang || "").toLowerCase();
     const name = String(v.name || "").toLowerCase();
@@ -1691,16 +1695,21 @@ function pickPreferredSpeechVoice(langPrefix) {
     else if (lang.startsWith(want)) score += 25;
     else if (want === "en" && lang.startsWith("en")) score += 20;
     else score -= 50;
-    for (const hint of preferredNameHints) {
+    for (const hint of softNameHints) {
       if (name.includes(hint)) {
-        score += 30;
+        score += 38;
         break;
       }
     }
-    // Soft preference for local voices when quality is similar (less latency).
-    if (v.localService) score += 3;
-    // Avoid obviously compressed/novelty voices.
-    if (/whisper|zarvox|bad news|good news|bells|organ|cellos|junior|trinoids/i.test(name)) score -= 40;
+    for (const hint of okNameHints) {
+      if (name.includes(hint)) {
+        score += 18;
+        break;
+      }
+    }
+    if (brightOrHarsh.test(name)) score -= 28;
+    // Mild preference for local voices (stable pacing).
+    if (v.localService) score += 2;
     return { v, score };
   });
   scored.sort((a, b) => b.score - a.score);
@@ -1727,7 +1736,7 @@ function prepareTextForSpeech(rawPlain) {
   return s;
 }
 
-function chunkTextForSpeech(text, maxLen = 420) {
+function chunkTextForSpeech(text, maxLen = 320) {
   const src = String(text || "").trim();
   if (!src) return [];
   if (src.length <= maxLen) return [src];
@@ -1765,11 +1774,14 @@ function speakTextChunks(chunks, voice, langTag) {
     i += 1;
     if (voice) u.voice = voice;
     u.lang = langTag || voice?.lang || "en-US";
-    // Slightly slower + neutral pitch reads clearer as a study coach.
-    u.rate = 0.92;
-    u.pitch = 1;
-    u.volume = 1;
-    u.onend = () => speakNext();
+    // Soft + sober study-coach delivery: slower, slightly lower pitch, gentler volume.
+    u.rate = 0.84;
+    u.pitch = 0.92;
+    u.volume = 0.88;
+    u.onend = () => {
+      // Brief pause between chunks keeps pacing calm rather than rushed.
+      setTimeout(speakNext, 160);
+    };
     u.onerror = () => {
       if (i === 1) showToast(t("toast_speech_playback_failed"));
     };
