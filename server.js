@@ -547,9 +547,9 @@ app.get("/index.html", (_req, res) => {
 
 function buildPrompt(mode, userInput) {
   if (mode === "code") {
-    return `You are a coding tutor for students. Explain clearly and briefly.\n\nStudent request:\n${userInput}`;
+    return `${chatSystemBase("code")}\n\nStudent request:\n${userInput}`;
   }
-  return `You are a friendly study coach for students. Give practical, concise advice.\n\nStudent request:\n${userInput}`;
+  return `${chatSystemBase("learn")}\n\nStudent request:\n${userInput}`;
 }
 
 function explainRouterModelError(status, rawBody) {
@@ -667,31 +667,40 @@ function truncateForPrompt(text, maxChars) {
 }
 
 /** Static system first (prefix-cache friendly); variable document only in the user message. */
-const NOTEBOOK_SYSTEM_STATIC = `You create accurate student study materials. Never invent facts not present in the source materials. Prefer Markdown.
+const NOTEBOOK_SYSTEM_STATIC = `You create accurate student study materials. Never invent facts not present in the source materials.
 
-You are "Study Notebook", a notebook-style study assistant.
+You are Student AI Notebook inside AI Hub.
 
-Using ONLY the source materials in the user message, produce structured study notes for students:
-1) Executive summary (5-8 bullets)
-2) Key concepts and definitions (bullet list)
-3) Important formulas / steps / algorithms (if any; else say "None obvious")
-4) 5 short practice-check questions with brief answers (mix easy/medium; for learning, not graded exams)
-5) A 7-day study plan (short daily tasks)
+Response contract for Notebook analyze (follow strictly):
+1) Use ONLY the source materials in the user message. If something is missing, write "Not in document" - never invent facts.
+2) Output exactly these ## sections in order, nothing else before section 1:
+## Executive summary
+## Key concepts
+## Formulas and procedures
+## Practice checks
+## 7-day study plan
+3) Executive summary: 5-8 hyphen bullets, concrete and short.
+4) Key concepts: hyphen bullets with plain definitions (no decorative bold asterisks).
+5) Formulas and procedures: numbered steps when sequential; if none, one line: None obvious.
+6) Practice checks: exactly 5 short learning checks (not graded-exam items) with brief answers under each.
+7) 7-day study plan: Day 1 ... Day 7, one short task per day.
+8) When multiple files are present, synthesize and name the source file when a point is document-specific.
+9) No filler openers. No **bold** or *italic* asterisk decoration. Prefer ## headings and hyphen/number lists only.
+10) End when the sections are complete - do not add extra pep talks.`;
 
-Rules:
-- If information is missing, say "Not in document" instead of guessing.
-- When multiple documents are provided, synthesize across them and mention the source file name when a point is document-specific.
-- Use clear Markdown headings (##) for each section.
-- Prefer numbered lists for procedures. Do not wrap phrases in **bold asterisks**.
-- The user message includes file names and extracted document text.`;
-
-const NOTEBOOK_FOLLOWUP_SYSTEM = `You are Student AI Notebook inside AI Hub — a document-grounded study coach.
+const NOTEBOOK_FOLLOWUP_SYSTEM = `You are Student AI Notebook inside AI Hub - a document-grounded study coach.
 Answer ONLY using the SOURCE MATERIALS provided below.
 If the answer is not supported by those materials, say "Not in document" instead of guessing.
-Response contract: start with a direct 1-2 sentence answer, then short steps or bullets. No filler openers.
-Never use **bold asterisks** or raw # clutter. Do not invent facts, citations, or page numbers.
 When multiple sources are present, synthesize across them and name the source file when helpful.
-If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.`;
+If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.
+
+Response contract for Notebook follow-ups (follow strictly):
+1) Start with a direct answer in 1-2 sentences. Do not restate the question.
+2) Then only useful detail from the sources: numbered steps for procedures, or hyphen bullets for lists.
+3) Prefer one concrete example from the notes when it helps; keep paragraphs short.
+4) No filler openers (avoid Great question, Sure, As an AI, Based on the document you uploaded).
+5) No decorative **bold** or *italic* asterisks. Use ## only when a real section title helps.
+6) End when the student can act. Do not invent citations, page numbers, or facts not in the sources.`;
 
 function notebookUserContent(docName, docText) {
   return notebookUserContentFromSources([{ name: docName, text: docText }]);
@@ -1076,56 +1085,69 @@ function responseContractInstruction(mode) {
   const shared = [
     "Response contract (follow strictly):",
     "1) Start with a direct answer in 1-2 sentences. Do not restate the question.",
-    "2) Then add only useful detail: short sections, numbered steps (1. 2. 3.) for processes, or hyphen bullets for lists.",
-    "3) Prefer concrete examples over vague advice. Keep paragraphs short.",
-    "4) No filler openers (avoid So you want, Great question, Sure, As an AI).",
+    "2) Then add only useful detail: numbered steps (1. 2. 3.) for processes, or hyphen bullets (-) for lists.",
+    "3) Prefer one concrete example over vague advice. Keep paragraphs to 1-3 short sentences.",
+    "4) No filler openers (avoid So, Great question, Sure, Absolutely, As an AI, I'd be happy to).",
     "5) No decorative **bold** or *italic* asterisks. Use ## headings sparingly and only with real titles.",
-    "6) End when the student can act; do not pad with generic encouragement.",
+    "6) Stay within scope: teach and practice help only - do not write work the student should submit as their own.",
+    "7) End when the student can act. Do not pad with generic encouragement or recap fluff.",
   ];
   if (mode === "code") {
     return [
       ...shared,
-      "7) For code help: show the working idea first, then a minimal code fence, then brief why-it-works notes.",
+      "Code contract:",
+      "8) Lead with the fix or working idea in plain language.",
+      "9) Then one minimal Markdown code fence (only the smallest useful snippet).",
+      "10) Then 2-4 brief why-it-works or how-to-verify notes as numbered steps or short bullets.",
+      "11) If the student pasted an error, name the likely cause before showing code.",
+      "12) Do not dump large unrelated files or multiple alternate full solutions unless asked.",
     ].join(" ");
   }
-  return shared.join(" ");
+  if (mode === "notebook") {
+    return [
+      ...shared,
+      "Notebook contract:",
+      "8) Use only provided source materials; otherwise say Not in document.",
+      "9) Prefer steps and bullets grounded in the notes; name the source file when useful.",
+    ].join(" ");
+  }
+  // learn / Ask
+  return [
+    ...shared,
+    "Ask contract:",
+    "8) Teach the smallest useful explanation after the direct answer - typically under ~180 words unless the student asks for depth.",
+    "9) If the topic is multi-step, use numbered steps with one idea each.",
+    "10) If a common misconception exists, call it out in one short line.",
+  ].join(" ");
 }
 
 function chatSystemBase(mode) {
   const identity =
     'You are Student AI inside AI Hub. If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
-  return mode === "code"
-    ? [
-        "You are a patient coding tutor for students in Student AI (AI Hub).",
-        identity,
-        responseContractInstruction("code"),
-        "Use Markdown code fences for code only.",
-        "Use numbered steps for procedures. Use hyphen bullets (-) for lists.",
-      ].join(" ")
-    : [
-        "You are a friendly study coach for students in Student AI (AI Hub).",
-        identity,
-        responseContractInstruction("learn"),
-        "Teach clearly: answer first, then the smallest useful explanation.",
-      ].join(" ");
-}
-
-function modeStyleInstruction(studyMode) {
-  const m = String(studyMode || "explain").trim().toLowerCase();
-  if (m === "quiz") {
+  if (mode === "code") {
     return [
-      "Mode: Quiz.",
-      "Lead with one sentence on what the quiz covers.",
-      "Then give 4-6 short numbered questions.",
-      "Finish with an Answer key section (brief explanations).",
-      "Keep formatting clean. No ** asterisks.",
+      "You are a patient coding tutor for students in Student AI (AI Hub).",
+      identity,
+      responseContractInstruction("code"),
+      "Use Markdown code fences for code only. Use numbered steps for procedures. Use hyphen bullets (-) for lists.",
     ].join(" ");
   }
   return [
-    "Mode: Explain.",
-    "Honor the response contract: answer first, then steps or short paragraphs.",
+    "You are a calm study coach for students in Student AI (AI Hub).",
+    identity,
+    responseContractInstruction("learn"),
+    "Default posture: answer first, then the smallest useful explanation.",
+  ].join(" ");
+}
+
+function modeStyleInstruction(studyMode) {
+  // Quiz UI was removed; keep explain as the only style path for chat.
+  void studyMode;
+  return [
+    "Style: Explain.",
+    "Honor the response contract above on every turn.",
     "If the idea has a sequence, use numbered steps (1. 2. 3.), one idea per step.",
-    "Otherwise use short clean paragraphs. Avoid markdown clutter.",
+    "Otherwise use short clean paragraphs or hyphen bullets. Avoid markdown clutter.",
   ].join(" ");
 }
 
@@ -1476,9 +1498,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
     const modeRaw = String(req.body?.mode || "").trim().toLowerCase();
     const mode = modeRaw === "code" ? "code" : modeRaw === "notebook" ? "notebook" : "learn";
     const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
-    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || "").toLowerCase())
-      ? String(req.body.studyMode).toLowerCase()
-      : "explain";
+    const studyMode = "explain";
     const learnVisionOn = mode === "learn" && ENABLE_LEARN_VISION;
     const imageMimeIn = req.body?.imageMime;
     const imageB64In = req.body?.imageBase64 != null ? String(req.body.imageBase64).replace(/\s/g, "") : "";
@@ -1757,9 +1777,8 @@ app.post("/api/feedback", requireSession, async (req, res) => {
       return res.status(400).json({ error: "rating must be 1 or -1" });
     }
     const mode = req.body?.mode === "code" ? "code" : req.body?.mode === "notebook" ? "notebook" : "learn";
-    const studyMode = ["explain", "quiz"].includes(String(req.body?.studyMode || ""))
-      ? String(req.body.studyMode)
-      : "explain";
+    const studyModeRaw = String(req.body?.studyMode || "explain").toLowerCase().slice(0, 32);
+    const studyMode = ["explain", "practice", "quiz"].includes(studyModeRaw) ? studyModeRaw : "explain";
     const reason = String(req.body?.reason || "").trim().slice(0, 64) || (ratingRaw > 0 ? "helpful" : "other");
     const assistantMessage = String(req.body?.assistantMessage || "").trim().slice(0, 8000);
     const createdAt = String(req.body?.createdAt || new Date().toISOString());
