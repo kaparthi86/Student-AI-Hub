@@ -1,15 +1,26 @@
 {
   "name": "AI Hub",
   "short_name": "AI Hub",
-  "description": "Focused AI for learning, health, and money. Start with Student AI.",
-  "start_url": "/",
+  "description": "AI Hub — start with Student AI. Free study help for Ask, Code, and Notebook. Learning and practice, not a homework shortcut.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/?utm_source=pwa&utm_medium=homescreen",
   "scope": "/",
   "id": "/",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
   "background_color": "#F7F6F3",
   "theme_color": "#F7F6F3",
   "orientation": "any",
-  "categories": ["education", "productivity", "lifestyle"],
+  "categories": ["education", "productivity"],
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.mystudentcoach.app",
+      "id": "com.mystudentcoach.app"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -24,10 +35,53 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Ask a question",
+      "short_name": "Ask",
+      "description": "Open Student AI Ask",
+      "url": "/?tab=chat&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Code help",
+      "short_name": "Code",
+      "description": "Open Student AI Code",
+      "url": "/?tab=code&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Notebook",
+      "short_name": "Notebook",
+      "description": "Open Student AI Notebook",
+      "url": "/?tab=notebook&utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
 }
