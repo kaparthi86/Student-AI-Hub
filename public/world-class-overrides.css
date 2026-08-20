@@ -1808,3 +1808,12 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
     animation: none !important;
   }
 }
+
+
+/* Capacitor native shell — Soft paper status/safe areas */
+html.is-native-app body {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+html.is-native-app .pwa-install-bar {
+  display: none !important;
+}

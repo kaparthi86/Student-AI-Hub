@@ -141,6 +141,18 @@ For a **very short** test you can use `npx localtunnel --port 3001` or [ngrok](h
 - `POST /api/doc-insights` multipart form field `document` (file)
 - `POST /api/ai` still works for one-shot prompts (optional)
 
+## Android / Play Store foundation
+
+Capacitor Android shell loads the live Soft paper site (`https://www.my-student-coach.com`) so Ask / Code / Notebook, Practice under topic, honor code, and auth stay one product.
+
+```bash
+npm install
+npm run mobile:sync
+npm run mobile:open
+```
+
+See `store/ANDROID.md` and `store/PLAY_STORE_LISTING.md`. Before Play release, replace `REPLACE_WITH_PLAY_APP_SIGNING_SHA256` in `public/.well-known/assetlinks.json`.
+
 ## Notes
 
 - If `HF_API_TOKEN` is missing, API returns a demo message so UI still works.

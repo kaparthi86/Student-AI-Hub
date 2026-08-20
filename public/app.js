@@ -3401,6 +3401,46 @@ function wirePwaInstallBar() {
   });
 }
 
+/** Capacitor native shell bridge (Android Play app). Safe no-op on plain web. */
+async function initNativeMobileShell() {
+  try {
+    const cap = window.Capacitor;
+    if (!cap || typeof cap.isNativePlatform !== "function" || !cap.isNativePlatform()) return;
+    document.documentElement.classList.add("is-native-app");
+    const plugins = cap.Plugins || {};
+    const StatusBarPlugin = plugins.StatusBar;
+    const SplashScreenPlugin = plugins.SplashScreen;
+    const AppPlugin = plugins.App;
+    try {
+      await StatusBarPlugin?.setBackgroundColor?.({ color: "#F7F6F3" });
+      await StatusBarPlugin?.setStyle?.({ style: "DARK" });
+    } catch {
+      /* ignore */
+    }
+    try {
+      await SplashScreenPlugin?.hide?.();
+    } catch {
+      /* ignore */
+    }
+    AppPlugin?.addListener?.("backButton", ({ canGoBack }) => {
+      if (canGoBack) window.history.back();
+      else AppPlugin.exitApp?.();
+    });
+    AppPlugin?.addListener?.("appUrlOpen", ({ url }) => {
+      try {
+        const u = new URL(url);
+        if (String(u.host || "").includes("my-student-coach.com")) {
+          window.location.href = `${u.pathname}${u.search}${u.hash}`;
+        }
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch {
+    /* ignore missing native bridge */
+  }
+}
+
 function initPwaInstallSupport() {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
@@ -4793,6 +4833,7 @@ document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
 });
 
 initMarkdown();
+void initNativeMobileShell();
 initPwaInstallSupport();
 setMainTab("chat");
 wireSettingsUi();

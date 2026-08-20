@@ -1,16 +1,28 @@
 {
   "name": "student-ai-mvp",
   "version": "1.0.0",
-  "description": "Free AI learning + coding tools",
+  "description": "AI Hub — Student AI for Ask, Code, and Notebook (web + Android)",
   "main": "server.js",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "mobile:www": "node scripts/sync-mobile-www.js",
+    "mobile:sync": "node scripts/sync-mobile-www.js && npx cap sync android",
+    "mobile:open": "npx cap open android",
+    "mobile:add:android": "npx cap add android"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/keyboard": "^6.0.4",
+    "@capacitor/share": "^6.0.4",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "@supabase/supabase-js": "^2.49.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opening Student AI…</title>
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search || "");
+          var parts = [];
+          var title = (params.get("title") || "").trim();
+          var text = (params.get("text") || "").trim();
+          var url = (params.get("url") || "").trim();
+          if (title) parts.push(title);
+          if (text) parts.push(text);
+          if (url) parts.push(url);
+          var q = parts.join("\n\n").trim().slice(0, 4000);
+          var next = "/?tab=chat";
+          if (q) next += "&q=" + encodeURIComponent(q);
+          window.location.replace(next);
+        } catch (e) {
+          window.location.replace("/?tab=chat");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Opening Ask…</p>
+  </body>
+</html>

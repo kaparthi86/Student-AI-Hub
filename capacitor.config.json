@@ -1,0 +1,26 @@
+{
+  "appId": "com.mystudentcoach.app",
+  "appName": "AI Hub",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.my-student-coach.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 400,
+      "backgroundColor": "#F7F6F3",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#F7F6F3"
+    }
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#F7F6F3",
+    "webContentsDebuggingEnabled": false
+  }
+}
