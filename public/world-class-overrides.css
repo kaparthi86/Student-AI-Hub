@@ -296,10 +296,32 @@ body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))):not(:has(#hubC
   min-height: 1.25em;
 }
 
+.landing-mission,
 .landing-below,
 .landing-integrity {
   background: #F1F0EC;
   border-top: 1px solid rgba(28, 27, 25, 0.06);
+}
+
+.landing-mission .landing-below-inner {
+  padding-bottom: 40px;
+}
+
+.landing-mission-statement {
+  margin-bottom: 10px;
+  max-width: 36ch;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: #1c1b19;
+}
+
+.landing-mission-sub {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .landing-below-inner {

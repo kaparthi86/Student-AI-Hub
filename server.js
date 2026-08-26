@@ -1851,7 +1851,7 @@ app.post("/api/feedback", requireSession, async (req, res) => {
   }
 });
 
-function aggregateFeedbackRows(rows) {
+function aggregateFeedbackRows(rows, { source = "supabase", days = null } = {}) {
   const summary = {
     ok: true,
     total: 0,
@@ -1859,13 +1859,20 @@ function aggregateFeedbackRows(rows) {
     byReason: {},
     byMode: {},
     byStudyMode: {},
-    source: "supabase",
+    topNegativeReasons: [],
+    source,
+    days: days == null ? null : days,
   };
+  const negReasons = {};
   for (const row of rows) {
     summary.total += 1;
     const r = Number(row.rating);
     if (r > 0) summary.byRating.positive += 1;
-    else if (r < 0) summary.byRating.negative += 1;
+    else if (r < 0) {
+      summary.byRating.negative += 1;
+      const reason = String(row.reason || "unknown");
+      negReasons[reason] = (negReasons[reason] || 0) + 1;
+    }
     const reason = String(row.reason || "unknown");
     summary.byReason[reason] = (summary.byReason[reason] || 0) + 1;
     const mode = String(row.mode || "unknown");
@@ -1873,46 +1880,62 @@ function aggregateFeedbackRows(rows) {
     const sm = String(row.study_mode ?? row.studyMode ?? "unknown");
     summary.byStudyMode[sm] = (summary.byStudyMode[sm] || 0) + 1;
   }
+  summary.topNegativeReasons = Object.entries(negReasons)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([reason, count]) => ({ reason, count }));
   return summary;
 }
 
-app.get("/api/feedback-summary", requireSession, async (_req, res) => {
+function parseFeedbackDays(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(90, Math.floor(n));
+}
+
+function feedbackReviewAllowlist() {
+  return String(process.env.FEEDBACK_REVIEW_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function canReviewFeedback(user) {
+  const allow = feedbackReviewAllowlist();
+  if (!allow.length) return false;
+  const email = String(user?.email || "").trim().toLowerCase();
+  return Boolean(email && allow.includes(email));
+}
+
+app.get("/api/feedback-summary", requireSession, async (req, res) => {
   try {
+    const days = parseFeedbackDays(req.query?.days);
+    const sinceIso = days
+      ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      : null;
     const admin = getSupabaseAdminClient();
     if (admin) {
-      const { data, error } = await admin
-        .from("assistant_feedback")
-        .select("rating, reason, mode, study_mode")
-        .limit(50000);
+      let q = admin.from("assistant_feedback").select("rating, reason, mode, study_mode").limit(50000);
+      if (sinceIso) q = q.gte("created_at", sinceIso);
+      const { data, error } = await q;
       if (!error && Array.isArray(data)) {
-        return res.json(aggregateFeedbackRows(data));
+        return res.json(aggregateFeedbackRows(data, { source: "supabase", days }));
       }
       // eslint-disable-next-line no-console
       console.warn("[feedback-summary] Supabase read failed, falling back to file:", error?.message || error);
     }
 
     if (!fs.existsSync(feedbackLogPath)) {
-      return res.json({
-        ok: true,
-        total: 0,
-        byRating: { positive: 0, negative: 0 },
-        byReason: {},
-        byMode: {},
-        byStudyMode: {},
-        source: "file",
-      });
+      return res.json(
+        aggregateFeedbackRows([], {
+          source: "file",
+          days,
+        }),
+      );
     }
     const raw = await fs.promises.readFile(feedbackLogPath, "utf8");
     const lines = raw.split("\n").filter(Boolean);
-    const summary = {
-      ok: true,
-      total: 0,
-      byRating: { positive: 0, negative: 0 },
-      byReason: {},
-      byMode: {},
-      byStudyMode: {},
-      source: "file",
-    };
+    const rows = [];
     for (const line of lines) {
       let row;
       try {
@@ -1920,17 +1943,74 @@ app.get("/api/feedback-summary", requireSession, async (_req, res) => {
       } catch {
         continue;
       }
-      summary.total += 1;
-      if (Number(row.rating) > 0) summary.byRating.positive += 1;
-      else if (Number(row.rating) < 0) summary.byRating.negative += 1;
-      const reason = String(row.reason || "unknown");
-      summary.byReason[reason] = (summary.byReason[reason] || 0) + 1;
-      const mode = String(row.mode || "unknown");
-      summary.byMode[mode] = (summary.byMode[mode] || 0) + 1;
-      const studyMode = String(row.studyMode || "unknown");
-      summary.byStudyMode[studyMode] = (summary.byStudyMode[studyMode] || 0) + 1;
+      if (sinceIso) {
+        const ts = String(row.receivedAt || row.createdAt || "");
+        if (ts && ts < sinceIso) continue;
+      }
+      rows.push({
+        rating: row.rating,
+        reason: row.reason,
+        mode: row.mode,
+        studyMode: row.studyMode,
+      });
     }
-    return res.json(summary);
+    return res.json(aggregateFeedbackRows(rows, { source: "file", days }));
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+/** Founder weekly review: recent negative thumbs (gated by FEEDBACK_REVIEW_EMAILS). */
+app.get("/api/feedback-review", requireSession, async (req, res) => {
+  try {
+    if (!canReviewFeedback(req.user)) {
+      return res.status(403).json({
+        error: "Feedback review is limited to allowlisted founder emails. Set FEEDBACK_REVIEW_EMAILS on the server.",
+      });
+    }
+    const days = parseFeedbackDays(req.query?.days) || 7;
+    const sinceIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const limit = Math.min(100, Math.max(1, Number(req.query?.limit) || 40));
+    const admin = getSupabaseAdminClient();
+    if (admin) {
+      const { data, error } = await admin
+        .from("assistant_feedback")
+        .select("id, rating, reason, mode, study_mode, assistant_message, created_at")
+        .eq("rating", -1)
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (!error && Array.isArray(data)) {
+        const summaryQ = await admin
+          .from("assistant_feedback")
+          .select("rating, reason, mode, study_mode")
+          .gte("created_at", sinceIso)
+          .limit(50000);
+        const summary =
+          !summaryQ.error && Array.isArray(summaryQ.data)
+            ? aggregateFeedbackRows(summaryQ.data, { source: "supabase", days })
+            : null;
+        return res.json({
+          ok: true,
+          days,
+          summary,
+          negatives: data.map((row) => ({
+            id: row.id,
+            reason: row.reason,
+            mode: row.mode,
+            studyMode: row.study_mode,
+            createdAt: row.created_at,
+            assistantPreview: String(row.assistant_message || "").slice(0, 400),
+          })),
+        });
+      }
+      // eslint-disable-next-line no-console
+      console.warn("[feedback-review] Supabase read failed:", error?.message || error);
+    }
+    return res.status(503).json({
+      error:
+        "Supabase feedback table not available. Set SUPABASE_SERVICE_ROLE_KEY and run supabase/assistant_feedback.sql.",
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
@@ -1950,6 +2030,8 @@ app.get("/api/health", (_req, res) => {
     supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
     /** Needed to write thumbs feedback into public.assistant_feedback (never expose this key to the browser). */
     feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
+    /** Founder weekly review endpoint allowlist configured. */
+    feedbackReviewAllowlistConfigured: feedbackReviewAllowlist().length > 0,
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
     supabaseAnonKeyIsSecretNotAllowed: SUPABASE_ANON_KEY.startsWith("sb_secret_"),
   };
