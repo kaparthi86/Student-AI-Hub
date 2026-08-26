@@ -47,6 +47,15 @@ order by created_at desc
 limit 50;
 ```
 
+### Weekly feedback loop (quality)
+
+Every week, review negative thumbs and ship one small fix:
+
+1. Run `supabase/feedback_weekly_review.sql` in the Supabase SQL Editor, **or**
+2. Call `GET /api/feedback-summary?days=7` while signed in (aggregates), and for founders set **`FEEDBACK_REVIEW_EMAILS`** then `GET /api/feedback-review?days=7` (recent negatives + summary).
+
+Focus on the top 1–2 `reason` + `mode` pairs (Ask / Code / Notebook), then adjust response contracts or UX — don’t chase every thumbs-down.
+
 ## 2) Frontend auth config
 
 Edit `public/config.js`:
