@@ -650,6 +650,14 @@
           <div id="codeAnswerShell" class="answer-shell hidden">
             <div id="codeThread" class="chat-thread perplexity-thread" aria-live="polite"></div>
             <div class="followup-bar">
+              <div
+                id="codeFollowupChips"
+                class="starter-chips starter-chips--inline"
+                role="group"
+                aria-label="Quick follow-ups and practice"
+              >
+                <!-- Filled by smart follow-up renderer -->
+              </div>
               <div class="search-bar compact">
                 <textarea id="codeFollowupInput" rows="1" placeholder="Follow-up..."></textarea>
                 <button id="codeFollowupSubmit" class="search-submit primary-btn" type="button">Send</button>
@@ -886,6 +894,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=mission-1"></script>
+    <script defer src="./app.js?v=practice-code-1"></script>
   </body>
 </html>

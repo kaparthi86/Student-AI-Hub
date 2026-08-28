@@ -44,6 +44,7 @@ const codeSearchSubmit = document.getElementById("codeSearchSubmit");
 const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
+const codeFollowupChips = document.getElementById("codeFollowupChips");
 const codeStatus = document.getElementById("codeStatus");
 const chatCopyThreadBtn = document.getElementById("chatCopyThreadBtn");
 const codeCopyThreadBtn = document.getElementById("codeCopyThreadBtn");
@@ -251,6 +252,7 @@ const I18N = {
     practice_score: "You got {correct} of {total} right.",
     practice_need_notes: "Analyze notes in Notebook first.",
     practice_need_ask: "Ask a question first, then practice that topic.",
+    practice_need_code: "Get Code help first, then practice that topic.",
     practice_building: "Building your practice set...",
     practice_checking: "Checking your answer...",
     practice_wrapping: "Building your next step...",
@@ -1570,6 +1572,7 @@ function renderSmartFollowupChips(container, history, scope) {
 
 function refreshAllSmartFollowupChips() {
   renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  renderSmartFollowupChips(codeFollowupChips, codeHistory, "code");
   renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
 }
 
@@ -2481,6 +2484,7 @@ function syncCodeLayout() {
   codeSearchShell.classList.toggle("hidden", showThread);
   codeAnswerShell.classList.toggle("hidden", !showThread);
   codeCopyThreadBtn?.classList.toggle("hidden", codeHistory.length === 0);
+  if (showThread) renderSmartFollowupChips(codeFollowupChips, codeHistory, "code");
 }
 
 function syncNotebookLayout() {
@@ -3224,6 +3228,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       else if (mode === "notebook") syncNotebookLayout();
       setStatus(statusEl, "status_ready");
       if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+      if (mode === "code") renderSmartFollowupChips(codeFollowupChips, history, "code");
       if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
       return true;
     }
@@ -3258,6 +3263,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     else if (mode === "notebook") syncNotebookLayout();
     setStatus(statusEl, "status_ready");
     if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+    if (mode === "code") renderSmartFollowupChips(codeFollowupChips, history, "code");
     if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
     return true;
   } catch (error) {
@@ -4167,7 +4173,7 @@ function wireCopyThreadButtons() {
 wireLearnVoiceMic({ micBtn: chatHeroMicBtn, inputEl: chatSearchInput, submitBtn: chatSearchSubmit });
 wireLearnVoiceMic({ micBtn: chatFollowupMicBtn, inputEl: chatFollowupInput, submitBtn: chatFollowupSubmit });
 
-wireSearchFlow({
+const codeSearchFlow = wireSearchFlow({
   searchInput: codeSearchInput,
   searchSubmit: codeSearchSubmit,
   followupInput: codeFollowupInput,
@@ -4181,6 +4187,23 @@ wireSearchFlow({
     syncCodeLayout();
   },
 });
+
+wireStarterChipsAsSend(codeFollowupChips, codeSearchFlow.sendFromFollowup, codeFollowupSubmit, {
+  readAloud: () => readLastAssistantAloud(codeHistory),
+  practice: () => {
+    const topic = lastCodeTopicGuess();
+    if (!topic) {
+      showToast(t("practice_need_code"));
+      return;
+    }
+    startPracticeSession({
+      source: "code",
+      topic,
+      documentContext: codePracticeDocumentContext(),
+    });
+  },
+});
+renderSmartFollowupChips(codeFollowupChips, codeHistory, "code");
 
 function wireLearnChatImageAttach() {
   const openPicker = () => learnChatImageInput?.click();
@@ -4361,7 +4384,7 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 function mountAssistantPractice(bubble, rawText) {
   bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
   const mode = bubble.dataset.mode || "learn";
-  if (mode !== "learn" && mode !== "notebook") return;
+  if (mode !== "learn" && mode !== "notebook" && mode !== "code") return;
   const wrap = document.createElement("div");
   wrap.className = "assistant-practice";
   const btn = document.createElement("button");
@@ -4373,13 +4396,21 @@ function mountAssistantPractice(bubble, rawText) {
       startPracticeSession({ source: "notebook", topic: "My notes" });
       return;
     }
+    if (mode === "code") {
+      startPracticeSession({
+        source: "code",
+        topic: topicFromCodeContext(bubble, rawText),
+        documentContext: codePracticeDocumentContext(bubble, rawText),
+      });
+      return;
+    }
     startPracticeSession({ source: "ask", topic: topicFromAskContext(bubble, rawText) });
   });
   wrap.appendChild(btn);
   bubble.appendChild(wrap);
 }
 
-function topicFromAskContext(bubble, rawText) {
+function topicFromPrecedingUser(bubble, rawText, fallbackGuess, defaultLabel) {
   const msg = bubble.closest(".msg");
   const thread = msg && msg.parentElement;
   if (thread) {
@@ -4389,13 +4420,67 @@ function topicFromAskContext(bubble, rawText) {
       if (!rows[i].classList.contains("user")) continue;
       const plain = rows[i].querySelector(".bubble-text");
       const t0 = plain ? plain.textContent.trim() : "";
-      if (t0) return t0.slice(0, 160);
+      if (t0) return shortPracticeTopic(t0);
     }
   }
-  const guess = lastAskTopicGuess();
-  if (guess) return guess;
+  if (fallbackGuess) return shortPracticeTopic(fallbackGuess);
   const line = String(rawText || "").trim().split(/\n/)[0] || "";
-  return line.replace(/^#+\s*/, "").slice(0, 160) || "This topic";
+  return shortPracticeTopic(line.replace(/^#+\s*/, "")) || defaultLabel;
+}
+
+function shortPracticeTopic(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+  const lines = raw.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const prose = lines.find((l) => {
+    if (l.length < 8) return false;
+    if (/^(def |function |class |import |from |const |let |var |#include|public |private |package |using )/i.test(l)) {
+      return false;
+    }
+    const words = l.split(/\s+/).filter((w) => /^[A-Za-z?'"]/.test(w));
+    return words.length >= 3;
+  });
+  return (prose || raw.replace(/\s+/g, " ")).slice(0, 160);
+}
+
+function topicFromAskContext(bubble, rawText) {
+  return topicFromPrecedingUser(bubble, rawText, lastAskTopicGuess(), "This topic");
+}
+
+function topicFromCodeContext(bubble, rawText) {
+  return topicFromPrecedingUser(bubble, rawText, lastCodeTopicGuess(), "This code topic");
+}
+
+function codePracticeDocumentContext(bubble, rawText) {
+  const chunks = [];
+  const msg = bubble && bubble.closest ? bubble.closest(".msg") : null;
+  const thread = msg && msg.parentElement;
+  if (thread) {
+    const rows = Array.from(thread.querySelectorAll(".msg"));
+    const idx = rows.indexOf(msg);
+    for (let i = idx - 1; i >= 0; i -= 1) {
+      if (!rows[i].classList.contains("user")) continue;
+      const plain = rows[i].querySelector(".bubble-text");
+      const t0 = plain ? plain.textContent.trim() : "";
+      if (t0) {
+        chunks.push(`Student:\n${t0.slice(0, 4000)}`);
+        break;
+      }
+    }
+    const asst = bubble.querySelector(".bubble-text");
+    const asstText = asst ? asst.textContent.trim() : String(rawText || "").trim();
+    if (asstText) chunks.push(`Tutor:\n${asstText.slice(0, 4000)}`);
+  }
+  if (!chunks.length) {
+    const start = Math.max(0, codeHistory.length - 4);
+    for (let i = start; i < codeHistory.length; i += 1) {
+      const row = codeHistory[i];
+      if (!row || typeof row.content !== "string" || !row.content.trim()) continue;
+      const who = row.role === "user" ? "Student" : "Tutor";
+      chunks.push(`${who}:\n${row.content.trim().slice(0, 2500)}`);
+    }
+  }
+  return chunks.join("\n\n").slice(0, 8000);
 }
 
 const practiceActive = document.getElementById("practiceActive");
@@ -4429,7 +4514,13 @@ let practiceState = {
 
 function placePracticeDock() {
   if (!practiceDock) return;
-  const host = mainTab === "notebook" ? notebookAnswerShell : chatAnswerShell;
+  const src = practiceState.source || practiceState.lastStartOpts?.source || "";
+  const host =
+    src === "notebook" || (!src && mainTab === "notebook")
+      ? notebookAnswerShell
+      : src === "code" || (!src && mainTab === "code")
+        ? codeAnswerShell
+        : chatAnswerShell;
   if (!host) return;
   const followup = host.querySelector(".followup-bar");
   if (followup) host.insertBefore(practiceDock, followup);
@@ -4462,7 +4553,17 @@ function lastAskTopicGuess() {
   for (let i = chatHistory.length - 1; i >= 0; i -= 1) {
     const row = chatHistory[i];
     if (row && row.role === "user" && typeof row.content === "string" && row.content.trim()) {
-      return row.content.trim().slice(0, 160);
+      return shortPracticeTopic(row.content);
+    }
+  }
+  return "";
+}
+
+function lastCodeTopicGuess() {
+  for (let i = codeHistory.length - 1; i >= 0; i -= 1) {
+    const row = codeHistory[i];
+    if (row && row.role === "user" && typeof row.content === "string" && row.content.trim()) {
+      return shortPracticeTopic(row.content);
     }
   }
   return "";
@@ -4514,22 +4615,34 @@ async function startPracticeSession(opts) {
     return;
   }
   const source = opts?.source || "ask";
-  const documentContext = source === "notebook" ? String(notebookDocumentContext || "") : "";
+  const documentContext =
+    source === "notebook"
+      ? String(notebookDocumentContext || "")
+      : source === "code"
+        ? String(opts?.documentContext || codePracticeDocumentContext() || "")
+        : "";
   const topic = String(opts?.topic || "").trim();
   if (source === "notebook" && !documentContext) {
     showToast(t("practice_need_notes"));
     setMainTab("notebook");
     return;
   }
-  if (source !== "notebook" && !topic) {
+  if (source === "code" && !topic && !documentContext) {
+    showToast(t("practice_need_code"));
+    setMainTab("code");
+    return;
+  }
+  if (source !== "notebook" && source !== "code" && !topic) {
     showToast(t("practice_need_ask"));
     setMainTab("chat");
     return;
   }
 
   practiceState.busy = true;
+  practiceState.source = source;
   practiceState.lastStartOpts = { source, topic, documentContext };
   if (source === "notebook") setMainTab("notebook");
+  else if (source === "code") setMainTab("code");
   else setMainTab("chat");
   placePracticeDock();
   showPracticeView("loading");
@@ -4543,6 +4656,7 @@ async function startPracticeSession(opts) {
       action: "start",
       documentContext: documentContext || undefined,
       topic: topic || undefined,
+      source,
     });
     const questions = Array.isArray(data.questions) ? data.questions : [];
     if (questions.length < 3) throw new Error("Could not build a practice set.");

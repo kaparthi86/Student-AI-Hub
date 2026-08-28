@@ -1185,6 +1185,7 @@ Return ONLY valid JSON (no markdown, no commentary) with this exact shape:
 Rules:
 - Exactly 5 questions, mix easy and medium.
 - Questions should check understanding and practice, not help students cheat on graded exams.
+- For coding topics: ask about concepts, debugging reasoning, and what to try next — do not ask students to paste full graded assignment solutions.
 - Keep prompts short (1-2 sentences). Rubric is for the grader only (key points).
 - If source materials are provided, use ONLY those materials. If a fact is missing, avoid inventing it.
 - No **bold asterisks**.`;
@@ -1206,8 +1207,41 @@ Rules:
 - Honor-code first: frame as learning/practice, not exam shortcuts.
 - No **bold asterisks**.`;
 
-function demoPracticeStart(topic) {
-  const label = String(topic || "General review").slice(0, 80);
+function demoPracticeStart(topic, source) {
+  const isCode = String(source || "").trim().toLowerCase() === "code";
+  const label = String(topic || (isCode ? "this code" : "General review")).slice(0, 80);
+  if (isCode) {
+    return {
+      topic: label,
+      questions: [
+        {
+          id: 1,
+          prompt: `In your own words, what was going wrong in "${label}"?`,
+          rubric: "Names the bug, error, or misconception in plain language.",
+        },
+        {
+          id: 2,
+          prompt: `Why would the suggested fix for "${label}" work?`,
+          rubric: "Explains the cause, not only the patch.",
+        },
+        {
+          id: 3,
+          prompt: `What would you check first if "${label}" still failed?`,
+          rubric: "Names a concrete debug or verify step.",
+        },
+        {
+          id: 4,
+          prompt: `Give a small example input or case that would expose "${label}".`,
+          rubric: "Provides a relevant test case or reproduction idea.",
+        },
+        {
+          id: 5,
+          prompt: `What common mistake should you avoid next time with "${label}"?`,
+          rubric: "Names a plausible pitfall and how to avoid it.",
+        },
+      ],
+    };
+  }
   return {
     topic: label,
     questions: [
@@ -1317,6 +1351,7 @@ app.post("/api/practice", requireSession, async (req, res) => {
       .trim()
       .slice(0, MAX_DOC_CHARS + 4000);
     const topic = String(req.body?.topic || "").trim().slice(0, 200);
+    const source = String(req.body?.source || "").trim().toLowerCase();
 
     if (!["start", "check", "wrapup"].includes(action)) {
       return res.status(400).json({ error: "action must be start, check, or wrapup." });
@@ -1329,14 +1364,30 @@ app.post("/api/practice", requireSession, async (req, res) => {
         });
       }
       if (!HF_API_TOKEN) {
-        return res.json({ ok: true, ...demoPracticeStart(topic || "Your notes") });
+        return res.json({ ok: true, ...demoPracticeStart(topic || "Your notes", source) });
       }
-      const userParts = [
-        documentContext
-          ? `Create 5 practice questions from these SOURCE MATERIALS only:\n---\n${documentContext}\n---`
-          : `Create 5 practice questions on this topic: ${topic}`,
-        uiLanguageInstruction(uiLanguage),
-      ];
+      const isCode = source === "code";
+      let startUser;
+      if (documentContext && isCode) {
+        startUser = [
+          "Create 5 short practice questions that check understanding of this coding/debugging conversation.",
+          "Ask about concepts, why a fix works, and what to try next — not full graded homework solutions.",
+          topic ? `Topic hint: ${topic}` : "",
+          "SOURCE MATERIALS:",
+          "---",
+          documentContext,
+          "---",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      } else if (documentContext) {
+        startUser = `Create 5 practice questions from these SOURCE MATERIALS only:\n---\n${documentContext}\n---`;
+      } else if (isCode) {
+        startUser = `Create 5 short practice questions that check understanding of this coding/debugging topic (concepts, why it works, what to try next — not full graded homework solutions):\n${topic}`;
+      } else {
+        startUser = `Create 5 practice questions on this topic: ${topic}`;
+      }
+      const userParts = [startUser, uiLanguageInstruction(uiLanguage)];
       const raw = await callChatCompletion(
         [
           { role: "system", content: PRACTICE_START_SYSTEM },
@@ -1346,7 +1397,7 @@ app.post("/api/practice", requireSession, async (req, res) => {
           max_tokens: 900,
           temperature: 0.4,
           cacheUserKey,
-          promptCacheKey: `${cacheUserKey}:practice:start:${crypto
+          promptCacheKey: `${cacheUserKey}:practice:start:${source || "ask"}:${crypto
             .createHash("sha256")
             .update(documentContext || topic)
             .digest("hex")
@@ -1445,7 +1496,7 @@ app.post("/api/practice", requireSession, async (req, res) => {
         })),
         next_best_step:
           misses.length > 0
-            ? "Revisit the missed ideas in Notebook or Ask, then run Practice again."
+            ? "Revisit the missed ideas in Notebook, Ask, or Code, then run Practice again."
             : "Raise the difficulty: explain the topic to a friend or invent two new quiz questions.",
         encouragement: "Nice work completing a practice loop.",
       });
