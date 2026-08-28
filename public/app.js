@@ -251,6 +251,7 @@ const I18N = {
     practice_score: "You got {correct} of {total} right.",
     practice_need_notes: "Analyze notes in Notebook first.",
     practice_need_ask: "Ask a question first, then practice that topic.",
+    practice_need_code: "Get Code help first, then practice that topic.",
     practice_building: "Building your practice set...",
     practice_checking: "Checking your answer...",
     practice_wrapping: "Building your next step...",
@@ -4361,7 +4362,7 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 function mountAssistantPractice(bubble, rawText) {
   bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
   const mode = bubble.dataset.mode || "learn";
-  if (mode !== "learn" && mode !== "notebook") return;
+  if (mode !== "learn" && mode !== "notebook" && mode !== "code") return;
   const wrap = document.createElement("div");
   wrap.className = "assistant-practice";
   const btn = document.createElement("button");
@@ -4371,6 +4372,10 @@ function mountAssistantPractice(bubble, rawText) {
   btn.addEventListener("click", () => {
     if (mode === "notebook") {
       startPracticeSession({ source: "notebook", topic: "My notes" });
+      return;
+    }
+    if (mode === "code") {
+      startPracticeSession({ source: "code", topic: topicFromCodeContext(bubble, rawText) });
       return;
     }
     startPracticeSession({ source: "ask", topic: topicFromAskContext(bubble, rawText) });
@@ -4429,7 +4434,12 @@ let practiceState = {
 
 function placePracticeDock() {
   if (!practiceDock) return;
-  const host = mainTab === "notebook" ? notebookAnswerShell : chatAnswerShell;
+  const host =
+    mainTab === "notebook"
+      ? notebookAnswerShell
+      : mainTab === "code"
+        ? codeAnswerShell
+        : chatAnswerShell;
   if (!host) return;
   const followup = host.querySelector(".followup-bar");
   if (followup) host.insertBefore(practiceDock, followup);
@@ -4458,9 +4468,38 @@ function showPracticeView(which) {
   if (practiceEmptyStatus) practiceEmptyStatus.classList.toggle("hidden", which !== "loading");
 }
 
+function topicFromCodeContext(bubble, rawText) {
+  const msg = bubble.closest(".msg");
+  const thread = msg && msg.parentElement;
+  if (thread) {
+    const rows = Array.from(thread.querySelectorAll(".msg"));
+    const idx = rows.indexOf(msg);
+    for (let i = idx - 1; i >= 0; i -= 1) {
+      if (!rows[i].classList.contains("user")) continue;
+      const plain = rows[i].querySelector(".bubble-text");
+      const t0 = plain ? plain.textContent.trim() : "";
+      if (t0) return t0.slice(0, 160);
+    }
+  }
+  const guess = lastCodeTopicGuess();
+  if (guess) return guess;
+  const line = String(rawText || "").trim().split(/\n/)[0] || "";
+  return line.replace(/^#+\s*/, "").slice(0, 160) || "This code topic";
+}
+
 function lastAskTopicGuess() {
   for (let i = chatHistory.length - 1; i >= 0; i -= 1) {
     const row = chatHistory[i];
+    if (row && row.role === "user" && typeof row.content === "string" && row.content.trim()) {
+      return row.content.trim().slice(0, 160);
+    }
+  }
+  return "";
+}
+
+function lastCodeTopicGuess() {
+  for (let i = codeHistory.length - 1; i >= 0; i -= 1) {
+    const row = codeHistory[i];
     if (row && row.role === "user" && typeof row.content === "string" && row.content.trim()) {
       return row.content.trim().slice(0, 160);
     }
@@ -4522,14 +4561,15 @@ async function startPracticeSession(opts) {
     return;
   }
   if (source !== "notebook" && !topic) {
-    showToast(t("practice_need_ask"));
-    setMainTab("chat");
+    showToast(source === "code" ? t("practice_need_code") : t("practice_need_ask"));
+    setMainTab(source === "code" ? "code" : "chat");
     return;
   }
 
   practiceState.busy = true;
   practiceState.lastStartOpts = { source, topic, documentContext };
   if (source === "notebook") setMainTab("notebook");
+  else if (source === "code") setMainTab("code");
   else setMainTab("chat");
   placePracticeDock();
   showPracticeView("loading");
@@ -4543,6 +4583,7 @@ async function startPracticeSession(opts) {
       action: "start",
       documentContext: documentContext || undefined,
       topic: topic || undefined,
+      source,
     });
     const questions = Array.isArray(data.questions) ? data.questions : [];
     if (questions.length < 3) throw new Error("Could not build a practice set.");

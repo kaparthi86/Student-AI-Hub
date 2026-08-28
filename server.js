@@ -1185,6 +1185,7 @@ Return ONLY valid JSON (no markdown, no commentary) with this exact shape:
 Rules:
 - Exactly 5 questions, mix easy and medium.
 - Questions should check understanding and practice, not help students cheat on graded exams.
+- For coding topics: ask about concepts, debugging reasoning, and what to try next — do not ask students to paste full graded assignment solutions.
 - Keep prompts short (1-2 sentences). Rubric is for the grader only (key points).
 - If source materials are provided, use ONLY those materials. If a fact is missing, avoid inventing it.
 - No **bold asterisks**.`;
@@ -1317,6 +1318,7 @@ app.post("/api/practice", requireSession, async (req, res) => {
       .trim()
       .slice(0, MAX_DOC_CHARS + 4000);
     const topic = String(req.body?.topic || "").trim().slice(0, 200);
+    const source = String(req.body?.source || "").trim().toLowerCase();
 
     if (!["start", "check", "wrapup"].includes(action)) {
       return res.status(400).json({ error: "action must be start, check, or wrapup." });
@@ -1331,10 +1333,14 @@ app.post("/api/practice", requireSession, async (req, res) => {
       if (!HF_API_TOKEN) {
         return res.json({ ok: true, ...demoPracticeStart(topic || "Your notes") });
       }
+      const topicPrompt =
+        source === "code"
+          ? `Create 5 short practice questions that check understanding of this coding/debugging topic (concepts, why it works, what to try next — not full graded homework solutions):\n${topic}`
+          : `Create 5 practice questions on this topic: ${topic}`;
       const userParts = [
         documentContext
           ? `Create 5 practice questions from these SOURCE MATERIALS only:\n---\n${documentContext}\n---`
-          : `Create 5 practice questions on this topic: ${topic}`,
+          : topicPrompt,
         uiLanguageInstruction(uiLanguage),
       ];
       const raw = await callChatCompletion(
