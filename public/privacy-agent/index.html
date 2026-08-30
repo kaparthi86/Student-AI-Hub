@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-7" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-7" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-7" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-8" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-8" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-8" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -49,24 +49,50 @@
                 </svg>
               </span>
               <div class="brand-wordmark workspace-wordmark">
-                <a class="workspace-hub-link" href="../" aria-label="Back to AI Hub" title="Back to AI Hub">Back to AI Hub</a>
+                <button
+                  type="button"
+                  class="workspace-hub-link"
+                  id="backToHubFromPrivacyBtn"
+                  aria-label="Back to AI Hub"
+                  title="Back to AI Hub"
+                >
+                  Back to AI Hub
+                </button>
                 <span class="brand-title workspace-title">Privacy Agent</span>
+              </div>
+            </div>
+            <div class="head-actions account-menu">
+              <button
+                type="button"
+                class="ghost-btn icon-btn account-menu-btn"
+                id="privacyAccountMenuBtn"
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="privacyAccountMenuPanel"
+              >
+                <span aria-hidden="true">···</span>
+              </button>
+              <div id="privacyAccountMenuPanel" class="account-menu-panel hidden" role="menu">
+                <button id="privacySettingsBtn" class="account-menu-item" type="button" role="menuitem">Settings</button>
+                <button id="privacyLogoutBtn" class="account-menu-item" type="button" role="menuitem">Logout</button>
               </div>
             </div>
           </div>
         </header>
 
-        <section class="privacy-analytics" id="privacyAnalytics" data-state="exposed" aria-label="House analytics">
-          <div class="privacy-analytics-stats">
-            <p>
+        <section class="privacy-analytics finance-leftover-card" id="privacyAnalytics" data-state="exposed" aria-label="House analytics">
+          <p class="finance-leftover-kicker" id="analyticsKicker">House analytics</p>
+          <div class="privacy-analytics-stats finance-split">
+            <p class="finance-split-pill">
               <strong id="analyticsTracking">0</strong>
               <span>sites tracking</span>
             </p>
-            <p>
+            <p class="finance-split-pill">
               <strong id="analyticsBlocked">0</strong>
               <span>blocked now</span>
             </p>
-            <p>
+            <p class="finance-split-pill">
               <strong id="analyticsDevice">—</strong>
               <span>this device</span>
             </p>
@@ -76,7 +102,7 @@
           </div>
         </section>
 
-        <p class="privacy-lead" style="margin-top: 0">
+        <p class="privacy-lead privacy-lead--intro">
           Set house rules, turn the filter on, and put the same list on your phone or router. Then check this network.
           Vault data stays in this browser.
         </p>
@@ -93,9 +119,9 @@
                     <span>On my network works for any signed-in user. This computer is an advanced home-server option.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="off">Off</button>
-                    <button type="button" data-value="network">On my network</button>
-                    <button type="button" data-value="computer">This computer</button>
+                    <button type="button" class="live-web-toggle" data-value="off">Off</button>
+                    <button type="button" class="live-web-toggle" data-value="network">On my network</button>
+                    <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
                   </div>
                 </div>
                 <div class="privacy-rule" data-rule="shopping">
@@ -104,8 +130,8 @@
                     <span>Discounts and receipts, or no ad profile at all.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="ok_for_discounts">OK for discounts</button>
-                    <button type="button" data-value="never">Never for ads</button>
+                    <button type="button" class="live-web-toggle" data-value="ok_for_discounts">OK for discounts</button>
+                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
                   </div>
                 </div>
                 <div class="privacy-rule" data-rule="health">
@@ -114,8 +140,8 @@
                     <span>Never sold into an advertising graph.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="never">Never for ads</button>
-                    <button type="button" data-value="allow">Allow (not recommended)</button>
+                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
+                    <button type="button" class="live-web-toggle" data-value="allow">Allow (not recommended)</button>
                   </div>
                 </div>
                 <div class="privacy-rule" data-rule="identity">
@@ -124,8 +150,8 @@
                     <span>Email and phone stay in the vault unless you are checking out.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="checkout_ok">Checkout only</button>
-                    <button type="button" data-value="vault_only">Vault only</button>
+                    <button type="button" class="live-web-toggle" data-value="checkout_ok">Checkout only</button>
+                    <button type="button" class="live-web-toggle" data-value="vault_only">Vault only</button>
                   </div>
                 </div>
               </div>
@@ -179,11 +205,11 @@
               <h2>Vault</h2>
               <p class="privacy-lead">Use fake details. This stays in this browser. We do not upload it.</p>
               <div class="privacy-vault">
-                <label>Name <input id="vault-name" data-vault="name" autocomplete="off" /></label>
-                <label>Email <input id="vault-email" data-vault="email" autocomplete="off" /></label>
-                <label>Phone <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
-                <label>City <input id="vault-city" data-vault="city" autocomplete="off" /></label>
-                <label>Interest <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
+                <label class="finance-field"><span>Name</span> <input id="vault-name" data-vault="name" autocomplete="off" /></label>
+                <label class="finance-field"><span>Email</span> <input id="vault-email" data-vault="email" autocomplete="off" /></label>
+                <label class="finance-field"><span>Phone</span> <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
+                <label class="finance-field"><span>City</span> <input id="vault-city" data-vault="city" autocomplete="off" /></label>
+                <label class="finance-field"><span>Interest</span> <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
               </div>
               <div class="privacy-actions">
                 <button type="button" class="ghost-btn tiny-btn" id="clearVaultBtn">Clear vault</button>
@@ -228,6 +254,10 @@
           <p class="fine-print-line">
             AI Hub is mission-driven — built to help people learn and plan, not to sell your data or push ads.
           </p>
+          <p class="fine-print-line support-contact-line">
+            Feedback:
+            <a href="mailto:student-ai-hub-support@googlegroups.com">student-ai-hub-support@googlegroups.com</a>
+          </p>
         </footer>
       </section>
     </main>
@@ -260,7 +290,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-7"></script>
-    <script defer src="./app.js?v=privacy-7"></script>
+    <script defer src="./house-filter.js?v=privacy-8"></script>
+    <script defer src="./app.js?v=privacy-8"></script>
   </body>
 </html>

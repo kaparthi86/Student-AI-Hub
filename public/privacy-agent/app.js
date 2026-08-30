@@ -142,7 +142,18 @@ async function renderAnalyticsBanner() {
   trackingEl.textContent = String(tracking);
   blockedEl.textContent = String(blocked);
   deviceEl.textContent = deviceLabel;
+  trackingEl.className = liveNow ? "is-ok" : "is-over";
+  blockedEl.className = blocked ? "is-ok" : "is-tight";
+  deviceEl.className = liveNow ? "is-ok" : filterOn ? "is-tight" : "is-over";
   if (banner) banner.dataset.state = deviceLabel.toLowerCase();
+  const kicker = document.getElementById("analyticsKicker");
+  if (kicker) {
+    kicker.textContent = liveNow
+      ? "Live house analytics"
+      : filterOn
+        ? "Armed — waiting for a live check"
+        : "House analytics";
+  }
   const chips = [
     tickerChip("list", `${tracking} tracker ${tracking === 1 ? "site" : "sites"}`),
     tickerChip(blocked ? "blocked" : "wait", `${blocked} ${blocked === 1 ? "site blocked" : "sites blocked"} now`),
@@ -316,7 +327,7 @@ function renderDecision(entry) {
     <p class="privacy-kicker">${actionLabel(entry.action)}</p>
     <h3>${entry.headline}</h3>
     <p>${entry.body}</p>
-    ${released ? `<p class="privacy-lead" style="margin:10px 0 0">Left the vault: ${released}</p>` : ""}
+    ${released ? `<p class="privacy-lead privacy-lead--tight">Left the vault: ${released}</p>` : ""}
   `;
 }
 
@@ -723,18 +734,66 @@ function bindDisclaimer() {
   });
 }
 
+let supabaseClient = null;
+
+function goToHub() {
+  window.location.href = "../";
+}
+
+function bindChrome() {
+  document.getElementById("backToHubFromPrivacyBtn")?.addEventListener("click", goToHub);
+  const menu = document.querySelector(".account-menu");
+  const btn = menu?.querySelector(".account-menu-btn");
+  const panel = menu?.querySelector(".account-menu-panel");
+  const closeMenu = () => {
+    panel?.classList.add("hidden");
+    btn?.setAttribute("aria-expanded", "false");
+  };
+  btn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const willOpen = panel?.classList.contains("hidden");
+    closeMenu();
+    if (willOpen) {
+      panel?.classList.remove("hidden");
+      btn?.setAttribute("aria-expanded", "true");
+    }
+  });
+  panel?.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest?.(".account-menu")) return;
+    closeMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+  document.getElementById("privacySettingsBtn")?.addEventListener("click", goToHub);
+  document.getElementById("privacyLogoutBtn")?.addEventListener("click", async () => {
+    closeMenu();
+    if (supabaseClient) {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch {
+        /* still leave the workspace */
+      }
+    }
+    goToHub();
+  });
+}
+
 async function ensureHubSession() {
   const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
   if (!window.supabase || !supabaseUrl || !supabaseAnonKey) return;
   try {
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    const { data } = await supabase.auth.getSession();
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    const { data } = await supabaseClient.auth.getSession();
     if (!data?.session) window.location.replace("../");
   } catch {
     /* stay on the demo if auth cannot be checked */
   }
 }
 
+bindChrome();
 bindRules();
 bindVault();
 bindScenarios();
