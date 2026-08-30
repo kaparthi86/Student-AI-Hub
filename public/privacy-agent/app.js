@@ -263,6 +263,115 @@ function persistAndPaint(lastDecision) {
   renderVault();
   renderDecision(lastDecision);
   renderLog();
+  renderHouseFilter();
+}
+
+function houseFilterApi() {
+  return "http://127.0.0.1:8787";
+}
+
+function canTalkToHouseFilter() {
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1";
+}
+
+function listLabel(id) {
+  if (id === "always") return "fingerprinting";
+  if (id === "advertising") return "shopping ads";
+  if (id === "health") return "health-adjacent trackers";
+  if (id === "brokers") return "data brokers";
+  return id;
+}
+
+function renderHouseFilter() {
+  const mount = document.getElementById("houseActiveLists");
+  const filter = window.PrivacyHouseFilter;
+  if (!mount || !filter) return;
+  const lists = filter.enabledLists(state.rules);
+  mount.textContent = `Active lists for these rules: ${lists.map(listLabel).join(", ")}.`;
+  document.getElementById("pushRulesBtn")?.classList.toggle("hidden", !canTalkToHouseFilter());
+}
+
+async function loadListTexts() {
+  if (window.__privacyListTexts) return window.__privacyListTexts;
+  const filter = window.PrivacyHouseFilter;
+  const texts = {};
+  await Promise.all(
+    (filter?.LIST_IDS || []).map(async (id) => {
+      const res = await fetch(`./lists/${id}.txt`);
+      texts[id] = res.ok ? await res.text() : "";
+    })
+  );
+  window.__privacyListTexts = texts;
+  return texts;
+}
+
+function downloadText(filename, body, type) {
+  const blob = new Blob([body], { type: type || "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function currentBlockSet() {
+  const filter = window.PrivacyHouseFilter;
+  if (!filter) return new Set();
+  const texts = await loadListTexts();
+  return filter.buildBlockSet(texts, state.rules);
+}
+
+function setHouseStatus(message) {
+  const el = document.getElementById("houseFilterStatus");
+  if (el) el.textContent = message || "";
+}
+
+function bindHouseFilter() {
+  document.getElementById("downloadHostsBtn")?.addEventListener("click", async () => {
+    const domains = await currentBlockSet();
+    downloadText("privacy-agent-hosts.txt", `${window.PrivacyHouseFilter.hostsFile(domains)}\n`);
+    setHouseStatus("Saved a hosts file. Import it into Pi-hole, AdGuard Home, or NextDNS.");
+  });
+  document.getElementById("downloadDomainsBtn")?.addEventListener("click", async () => {
+    const domains = await currentBlockSet();
+    downloadText("privacy-agent-domains.txt", `${window.PrivacyHouseFilter.domainFile(domains)}\n`);
+    setHouseStatus("Saved one domain per line. Paste this into a NextDNS deny list.");
+  });
+  document.getElementById("downloadRulesBtn")?.addEventListener("click", () => {
+    downloadText(
+      "house-rules.json",
+      `${JSON.stringify(state.rules, null, 2)}\n`,
+      "application/json"
+    );
+    setHouseStatus("Save this file as privacy-agent-dns/house-rules.json and restart npm run privacy-dns.");
+  });
+  document.getElementById("pushRulesBtn")?.addEventListener("click", async () => {
+    try {
+      const res = await fetch(`${houseFilterApi()}/rules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state.rules),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Filter did not accept rules.");
+      setHouseStatus(`House filter updated. Blocking ${data.domains} domains.`);
+    } catch {
+      setHouseStatus("Could not reach the house filter on this computer. Start it with npm run privacy-dns.");
+    }
+  });
+  if (!canTalkToHouseFilter()) return;
+  fetch(`${houseFilterApi()}/status.json`)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (!data?.ok) return;
+      const ip = (data.lan && data.lan[0]) || "this computer";
+      setHouseStatus(`House filter is running. Router DNS → ${ip}. Status http://${ip}:8787`);
+    })
+    .catch(() => {
+      /* filter not running yet */
+    });
 }
 
 function runScenario(id) {
@@ -360,6 +469,7 @@ async function ensureHubSession() {
 bindRules();
 bindVault();
 bindScenarios();
+bindHouseFilter();
 bindDisclaimer();
 persistAndPaint(null);
 ensureHubSession();

@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-1" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-1" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-1" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-2" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-2" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-2" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -57,8 +57,8 @@
         </header>
 
         <p class="privacy-lead" style="margin-top: 0">
-          You decide once. The agent keeps the promise. This MVP runs on your device — it does not yet sit on the live
-          internet wire.
+          You decide once. The agent keeps the promise. Practice requests here, then put the same rules on your house
+          Wi-Fi with the DNS filter.
         </p>
 
         <section class="privacy-week" aria-label="This week">
@@ -115,6 +115,43 @@
               </div>
             </section>
 
+            <section class="privacy-card" id="houseFilterCard">
+              <h2>This house</h2>
+              <p class="privacy-lead">
+                Run a DNS filter on a computer that stays on, then point the router at that computer. Phones and laptops
+                on this Wi-Fi inherit the house rules. DNS can block tracker domains. It cannot unsell data a company
+                already has, and it cannot see inside HTTPS.
+              </p>
+              <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
+              <ol class="privacy-steps">
+                <li>Set house rules above.</li>
+                <li>
+                  On a home computer in this repo, run
+                  <code>sudo npm run privacy-dns</code>
+                  (Administrator on Windows).
+                </li>
+                <li>Copy the LAN IP the command prints, such as <code>192.168.1.42</code>.</li>
+                <li>
+                  In the router admin page (often <code>192.168.1.1</code>), set DNS to that IP. Save, then toggle
+                  airplane mode on phones.
+                </li>
+                <li>
+                  Open the filter status page at <code>http://LAN-IP:8787</code> from any device on this Wi-Fi.
+                </li>
+              </ol>
+              <div class="privacy-actions">
+                <button type="button" class="primary-btn" id="downloadHostsBtn">Download hosts list</button>
+                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
+                <button type="button" class="ghost-btn" id="downloadRulesBtn">Download house rules</button>
+                <button type="button" class="ghost-btn hidden" id="pushRulesBtn">Push rules to house filter</button>
+              </div>
+              <p class="privacy-lead" id="houseFilterStatus"></p>
+              <p class="privacy-lead">
+                Safer first night if you do not want to run a server: download the domain list and paste it into NextDNS
+                or AdGuard Home, then point the router at that service.
+              </p>
+            </section>
+
             <section class="privacy-card">
               <h2>Try a request</h2>
               <p class="privacy-lead">Practice the agent. Each tap is a company asking for a piece of you.</p>
@@ -151,8 +188,8 @@
 
         <footer class="app-fine-print" role="note" aria-label="Disclaimer">
           <p class="fine-print-line">
-            Privacy Agent is an on-device demo. It does not yet filter live traffic, apps, or data brokers on the real
-            internet.
+            The house DNS filter blocks known tracker domains on your network. It does not stop first-party cookies,
+            logins, or copies of your data that already live at brokers.
           </p>
           <p class="fine-print-line">
             AI Hub is mission-driven — built to help people learn and plan, not to sell your data or push ads.
@@ -176,8 +213,9 @@
           Privacy Agent is a practice control plane — house rules, a vault, and a decision log.
         </p>
         <p class="honor-code-body muted">
-          It does not sit between you and the live internet yet. Do not store real secrets here. Use fake details. We do
-          not sell vault data. There are no ads in this product.
+          The vault stays in this browser. The optional house DNS filter runs on a computer you control and blocks
+          known tracker domains. Do not store real secrets in the vault. We do not sell your data. There are no ads in
+          this product.
         </p>
         <div class="honor-code-actions">
           <button id="privacyDisclaimerAckBtn" class="primary-btn" type="button">I understand</button>
@@ -188,6 +226,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./app.js?v=privacy-1"></script>
+    <script defer src="./house-filter.js?v=privacy-2"></script>
+    <script defer src="./app.js?v=privacy-2"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 # Privacy Agent (MVP)
 
-On-device control plane under AI Hub. This folder is the first product slice of a personal data agent: house rules, a local vault, a request simulator, and a weekly brief.
+On-device control plane under AI Hub: house rules, a local vault, a request simulator, and a house DNS filter.
 
-It does **not** sit on the live internet wire yet. Nothing in the vault is sent to AI Hub servers. Data stays in this browser until you clear it.
+Vault data stays in this browser. The optional house filter lives in `privacy-agent-dns/` and blocks known tracker domains on your Wi-Fi after you point the router at that computer.
