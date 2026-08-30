@@ -551,6 +551,80 @@ app.get("/privacy-agent/", (_req, res) => {
   res.sendFile("privacy-agent/index.html", { root: publicDir });
 });
 
+const houseDnsLib = require("./privacy-agent-dns/lib");
+const houseDnsRuntime = houseDnsLib.createRuntime();
+
+function houseDnsUnavailableOnCloud(res) {
+  return res.status(400).json({
+    ok: false,
+    cloud: true,
+    error:
+      "The house filter has to run on a computer in your home, not on the public website. Open AI Hub on that computer (http://localhost:3001/privacy-agent/) and tap Protect this house.",
+  });
+}
+
+app.get("/api/privacy-dns/status", (req, res) => {
+  res.json(
+    houseDnsRuntime.status({
+      cloud: houseDnsLib.isCloudHost(),
+      homeRequest: houseDnsLib.isHomeRequest(req),
+    })
+  );
+});
+
+app.post("/api/privacy-dns/start", async (req, res) => {
+  if (houseDnsLib.isCloudHost()) return houseDnsUnavailableOnCloud(res);
+  if (!houseDnsLib.isHomeRequest(req)) {
+    return res.status(403).json({ ok: false, error: "Start the house filter from a device on this home network." });
+  }
+  const requested = Number(req.body?.port || process.env.PRIVACY_DNS_PORT || 53);
+  try {
+    const snapshot = await houseDnsRuntime.start({ port: requested });
+    return res.json(snapshot);
+  } catch (err) {
+    const needsAdmin = requested === 53 || /eacces|eaddrinuse/i.test(String(err.message || ""));
+    return res.status(409).json({
+      ok: false,
+      needsAdmin,
+      error: err.message || "Could not start the house filter.",
+      hint: needsAdmin
+        ? "Close AI Hub, start it with administrator rights (sudo npm run dev on Mac/Linux), then tap Protect this house again."
+        : "Another app may already be using DNS on this computer.",
+    });
+  }
+});
+
+app.post("/api/privacy-dns/stop", async (req, res) => {
+  if (houseDnsLib.isCloudHost()) return houseDnsUnavailableOnCloud(res);
+  if (!houseDnsLib.isHomeRequest(req)) {
+    return res.status(403).json({ ok: false, error: "Stop the house filter from a device on this home network." });
+  }
+  const snapshot = await houseDnsRuntime.stop();
+  return res.json(snapshot);
+});
+
+app.post("/api/privacy-dns/rules", (req, res) => {
+  if (houseDnsLib.isCloudHost()) return houseDnsUnavailableOnCloud(res);
+  if (!houseDnsLib.isHomeRequest(req)) {
+    return res.status(403).json({ ok: false, error: "Update house rules from a device on this home network." });
+  }
+  return res.json(houseDnsRuntime.setRules(req.body || {}));
+});
+
+app.get("/api/privacy-dns/hosts.txt", (req, res) => {
+  res.type("text/plain").send(houseDnsRuntime.hostsText());
+});
+
+app.get("/api/privacy-dns/domains.txt", (req, res) => {
+  res.type("text/plain").send(houseDnsRuntime.domainsText());
+});
+
+if (!houseDnsLib.isCloudHost()) {
+  houseDnsRuntime.start({ port: Number(process.env.PRIVACY_DNS_PORT || 53) }).catch(() => {
+    /* Port 53 usually needs admin. The Privacy Agent Start button reports this. */
+  });
+}
+
 function buildPrompt(mode, userInput) {
   if (mode === "code") {
     return `${chatSystemBase("code")}\n\nStudent request:\n${userInput}`;

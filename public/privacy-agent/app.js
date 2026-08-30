@@ -264,15 +264,11 @@ function persistAndPaint(lastDecision) {
   renderDecision(lastDecision);
   renderLog();
   renderHouseFilter();
+  syncHouseRules();
 }
 
-function houseFilterApi() {
-  return "http://127.0.0.1:8787";
-}
-
-function canTalkToHouseFilter() {
-  const host = window.location.hostname;
-  return host === "localhost" || host === "127.0.0.1";
+function houseApi(path) {
+  return `/api/privacy-dns${path}`;
 }
 
 function listLabel(id) {
@@ -283,13 +279,91 @@ function listLabel(id) {
   return id;
 }
 
+function setHouseStatus(message) {
+  const el = document.getElementById("houseFilterStatus");
+  if (el) el.textContent = message || "";
+}
+
+function renderHouseLiveLog(recent) {
+  const mount = document.getElementById("houseLiveLog");
+  if (!mount) return;
+  mount.innerHTML = "";
+  (recent || []).slice(0, 6).forEach((item) => {
+    const li = document.createElement("li");
+    const strong = document.createElement("strong");
+    strong.textContent = "Blocked";
+    const span = document.createElement("span");
+    span.textContent = item.name || "";
+    li.append(strong, span);
+    mount.appendChild(li);
+  });
+}
+
+function paintHouseSnapshot(data, extraMessage) {
+  const running = Boolean(data?.running);
+  window.__houseFilterRunning = running;
+  const label = document.getElementById("houseFilterStateLabel");
+  if (label) label.textContent = running ? "Filter on — part of this agent" : "Filter off";
+  document.getElementById("startHouseFilterBtn")?.classList.toggle("hidden", running);
+  document.getElementById("stopHouseFilterBtn")?.classList.toggle("hidden", !running);
+  renderHouseLiveLog(data?.recent);
+  if (extraMessage) {
+    setHouseStatus(extraMessage);
+    return;
+  }
+  if (data?.cloud) {
+    document.getElementById("startHouseFilterBtn")?.classList.add("hidden");
+    document.getElementById("stopHouseFilterBtn")?.classList.add("hidden");
+    setHouseStatus(
+      "You are on the public site. Open Privacy Agent on your home computer running AI Hub to start the filter from this same screen."
+    );
+    return;
+  }
+  if (running) {
+    const ip = (data.lan && data.lan[0]) || "this computer";
+    const blocked = data.stats?.blocked ?? 0;
+    setHouseStatus(
+      `Protecting this house from ${ip}. Router DNS → ${ip}. ${data.domains} domains in the list. ${blocked} blocked so far.`
+    );
+    return;
+  }
+  setHouseStatus("Tap Protect this house to turn the filter on from this agent.");
+}
+
 function renderHouseFilter() {
   const mount = document.getElementById("houseActiveLists");
   const filter = window.PrivacyHouseFilter;
   if (!mount || !filter) return;
   const lists = filter.enabledLists(state.rules);
   mount.textContent = `Active lists for these rules: ${lists.map(listLabel).join(", ")}.`;
-  document.getElementById("pushRulesBtn")?.classList.toggle("hidden", !canTalkToHouseFilter());
+}
+
+async function refreshHouseSnapshot() {
+  try {
+    const res = await fetch(houseApi("/status"));
+    const data = await res.json();
+    paintHouseSnapshot(data);
+    return data;
+  } catch {
+    setHouseStatus("Could not reach the house filter inside this app. Is AI Hub running on this computer?");
+    return null;
+  }
+}
+
+async function syncHouseRules() {
+  if (!window.__houseFilterRunning) return;
+  try {
+    const res = await fetch(houseApi("/rules"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state.rules),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    paintHouseSnapshot(data);
+  } catch {
+    /* filter not running */
+  }
 }
 
 async function loadListTexts() {
@@ -323,55 +397,51 @@ async function currentBlockSet() {
   return filter.buildBlockSet(texts, state.rules);
 }
 
-function setHouseStatus(message) {
-  const el = document.getElementById("houseFilterStatus");
-  if (el) el.textContent = message || "";
-}
-
 function bindHouseFilter() {
+  document.getElementById("startHouseFilterBtn")?.addEventListener("click", async () => {
+    setHouseStatus("Starting the house filter…");
+    try {
+      await fetch(houseApi("/rules"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state.rules),
+      }).catch(() => null);
+      const res = await fetch(houseApi("/start"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        paintHouseSnapshot(data, data.hint || data.error || "Could not start the house filter.");
+        return;
+      }
+      paintHouseSnapshot(data);
+    } catch {
+      setHouseStatus("Could not start the house filter from this page. Run AI Hub on this computer first.");
+    }
+  });
+  document.getElementById("stopHouseFilterBtn")?.addEventListener("click", async () => {
+    try {
+      const res = await fetch(houseApi("/stop"), { method: "POST" });
+      const data = await res.json();
+      paintHouseSnapshot(data, "House filter stopped.");
+    } catch {
+      setHouseStatus("Could not stop the house filter.");
+    }
+  });
   document.getElementById("downloadHostsBtn")?.addEventListener("click", async () => {
     const domains = await currentBlockSet();
     downloadText("privacy-agent-hosts.txt", `${window.PrivacyHouseFilter.hostsFile(domains)}\n`);
-    setHouseStatus("Saved a hosts file. Import it into Pi-hole, AdGuard Home, or NextDNS.");
+    setHouseStatus("Saved a hosts file. Use this only if you prefer NextDNS, Pi-hole, or AdGuard Home.");
   });
   document.getElementById("downloadDomainsBtn")?.addEventListener("click", async () => {
     const domains = await currentBlockSet();
     downloadText("privacy-agent-domains.txt", `${window.PrivacyHouseFilter.domainFile(domains)}\n`);
-    setHouseStatus("Saved one domain per line. Paste this into a NextDNS deny list.");
+    setHouseStatus("Saved one domain per line. Use this only if you prefer NextDNS or AdGuard Home.");
   });
-  document.getElementById("downloadRulesBtn")?.addEventListener("click", () => {
-    downloadText(
-      "house-rules.json",
-      `${JSON.stringify(state.rules, null, 2)}\n`,
-      "application/json"
-    );
-    setHouseStatus("Save this file as privacy-agent-dns/house-rules.json and restart npm run privacy-dns.");
-  });
-  document.getElementById("pushRulesBtn")?.addEventListener("click", async () => {
-    try {
-      const res = await fetch(`${houseFilterApi()}/rules`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state.rules),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || "Filter did not accept rules.");
-      setHouseStatus(`House filter updated. Blocking ${data.domains} domains.`);
-    } catch {
-      setHouseStatus("Could not reach the house filter on this computer. Start it with npm run privacy-dns.");
-    }
-  });
-  if (!canTalkToHouseFilter()) return;
-  fetch(`${houseFilterApi()}/status.json`)
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
-      if (!data?.ok) return;
-      const ip = (data.lan && data.lan[0]) || "this computer";
-      setHouseStatus(`House filter is running. Router DNS → ${ip}. Status http://${ip}:8787`);
-    })
-    .catch(() => {
-      /* filter not running yet */
-    });
+  refreshHouseSnapshot();
+  window.setInterval(refreshHouseSnapshot, 8000);
 }
 
 function runScenario(id) {
