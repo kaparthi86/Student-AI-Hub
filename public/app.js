@@ -239,7 +239,7 @@ const I18N = {
     tile_privacy_sub: "Live house rules for your phone and Wi-Fi",
     tile_privacy_cta: "Open ->",
     disclaimer_privacy:
-      "Privacy Agent is an on-device demo. It does not yet filter live internet traffic. Vault data stays in this browser.",
+      "Privacy Agent blocks known tracker domains when you apply the house list on your phone, router, or this computer.",
     soon_health_title: "Health AI",
     soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
     soon_health_note: "Not medical advice. Never for emergencies.",
@@ -559,7 +559,7 @@ const I18N = {
     tile_privacy_sub: "Decide que datos pueden salir",
     tile_privacy_cta: "Abrir ->",
     disclaimer_privacy:
-      "Privacy Agent es una demo en este dispositivo. Aun no filtra el trafico real. El vault se queda en este navegador.",
+      "Privacy Agent bloquea dominios de rastreo conocidos cuando aplicas la lista en tu telefono, router o esta computadora.",
     soon_health_title: "Health AI",
     soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
     soon_health_note: "No es consejo medico. Nunca para emergencias.",
@@ -797,7 +797,7 @@ const I18N = {
     tile_privacy_sub: "House rules set karein ? kya bahar ja sakta hai",
     tile_privacy_cta: "Open ->",
     disclaimer_privacy:
-      "Privacy Agent is device par demo hai. Live internet filter abhi nahi. Vault is browser mein rehta hai.",
+      "Privacy Agent known tracker domains ko block karta hai jab aap house list phone, router, ya is computer par apply karte hain.",
     soon_health_title: "Health AI",
     soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
     soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
@@ -1036,7 +1036,7 @@ const I18N = {
     tile_privacy_sub: "House rules petti emi bayataki vellalo decide cheyyandi",
     tile_privacy_cta: "Open ->",
     disclaimer_privacy:
-      "Privacy Agent ee device lo demo. Live internet filter inka ledu. Vault ee browser lo untundi.",
+      "Privacy Agent known tracker domains ni block chestundi when you apply the house list on your phone, router, or this computer.",
     soon_health_title: "Health AI",
     soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
     soon_health_note: "Medical advice kadu. Emergencies ki kadu.",

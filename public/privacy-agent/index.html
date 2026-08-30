@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-8" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-8" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-8" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-9" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-9" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-9" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -97,71 +97,62 @@
               <span>this device</span>
             </p>
           </div>
-          <div class="privacy-analytics-ticker" aria-hidden="true">
-            <div class="privacy-analytics-track" id="analyticsTrack"></div>
-          </div>
         </section>
 
         <p class="privacy-lead privacy-lead--intro">
-          Set house rules, turn the filter on, and put the same list on your phone or router. Then check this network.
-          Vault data stays in this browser.
+          Turn the house filter on, choose what to block, and put the same list on your phone or router. Then check this
+          network.
         </p>
 
         <div class="privacy-main">
-          <div class="privacy-grid">
-            <section class="privacy-card">
-              <h2>House rules</h2>
-              <p class="privacy-lead">Choose On for your network. That is the live product for phones and Wi-Fi.</p>
-              <div class="privacy-rules">
-                <div class="privacy-rule" data-rule="filter">
-                  <div class="privacy-rule-copy">
-                    <strong>House filter</strong>
-                    <span>On my network works for any signed-in user. This computer is an advanced home-server option.</span>
-                  </div>
-                  <div class="privacy-choice">
-                    <button type="button" class="live-web-toggle" data-value="off">Off</button>
-                    <button type="button" class="live-web-toggle" data-value="network">On my network</button>
-                    <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
-                  </div>
+          <section class="privacy-card">
+            <h2>House rules</h2>
+            <p class="privacy-lead">These rules build the tracker list this app applies to your traffic.</p>
+            <div class="privacy-rules">
+              <div class="privacy-rule" data-rule="filter">
+                <div class="privacy-rule-copy">
+                  <strong>House filter</strong>
+                  <span>Off parks the list. On my network is the live path for phones and Wi-Fi.</span>
                 </div>
-                <div class="privacy-rule" data-rule="shopping">
-                  <div class="privacy-rule-copy">
-                    <strong>Shopping</strong>
-                    <span>Discounts and receipts, or no ad profile at all.</span>
-                  </div>
-                  <div class="privacy-choice">
-                    <button type="button" class="live-web-toggle" data-value="ok_for_discounts">OK for discounts</button>
-                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
-                  </div>
-                </div>
-                <div class="privacy-rule" data-rule="health">
-                  <div class="privacy-rule-copy">
-                    <strong>Health, family, location</strong>
-                    <span>Never sold into an advertising graph.</span>
-                  </div>
-                  <div class="privacy-choice">
-                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
-                    <button type="button" class="live-web-toggle" data-value="allow">Allow (not recommended)</button>
-                  </div>
-                </div>
-                <div class="privacy-rule" data-rule="identity">
-                  <div class="privacy-rule-copy">
-                    <strong>Real identity</strong>
-                    <span>Email and phone stay in the vault unless you are checking out.</span>
-                  </div>
-                  <div class="privacy-choice">
-                    <button type="button" class="live-web-toggle" data-value="checkout_ok">Checkout only</button>
-                    <button type="button" class="live-web-toggle" data-value="vault_only">Vault only</button>
-                  </div>
+                <div class="privacy-choice" role="group" aria-label="House filter">
+                  <button type="button" class="live-web-toggle" data-value="off">Off</button>
+                  <button type="button" class="live-web-toggle" data-value="network">On my network</button>
+                  <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
                 </div>
               </div>
-            </section>
+              <div class="privacy-rule" data-rule="shopping">
+                <div class="privacy-rule-copy">
+                  <strong>Shopping ads</strong>
+                  <span>Block ad and retargeting trackers, or leave shopping ads alone.</span>
+                </div>
+                <div class="privacy-choice" role="group" aria-label="Shopping ads">
+                  <button type="button" class="live-web-toggle" data-value="never">Block shopping ads</button>
+                  <button type="button" class="live-web-toggle" data-value="ok_for_discounts">Allow shopping ads</button>
+                </div>
+              </div>
+              <div class="privacy-rule" data-rule="health">
+                <div class="privacy-rule-copy">
+                  <strong>Health, family, location</strong>
+                  <span>Keep health-adjacent trackers off your network.</span>
+                </div>
+                <div class="privacy-choice" role="group" aria-label="Health trackers">
+                  <button type="button" class="live-web-toggle" data-value="never">Block health trackers</button>
+                  <button type="button" class="live-web-toggle" data-value="allow">Allow (not recommended)</button>
+                </div>
+              </div>
+            </div>
+          </section>
 
-            <section class="privacy-card" id="houseFilterCard">
-              <h2>Protect this network</h2>
+          <section class="privacy-card" id="houseFilterCard">
+            <h2>Protect this network</h2>
+            <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
+            <p class="privacy-lead" id="houseFilterStatus"></p>
+            <p class="privacy-lead hidden" id="houseOffNote">
+              Filter is off. This app is not applying a list. If you already added it in AdGuard or NextDNS, remove that
+              custom list there too.
+            </p>
+            <div class="privacy-live-controls hidden" id="houseLiveControls">
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
-              <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
-              <p class="privacy-lead" id="houseFilterStatus"></p>
               <label class="privacy-url-label" for="houseBlocklistUrl">Your house list</label>
               <div class="privacy-url-row">
                 <input id="houseBlocklistUrl" readonly />
@@ -170,12 +161,9 @@
               <div class="privacy-actions">
                 <button type="button" class="primary-btn" id="checkNetworkBtn">Check this network</button>
                 <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test local DNS</button>
-                <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts</button>
-                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domains</button>
               </div>
               <p class="privacy-lead" id="houseTestResult"></p>
-              <p class="privacy-lead" id="houseLiveCount">Live local blocks: 0</p>
-              <ul class="privacy-log" id="houseLiveLog"></ul>
+              <p class="privacy-lead hidden" id="houseLiveCount">Live local blocks: 0</p>
               <ol class="privacy-steps hidden" id="houseNetworkSteps">
                 <li>Copy the house list link above.</li>
                 <li>
@@ -197,53 +185,8 @@
                 <li>Set this computer’s DNS to <code>127.0.0.1</code>.</li>
                 <li>Tap <strong>Test local DNS</strong>. You want <code>google-analytics.com → 0.0.0.0</code>.</li>
               </ol>
-            </section>
-          </div>
-
-          <div class="privacy-grid">
-            <section class="privacy-card">
-              <h2>Vault</h2>
-              <p class="privacy-lead">Use fake details. This stays in this browser. We do not upload it.</p>
-              <div class="privacy-vault">
-                <label class="finance-field"><span>Name</span> <input id="vault-name" data-vault="name" autocomplete="off" /></label>
-                <label class="finance-field"><span>Email</span> <input id="vault-email" data-vault="email" autocomplete="off" /></label>
-                <label class="finance-field"><span>Phone</span> <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
-                <label class="finance-field"><span>City</span> <input id="vault-city" data-vault="city" autocomplete="off" /></label>
-                <label class="finance-field"><span>Interest</span> <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
-              </div>
-              <div class="privacy-actions">
-                <button type="button" class="ghost-btn tiny-btn" id="clearVaultBtn">Clear vault</button>
-                <button type="button" class="ghost-btn tiny-btn" id="resetDemoBtn">Reset</button>
-              </div>
-            </section>
-
-            <section class="privacy-card">
-              <h2>Log</h2>
-              <p class="privacy-lead" id="privacyLogEmpty">No practice requests yet.</p>
-              <ul class="privacy-log" id="privacyLog"></ul>
-            </section>
-
-            <details class="privacy-card privacy-practice">
-              <summary>Practice requests (not live)</summary>
-              <p class="privacy-lead">These taps only train the decision card. They do not block your Wi-Fi.</p>
-              <div class="privacy-week" aria-label="Practice counts">
-                <p class="privacy-stat">
-                  <span class="privacy-stat-value" id="statBlocked">0</span>
-                  <span class="privacy-stat-label">Practice blocked</span>
-                </p>
-                <p class="privacy-stat">
-                  <span class="privacy-stat-value" id="statReleased">0</span>
-                  <span class="privacy-stat-label">Practice released</span>
-                </p>
-                <p class="privacy-stat">
-                  <span class="privacy-stat-value" id="statRevoked">0</span>
-                  <span class="privacy-stat-label">Practice revokes</span>
-                </p>
-              </div>
-              <div class="privacy-scenarios" id="privacyScenarios"></div>
-              <section class="privacy-card privacy-decision" id="privacyDecision" aria-live="polite"></section>
-            </details>
-          </div>
+            </div>
+          </section>
         </div>
 
         <footer class="app-fine-print" role="note" aria-label="Disclaimer">
@@ -274,12 +217,12 @@
           <h3 id="privacyDisclaimerTitle">Protect this network with clear limits</h3>
         </div>
         <p class="honor-code-lead">
-          House rules stay in this browser. The house list is a public tracker list from your choices — not your name,
-          email, or vault.
+          House rules stay in this browser. The house list is a public tracker list from your choices — not your name or
+          email.
         </p>
         <p class="honor-code-body muted">
           You must apply the list on your phone, router, or this computer for blocking to be live. We do not sell your
-          data. Do not store real secrets in the vault. This is not a VPN and not legal advice.
+          data. This is not a VPN and not legal advice.
         </p>
         <div class="honor-code-actions">
           <button id="privacyDisclaimerAckBtn" class="primary-btn" type="button">I understand</button>
@@ -290,7 +233,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-8"></script>
-    <script defer src="./app.js?v=privacy-8"></script>
+    <script defer src="./house-filter.js?v=privacy-9"></script>
+    <script defer src="./app.js?v=privacy-9"></script>
   </body>
 </html>
