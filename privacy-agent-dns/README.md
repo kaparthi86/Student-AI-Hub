@@ -6,7 +6,7 @@ It does **not** stop first-party cookies, logins, or companies that already have
 
 ## Run from the agent app
 
-For most users, open Privacy Agent, choose **On my network**, copy the house list into AdGuard or NextDNS, then tap **Check this network**.
+For most users, open Privacy Agent, choose **Disable tracking**, copy the house list into AdGuard or NextDNS, then tap **Check this network**.
 
 Advanced local DNS, on a home computer:
 

@@ -1,5 +1,5 @@
-# Privacy Agent (MVP)
+# Privacy Agent
 
-On-device control plane under AI Hub: house rules, a local vault, a request simulator, and a house DNS filter.
+Live house filter under AI Hub: set rules, apply the tracker list on your phone or router, and check this network.
 
-Vault data stays in this browser. For launch, choose **On my network**, copy the house list into AdGuard or NextDNS, and tap **Check this network**. **This computer** remains an advanced local DNS option.
+House rules stay in this browser. Choose **Disable tracking**, copy the house list into AdGuard or NextDNS, then tap **Check this network**. **Allow tracking** turns that protection off in this app — remove the list from AdGuard or NextDNS too if you already added it. **This computer** remains an advanced local DNS option.

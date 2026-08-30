@@ -5,7 +5,7 @@ A prototype for a free student-focused AI app with:
 - Google login (Supabase Auth)
 - Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
 - **Finance AI**: Ask, a local Budget planner, and Goals with educational (not advice) guardrails
-- **Privacy Agent** (`public/privacy-agent/`): house rules, local vault, request simulator, and an optional home DNS filter (`npm run privacy-dns`)
+- **Privacy Agent** (`public/privacy-agent/`): house rules and a live tracker list for your phone, router, or computer (`npm run privacy-dns` for the optional local DNS filter)
 - **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
 - Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
 
@@ -82,7 +82,7 @@ PORT=3001 npm run dev
 
 Open: [http://localhost:3001](http://localhost:3001)
 
-Privacy Agent is a live Hub product. Open **Privacy Agent**, choose **On my network**, copy the house list link into AdGuard or NextDNS, then tap **Check this network**. Advanced users can still run a local DNS filter with `sudo npm run dev` and **This computer**. See `privacy-agent-dns/README.md`.
+Privacy Agent is a live Hub product. Open **Privacy Agent**, choose **Disable tracking**, copy the house list link into AdGuard or NextDNS, then tap **Check this network**. Advanced users can still run a local DNS filter with `sudo npm run dev` and **This computer**. See `privacy-agent-dns/README.md`.
 
 Verify Hugging Face env is picked up:
 
