@@ -236,10 +236,10 @@ const I18N = {
     tile_finance_sub: "Plan budgets and goals with clarity",
     tile_finance_cta: "Open ->",
     tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "Live house rules for your phone and Wi-Fi",
+    tile_privacy_sub: "Disable website tracking for your phone and Wi-Fi",
     tile_privacy_cta: "Open ->",
     disclaimer_privacy:
-      "Privacy Agent blocks known tracker domains when you apply the house list on your phone, router, or this computer.",
+      "Privacy Agent sits between you and the ad internet. It blocks known tracker domains when you apply the house list on your phone, router, or this computer.",
     soon_health_title: "Health AI",
     soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
     soon_health_note: "Not medical advice. Never for emergencies.",

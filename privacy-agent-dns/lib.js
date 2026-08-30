@@ -11,7 +11,7 @@ const ROOT = __dirname;
 const LIST_DIR = path.join(__dirname, "..", "public", "privacy-agent", "lists");
 const RULES_PATH = path.join(ROOT, "house-rules.json");
 const EXAMPLE_RULES_PATH = path.join(ROOT, "house-rules.example.json");
-const DEFAULT_RULES = { shopping: "never", health: "never", identity: "checkout_ok" };
+const DEFAULT_RULES = { shopping: "never", health: "never", identity: "vault_only" };
 
 function readJson(filePath, fallback) {
   try {

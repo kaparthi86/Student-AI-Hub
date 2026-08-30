@@ -1,4 +1,4 @@
-const STORAGE_KEY = "aihub.privacy-agent.v1";
+const STORAGE_KEY = "aihub.privacy-agent.v2";
 const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v2";
 const ANALYTICS_KEY = "aihub.privacy-agent.analytics.v1";
 
@@ -7,7 +7,7 @@ const DEFAULT_STATE = {
     filter: "network",
     shopping: "never",
     health: "never",
-    identity: "checkout_ok",
+    identity: "vault_only",
   },
 };
 
@@ -18,6 +18,7 @@ function loadState() {
     const parsed = JSON.parse(raw);
     const rules = { ...DEFAULT_STATE.rules, ...(parsed.rules || {}) };
     if (rules.filter === "house") rules.filter = "network";
+    if (!rules.identity) rules.identity = DEFAULT_STATE.rules.identity;
     return { rules };
   } catch {
     return structuredClone(DEFAULT_STATE);
@@ -72,7 +73,7 @@ async function renderAnalyticsBanner() {
   const tracking = domains.length;
   const liveNow = live && (analytics.networkProtected || analytics.localBlocked > 0);
   const blocked = liveNow ? tracking : Number(analytics.localBlocked || 0);
-  const deviceLabel = liveNow ? "Protected" : live ? "Armed" : "Tracked";
+  const deviceLabel = liveNow ? "Protected" : live ? "Needs setup" : "Tracking on";
 
   trackingEl.textContent = String(tracking);
   blockedEl.textContent = String(blocked);
@@ -85,10 +86,28 @@ async function renderAnalyticsBanner() {
   const kicker = document.getElementById("analyticsKicker");
   if (kicker) {
     kicker.textContent = liveNow
-      ? "Live house analytics"
+      ? "Tracking is disabled on this device"
       : live
-        ? "Armed — waiting for a live check"
-        : "Tracking allowed";
+        ? "Tracking is disabled in this app — finish setup"
+        : "Tracking is allowed";
+  }
+
+  const status = document.getElementById("privacyStatusLine");
+  if (status) {
+    status.textContent = liveNow
+      ? "The agent is between you and the ad internet on this device."
+      : live
+        ? "The agent has your house list ready. Apply it on your phone or router to make the block real."
+        : "The agent is standing down. Known tracker sites can load again.";
+  }
+
+  const next = document.getElementById("privacyNextStep");
+  if (next) {
+    next.textContent = liveNow
+      ? `${tracking} known tracker sites are on your house list, and this device failed a tracker probe.`
+      : live
+        ? `${tracking} known tracker sites are on your list. That number is the list size — it changes when you change house rules, not as you browse.`
+        : "Tap Disable tracking to put the agent back between you and ad trackers.";
   }
 }
 
@@ -148,7 +167,7 @@ function paintHouseSnapshot(data, extraMessage) {
   const label = document.getElementById("houseFilterStateLabel");
   if (label) {
     if (mode === "off") label.textContent = "Tracking allowed";
-    else if (mode === "network") label.textContent = "Tracking disabled — apply the list, then check";
+    else if (mode === "network") label.textContent = "Tracking disabled — apply the list to make it live";
     else if (running) label.textContent = "Live — this computer";
     else label.textContent = "This computer — waiting to start";
   }

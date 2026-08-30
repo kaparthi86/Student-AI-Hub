@@ -10,7 +10,7 @@
     <title>Privacy Agent - AI Hub</title>
     <meta
       name="description"
-      content="Privacy Agent lets you set house rules and apply a live tracker blocklist on your phone, router, or computer."
+      content="Privacy Agent sits between you and the ad internet. Disable tracking, set house rules, and apply the same list on your phone or router."
     />
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png?v=launch-landing-1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-10" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-10" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-10" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-11" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-11" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-11" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -81,40 +81,42 @@
           </div>
         </header>
 
-        <section class="privacy-analytics finance-leftover-card" id="privacyAnalytics" data-state="exposed" aria-label="House analytics">
-          <p class="finance-leftover-kicker" id="analyticsKicker">House analytics</p>
+        <section class="privacy-analytics finance-leftover-card" id="privacyAnalytics" data-state="exposed" aria-label="Privacy status">
+          <p class="finance-leftover-kicker" id="analyticsKicker">Your privacy status</p>
+          <p class="privacy-status-line" id="privacyStatusLine">The agent is ready to sit between you and the ad internet.</p>
           <div class="privacy-analytics-stats finance-split">
             <p class="finance-split-pill">
               <strong id="analyticsTracking">0</strong>
-              <span>sites tracking</span>
+              <span>on your list</span>
             </p>
             <p class="finance-split-pill">
               <strong id="analyticsBlocked">0</strong>
-              <span>blocked now</span>
+              <span>proven blocked</span>
             </p>
             <p class="finance-split-pill">
               <strong id="analyticsDevice">—</strong>
               <span>this device</span>
             </p>
           </div>
+          <p class="privacy-lead privacy-lead--tight" id="privacyNextStep"></p>
         </section>
 
         <p class="privacy-lead privacy-lead--intro">
-          Disable tracking to block known tracker sites. Then put the same list on your phone or router and check this
-          network.
+          This is your house privacy control. Disable tracking to stop known websites from building an ad profile on you.
+          Your rules stay on this device. The list goes on your phone or router so the block is real.
         </p>
 
         <div class="privacy-main">
           <section class="privacy-card">
-            <h2>Your tracking control</h2>
-            <p class="privacy-lead">This is the switch. Disable tracking to stop known websites from profiling you.</p>
+            <h2>House rules</h2>
+            <p class="privacy-lead">Tell the agent what may not leave for advertising.</p>
             <div class="privacy-rules">
               <div class="privacy-rule" data-rule="filter">
                 <div class="privacy-rule-copy">
-                  <strong>Website tracking</strong>
-                  <span>Disable tracking builds the house list. Allow tracking turns that protection off in this app.</span>
+                  <strong>Disable tracking</strong>
+                  <span>The main switch. Turn tracking off for the ad internet, or allow it again.</span>
                 </div>
-                <div class="privacy-choice" role="group" aria-label="Website tracking">
+                <div class="privacy-choice" role="group" aria-label="Disable tracking">
                   <button type="button" class="live-web-toggle" data-value="network">Disable tracking</button>
                   <button type="button" class="live-web-toggle" data-value="off">Allow tracking</button>
                   <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
@@ -122,37 +124,55 @@
               </div>
               <div class="privacy-rule" data-rule="shopping">
                 <div class="privacy-rule-copy">
-                  <strong>Shopping ads</strong>
-                  <span>Block ad and retargeting trackers, or leave shopping ads alone.</span>
+                  <strong>Shopping</strong>
+                  <span>Shops should not sell your cart to ad networks.</span>
                 </div>
-                <div class="privacy-choice" role="group" aria-label="Shopping ads">
-                  <button type="button" class="live-web-toggle" data-value="never">Block shopping ads</button>
-                  <button type="button" class="live-web-toggle" data-value="ok_for_discounts">Allow shopping ads</button>
+                <div class="privacy-choice" role="group" aria-label="Shopping">
+                  <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
+                  <button type="button" class="live-web-toggle" data-value="ok_for_discounts">OK for discounts</button>
                 </div>
               </div>
               <div class="privacy-rule" data-rule="health">
                 <div class="privacy-rule-copy">
                   <strong>Health, family, location</strong>
-                  <span>Keep health-adjacent trackers off your network.</span>
+                  <span>Never sold into an advertising graph.</span>
                 </div>
-                <div class="privacy-choice" role="group" aria-label="Health trackers">
-                  <button type="button" class="live-web-toggle" data-value="never">Block health trackers</button>
+                <div class="privacy-choice" role="group" aria-label="Health, family, location">
+                  <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
                   <button type="button" class="live-web-toggle" data-value="allow">Allow (not recommended)</button>
+                </div>
+              </div>
+              <div class="privacy-rule" data-rule="identity">
+                <div class="privacy-rule-copy">
+                  <strong>Real identity</strong>
+                  <span>Email, phone, and data-broker profiles stay off the ad graph.</span>
+                </div>
+                <div class="privacy-choice" role="group" aria-label="Real identity">
+                  <button type="button" class="live-web-toggle" data-value="vault_only">Keep identity home</button>
+                  <button type="button" class="live-web-toggle" data-value="checkout_ok">Checkout only</button>
                 </div>
               </div>
             </div>
           </section>
 
+          <section class="privacy-card">
+            <h2>Your data stays here</h2>
+            <p class="privacy-lead">
+              House rules live in this browser. We do not collect your browsing history, name, or email. The house list
+              is a public set of tracker domains from those rules — not a copy of you.
+            </p>
+            <p class="privacy-lead privacy-lead--tight" id="houseActiveLists">Loading protected categories…</p>
+          </section>
+
           <section class="privacy-card" id="houseFilterCard">
-            <h2>Apply it on this network</h2>
+            <h2>Make it live on your network</h2>
             <p class="privacy-kicker" id="houseFilterStateLabel">Tracking allowed</p>
             <p class="privacy-lead" id="houseFilterStatus"></p>
             <p class="privacy-lead hidden" id="houseOffNote">
-              Tracking is allowed. This app is not blocking tracker sites. If you already added the house list in AdGuard
-              or NextDNS, remove that custom list there too.
+              Tracking is allowed. The agent is not blocking tracker sites. If you already added the house list in
+              AdGuard or NextDNS, remove that custom list there too.
             </p>
             <div class="privacy-live-controls hidden" id="houseLiveControls">
-              <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
               <label class="privacy-url-label" for="houseBlocklistUrl">Your house list</label>
               <div class="privacy-url-row">
                 <input id="houseBlocklistUrl" readonly />
@@ -214,7 +234,7 @@
     >
       <div class="settings-card honor-code-card">
         <div class="settings-head">
-          <h3 id="privacyDisclaimerTitle">Protect this network with clear limits</h3>
+          <h3 id="privacyDisclaimerTitle">A filter between you and the ad internet</h3>
         </div>
         <p class="honor-code-lead">
           House rules stay in this browser. The house list is a public tracker list from your choices — not your name or
@@ -233,7 +253,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-10"></script>
-    <script defer src="./app.js?v=privacy-10"></script>
+    <script defer src="./house-filter.js?v=privacy-11"></script>
+    <script defer src="./app.js?v=privacy-11"></script>
   </body>
 </html>
