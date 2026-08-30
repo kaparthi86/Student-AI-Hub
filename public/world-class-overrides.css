@@ -529,7 +529,7 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   gap: 4px;
 }
 
-.workspace-shell .workspace-hub-link {
+.workspace-hub-link {
   display: inline-flex;
   align-items: center;
   gap: 0.35em;
@@ -551,22 +551,21 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
 }
 
-.workspace-shell .workspace-hub-link::before {
-  content: "←";
+.workspace-hub-arrow {
   font-size: 0.95em;
   font-weight: 700;
   line-height: 1;
 }
 
-.workspace-shell .workspace-hub-link:hover,
-.workspace-shell .workspace-hub-link:focus-visible {
+.workspace-hub-link:hover,
+.workspace-hub-link:focus-visible {
   background: rgba(47, 111, 237, 0.14);
   color: #1547b0;
   outline: none;
   transform: translateX(-1px);
 }
 
-.workspace-shell .workspace-hub-link:focus-visible {
+.workspace-hub-link:focus-visible {
   box-shadow: 0 0 0 2px rgba(47, 111, 237, 0.35);
 }
 

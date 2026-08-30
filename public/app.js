@@ -1279,8 +1279,6 @@ function applyTranslations() {
     soonNotifyBtn: "soon_notify",
     soonBackBtn: "soon_back",
     soonModalCloseBtn: "soon_close",
-    backToHubBtn: "nav_back_hub",
-    backToHubFromFinanceBtn: "nav_back_hub",
     crumbStudent: "nav_student",
     crumbFinance: "tile_finance_title",
     googleLoginBtn: "continue_google",
@@ -1451,6 +1449,8 @@ function applyTranslations() {
   if (closeDefaultPageHintBtn) closeDefaultPageHintBtn.setAttribute("aria-label", t("settings_close"));
   document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
     const hubLabel = t("nav_back_hub");
+    const label = btn.querySelector(".workspace-hub-label");
+    if (label) label.textContent = hubLabel;
     btn.setAttribute("aria-label", hubLabel);
     btn.setAttribute("title", hubLabel);
   });
