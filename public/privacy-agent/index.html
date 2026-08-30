@@ -10,7 +10,7 @@
     <title>Privacy Agent - AI Hub</title>
     <meta
       name="description"
-      content="Privacy Agent is an on-device filter between your life and advertising. Set house rules, keep a vault, and decide what can leave."
+      content="Privacy Agent lets you set house rules and apply a live tracker blocklist on your phone, router, or computer."
     />
     <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png?v=launch-landing-1" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-3" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-3" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-3" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-8" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-8" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-8" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -49,47 +49,89 @@
                 </svg>
               </span>
               <div class="brand-wordmark workspace-wordmark">
-                <a class="workspace-hub-link" href="../" aria-label="Back to AI Hub" title="Back to AI Hub">Back to AI Hub</a>
+                <button
+                  type="button"
+                  class="workspace-hub-link"
+                  id="backToHubFromPrivacyBtn"
+                  aria-label="Back to AI Hub"
+                  title="Back to AI Hub"
+                >
+                  Back to AI Hub
+                </button>
                 <span class="brand-title workspace-title">Privacy Agent</span>
+              </div>
+            </div>
+            <div class="head-actions account-menu">
+              <button
+                type="button"
+                class="ghost-btn icon-btn account-menu-btn"
+                id="privacyAccountMenuBtn"
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="privacyAccountMenuPanel"
+              >
+                <span aria-hidden="true">···</span>
+              </button>
+              <div id="privacyAccountMenuPanel" class="account-menu-panel hidden" role="menu">
+                <button id="privacySettingsBtn" class="account-menu-item" type="button" role="menuitem">Settings</button>
+                <button id="privacyLogoutBtn" class="account-menu-item" type="button" role="menuitem">Logout</button>
               </div>
             </div>
           </div>
         </header>
 
-        <p class="privacy-lead" style="margin-top: 0">
-          You decide once. The agent keeps the promise. Practice requests here, then put the same rules on your house
-          Wi-Fi with the DNS filter.
-        </p>
-
-        <section class="privacy-week" aria-label="This week">
-          <p class="privacy-stat">
-            <span class="privacy-stat-value" id="statBlocked">0</span>
-            <span class="privacy-stat-label">Requests blocked</span>
-          </p>
-          <p class="privacy-stat">
-            <span class="privacy-stat-value" id="statReleased">0</span>
-            <span class="privacy-stat-label">Minimal claims released</span>
-          </p>
-          <p class="privacy-stat">
-            <span class="privacy-stat-value" id="statRevoked">0</span>
-            <span class="privacy-stat-label">Broker copies to take back</span>
-          </p>
+        <section class="privacy-analytics finance-leftover-card" id="privacyAnalytics" data-state="exposed" aria-label="House analytics">
+          <p class="finance-leftover-kicker" id="analyticsKicker">House analytics</p>
+          <div class="privacy-analytics-stats finance-split">
+            <p class="finance-split-pill">
+              <strong id="analyticsTracking">0</strong>
+              <span>sites tracking</span>
+            </p>
+            <p class="finance-split-pill">
+              <strong id="analyticsBlocked">0</strong>
+              <span>blocked now</span>
+            </p>
+            <p class="finance-split-pill">
+              <strong id="analyticsDevice">—</strong>
+              <span>this device</span>
+            </p>
+          </div>
+          <div class="privacy-analytics-ticker" aria-hidden="true">
+            <div class="privacy-analytics-track" id="analyticsTrack"></div>
+          </div>
         </section>
+
+        <p class="privacy-lead privacy-lead--intro">
+          Set house rules, turn the filter on, and put the same list on your phone or router. Then check this network.
+          Vault data stays in this browser.
+        </p>
 
         <div class="privacy-main">
           <div class="privacy-grid">
             <section class="privacy-card">
               <h2>House rules</h2>
-              <p class="privacy-lead">Three life decisions. Not two hundred cookie checkboxes.</p>
+              <p class="privacy-lead">Choose On for your network. That is the live product for phones and Wi-Fi.</p>
               <div class="privacy-rules">
+                <div class="privacy-rule" data-rule="filter">
+                  <div class="privacy-rule-copy">
+                    <strong>House filter</strong>
+                    <span>On my network works for any signed-in user. This computer is an advanced home-server option.</span>
+                  </div>
+                  <div class="privacy-choice">
+                    <button type="button" class="live-web-toggle" data-value="off">Off</button>
+                    <button type="button" class="live-web-toggle" data-value="network">On my network</button>
+                    <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
+                  </div>
+                </div>
                 <div class="privacy-rule" data-rule="shopping">
                   <div class="privacy-rule-copy">
                     <strong>Shopping</strong>
                     <span>Discounts and receipts, or no ad profile at all.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="ok_for_discounts">OK for discounts</button>
-                    <button type="button" data-value="never">Never for ads</button>
+                    <button type="button" class="live-web-toggle" data-value="ok_for_discounts">OK for discounts</button>
+                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
                   </div>
                 </div>
                 <div class="privacy-rule" data-rule="health">
@@ -98,8 +140,8 @@
                     <span>Never sold into an advertising graph.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="never">Never for ads</button>
-                    <button type="button" data-value="allow">Allow (not recommended)</button>
+                    <button type="button" class="live-web-toggle" data-value="never">Never for ads</button>
+                    <button type="button" class="live-web-toggle" data-value="allow">Allow (not recommended)</button>
                   </div>
                 </div>
                 <div class="privacy-rule" data-rule="identity">
@@ -108,78 +150,113 @@
                     <span>Email and phone stay in the vault unless you are checking out.</span>
                   </div>
                   <div class="privacy-choice">
-                    <button type="button" data-value="checkout_ok">Checkout only</button>
-                    <button type="button" data-value="vault_only">Vault only</button>
+                    <button type="button" class="live-web-toggle" data-value="checkout_ok">Checkout only</button>
+                    <button type="button" class="live-web-toggle" data-value="vault_only">Vault only</button>
                   </div>
                 </div>
               </div>
             </section>
 
             <section class="privacy-card" id="houseFilterCard">
-              <h2>This house</h2>
-              <p class="privacy-lead">
-                The house filter is part of this agent. Start it here on a computer that stays on, then point the router
-                at that computer. Phones and laptops on this Wi-Fi inherit the house rules.
-              </p>
+              <h2>Protect this network</h2>
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
               <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
               <p class="privacy-lead" id="houseFilterStatus"></p>
-              <ul class="privacy-log" id="houseLiveLog"></ul>
-              <div class="privacy-actions">
-                <button type="button" class="primary-btn" id="startHouseFilterBtn">Protect this house</button>
-                <button type="button" class="ghost-btn hidden" id="stopHouseFilterBtn">Stop filter</button>
-                <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts list</button>
-                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
+              <label class="privacy-url-label" for="houseBlocklistUrl">Your house list</label>
+              <div class="privacy-url-row">
+                <input id="houseBlocklistUrl" readonly />
+                <button type="button" class="primary-btn" id="copyBlocklistBtn">Copy link</button>
               </div>
-              <ol class="privacy-steps" id="houseRouterSteps">
-                <li>Tap <strong>Protect this house</strong> on the home computer running AI Hub.</li>
-                <li>If the app asks for administrator rights, close Hub and start it with <code>sudo npm run dev</code> (Administrator on Windows), then tap again.</li>
-                <li>Copy the LAN IP shown above into the router DNS page (often <code>192.168.1.1</code>).</li>
-                <li>Save, then toggle airplane mode on phones.</li>
+              <div class="privacy-actions">
+                <button type="button" class="primary-btn" id="checkNetworkBtn">Check this network</button>
+                <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test local DNS</button>
+                <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts</button>
+                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domains</button>
+              </div>
+              <p class="privacy-lead" id="houseTestResult"></p>
+              <p class="privacy-lead" id="houseLiveCount">Live local blocks: 0</p>
+              <ul class="privacy-log" id="houseLiveLog"></ul>
+              <ol class="privacy-steps hidden" id="houseNetworkSteps">
+                <li>Copy the house list link above.</li>
+                <li>
+                  Phone (fastest): install
+                  <a href="https://adguard.com/en/adguard-ios/overview.html" target="_blank" rel="noopener">AdGuard</a>
+                  or
+                  <a href="https://nextdns.io" target="_blank" rel="noopener">NextDNS</a>
+                  (free). Add this link as a custom filter or denylist.
+                </li>
+                <li>
+                  Whole house: in NextDNS, add the same link, then set the router DNS to the addresses NextDNS shows
+                  you.
+                </li>
+                <li>Come back here and tap <strong>Check this network</strong>.</li>
               </ol>
-            </section>
-
-            <section class="privacy-card">
-              <h2>Try a request</h2>
-              <p class="privacy-lead">Practice the agent. Each tap is a company asking for a piece of you.</p>
-              <div class="privacy-scenarios" id="privacyScenarios"></div>
+              <ol class="privacy-steps hidden" id="houseComputerSteps">
+                <li>This mode only works when AI Hub is running on this computer.</li>
+                <li>If start fails, restart with <code>sudo npm run dev</code> (Administrator on Windows).</li>
+                <li>Set this computer’s DNS to <code>127.0.0.1</code>.</li>
+                <li>Tap <strong>Test local DNS</strong>. You want <code>google-analytics.com → 0.0.0.0</code>.</li>
+              </ol>
             </section>
           </div>
 
           <div class="privacy-grid">
-            <section class="privacy-card privacy-decision" id="privacyDecision" aria-live="polite"></section>
-
             <section class="privacy-card">
               <h2>Vault</h2>
               <p class="privacy-lead">Use fake details. This stays in this browser. We do not upload it.</p>
               <div class="privacy-vault">
-                <label>Name <input id="vault-name" data-vault="name" autocomplete="off" /></label>
-                <label>Email <input id="vault-email" data-vault="email" autocomplete="off" /></label>
-                <label>Phone <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
-                <label>City <input id="vault-city" data-vault="city" autocomplete="off" /></label>
-                <label>Interest <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
+                <label class="finance-field"><span>Name</span> <input id="vault-name" data-vault="name" autocomplete="off" /></label>
+                <label class="finance-field"><span>Email</span> <input id="vault-email" data-vault="email" autocomplete="off" /></label>
+                <label class="finance-field"><span>Phone</span> <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
+                <label class="finance-field"><span>City</span> <input id="vault-city" data-vault="city" autocomplete="off" /></label>
+                <label class="finance-field"><span>Interest</span> <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
               </div>
               <div class="privacy-actions">
                 <button type="button" class="ghost-btn tiny-btn" id="clearVaultBtn">Clear vault</button>
-                <button type="button" class="ghost-btn tiny-btn" id="resetDemoBtn">Reset demo</button>
+                <button type="button" class="ghost-btn tiny-btn" id="resetDemoBtn">Reset</button>
               </div>
             </section>
 
             <section class="privacy-card">
               <h2>Log</h2>
-              <p class="privacy-lead" id="privacyLogEmpty">No requests yet. Try one on the left.</p>
+              <p class="privacy-lead" id="privacyLogEmpty">No practice requests yet.</p>
               <ul class="privacy-log" id="privacyLog"></ul>
             </section>
+
+            <details class="privacy-card privacy-practice">
+              <summary>Practice requests (not live)</summary>
+              <p class="privacy-lead">These taps only train the decision card. They do not block your Wi-Fi.</p>
+              <div class="privacy-week" aria-label="Practice counts">
+                <p class="privacy-stat">
+                  <span class="privacy-stat-value" id="statBlocked">0</span>
+                  <span class="privacy-stat-label">Practice blocked</span>
+                </p>
+                <p class="privacy-stat">
+                  <span class="privacy-stat-value" id="statReleased">0</span>
+                  <span class="privacy-stat-label">Practice released</span>
+                </p>
+                <p class="privacy-stat">
+                  <span class="privacy-stat-value" id="statRevoked">0</span>
+                  <span class="privacy-stat-label">Practice revokes</span>
+                </p>
+              </div>
+              <div class="privacy-scenarios" id="privacyScenarios"></div>
+              <section class="privacy-card privacy-decision" id="privacyDecision" aria-live="polite"></section>
+            </details>
           </div>
         </div>
 
         <footer class="app-fine-print" role="note" aria-label="Disclaimer">
           <p class="fine-print-line">
-            The house DNS filter blocks known tracker domains on your network. It does not stop first-party cookies,
-            logins, or copies of your data that already live at brokers.
+            Privacy Agent blocks known tracker domains when you apply the house list on a phone, router, or this
+            computer. It does not stop first-party cookies, logins, or copies brokers already hold.
           </p>
           <p class="fine-print-line">
             AI Hub is mission-driven — built to help people learn and plan, not to sell your data or push ads.
+          </p>
+          <p class="fine-print-line support-contact-line">
+            Feedback:
+            <a href="mailto:student-ai-hub-support@googlegroups.com">student-ai-hub-support@googlegroups.com</a>
           </p>
         </footer>
       </section>
@@ -194,15 +271,15 @@
     >
       <div class="settings-card honor-code-card">
         <div class="settings-head">
-          <h3 id="privacyDisclaimerTitle">Your data stays on this device</h3>
+          <h3 id="privacyDisclaimerTitle">Protect this network with clear limits</h3>
         </div>
         <p class="honor-code-lead">
-          Privacy Agent is a practice control plane — house rules, a vault, and a decision log.
+          House rules stay in this browser. The house list is a public tracker list from your choices — not your name,
+          email, or vault.
         </p>
         <p class="honor-code-body muted">
-          The vault stays in this browser. The optional house DNS filter runs on a computer you control and blocks
-          known tracker domains. Do not store real secrets in the vault. We do not sell your data. There are no ads in
-          this product.
+          You must apply the list on your phone, router, or this computer for blocking to be live. We do not sell your
+          data. Do not store real secrets in the vault. This is not a VPN and not legal advice.
         </p>
         <div class="honor-code-actions">
           <button id="privacyDisclaimerAckBtn" class="primary-btn" type="button">I understand</button>
@@ -213,7 +290,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-3"></script>
-    <script defer src="./app.js?v=privacy-3"></script>
+    <script defer src="./house-filter.js?v=privacy-8"></script>
+    <script defer src="./app.js?v=privacy-8"></script>
   </body>
 </html>

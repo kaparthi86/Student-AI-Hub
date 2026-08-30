@@ -1,5 +1,6 @@
 const STORAGE_KEY = "aihub.privacy-agent.v1";
-const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v1";
+const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v2";
+const ANALYTICS_KEY = "aihub.privacy-agent.analytics.v1";
 
 const SCENARIOS = [
   {
@@ -51,6 +52,7 @@ const SCENARIOS = [
 
 const DEFAULT_STATE = {
   rules: {
+    filter: "off",
     shopping: "ok_for_discounts",
     health: "never",
     identity: "checkout_ok",
@@ -82,6 +84,97 @@ function loadState() {
 
 function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadAnalytics() {
+  try {
+    return {
+      networkProtected: false,
+      localBlocked: 0,
+      ...JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "{}"),
+    };
+  } catch {
+    return { networkProtected: false, localBlocked: 0 };
+  }
+}
+
+function saveAnalytics(next) {
+  localStorage.setItem(ANALYTICS_KEY, JSON.stringify(next));
+}
+
+const analytics = loadAnalytics();
+
+function tickerChip(kind, name) {
+  const item = document.createElement("span");
+  item.className = "privacy-analytics-item";
+  item.dataset.kind = kind;
+  const tag = document.createElement("em");
+  tag.textContent = kind;
+  const label = document.createElement("span");
+  label.textContent = name;
+  item.append(tag, label);
+  return item;
+}
+
+function resetAnalytics() {
+  analytics.networkProtected = false;
+  analytics.localBlocked = 0;
+  saveAnalytics(analytics);
+}
+
+async function renderAnalyticsBanner() {
+  const trackingEl = document.getElementById("analyticsTracking");
+  const blockedEl = document.getElementById("analyticsBlocked");
+  const deviceEl = document.getElementById("analyticsDevice");
+  const track = document.getElementById("analyticsTrack");
+  const banner = document.getElementById("privacyAnalytics");
+  if (!trackingEl || !blockedEl || !deviceEl || !track) return;
+  const domains = Array.from(await currentBlockSet()).sort();
+  const tracking = domains.length;
+  const filterOn = Boolean(state.rules.filter && state.rules.filter !== "off");
+  if (!filterOn && analytics.networkProtected) {
+    analytics.networkProtected = false;
+    saveAnalytics(analytics);
+  }
+  const liveNow = filterOn && (analytics.networkProtected || analytics.localBlocked > 0);
+  const blocked = liveNow ? tracking : Number(analytics.localBlocked || 0);
+  const deviceLabel = liveNow ? "Protected" : filterOn ? "Armed" : "Exposed";
+  trackingEl.textContent = String(tracking);
+  blockedEl.textContent = String(blocked);
+  deviceEl.textContent = deviceLabel;
+  trackingEl.className = liveNow ? "is-ok" : "is-over";
+  blockedEl.className = blocked ? "is-ok" : "is-tight";
+  deviceEl.className = liveNow ? "is-ok" : filterOn ? "is-tight" : "is-over";
+  if (banner) banner.dataset.state = deviceLabel.toLowerCase();
+  const kicker = document.getElementById("analyticsKicker");
+  if (kicker) {
+    kicker.textContent = liveNow
+      ? "Live house analytics"
+      : filterOn
+        ? "Armed — waiting for a live check"
+        : "House analytics";
+  }
+  const chips = [
+    tickerChip("list", `${tracking} tracker ${tracking === 1 ? "site" : "sites"}`),
+    tickerChip(blocked ? "blocked" : "wait", `${blocked} ${blocked === 1 ? "site blocked" : "sites blocked"} now`),
+    tickerChip(filterOn ? (state.rules.filter === "network" ? "on" : "armed") : "off", filterOn
+      ? state.rules.filter === "network"
+        ? "House filter on · network"
+        : "House filter on · this computer"
+      : "House filter off · list parked"),
+    tickerChip(
+      liveNow ? "blocked" : filterOn ? "armed" : "tracking",
+      liveNow ? "This device is protected" : filterOn ? "Armed — waiting for a live check" : "This device is exposed"
+    ),
+  ];
+  if (analytics.localBlocked > 0) {
+    chips.push(tickerChip("live", `${analytics.localBlocked} local DNS ${analytics.localBlocked === 1 ? "drop" : "drops"}`));
+  }
+  chips.push(tickerChip("list", "Practice drills stay out of this banner"));
+  domains.slice(0, 16).forEach((domain) => {
+    chips.push(tickerChip(liveNow ? "covered" : "tracking", domain));
+  });
+  track.replaceChildren(...chips, ...chips.map((chip) => chip.cloneNode(true)));
 }
 
 function decide(scenario, rules, vault) {
@@ -182,6 +275,7 @@ function actionLabel(action) {
 }
 
 const state = loadState();
+if (state.rules.filter === "house") state.rules.filter = "network";
 
 const els = {
   blocked: document.getElementById("statBlocked"),
@@ -233,7 +327,7 @@ function renderDecision(entry) {
     <p class="privacy-kicker">${actionLabel(entry.action)}</p>
     <h3>${entry.headline}</h3>
     <p>${entry.body}</p>
-    ${released ? `<p class="privacy-lead" style="margin:10px 0 0">Left the vault: ${released}</p>` : ""}
+    ${released ? `<p class="privacy-lead privacy-lead--tight">Left the vault: ${released}</p>` : ""}
   `;
 }
 
@@ -264,6 +358,7 @@ function persistAndPaint(lastDecision) {
   renderDecision(lastDecision);
   renderLog();
   renderHouseFilter();
+  renderAnalyticsBanner();
   syncHouseRules();
 }
 
@@ -299,43 +394,69 @@ function renderHouseLiveLog(recent) {
   });
 }
 
+function blocklistUrl(format) {
+  const query = new URLSearchParams({
+    shopping: state.rules.shopping,
+    health: state.rules.health,
+    identity: state.rules.identity,
+  });
+  if (format) query.set("format", format);
+  return `${window.location.origin}/api/privacy-blocklist?${query.toString()}`;
+}
+
 function paintHouseSnapshot(data, extraMessage) {
   const running = Boolean(data?.running);
   window.__houseFilterRunning = running;
+  const mode = state.rules.filter || "off";
   const label = document.getElementById("houseFilterStateLabel");
-  if (label) label.textContent = running ? "Filter on — part of this agent" : "Filter off";
-  document.getElementById("startHouseFilterBtn")?.classList.toggle("hidden", running);
-  document.getElementById("stopHouseFilterBtn")?.classList.toggle("hidden", !running);
-  renderHouseLiveLog(data?.recent);
+  if (label) {
+    if (mode === "network") label.textContent = "On my network — apply the list, then check";
+    else if (running && mode === "computer") label.textContent = "Live — this computer";
+    else if (mode === "computer") label.textContent = "This computer — waiting to start";
+    else label.textContent = "Filter off";
+  }
+  const liveCount = document.getElementById("houseLiveCount");
+  if (liveCount) {
+    liveCount.textContent = running ? `Live local blocks: ${data?.stats?.blocked ?? 0}` : "Live local blocks: 0";
+    liveCount.classList.toggle("hidden", mode !== "computer");
+  }
+  document.getElementById("testHouseFilterBtn")?.classList.toggle("hidden", !(running && mode === "computer"));
+  document.getElementById("houseComputerSteps")?.classList.toggle("hidden", mode !== "computer");
+  document.getElementById("houseNetworkSteps")?.classList.toggle("hidden", mode !== "network");
+  renderHouseLiveLog(mode === "computer" ? data?.recent : []);
+  analytics.localBlocked = running ? Number(data?.stats?.blocked || 0) : 0;
+  saveAnalytics(analytics);
+  renderAnalyticsBanner();
   if (extraMessage) {
     setHouseStatus(extraMessage);
     return;
   }
-  if (data?.cloud) {
-    document.getElementById("startHouseFilterBtn")?.classList.add("hidden");
-    document.getElementById("stopHouseFilterBtn")?.classList.add("hidden");
+  if (mode === "network") {
     setHouseStatus(
-      "You are on the public site. Open Privacy Agent on your home computer running AI Hub to start the filter from this same screen."
+      "Your house list is ready. Add the link on your phone or router, then tap Check this network. This works for the live site — no Terminal."
     );
     return;
   }
-  if (running) {
+  if (mode === "computer" && running) {
     const ip = (data.lan && data.lan[0]) || "this computer";
-    const blocked = data.stats?.blocked ?? 0;
-    setHouseStatus(
-      `Protecting this house from ${ip}. Router DNS → ${ip}. ${data.domains} domains in the list. ${blocked} blocked so far.`
-    );
+    setHouseStatus(`Local DNS is on. Set this computer to 127.0.0.1 or the router to ${ip}.`);
     return;
   }
-  setHouseStatus("Tap Protect this house to turn the filter on from this agent.");
+  if (mode === "off") {
+    setHouseStatus("House filter is off. Nothing is being blocked on the network.");
+    return;
+  }
+  setHouseStatus("Choose On my network to protect phones and Wi-Fi, or This computer for a local DNS server.");
 }
 
 function renderHouseFilter() {
   const mount = document.getElementById("houseActiveLists");
   const filter = window.PrivacyHouseFilter;
+  const urlInput = document.getElementById("houseBlocklistUrl");
+  if (urlInput) urlInput.value = blocklistUrl();
   if (!mount || !filter) return;
   const lists = filter.enabledLists(state.rules);
-  mount.textContent = `Active lists for these rules: ${lists.map(listLabel).join(", ")}.`;
+  mount.textContent = `Active lists: ${lists.map(listLabel).join(", ")}.`;
 }
 
 async function refreshHouseSnapshot() {
@@ -345,7 +466,11 @@ async function refreshHouseSnapshot() {
     paintHouseSnapshot(data);
     return data;
   } catch {
-    setHouseStatus("Could not reach the house filter inside this app. Is AI Hub running on this computer?");
+    if (state.rules.filter === "network") {
+      paintHouseSnapshot({ running: false }, null);
+      return null;
+    }
+    setHouseStatus("Could not reach the local house filter. For 100-user launch, choose On my network.");
     return null;
   }
 }
@@ -397,37 +522,84 @@ async function currentBlockSet() {
   return filter.buildBlockSet(texts, state.rules);
 }
 
+function probeUrl(url, timeoutMs) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    const timer = window.setTimeout(() => {
+      image.onload = null;
+      image.onerror = null;
+      resolve("timeout");
+    }, timeoutMs);
+    image.onload = () => {
+      window.clearTimeout(timer);
+      resolve("load");
+    };
+    image.onerror = () => {
+      window.clearTimeout(timer);
+      resolve("error");
+    };
+    image.src = url;
+  });
+}
+
+async function checkThisNetwork() {
+  const resultEl = document.getElementById("houseTestResult");
+  if (resultEl) resultEl.textContent = "Checking this device’s network…";
+  const stamp = Date.now();
+  const safe = await probeUrl(`https://www.example.com/favicon.ico?cb=${stamp}`, 4000);
+  const tracker = await probeUrl(`https://www.google-analytics.com/analytics.js?cb=${stamp}`, 4000);
+  if (!resultEl) return;
+  if (safe !== "load") {
+    resultEl.textContent = "This device looks offline. Connect to Wi-Fi and check again.";
+    return;
+  }
+  if (tracker === "error" || tracker === "timeout") {
+    resultEl.textContent =
+      "Live check passed. This device cannot load google-analytics.com, so the house list is working on this network.";
+    analytics.networkProtected = true;
+    saveAnalytics(analytics);
+    renderAnalyticsBanner();
+    return;
+  }
+  analytics.networkProtected = false;
+  saveAnalytics(analytics);
+  renderAnalyticsBanner();
+  resultEl.textContent =
+    "This device can still reach google-analytics.com. Add the house list in AdGuard or NextDNS, set DNS, then check again.";
+}
+
 function bindHouseFilter() {
-  document.getElementById("startHouseFilterBtn")?.addEventListener("click", async () => {
-    setHouseStatus("Starting the house filter…");
+  document.getElementById("copyBlocklistBtn")?.addEventListener("click", async () => {
+    const url = blocklistUrl();
     try {
-      await fetch(houseApi("/rules"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state.rules),
-      }).catch(() => null);
-      const res = await fetch(houseApi("/start"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        paintHouseSnapshot(data, data.hint || data.error || "Could not start the house filter.");
-        return;
-      }
-      paintHouseSnapshot(data);
+      await navigator.clipboard.writeText(url);
+      setHouseStatus("House list link copied. Paste it into AdGuard or NextDNS.");
     } catch {
-      setHouseStatus("Could not start the house filter from this page. Run AI Hub on this computer first.");
+      const input = document.getElementById("houseBlocklistUrl");
+      input?.select();
+      setHouseStatus("Copy the house list link from the box, then paste it into AdGuard or NextDNS.");
     }
   });
-  document.getElementById("stopHouseFilterBtn")?.addEventListener("click", async () => {
+  document.getElementById("checkNetworkBtn")?.addEventListener("click", () => {
+    checkThisNetwork();
+  });
+  document.getElementById("testHouseFilterBtn")?.addEventListener("click", async () => {
+    const resultEl = document.getElementById("houseTestResult");
+    if (resultEl) resultEl.textContent = "Sending a real DNS query through the house filter…";
     try {
-      const res = await fetch(houseApi("/stop"), { method: "POST" });
+      const res = await fetch(houseApi("/test"), { method: "POST" });
       const data = await res.json();
-      paintHouseSnapshot(data, "House filter stopped.");
+      paintHouseSnapshot(data);
+      if (!resultEl) return;
+      if (data.real) {
+        resultEl.textContent = `Real block confirmed. ${data.tracker.name} → ${data.tracker.address}. ${data.allowed.name} still resolves to ${data.allowed.address}.`;
+        return;
+      }
+      resultEl.textContent =
+        data.error ||
+        `Not a real house block yet. Tracker ${data.tracker?.name || ""} → ${data.tracker?.address || "no answer"}.`;
     } catch {
-      setHouseStatus("Could not stop the house filter.");
+      if (resultEl) resultEl.textContent = "Could not run the real DNS test. Is AI Hub running on this computer?";
     }
   });
   document.getElementById("downloadHostsBtn")?.addEventListener("click", async () => {
@@ -440,7 +612,9 @@ function bindHouseFilter() {
     downloadText("privacy-agent-domains.txt", `${window.PrivacyHouseFilter.domainFile(domains)}\n`);
     setHouseStatus("Saved one domain per line. Use this only if you prefer NextDNS or AdGuard Home.");
   });
-  refreshHouseSnapshot();
+  refreshHouseSnapshot().then(() => {
+    if (state.rules.filter === "computer") applyFilterChoice("computer");
+  });
   window.setInterval(refreshHouseSnapshot, 8000);
 }
 
@@ -463,6 +637,39 @@ function runScenario(id) {
   persistAndPaint(entry);
 }
 
+async function applyFilterChoice(value) {
+  if (value === "off" || value === "network") {
+    try {
+      await fetch(houseApi("/stop"), { method: "POST" }).catch(() => null);
+    } catch {
+      /* hosted users will not have a local filter */
+    }
+    paintHouseSnapshot({ running: false });
+    return;
+  }
+  setHouseStatus("Starting the local DNS filter…");
+  try {
+    await fetch(houseApi("/rules"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state.rules),
+    }).catch(() => null);
+    const res = await fetch(houseApi("/start"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      paintHouseSnapshot(data, data.hint || data.error || "Could not start the house filter.");
+      return;
+    }
+    paintHouseSnapshot(data);
+  } catch {
+    setHouseStatus("Could not start the house filter. Run AI Hub on this computer first.");
+  }
+}
+
 function bindRules() {
   document.querySelectorAll("[data-rule] button[data-value]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -472,6 +679,7 @@ function bindRules() {
       if (!rule || !value) return;
       state.rules[rule] = value;
       persistAndPaint(null);
+      if (rule === "filter") applyFilterChoice(value);
     });
   });
 }
@@ -494,7 +702,9 @@ function bindVault() {
     state.rules = next.rules;
     state.vault = next.vault;
     state.log = [];
+    resetAnalytics();
     persistAndPaint(null);
+    applyFilterChoice("off");
   });
 }
 
@@ -524,18 +734,66 @@ function bindDisclaimer() {
   });
 }
 
+let supabaseClient = null;
+
+function goToHub() {
+  window.location.href = "../";
+}
+
+function bindChrome() {
+  document.getElementById("backToHubFromPrivacyBtn")?.addEventListener("click", goToHub);
+  const menu = document.querySelector(".account-menu");
+  const btn = menu?.querySelector(".account-menu-btn");
+  const panel = menu?.querySelector(".account-menu-panel");
+  const closeMenu = () => {
+    panel?.classList.add("hidden");
+    btn?.setAttribute("aria-expanded", "false");
+  };
+  btn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const willOpen = panel?.classList.contains("hidden");
+    closeMenu();
+    if (willOpen) {
+      panel?.classList.remove("hidden");
+      btn?.setAttribute("aria-expanded", "true");
+    }
+  });
+  panel?.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest?.(".account-menu")) return;
+    closeMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+  document.getElementById("privacySettingsBtn")?.addEventListener("click", goToHub);
+  document.getElementById("privacyLogoutBtn")?.addEventListener("click", async () => {
+    closeMenu();
+    if (supabaseClient) {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch {
+        /* still leave the workspace */
+      }
+    }
+    goToHub();
+  });
+}
+
 async function ensureHubSession() {
   const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
   if (!window.supabase || !supabaseUrl || !supabaseAnonKey) return;
   try {
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    const { data } = await supabase.auth.getSession();
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    const { data } = await supabaseClient.auth.getSession();
     if (!data?.session) window.location.replace("../");
   } catch {
     /* stay on the demo if auth cannot be checked */
   }
 }
 
+bindChrome();
 bindRules();
 bindVault();
 bindScenarios();
