@@ -247,6 +247,25 @@ a.workspace-hub-link {
   font-size: 0.92rem;
 }
 
+.privacy-steps {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  color: var(--text, #1c1b19);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.privacy-steps li + li {
+  margin-top: 8px;
+}
+
+.privacy-steps code {
+  font-size: 0.84em;
+  background: rgba(28, 27, 25, 0.05);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
 @media (max-width: 820px) {
   .privacy-week {
     grid-template-columns: 1fr;

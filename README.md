@@ -5,7 +5,7 @@ A prototype for a free student-focused AI app with:
 - Google login (Supabase Auth)
 - Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
 - **Finance AI**: Ask, a local Budget planner, and Goals with educational (not advice) guardrails
-- **Privacy Agent** (`public/privacy-agent/`): on-device house rules, vault, and request simulator (does not filter live traffic yet)
+- **Privacy Agent** (`public/privacy-agent/`): house rules, local vault, request simulator, and an optional home DNS filter (`npm run privacy-dns`)
 - **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
 - Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
 
@@ -81,6 +81,14 @@ PORT=3001 npm run dev
 ```
 
 Open: [http://localhost:3001](http://localhost:3001)
+
+Privacy Agent house DNS filter (run on a home computer, then point the router at that computer’s LAN IP):
+
+```bash
+sudo npm run privacy-dns
+```
+
+See `privacy-agent-dns/README.md`.
 
 Verify Hugging Face env is picked up:
 
