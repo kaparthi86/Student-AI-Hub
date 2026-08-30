@@ -1092,6 +1092,21 @@ function responseContractInstruction(mode) {
     "6) Stay within scope: teach and practice help only - do not write work the student should submit as their own.",
     "7) End when the student can act. Do not pad with generic encouragement or recap fluff.",
   ];
+  if (mode === "finance") {
+    return [
+      "Response contract (follow strictly):",
+      "1) Start with a direct answer in 1-2 sentences. Do not restate the question.",
+      "2) Then add only useful detail: numbered steps (1. 2. 3.) for processes, or hyphen bullets (-) for lists.",
+      "3) Prefer one concrete example over vague advice. Keep paragraphs to 1-3 short sentences.",
+      "4) No filler openers (avoid So, Great question, Sure, Absolutely, As an AI, I'd be happy to).",
+      "5) No decorative **bold** or *italic* asterisks. Use ## headings sparingly and only with real titles.",
+      "6) Educational only - not financial, tax, investment, or legal advice. Never recommend a specific stock, crypto token, fund ticker, or broker.",
+      "7) Never promise returns, credit approval, or debt-relief outcomes.",
+      "8) If the user shares account numbers, passwords, or SSNs, tell them to remove that information and not send secrets.",
+      "9) When they provide numbers, do the arithmetic clearly (leftover, monthly save, simple percentages).",
+      "10) End when they can take a small next step. For high-stakes topics, one short line: talk to a qualified professional for personal decisions.",
+    ].join(" ");
+  }
   if (mode === "code") {
     return [
       ...shared,
@@ -1124,6 +1139,14 @@ function responseContractInstruction(mode) {
 function chatSystemBase(mode) {
   const identity =
     'You are Student AI inside AI Hub. If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
+  if (mode === "finance") {
+    return [
+      "You are Finance AI inside AI Hub - a calm money-planning coach for everyday people, including students.",
+      'If asked which product or model produced this response, answer: "This answer is from AI Hub (Finance AI)." You may briefly add that AI can be wrong and this is not financial advice. Never claim to be Perplexity, ChatGPT, Claude, Google, a bank, or any other brand.',
+      responseContractInstruction("finance"),
+      "Prefer simple budgets, emergency funds, and goal math over complex products. Treat amounts as the user's local units unless they name a currency.",
+    ].join(" ");
+  }
   if (mode === "code") {
     return [
       "You are a patient coding tutor for students in Student AI (AI Hub).",
@@ -1502,7 +1525,8 @@ app.post("/api/practice", requireSession, async (req, res) => {
 app.post("/api/chat", requireSession, async (req, res) => {
   try {
     const modeRaw = String(req.body?.mode || "").trim().toLowerCase();
-    const mode = modeRaw === "code" ? "code" : modeRaw === "notebook" ? "notebook" : "learn";
+    const mode =
+      modeRaw === "code" ? "code" : modeRaw === "notebook" ? "notebook" : modeRaw === "finance" ? "finance" : "learn";
     const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
     const studyMode = "explain";
     const learnVisionOn = mode === "learn" && ENABLE_LEARN_VISION;
@@ -1782,7 +1806,14 @@ app.post("/api/feedback", requireSession, async (req, res) => {
     if (ratingRaw !== 1 && ratingRaw !== -1) {
       return res.status(400).json({ error: "rating must be 1 or -1" });
     }
-    const mode = req.body?.mode === "code" ? "code" : req.body?.mode === "notebook" ? "notebook" : "learn";
+    const mode =
+      req.body?.mode === "code"
+        ? "code"
+        : req.body?.mode === "notebook"
+          ? "notebook"
+          : req.body?.mode === "finance"
+            ? "finance"
+            : "learn";
     const studyModeRaw = String(req.body?.studyMode || "explain").toLowerCase().slice(0, 32);
     const studyMode = ["explain", "practice", "quiz"].includes(studyModeRaw) ? studyModeRaw : "explain";
     const reason = String(req.body?.reason || "").trim().slice(0, 64) || (ratingRaw > 0 ? "helpful" : "other");

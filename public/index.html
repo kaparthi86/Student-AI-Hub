@@ -17,7 +17,7 @@
     <title>AI Hub</title>
     <meta
       name="description"
-      content="AI Hub helps people learn and plan with focused AI. Start with Student AI: Ask, Code, and Notebook for learning and practice, not shortcuts."
+      content="AI Hub helps people learn and plan with focused AI. Student AI for study. Finance AI for budgets and goals. Educational help, not shortcuts or financial advice."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -297,20 +297,23 @@
           </button>
           <button
             type="button"
-            class="hub-tile hub-tile--soon"
+            class="hub-tile hub-tile--live"
             data-vertical="finance"
             role="listitem"
             id="tileFinance"
           >
-            <span class="hub-tile-badge hub-tile-badge--soon" id="tileFinanceBadge">Soon</span>
+            <span class="hub-tile-badge" id="tileFinanceBadge">Available now</span>
             <span class="hub-tile-title" id="tileFinanceTitle">Finance AI</span>
             <span class="hub-tile-sub" id="tileFinanceSub">Plan budgets and goals with clarity</span>
-            <span class="hub-tile-cta" id="tileFinanceCta">Coming soon</span>
+            <span class="hub-tile-cta" id="tileFinanceCta">Open -&gt;</span>
           </button>
         </div>
         <div class="hub-secondary">
           <button type="button" class="ghost-btn hub-resume-btn hidden" id="hubResumeStudent">
             Resume Student AI
+          </button>
+          <button type="button" class="ghost-btn hub-resume-btn hidden" id="hubResumeFinance">
+            Resume Finance AI
           </button>
         </div>
         <footer class="app-fine-print hub-fine-print" role="note" id="hubDisclaimerFooter" aria-label="Disclaimer">
@@ -324,7 +327,7 @@
         </footer>
       </section>
 
-      <section class="app app-shell card hidden" id="appCard">
+      <section class="app app-shell workspace-shell card hidden" id="appCard">
         <header class="app-head">
           <div class="app-head-top">
             <div class="app-brand app-brand--workspace" aria-label="Student AI">
@@ -768,6 +771,226 @@
           </p>
         </footer>
       </section>
+
+      <section class="app app-shell workspace-shell card hidden" id="financeCard" aria-label="Finance AI">
+        <header class="app-head">
+          <div class="app-head-top">
+            <div class="app-brand app-brand--workspace" aria-label="Finance AI">
+              <span class="brand-mark" aria-hidden="true">
+                <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="12" fill="url(#financeBrandGrad)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.92"
+                  />
+                  <defs>
+                    <linearGradient id="financeBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+              <div class="brand-wordmark workspace-wordmark">
+                <button
+                  type="button"
+                  class="workspace-hub-link"
+                  id="backToHubFromFinanceBtn"
+                  aria-label="Back to AI Hub"
+                  title="Back to AI Hub"
+                >
+                  Back to AI Hub
+                </button>
+                <span class="brand-title workspace-title" id="crumbFinance">Finance AI</span>
+              </div>
+            </div>
+            <div class="head-actions account-menu">
+              <button
+                type="button"
+                class="ghost-btn icon-btn account-menu-btn"
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded="false"
+              >
+                <span aria-hidden="true">···</span>
+              </button>
+              <div class="account-menu-panel hidden" role="menu">
+                <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
+                <button class="account-menu-item logout-btn" type="button" role="menuitem">Logout</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="tabs" id="financeTabs">
+          <button class="tab active" data-finance-tab="ask" type="button" id="tabFinanceAsk">Ask</button>
+          <button class="tab" data-finance-tab="budget" type="button" id="tabFinanceBudget">Budget</button>
+          <button class="tab" data-finance-tab="goals" type="button" id="tabFinanceGoals">Goals</button>
+        </div>
+
+        <section id="panelFinanceAsk" class="panel perplexity-panel">
+          <div id="financeSearchShell" class="search-hero">
+            <p class="search-title" id="financeSearchTitle">What money question is on your mind?</p>
+            <div class="search-bar search-bar--branded search-bar--learn-hero">
+              <span class="search-icon search-icon--logo" aria-hidden="true" title="Finance AI">
+                <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="11" fill="url(#searchBrandGradFinance)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.88"
+                  />
+                  <defs>
+                    <linearGradient
+                      id="searchBrandGradFinance"
+                      x1="8"
+                      y1="6"
+                      x2="34"
+                      y2="36"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+              <textarea
+                id="financeSearchInput"
+                rows="1"
+                placeholder="Ask about budgets, saving, or a money tradeoff..."
+              ></textarea>
+              <button id="financeSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
+            </div>
+            <p class="muted finance-edu-hint" id="financeAskHint">Educational only. Not financial advice.</p>
+            <div id="financeEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="financeEmptyPromptsLabel">
+              <p class="empty-prompts-label muted" id="financeEmptyPromptsLabel">Try asking:</p>
+              <div class="empty-prompts-chips starter-chips">
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="finance" data-empty-idx="0"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="finance" data-empty-idx="1"></button>
+                <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="finance" data-empty-idx="2"></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="financeAnswerShell" class="answer-shell hidden">
+            <div id="financeThread" class="chat-thread perplexity-thread" aria-live="polite"></div>
+            <div class="followup-bar">
+              <div
+                id="financeFollowupChips"
+                class="starter-chips starter-chips--inline"
+                role="group"
+                aria-label="Quick follow-ups"
+              ></div>
+              <div class="search-bar search-bar--branded search-bar--learn-hero">
+                <span class="search-icon search-icon--logo" aria-hidden="true" title="Finance AI">
+                  <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="11" fill="url(#searchBrandGradFinanceFollow)" />
+                    <path
+                      d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                      fill="white"
+                      fill-opacity="0.88"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="searchBrandGradFinanceFollow"
+                        x1="8"
+                        y1="6"
+                        x2="34"
+                        y2="36"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stop-color="#2F6FED" />
+                        <stop offset="1" stop-color="#1D5BD8" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </span>
+                <textarea id="financeFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
+                <button id="financeFollowupSubmit" class="search-submit primary-btn" type="button">Ask</button>
+              </div>
+              <div class="followup-meta">
+                <button type="button" id="financeCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
+                  Copy conversation
+                </button>
+                <span id="financeStatus" class="muted status-line" data-i18n-status="status_ready"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelFinanceBudget" class="panel finance-panel hidden">
+          <div class="finance-planner">
+            <p class="search-title" id="financeBudgetTitle">This month, in one view</p>
+            <p class="muted finance-planner-lead" id="financeBudgetLead">
+              Enter take-home pay and what you spend. Numbers stay on this device until you ask Finance AI to explain the plan.
+            </p>
+            <label class="finance-field">
+              <span id="financeIncomeLabel">Monthly take-home</span>
+              <input id="financeIncomeInput" type="number" min="0" inputmode="decimal" placeholder="0" />
+            </label>
+            <div class="finance-leftover-card" id="financeLeftoverCard">
+              <p class="finance-leftover-kicker" id="financeLeftoverKicker">Left after this plan</p>
+              <p class="finance-leftover" id="financeLeftoverValue">0</p>
+              <p class="muted finance-leftover-note" id="financeLeftoverNote">Add income and categories to see what remains.</p>
+            </div>
+            <div class="finance-split" id="financeSplit" aria-label="Educational spending split"></div>
+            <div class="finance-cat-head">
+              <p class="finance-section-label" id="financeCategoriesLabel">Categories</p>
+            </div>
+            <div id="financeCategoryList" class="finance-category-list"></div>
+            <button type="button" id="financeAddCategoryBtn" class="ghost-btn tiny-btn">Add category</button>
+            <div class="finance-planner-actions">
+              <button type="button" id="financeExplainBudgetBtn" class="primary-btn">Explain this plan</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelFinanceGoals" class="panel finance-panel hidden">
+          <div class="finance-planner">
+            <p class="search-title" id="financeGoalsTitle">Save toward something real</p>
+            <p class="muted finance-planner-lead" id="financeGoalsLead">
+              Name a target and a timeline. We will show the monthly amount, then you can ask for a calm plan.
+            </p>
+            <form id="financeGoalForm" class="finance-goal-form">
+              <label class="finance-field">
+                <span id="financeGoalNameLabel">Goal</span>
+                <input id="financeGoalName" type="text" maxlength="80" placeholder="Emergency fund" />
+              </label>
+              <div class="finance-goal-row">
+                <label class="finance-field">
+                  <span id="financeGoalTargetLabel">Target amount</span>
+                  <input id="financeGoalTarget" type="number" min="0" inputmode="decimal" placeholder="1000" />
+                </label>
+                <label class="finance-field">
+                  <span id="financeGoalMonthsLabel">Months</span>
+                  <input id="financeGoalMonths" type="number" min="1" max="120" inputmode="numeric" placeholder="6" />
+                </label>
+              </div>
+              <button type="submit" id="financeAddGoalBtn" class="primary-btn">Add goal</button>
+            </form>
+            <div id="financeGoalList" class="finance-goal-list"></div>
+            <p id="financeGoalsEmpty" class="muted finance-empty-goals">No goals yet. Start with one number you can actually save toward.</p>
+          </div>
+        </section>
+
+        <footer class="app-fine-print" role="note" id="financeDisclaimerFooter" aria-label="Disclaimer">
+          <p class="fine-print-line" data-i18n="disclaimer_base">
+            AI Hub can make mistakes. Check important facts.
+          </p>
+          <p class="fine-print-line" data-i18n="disclaimer_finance">
+            Finance AI is educational only &mdash; not financial, tax, or investment advice. Do not share account numbers or passwords.
+          </p>
+          <p class="fine-print-line" data-i18n="disclaimer_nonprofit">
+            AI Hub is mission-driven &mdash; built to help people learn and plan, not to sell your data or push ads.
+          </p>
+          <p class="fine-print-line support-contact-line">
+            Feedback:
+            <a href="mailto:student-ai-hub-support@googlegroups.com">student-ai-hub-support@googlegroups.com</a>
+          </p>
+        </footer>
+      </section>
     </main>
 
     <div
@@ -816,6 +1039,31 @@
         <div class="honor-code-actions">
           <button id="honorCodeAckBtn" class="primary-btn" type="button">I understand</button>
           <button id="honorCodeBackBtn" class="ghost-btn" type="button">Back to Hub</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="financeDisclaimerModal"
+      class="settings-modal honor-code-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="financeDisclaimerTitle"
+      aria-describedby="financeDisclaimerLead financeDisclaimerBody"
+    >
+      <div class="settings-card honor-code-card">
+        <div class="settings-head">
+          <h3 id="financeDisclaimerTitle">Plan with clear limits</h3>
+        </div>
+        <p id="financeDisclaimerLead" class="honor-code-lead">
+          Finance AI is for learning and planning &mdash; not financial, tax, or investment advice.
+        </p>
+        <p id="financeDisclaimerBody" class="honor-code-body muted">
+          Do not share bank logins, card numbers, or passwords. Check important facts. For high-stakes decisions, talk to a qualified professional.
+        </p>
+        <div class="honor-code-actions">
+          <button id="financeDisclaimerAckBtn" class="primary-btn" type="button">I understand</button>
+          <button id="financeDisclaimerBackBtn" class="ghost-btn" type="button">Back to Hub</button>
         </div>
       </div>
     </div>
@@ -886,6 +1134,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=practice-code-1"></script>
+    <script defer src="./app.js?v=finance-1"></script>
   </body>
 </html>

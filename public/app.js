@@ -44,6 +44,7 @@ const codeSearchSubmit = document.getElementById("codeSearchSubmit");
 const codeThread = document.getElementById("codeThread");
 const codeFollowupInput = document.getElementById("codeFollowupInput");
 const codeFollowupSubmit = document.getElementById("codeFollowupSubmit");
+const codeFollowupChips = document.getElementById("codeFollowupChips");
 const codeStatus = document.getElementById("codeStatus");
 const chatCopyThreadBtn = document.getElementById("chatCopyThreadBtn");
 const codeCopyThreadBtn = document.getElementById("codeCopyThreadBtn");
@@ -63,6 +64,20 @@ const notebookFollowupChips = document.getElementById("notebookFollowupChips");
 const notebookFollowupInput = document.getElementById("notebookFollowupInput");
 const notebookFollowupSubmit = document.getElementById("notebookFollowupSubmit");
 const notebookCopyThreadBtn = document.getElementById("notebookCopyThreadBtn");
+const financeCard = document.getElementById("financeCard");
+const panelFinanceAsk = document.getElementById("panelFinanceAsk");
+const panelFinanceBudget = document.getElementById("panelFinanceBudget");
+const panelFinanceGoals = document.getElementById("panelFinanceGoals");
+const financeSearchShell = document.getElementById("financeSearchShell");
+const financeAnswerShell = document.getElementById("financeAnswerShell");
+const financeSearchInput = document.getElementById("financeSearchInput");
+const financeSearchSubmit = document.getElementById("financeSearchSubmit");
+const financeThread = document.getElementById("financeThread");
+const financeFollowupInput = document.getElementById("financeFollowupInput");
+const financeFollowupSubmit = document.getElementById("financeFollowupSubmit");
+const financeFollowupChips = document.getElementById("financeFollowupChips");
+const financeStatus = document.getElementById("financeStatus");
+const financeCopyThreadBtn = document.getElementById("financeCopyThreadBtn");
 const NOTEBOOK_MAX_FILES = 5;
 
 let mainTab = "chat";
@@ -143,10 +158,12 @@ const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
+const FINANCE_DISCLAIMER_ACK_KEY = "ai_hub_finance_disclaimer_ack_v1";
+const FINANCE_SESSION_KEY = "ai_hub_finance_v1";
 const HUB_WAITLIST_KEY = "ai_hub_waitlist_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
-/** @type {"hub" | "student" | null} */
+/** @type {"hub" | "student" | "finance" | null} */
 let activeSurface = null;
 /** @type {"health" | "finance" | null} */
 let soonVertical = null;
@@ -155,6 +172,22 @@ let deferredInstallPrompt = null;
 let chatSessionOpen = false;
 let codeSessionOpen = false;
 let notebookSessionOpen = false;
+const financeHistory = [];
+let financeSessionOpen = false;
+let financeTab = "ask";
+let financeBudget = {
+  income: "",
+  categories: [
+    { id: "housing", nameKey: "finance_cat_housing", name: "Housing", amount: "" },
+    { id: "food", nameKey: "finance_cat_food", name: "Food", amount: "" },
+    { id: "transport", nameKey: "finance_cat_transport", name: "Transport", amount: "" },
+    { id: "school", nameKey: "finance_cat_school", name: "School", amount: "" },
+    { id: "fun", nameKey: "finance_cat_fun", name: "Fun", amount: "" },
+    { id: "other", nameKey: "finance_cat_other", name: "Other", amount: "" },
+  ],
+};
+let financeGoals = [];
+let financeDisclaimerAckThisSession = false;
 /** @type {File[]} */
 let notebookFiles = [];
 /** Combined extracted text used for grounded notebook follow-ups. */
@@ -187,6 +220,7 @@ const I18N = {
     tile_soon_badge: "Soon",
     hub_hint: "Choose a workspace to get started",
     resume_student: "Resume Student AI",
+    resume_finance: "Resume Finance AI",
     live_web_unavailable: "Live web needs a search key on the server",
     auth_brand_kicker: "Learning, health, and money - in one Hub",
     hub_brand: "AI Hub",
@@ -200,7 +234,7 @@ const I18N = {
     tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Plan budgets and goals with clarity",
-    tile_finance_cta: "Coming soon",
+    tile_finance_cta: "Open ->",
     soon_health_title: "Health AI",
     soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
     soon_health_note: "Not medical advice. Never for emergencies.",
@@ -221,6 +255,8 @@ const I18N = {
     disclaimer_hub: "For learning, wellness, and money planning help - not a substitute for professional medical, legal, or financial advice.",
     disclaimer_nonprofit: "AI Hub is mission-driven - built to help people learn and plan, not to sell your data or push ads.",
     disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
+    disclaimer_finance:
+      "Finance AI is educational only - not financial, tax, or investment advice. Do not share account numbers or passwords.",
     mission_title: "Our mission",
     mission_lead: "AI Hub helps people learn and plan with focused AI.",
     mission_sub: "Starting with Student AI - learning and practice, not shortcuts.",
@@ -260,6 +296,57 @@ const I18N = {
     practice_key_point: "Key point: {point}",
     practice_no_mistakes: "No major misses - solid practice.",
     practice_mistake_relearn: "Relearn: {tip}",
+    tab_finance_ask: "Ask",
+    tab_finance_budget: "Budget",
+    tab_finance_goals: "Goals",
+    finance_title: "What money question is on your mind?",
+    finance_placeholder: "Ask about budgets, saving, or a money tradeoff...",
+    finance_followup: "Ask a follow-up...",
+    finance_ask_hint: "Educational only. Not financial advice.",
+    finance_budget_title: "This month, in one view",
+    finance_budget_lead:
+      "Enter take-home pay and what you spend. Numbers stay on this device until you ask Finance AI to explain the plan.",
+    finance_income_label: "Monthly take-home",
+    finance_leftover_kicker: "Left after this plan",
+    finance_leftover_empty: "Add income and categories to see what remains.",
+    finance_leftover_ok: "A buffer you can save or use on purpose.",
+    finance_leftover_tight: "Little room left - trim a category or lower a want.",
+    finance_leftover_over: "This plan spends more than take-home. Cut something before the month starts.",
+    finance_categories_label: "Categories",
+    finance_add_category: "Add category",
+    finance_explain_budget: "Explain this plan",
+    finance_split_needs: "Needs",
+    finance_split_wants: "Wants",
+    finance_split_aside: "Set aside",
+    finance_cat_housing: "Housing",
+    finance_cat_food: "Food",
+    finance_cat_transport: "Transport",
+    finance_cat_school: "School",
+    finance_cat_fun: "Fun",
+    finance_cat_other: "Other",
+    finance_goals_title: "Save toward something real",
+    finance_goals_lead: "Name a target and a timeline. We will show the monthly amount, then you can ask for a calm plan.",
+    finance_goal_name: "Goal",
+    finance_goal_target: "Target amount",
+    finance_goal_months: "Months",
+    finance_add_goal: "Add goal",
+    finance_goals_empty: "No goals yet. Start with one number you can actually save toward.",
+    finance_goal_monthly: "{amount} / month",
+    finance_goal_meta: "{target} in {months} months",
+    finance_plan_goal: "Plan this goal",
+    finance_remove: "Remove",
+    finance_need_income: "Add a monthly take-home amount first.",
+    finance_need_goal: "Add a goal name, target, and months.",
+    finance_disclaimer_title: "Plan with clear limits",
+    finance_disclaimer_lead: "Finance AI is for learning and planning - not financial, tax, or investment advice.",
+    finance_disclaimer_body:
+      "Do not share bank logins, card numbers, or passwords. Check important facts. For high-stakes decisions, talk to a qualified professional.",
+    empty_finance_1: "Start a simple budget",
+    empty_finance_1_send: "How do I start a simple monthly budget with take-home pay, needs, wants, and a small amount to set aside?",
+    empty_finance_2: "Emergency fund, simply",
+    empty_finance_2_send: "Explain an emergency fund in plain language. How much is a reasonable starting target for a student or early-career person?",
+    empty_finance_3: "Save vs pay loans",
+    empty_finance_3_send: "How should I think about saving a little versus paying extra on student loans? Keep it educational, not personalized advice.",
     chat_title: "What do you want to learn today?",
     chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
     chat_hint: "Press Enter to search. Shift+Enter for a new line.",
@@ -462,7 +549,7 @@ const I18N = {
     tile_health_cta: "Proximamente",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Planifica presupuestos y metas con claridad",
-    tile_finance_cta: "Proximamente",
+    tile_finance_cta: "Abrir ->",
     soon_health_title: "Health AI",
     soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
     soon_health_note: "No es consejo medico. Nunca para emergencias.",
@@ -695,7 +782,7 @@ const I18N = {
     tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budget aur goals clear planning ke saath",
-    tile_finance_cta: "Coming soon",
+    tile_finance_cta: "Open ->",
     soon_health_title: "Health AI",
     soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
     soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
@@ -929,7 +1016,7 @@ const I18N = {
     tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budgets, goals clear ga plan cheyyandi",
-    tile_finance_cta: "Coming soon",
+    tile_finance_cta: "Open ->",
     soon_health_title: "Health AI",
     soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
     soon_health_note: "Medical advice kadu. Emergencies ki kadu.",
@@ -1157,6 +1244,9 @@ function setUiLanguage(nextLang) {
   applyTranslations();
   renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
   renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
+  renderThreadFromHistory(financeThread, financeHistory, "finance", "explain");
+  renderFinanceBudget();
+  renderFinanceGoals();
   refreshPwaInstallSubText();
 }
 
@@ -1171,9 +1261,10 @@ function applyTranslations() {
     hubBrandTitle: "hub_brand",
     hubTagline: "hub_tagline",
     hubResumeStudent: "resume_student",
+    hubResumeFinance: "resume_finance",
     tileStudentBadge: "tile_student_badge",
     tileHealthBadge: "tile_soon_badge",
-    tileFinanceBadge: "tile_soon_badge",
+    tileFinanceBadge: "tile_student_badge",
     liveWebToggleLabel: "live_web_label",
     liveWebHint: "live_web_hint",
     tileStudentTitle: "tile_student_title",
@@ -1184,12 +1275,14 @@ function applyTranslations() {
     tileHealthCta: "tile_health_cta",
     tileFinanceTitle: "tile_finance_title",
     tileFinanceSub: "tile_finance_sub",
-    tileFinanceCta: "tile_finance_cta",
+    tileFinanceCta: "tile_student_cta",
     soonNotifyBtn: "soon_notify",
     soonBackBtn: "soon_back",
     soonModalCloseBtn: "soon_close",
     backToHubBtn: "nav_back_hub",
+    backToHubFromFinanceBtn: "nav_back_hub",
     crumbStudent: "nav_student",
+    crumbFinance: "tile_finance_title",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
     logoutBtn: "logout",
@@ -1198,6 +1291,9 @@ function applyTranslations() {
     tabChat: "tab_ask",
     tabCode: "tab_code",
     tabNotebook: "tab_notebook",
+    tabFinanceAsk: "tab_finance_ask",
+    tabFinanceBudget: "tab_finance_budget",
+    tabFinanceGoals: "tab_finance_goals",
     practiceSubmitAnswer: "practice_check",
     practiceSkipBtn: "practice_skip",
     practiceAgainBtn: "practice_again",
@@ -1214,6 +1310,30 @@ function applyTranslations() {
     chatFollowupSubmit: "tab_ask",
     codeSearchSubmit: "tab_ask",
     codeFollowupSubmit: "send",
+    financeSearchTitle: "finance_title",
+    financeSearchSubmit: "tab_ask",
+    financeFollowupSubmit: "tab_ask",
+    financeAskHint: "finance_ask_hint",
+    financeEmptyPromptsLabel: "empty_try_ask",
+    financeBudgetTitle: "finance_budget_title",
+    financeBudgetLead: "finance_budget_lead",
+    financeIncomeLabel: "finance_income_label",
+    financeLeftoverKicker: "finance_leftover_kicker",
+    financeCategoriesLabel: "finance_categories_label",
+    financeAddCategoryBtn: "finance_add_category",
+    financeExplainBudgetBtn: "finance_explain_budget",
+    financeGoalsTitle: "finance_goals_title",
+    financeGoalsLead: "finance_goals_lead",
+    financeGoalNameLabel: "finance_goal_name",
+    financeGoalTargetLabel: "finance_goal_target",
+    financeGoalMonthsLabel: "finance_goal_months",
+    financeAddGoalBtn: "finance_add_goal",
+    financeGoalsEmpty: "finance_goals_empty",
+    financeDisclaimerTitle: "finance_disclaimer_title",
+    financeDisclaimerLead: "finance_disclaimer_lead",
+    financeDisclaimerBody: "finance_disclaimer_body",
+    financeDisclaimerAckBtn: "honor_ack",
+    financeDisclaimerBackBtn: "honor_back",
     docAnalyzeBtn: "analyze_doc",
     settingsTitle: "settings_title",
     closeSettingsBtn: "settings_close",
@@ -1241,6 +1361,7 @@ function applyTranslations() {
     chatCopyThreadBtn: "copy_thread",
     codeCopyThreadBtn: "copy_thread",
     notebookCopyThreadBtn: "copy_thread",
+    financeCopyThreadBtn: "copy_thread",
     chatEmptyPromptsLabel: "empty_try_ask",
     codeEmptyPromptsLabel: "empty_try_code",
     notebookEmptyPromptsLabel: "empty_try_notebook",
@@ -1262,6 +1383,8 @@ function applyTranslations() {
   if (chatFollowupInput) chatFollowupInput.placeholder = t("chat_followup");
   if (codeSearchInput) codeSearchInput.placeholder = t("code_placeholder");
   if (codeFollowupInput) codeFollowupInput.placeholder = t("code_followup");
+  if (financeSearchInput) financeSearchInput.placeholder = t("finance_placeholder");
+  if (financeFollowupInput) financeFollowupInput.placeholder = t("finance_followup");
   if (notebookFollowupInput) notebookFollowupInput.placeholder = t("notebook_followup");
   const practiceAnswerInputEl = document.getElementById("practiceAnswerInput");
   if (practiceAnswerInputEl) practiceAnswerInputEl.placeholder = t("practice_answer_placeholder");
@@ -1292,7 +1415,7 @@ function applyTranslations() {
   syncLiveWebToggleUi();
   syncHubResumeButton();
   if (soonVertical) fillSoonModal(soonVertical);
-  ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter"].forEach((id) => {
+  ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter", "financeDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
     if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
   });
@@ -1326,16 +1449,15 @@ function applyTranslations() {
   }
   const closeDefaultPageHintBtn = document.getElementById("closeDefaultPageHintBtn");
   if (closeDefaultPageHintBtn) closeDefaultPageHintBtn.setAttribute("aria-label", t("settings_close"));
-  const backToHubBtn = document.getElementById("backToHubBtn");
-  if (backToHubBtn) {
+  document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
     const hubLabel = t("nav_back_hub");
-    backToHubBtn.setAttribute("aria-label", hubLabel);
-    backToHubBtn.setAttribute("title", hubLabel);
-  }
+    btn.setAttribute("aria-label", hubLabel);
+    btn.setAttribute("title", hubLabel);
+  });
   document.querySelectorAll(".copy-thread-btn").forEach((btn) => {
     btn.setAttribute("aria-label", t("copy_thread_aria"));
   });
-  [apiStatus, codeStatus, notebookStatus].forEach((el) => {
+  [apiStatus, codeStatus, notebookStatus, financeStatus].forEach((el) => {
     if (!el) return;
     const key = el.dataset.i18nStatus || "status_ready";
     setStatus(el, key);
@@ -1523,9 +1645,10 @@ function analyzeAssistantForFollowups(raw) {
  */
 function pickSmartFollowupKeys(analysis, scope) {
   const a = analysis || analyzeAssistantForFollowups("");
-  const keys = ["simpler", "example", "practice"];
+  const keys = scope === "finance" ? ["simpler", "example"] : ["simpler", "example", "practice"];
   if (!a.hasSteps) keys.push("steps");
   else if (scope === "notebook") keys.push("studyPlan");
+  else if (scope === "finance") keys.push("summarize");
   else keys.push("studyNext");
   if (a.isLong || a.hasCode) keys.push("summarize");
   // Cap content chips, then Listen.
@@ -1571,7 +1694,9 @@ function renderSmartFollowupChips(container, history, scope) {
 
 function refreshAllSmartFollowupChips() {
   renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  renderSmartFollowupChips(codeFollowupChips, codeHistory, "code");
   renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
+  renderSmartFollowupChips(financeFollowupChips, financeHistory, "finance");
 }
 
 const EMPTY_PROMPT_SPECS = {
@@ -1589,6 +1714,11 @@ const EMPTY_PROMPT_SPECS = {
     { label: "empty_nb_1", hint: "empty_nb_1_hint" },
     { label: "empty_nb_2", hint: "empty_nb_2_hint" },
     { label: "empty_nb_3", hint: "empty_nb_3_hint" },
+  ],
+  finance: [
+    { label: "empty_finance_1", send: "empty_finance_1_send" },
+    { label: "empty_finance_2", send: "empty_finance_2_send" },
+    { label: "empty_finance_3", send: "empty_finance_3_send" },
   ],
 };
 
@@ -2112,6 +2242,7 @@ function saveSessionState() {
   } catch {
     /* ignore quota issues */
   }
+  saveFinanceState();
   syncHubResumeButton();
 }
 
@@ -2181,6 +2312,8 @@ function restoreSessionStateIfEnabled() {
     renderThreadFromHistory(chatThread, chatHistory, "learn", "explain");
     renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
     renderThreadFromHistory(notebookThread, notebookHistory, "notebook", "explain");
+    restoreFinanceState();
+    renderThreadFromHistory(financeThread, financeHistory, "finance", "explain");
   } catch {
     /* ignore malformed storage */
   }
@@ -2879,11 +3012,18 @@ function setLiveWebSearching(on) {
 }
 
 function syncHubResumeButton() {
-  const btn = document.getElementById("hubResumeStudent");
-  if (!btn) return;
-  const hasHistory = Array.isArray(chatHistory) && chatHistory.length > 0;
-  btn.classList.toggle("hidden", !hasHistory);
-  btn.textContent = t("resume_student");
+  const studentBtn = document.getElementById("hubResumeStudent");
+  const financeBtn = document.getElementById("hubResumeFinance");
+  const hasStudent = Array.isArray(chatHistory) && chatHistory.length > 0;
+  const hasFinance = Array.isArray(financeHistory) && financeHistory.length > 0;
+  if (studentBtn) {
+    studentBtn.classList.toggle("hidden", !hasStudent);
+    studentBtn.textContent = t("resume_student");
+  }
+  if (financeBtn) {
+    financeBtn.classList.toggle("hidden", !hasFinance);
+    financeBtn.textContent = t("resume_finance");
+  }
 }
 
 function isLiveWebEnabled() {
@@ -3223,9 +3363,11 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
       else if (mode === "notebook") syncNotebookLayout();
+      else if (mode === "finance") syncFinanceLayout();
       setStatus(statusEl, "status_ready");
       if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
       if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
+      if (mode === "finance") renderSmartFollowupChips(financeFollowupChips, history, "finance");
       return true;
     }
 
@@ -3257,9 +3399,11 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     if (mode === "learn") syncLearnLayout();
     else if (mode === "code") syncCodeLayout();
     else if (mode === "notebook") syncNotebookLayout();
+    else if (mode === "finance") syncFinanceLayout();
     setStatus(statusEl, "status_ready");
     if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
     if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
+    if (mode === "finance") renderSmartFollowupChips(financeFollowupChips, history, "finance");
     return true;
   } catch (error) {
     setLiveWebSearching(false);
@@ -3684,9 +3828,11 @@ function desiredVerticalFromUrl() {
 
 function showHubHome() {
   hideSoonModal();
+  hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.add("hidden");
   appCard?.classList.add("hidden");
+  financeCard?.classList.add("hidden");
   hubCard?.classList.remove("hidden");
   activeSurface = "hub";
   syncHubWelcome();
@@ -3696,9 +3842,11 @@ function showHubHome() {
 
 function showStudentWorkspace() {
   hideSoonModal();
+  hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.add("hidden");
   hubCard?.classList.add("hidden");
+  financeCard?.classList.add("hidden");
   appCard?.classList.remove("hidden");
   activeSurface = "student";
   document.title = "Student AI - AI Hub";
@@ -3710,6 +3858,26 @@ function showStudentWorkspace() {
   }
 }
 
+function showFinanceWorkspace() {
+  hideSoonModal();
+  hideHonorCodeModal();
+  closeAccountMenu();
+  authCard?.classList.add("hidden");
+  hubCard?.classList.add("hidden");
+  appCard?.classList.add("hidden");
+  financeCard?.classList.remove("hidden");
+  activeSurface = "finance";
+  document.title = "Finance AI - AI Hub";
+  setFinanceTab(financeTab || "ask");
+  syncFinanceLayout();
+  renderFinanceBudget();
+  renderFinanceGoals();
+  window.setTimeout(() => {
+    maybeOfferPwaInstallBar();
+  }, 850);
+  maybeOfferFinanceDisclaimer();
+}
+
 function showApp(session) {
   const display = getSessionDisplayName(session);
   if (userName) userName.textContent = display;
@@ -3719,8 +3887,12 @@ function showApp(session) {
     showStudentWorkspace();
     return;
   }
+  if (desired === "finance") {
+    showFinanceWorkspace();
+    return;
+  }
   showHubHome();
-  if (desired === "health" || desired === "finance") {
+  if (desired === "health") {
     openSoonModal(desired);
   }
 }
@@ -3730,10 +3902,12 @@ function showAuth(message = "") {
   document.getElementById("pwaIosSteps")?.classList.add("hidden");
   document.getElementById("pwaInstallHelpSteps")?.classList.add("hidden");
   hideSoonModal();
+  hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.remove("hidden");
   hubCard?.classList.add("hidden");
   appCard?.classList.add("hidden");
+  financeCard?.classList.add("hidden");
   activeSurface = null;
   if (authStatus) authStatus.textContent = message;
   document.title = "AI Hub";
@@ -3861,15 +4035,16 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-document.getElementById("backToHubBtn")?.addEventListener("click", () => {
-  showHubHome();
+document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
+  btn.addEventListener("click", () => showHubHome());
 });
 
 document.querySelectorAll(".hub-tile").forEach((tile) => {
   tile.addEventListener("click", () => {
     const vertical = tile.getAttribute("data-vertical");
     if (vertical === "student") showStudentWorkspace();
-    else if (vertical === "health" || vertical === "finance") openSoonModal(vertical);
+    else if (vertical === "finance") showFinanceWorkspace();
+    else if (vertical === "health") openSoonModal(vertical);
   });
 });
 
@@ -4030,8 +4205,11 @@ document.querySelectorAll(".logout-btn").forEach((btn) => {
   });
 });
 
-document.querySelectorAll(".tab").forEach((tab) => {
+document.querySelectorAll("#appCard .tab").forEach((tab) => {
   tab.addEventListener("click", () => setMainTab(tab.dataset.tab));
+});
+document.querySelectorAll("#financeTabs .tab").forEach((tab) => {
+  tab.addEventListener("click", () => setFinanceTab(tab.getAttribute("data-finance-tab")));
 });
 
 function wireSearchFlow({
@@ -4046,12 +4224,17 @@ function wireSearchFlow({
   onFirstSend,
   getVisionAttachment,
   clearVisionAttachment,
+  requireHonorCode = true,
+  gate,
 } = {}) {
   const run = (raw, activeBtn) => {
-    if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
-      maybeOfferHonorCodeModal();
-      return;
+    if (requireHonorCode !== false) {
+      if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+        maybeOfferHonorCodeModal();
+        return;
+      }
     }
+    if (typeof gate === "function" && !gate()) return;
     const attach = typeof getVisionAttachment === "function" ? getVisionAttachment() : null;
     const msg = typeof raw === "string" ? raw : "";
     const trimmed = msg.trim();
@@ -4145,6 +4328,11 @@ function wireEmptyStatePrompts() {
         codeSearchSubmit.click();
         return;
       }
+      if (scope === "finance") {
+        financeSearchInput.value = t(spec.send);
+        financeSearchSubmit.click();
+        return;
+      }
       if (scope === "notebook" && spec.hint) {
         showToast(t(spec.hint));
         docFileInput?.click();
@@ -4162,6 +4350,9 @@ function wireCopyThreadButtons() {
   });
   notebookCopyThreadBtn?.addEventListener("click", () => {
     void copyThreadHistory(notebookHistory);
+  });
+  financeCopyThreadBtn?.addEventListener("click", () => {
+    void copyThreadHistory(financeHistory);
   });
 }
 
@@ -4838,15 +5029,460 @@ document.getElementById("liveWebToggle")?.addEventListener("click", () => {
 document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
   showStudentWorkspace();
 });
+document.getElementById("hubResumeFinance")?.addEventListener("click", () => {
+  showFinanceWorkspace();
+});
+
+/* ---- Finance AI workspace ---- */
+function parseMoney(raw) {
+  const n = Number(String(raw ?? "").replace(/,/g, "").trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatMoney(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return "0";
+  return x.toLocaleString(undefined, { maximumFractionDigits: x % 1 ? 2 : 0 });
+}
+
+function defaultFinanceCategories() {
+  return [
+    { id: "housing", nameKey: "finance_cat_housing", amount: "" },
+    { id: "food", nameKey: "finance_cat_food", amount: "" },
+    { id: "transport", nameKey: "finance_cat_transport", amount: "" },
+    { id: "school", nameKey: "finance_cat_school", amount: "" },
+    { id: "fun", nameKey: "finance_cat_fun", amount: "" },
+    { id: "other", nameKey: "finance_cat_other", amount: "" },
+  ];
+}
+
+function categoryLabel(cat) {
+  if (cat?.nameKey && I18N.en[cat.nameKey]) return t(cat.nameKey);
+  return String(cat?.name || cat?.nameKey || "Category");
+}
+
+function saveFinanceState() {
+  try {
+    localStorage.setItem(
+      FINANCE_SESSION_KEY,
+      JSON.stringify({
+        financeHistory,
+        financeSessionOpen,
+        financeTab,
+        financeBudget,
+        financeGoals,
+      }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+function restoreFinanceState() {
+  const prefs = loadPrefs();
+  if (!prefs.restoreSessions) return;
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FINANCE_SESSION_KEY) || "{}");
+    if (Array.isArray(parsed.financeHistory)) {
+      financeHistory.splice(
+        0,
+        financeHistory.length,
+        ...parsed.financeHistory.filter((x) => x && typeof x.content === "string"),
+      );
+    }
+    financeSessionOpen = parsed.financeSessionOpen === true || financeHistory.length > 0;
+    if (parsed.financeTab === "budget" || parsed.financeTab === "goals" || parsed.financeTab === "ask") {
+      financeTab = parsed.financeTab;
+    }
+    if (parsed.financeBudget && typeof parsed.financeBudget === "object") {
+      const cats = Array.isArray(parsed.financeBudget.categories)
+        ? parsed.financeBudget.categories
+            .filter((c) => c && typeof c === "object")
+            .slice(0, 12)
+            .map((c, i) => ({
+              id: String(c.id || `cat-${i}`),
+              nameKey: typeof c.nameKey === "string" ? c.nameKey : "",
+              name: String(c.name || "").slice(0, 40),
+              amount: String(c.amount ?? "").slice(0, 16),
+            }))
+        : defaultFinanceCategories();
+      financeBudget = {
+        income: String(parsed.financeBudget.income ?? "").slice(0, 16),
+        categories: cats.length ? cats : defaultFinanceCategories(),
+      };
+    }
+    if (Array.isArray(parsed.financeGoals)) {
+      financeGoals = parsed.financeGoals
+        .filter((g) => g && typeof g === "object")
+        .slice(0, 12)
+        .map((g, i) => ({
+          id: String(g.id || `goal-${i}`),
+          name: String(g.name || "").slice(0, 80),
+          target: Number(g.target) || 0,
+          months: Math.max(1, Math.min(120, Number(g.months) || 1)),
+        }));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function hasAcknowledgedFinanceDisclaimer() {
+  if (financeDisclaimerAckThisSession) return true;
+  try {
+    return localStorage.getItem(FINANCE_DISCLAIMER_ACK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function isFinanceDisclaimerOpen() {
+  const modal = document.getElementById("financeDisclaimerModal");
+  return Boolean(modal && !modal.classList.contains("hidden"));
+}
+
+function hideFinanceDisclaimerModal() {
+  document.getElementById("financeDisclaimerModal")?.classList.add("hidden");
+}
+
+function acknowledgeFinanceDisclaimer() {
+  financeDisclaimerAckThisSession = true;
+  try {
+    localStorage.setItem(FINANCE_DISCLAIMER_ACK_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  hideFinanceDisclaimerModal();
+}
+
+function maybeOfferFinanceDisclaimer() {
+  const modal = document.getElementById("financeDisclaimerModal");
+  if (!modal || !financeCard || financeCard.classList.contains("hidden")) return false;
+  if (hasAcknowledgedFinanceDisclaimer()) return false;
+  modal.classList.remove("hidden");
+  window.setTimeout(() => {
+    document.getElementById("financeDisclaimerAckBtn")?.focus();
+  }, 40);
+  return true;
+}
+
+function wireFinanceDisclaimerModal() {
+  const modal = document.getElementById("financeDisclaimerModal");
+  const ackBtn = document.getElementById("financeDisclaimerAckBtn");
+  const backBtn = document.getElementById("financeDisclaimerBackBtn");
+  ackBtn?.addEventListener("click", () => acknowledgeFinanceDisclaimer());
+  backBtn?.addEventListener("click", () => {
+    hideFinanceDisclaimerModal();
+    showHubHome();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!isFinanceDisclaimerOpen()) return;
+    e.preventDefault();
+    hideFinanceDisclaimerModal();
+    showHubHome();
+  });
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      document.getElementById("financeDisclaimerAckBtn")?.focus();
+    }
+  });
+}
+
+function gateFinanceSend() {
+  if (isFinanceDisclaimerOpen() || !hasAcknowledgedFinanceDisclaimer()) {
+    maybeOfferFinanceDisclaimer();
+    return false;
+  }
+  return true;
+}
+
+function setFinanceTab(next) {
+  financeTab = next === "budget" ? "budget" : next === "goals" ? "goals" : "ask";
+  document.querySelectorAll("#financeTabs .tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.getAttribute("data-finance-tab") === financeTab);
+  });
+  panelFinanceAsk?.classList.toggle("hidden", financeTab !== "ask");
+  panelFinanceBudget?.classList.toggle("hidden", financeTab !== "budget");
+  panelFinanceGoals?.classList.toggle("hidden", financeTab !== "goals");
+  saveFinanceState();
+}
+
+function syncFinanceLayout() {
+  const showThread = financeSessionOpen || financeHistory.length > 0;
+  financeSearchShell?.classList.toggle("hidden", showThread);
+  financeAnswerShell?.classList.toggle("hidden", !showThread);
+  financeCopyThreadBtn?.classList.toggle("hidden", financeHistory.length === 0);
+  if (showThread) renderSmartFollowupChips(financeFollowupChips, financeHistory, "finance");
+}
+
+function budgetTotals() {
+  const income = parseMoney(financeBudget.income);
+  const spent = (financeBudget.categories || []).reduce((sum, cat) => sum + parseMoney(cat.amount), 0);
+  const leftover = income - spent;
+  const needsIds = new Set(["housing", "food", "transport", "school"]);
+  const wantsIds = new Set(["fun"]);
+  let needs = 0;
+  let wants = 0;
+  (financeBudget.categories || []).forEach((cat) => {
+    const amt = parseMoney(cat.amount);
+    if (needsIds.has(cat.id)) needs += amt;
+    else wants += amt;
+  });
+  void wantsIds;
+  return { income, spent, leftover, needs, wants, aside: leftover };
+}
+
+function renderFinanceBudget() {
+  const incomeEl = document.getElementById("financeIncomeInput");
+  if (incomeEl && document.activeElement !== incomeEl) incomeEl.value = financeBudget.income || "";
+  const list = document.getElementById("financeCategoryList");
+  if (list) {
+    list.innerHTML = "";
+    (financeBudget.categories || []).forEach((cat) => {
+      const row = document.createElement("div");
+      row.className = "finance-cat-row";
+      const name = document.createElement("input");
+      name.type = "text";
+      name.maxLength = 40;
+      name.value = categoryLabel(cat);
+      name.setAttribute("aria-label", t("finance_categories_label"));
+      name.addEventListener("input", () => {
+        cat.name = name.value;
+        cat.nameKey = "";
+        saveFinanceState();
+      });
+      const amount = document.createElement("input");
+      amount.type = "number";
+      amount.min = "0";
+      amount.inputMode = "decimal";
+      amount.placeholder = "0";
+      amount.value = cat.amount || "";
+      amount.setAttribute("aria-label", categoryLabel(cat));
+      amount.addEventListener("input", () => {
+        cat.amount = amount.value;
+        updateFinanceLeftover();
+        saveFinanceState();
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "finance-icon-btn";
+      remove.setAttribute("aria-label", t("finance_remove"));
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        financeBudget.categories = financeBudget.categories.filter((c) => c !== cat);
+        renderFinanceBudget();
+        saveFinanceState();
+      });
+      row.appendChild(name);
+      row.appendChild(amount);
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+  }
+  updateFinanceLeftover();
+}
+
+function updateFinanceLeftover() {
+  const { income, leftover, needs, wants, aside } = budgetTotals();
+  const valueEl = document.getElementById("financeLeftoverValue");
+  const noteEl = document.getElementById("financeLeftoverNote");
+  const splitEl = document.getElementById("financeSplit");
+  if (valueEl) {
+    valueEl.textContent = formatMoney(leftover);
+    valueEl.classList.remove("is-ok", "is-tight", "is-over");
+    if (income) {
+      if (leftover < 0) valueEl.classList.add("is-over");
+      else if (leftover / income < 0.08) valueEl.classList.add("is-tight");
+      else valueEl.classList.add("is-ok");
+    }
+  }
+  if (noteEl) {
+    if (!income) noteEl.textContent = t("finance_leftover_empty");
+    else if (leftover < 0) noteEl.textContent = t("finance_leftover_over");
+    else if (leftover / income < 0.08) noteEl.textContent = t("finance_leftover_tight");
+    else noteEl.textContent = t("finance_leftover_ok");
+  }
+  if (splitEl) {
+    splitEl.innerHTML = "";
+    if (income > 0) {
+      [
+        ["finance_split_needs", needs],
+        ["finance_split_wants", wants],
+        ["finance_split_aside", aside],
+      ].forEach(([key, amt]) => {
+        const pill = document.createElement("div");
+        pill.className = "finance-split-pill";
+        const strong = document.createElement("strong");
+        const pct = Math.round((amt / income) * 100);
+        strong.textContent = `${pct}%`;
+        const span = document.createElement("span");
+        span.textContent = `${t(key)} · ${formatMoney(amt)}`;
+        pill.appendChild(strong);
+        pill.appendChild(span);
+        splitEl.appendChild(pill);
+      });
+    }
+  }
+}
+
+function budgetExplainPrompt() {
+  const { income, spent, leftover, needs, wants } = budgetTotals();
+  const lines = (financeBudget.categories || [])
+    .map((c) => `- ${categoryLabel(c)}: ${formatMoney(parseMoney(c.amount))}`)
+    .join("\n");
+  return [
+    "Please explain this monthly plan in plain language. Educational only, not financial advice.",
+    `Monthly take-home: ${formatMoney(income)}`,
+    `Categories:\n${lines || "(none)"}`,
+    `Spent: ${formatMoney(spent)}`,
+    `Left: ${formatMoney(leftover)}`,
+    `Needs total: ${formatMoney(needs)}. Wants total: ${formatMoney(wants)}.`,
+    "Tell me what looks healthy, what looks tight, and one small next step.",
+  ].join("\n");
+}
+
+function renderFinanceGoals() {
+  const list = document.getElementById("financeGoalList");
+  const empty = document.getElementById("financeGoalsEmpty");
+  if (!list) return;
+  list.innerHTML = "";
+  if (empty) empty.classList.toggle("hidden", financeGoals.length > 0);
+  financeGoals.forEach((goal) => {
+    const monthly = goal.months ? goal.target / goal.months : goal.target;
+    const card = document.createElement("article");
+    card.className = "finance-goal-card";
+    const title = document.createElement("h3");
+    title.textContent = goal.name;
+    const meta = document.createElement("p");
+    meta.className = "finance-goal-meta";
+    meta.textContent = t("finance_goal_meta", {
+      target: formatMoney(goal.target),
+      months: String(goal.months),
+    });
+    const monthlyEl = document.createElement("p");
+    monthlyEl.className = "finance-goal-monthly";
+    monthlyEl.textContent = t("finance_goal_monthly", { amount: formatMoney(monthly) });
+    const actions = document.createElement("div");
+    actions.className = "finance-goal-actions";
+    const plan = document.createElement("button");
+    plan.type = "button";
+    plan.className = "primary-btn";
+    plan.textContent = t("finance_plan_goal");
+    plan.addEventListener("click", () => {
+      sendFinancePrompt(
+        [
+          `Help me plan this savings goal. Educational only, not financial advice.`,
+          `Goal: ${goal.name}`,
+          `Target: ${formatMoney(goal.target)} in ${goal.months} months`,
+          `That is about ${formatMoney(monthly)} per month.`,
+          "Give a calm plan: where the monthly amount could come from, what to watch, and one first step.",
+        ].join("\n"),
+      );
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "ghost-btn";
+    remove.textContent = t("finance_remove");
+    remove.addEventListener("click", () => {
+      financeGoals = financeGoals.filter((g) => g.id !== goal.id);
+      renderFinanceGoals();
+      saveFinanceState();
+    });
+    actions.appendChild(plan);
+    actions.appendChild(remove);
+    card.appendChild(title);
+    card.appendChild(meta);
+    card.appendChild(monthlyEl);
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+}
+
+function sendFinancePrompt(raw) {
+  if (!gateFinanceSend()) return;
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) return;
+  setFinanceTab("ask");
+  financeSessionOpen = true;
+  syncFinanceLayout();
+  void sendChatMessage("finance", trimmed, financeHistory, financeThread, financeStatus, financeFollowupSubmit);
+}
+
+function wireFinanceWorkspace() {
+  const financeSearchFlow = wireSearchFlow({
+    searchInput: financeSearchInput,
+    searchSubmit: financeSearchSubmit,
+    followupInput: financeFollowupInput,
+    followupSubmit: financeFollowupSubmit,
+    mode: "finance",
+    history: financeHistory,
+    threadEl: financeThread,
+    statusEl: financeStatus,
+    requireHonorCode: false,
+    gate: gateFinanceSend,
+    onFirstSend: () => {
+      financeSessionOpen = true;
+      syncFinanceLayout();
+    },
+  });
+  wireStarterChipsAsSend(financeFollowupChips, financeSearchFlow.sendFromFollowup, financeFollowupSubmit, {
+    readAloud: () => readLastAssistantAloud(financeHistory),
+  });
+  renderSmartFollowupChips(financeFollowupChips, financeHistory, "finance");
+
+  document.getElementById("financeIncomeInput")?.addEventListener("input", (e) => {
+    financeBudget.income = e.target.value;
+    updateFinanceLeftover();
+    saveFinanceState();
+  });
+  document.getElementById("financeAddCategoryBtn")?.addEventListener("click", () => {
+    financeBudget.categories.push({
+      id: `cat-${Date.now()}`,
+      name: t("finance_cat_other"),
+      amount: "",
+    });
+    renderFinanceBudget();
+    saveFinanceState();
+  });
+  document.getElementById("financeExplainBudgetBtn")?.addEventListener("click", () => {
+    if (!parseMoney(financeBudget.income)) {
+      showToast(t("finance_need_income"));
+      return;
+    }
+    sendFinancePrompt(budgetExplainPrompt());
+  });
+  document.getElementById("financeGoalForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = String(document.getElementById("financeGoalName")?.value || "").trim();
+    const target = parseMoney(document.getElementById("financeGoalTarget")?.value);
+    const months = Math.max(1, Math.min(120, Number(document.getElementById("financeGoalMonths")?.value) || 0));
+    if (!name || !target || !months) {
+      showToast(t("finance_need_goal"));
+      return;
+    }
+    financeGoals.push({ id: `goal-${Date.now()}`, name, target, months });
+    const nameEl = document.getElementById("financeGoalName");
+    const targetEl = document.getElementById("financeGoalTarget");
+    const monthsEl = document.getElementById("financeGoalMonths");
+    if (nameEl) nameEl.value = "";
+    if (targetEl) targetEl.value = "";
+    if (monthsEl) monthsEl.value = "";
+    renderFinanceGoals();
+    saveFinanceState();
+  });
+}
 
 initMarkdown();
 initPwaInstallSupport();
 setMainTab("chat");
 wireSettingsUi();
 wireHonorCodeModal();
+wireFinanceDisclaimerModal();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
 wireCopyThreadButtons();
+wireFinanceWorkspace();
 maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
 initAuth();
@@ -4859,6 +5495,9 @@ const restoreAfterPaint = () => {
   syncCodeLayout();
   syncNotebookLayout();
   syncNotebookAnalyzeVisibility();
+  syncFinanceLayout();
+  renderFinanceBudget();
+  renderFinanceGoals();
 };
 if (typeof requestAnimationFrame === "function") {
   requestAnimationFrame(() => requestAnimationFrame(restoreAfterPaint));

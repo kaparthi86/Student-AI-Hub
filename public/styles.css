@@ -271,7 +271,7 @@ body::before {
   box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 
-#appCard.card {
+.workspace-shell.card {
   padding-bottom: 22px;
 }
 
@@ -279,22 +279,22 @@ body::before {
  * Logged-in hub: Student AI Hub is ONE primary full-bleed shell.
  * Auth keeps the floating .card; the wallpaper is no longer a second "screen".
  */
-body:has(#appCard:not(.hidden)) {
+body:has(.workspace-shell:not(.hidden)) {
   background: linear-gradient(180deg, #FBFAF7 0%, #F7F6F3 48%, #F1F0EC 100%);
   background-attachment: fixed;
   overscroll-behavior-y: none;
 }
 
-body:has(#appCard:not(.hidden))::before {
+body:has(.workspace-shell:not(.hidden))::before {
   opacity: 0.025;
 }
 
-body:has(#appCard:not(.hidden)) .bg-glow {
+body:has(.workspace-shell:not(.hidden)) .bg-glow {
   opacity: 0.08;
   animation: none;
 }
 
-.container:has(#appCard:not(.hidden)) {
+.container:has(.workspace-shell:not(.hidden)) {
   max-width: none;
   width: 100%;
   margin: 0;
@@ -306,8 +306,8 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   box-sizing: border-box;
 }
 
-.container:has(#appCard:not(.hidden)) #betaBanner:not(.hidden),
-.container:has(#appCard:not(.hidden)) #pwaInstallBar:not(.hidden) {
+.container:has(.workspace-shell:not(.hidden)) #betaBanner:not(.hidden),
+.container:has(.workspace-shell:not(.hidden)) #pwaInstallBar:not(.hidden) {
   width: min(100% - 36px, 960px);
   margin-left: auto;
   margin-right: auto;
@@ -315,7 +315,7 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   flex-shrink: 0;
 }
 
-.container:has(#appCard:not(.hidden)) #appCard.card {
+.container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
   flex: 1 1 auto;
   width: 100%;
   max-width: none;
@@ -343,7 +343,7 @@ body:has(#appCard:not(.hidden)) .bg-glow {
 }
 
 /* Nested thread is scroll area only — not a second inset card */
-#appCard .chat-thread {
+.workspace-shell .chat-thread {
   border: none;
   border-radius: 0;
   background: transparent;
@@ -352,8 +352,8 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   box-shadow: none;
 }
 
-#appCard .chat-thread.perplexity-thread,
-#appCard .chat-thread.notebook-thread {
+.workspace-shell .chat-thread.perplexity-thread,
+.workspace-shell .chat-thread.notebook-thread {
   border-radius: 0;
 }
 
@@ -422,7 +422,7 @@ body:has(#appCard:not(.hidden)) .bg-glow {
   color: rgba(111, 107, 99, 0.72);
 }
 
-body:has(#authCard:not(.hidden)):not(:has(#appCard:not(.hidden))) .bg-glow {
+body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))) .bg-glow {
   opacity: 0.22;
 }
 
@@ -1801,11 +1801,11 @@ textarea:focus {
 /* Phones / small tablets */
 @media (max-width: 640px) {
   /* Logged-in shell: calmer page chrome, subtle taps — reads closer to a native app than a long web doc */
-  body:has(#appCard:not(.hidden)) {
+  body:has(.workspace-shell:not(.hidden)) {
     -webkit-tap-highlight-color: rgba(47, 111, 237, 0.12);
   }
 
-  body:has(#appCard:not(.hidden)) .bg-glow {
+  body:has(.workspace-shell:not(.hidden)) .bg-glow {
     opacity: 0.12;
   }
 
@@ -1817,47 +1817,47 @@ textarea:focus {
   }
 
   /* Logged-in: tighten shell padding / banners for phones */
-  .container:has(#appCard:not(.hidden)) {
+  .container:has(.workspace-shell:not(.hidden)) {
     padding: 0;
   }
 
-  .container:has(#appCard:not(.hidden)) #betaBanner:not(.hidden),
-  .container:has(#appCard:not(.hidden)) #pwaInstallBar:not(.hidden) {
+  .container:has(.workspace-shell:not(.hidden)) #betaBanner:not(.hidden),
+  .container:has(.workspace-shell:not(.hidden)) #pwaInstallBar:not(.hidden) {
     width: calc(100% - 24px);
     margin-left: max(12px, env(safe-area-inset-left, 0px));
     margin-right: max(12px, env(safe-area-inset-right, 0px));
     margin-bottom: 6px;
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard.card {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
     padding-left: max(12px, env(safe-area-inset-left, 0px));
     padding-right: max(12px, env(safe-area-inset-right, 0px));
     padding-top: max(6px, env(safe-area-inset-top, 0px));
     padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .app-head {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell .app-head {
     gap: 6px;
     flex-shrink: 0;
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .app-greeting .app-tagline {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell .app-greeting .app-tagline {
     display: none;
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .app-greeting h2 {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell .app-greeting h2 {
     font-size: 1.05rem;
     margin-bottom: 0;
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .app-fine-print {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell .app-fine-print {
     margin-top: auto;
     padding-top: 10px;
     flex-shrink: 0;
     border-top-color: rgba(28, 27, 25, 0.035);
   }
 
-  .container:has(#appCard:not(.hidden)) #appCard .app-fine-print p {
+  .container:has(.workspace-shell:not(.hidden)) .workspace-shell .app-fine-print p {
     font-size: 10px;
     line-height: 1.35;
   }
@@ -1920,7 +1920,7 @@ textarea:focus {
   }
 
   /* Empty state: hero fills most of the screen (Google-style landing) */
-  #appCard .perplexity-panel .search-hero {
+  .workspace-shell .perplexity-panel .search-hero {
     flex: 1 1 auto;
     justify-content: center;
     min-height: min(52dvh, 560px);
@@ -2069,12 +2069,12 @@ textarea:focus {
   }
 
   /* Ask/Code/Notebook: main panel eats remaining viewport under tabs */
-  #appCard .app-head,
-  #appCard .tabs {
+  .workspace-shell .app-head,
+  .workspace-shell .tabs {
     flex-shrink: 0;
   }
 
-  #appCard .panel:not(.hidden) {
+  .workspace-shell .panel:not(.hidden) {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -2082,13 +2082,14 @@ textarea:focus {
   }
 
   /* Chat/Code: scroll lives inside the thread, not the whole page */
-  #appCard #panelChat:not(.hidden),
-  #appCard #panelCode:not(.hidden),
-  #appCard #panelNotebook:not(.hidden) {
+  .workspace-shell #panelChat:not(.hidden),
+  .workspace-shell #panelCode:not(.hidden),
+  .workspace-shell #panelNotebook:not(.hidden),
+  .workspace-shell #panelFinanceAsk:not(.hidden) {
     overflow: hidden;
   }
 
-  #appCard .answer-shell {
+  .workspace-shell .answer-shell {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -2097,8 +2098,8 @@ textarea:focus {
     margin-top: 2px;
   }
 
-  #appCard .answer-shell .chat-thread.perplexity-thread,
-  #appCard .answer-shell .chat-thread.notebook-thread {
+  .workspace-shell .answer-shell .chat-thread.perplexity-thread,
+  .workspace-shell .answer-shell .chat-thread.notebook-thread {
     flex: 1 1 0;
     min-height: 0;
     max-height: none;
@@ -2107,7 +2108,7 @@ textarea:focus {
     box-shadow: none;
   }
 
-  #appCard .followup-bar {
+  .workspace-shell .followup-bar {
     flex-shrink: 0;
     position: relative;
     background: linear-gradient(180deg, transparent 0%, rgba(247, 246, 243, 0.95) 50%);
@@ -2217,7 +2218,7 @@ pre {
   }
 
   body,
-  body:has(#appCard:not(.hidden)) {
+  body:has(.workspace-shell:not(.hidden)) {
     background-attachment: scroll;
   }
 
@@ -2256,7 +2257,7 @@ pre {
 @media (hover: hover) and (pointer: fine) {
   @supports (hanging-punctuation: first) {
     body,
-    body:has(#appCard:not(.hidden)) {
+    body:has(.workspace-shell:not(.hidden)) {
       background-attachment: scroll;
     }
 

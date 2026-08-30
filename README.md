@@ -4,6 +4,7 @@ A prototype for a free student-focused AI app with:
 
 - Google login (Supabase Auth)
 - Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
+- **Finance AI**: Ask, a local Budget planner, and Goals with educational (not advice) guardrails
 - **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
 - Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
 
