@@ -4,7 +4,7 @@ const ANALYTICS_KEY = "aihub.privacy-agent.analytics.v1";
 
 const DEFAULT_STATE = {
   rules: {
-    filter: "off",
+    filter: "network",
     shopping: "never",
     health: "never",
     identity: "checkout_ok",
@@ -72,7 +72,7 @@ async function renderAnalyticsBanner() {
   const tracking = domains.length;
   const liveNow = live && (analytics.networkProtected || analytics.localBlocked > 0);
   const blocked = liveNow ? tracking : Number(analytics.localBlocked || 0);
-  const deviceLabel = liveNow ? "Protected" : live ? "Armed" : "Off";
+  const deviceLabel = liveNow ? "Protected" : live ? "Armed" : "Tracked";
 
   trackingEl.textContent = String(tracking);
   blockedEl.textContent = String(blocked);
@@ -88,7 +88,7 @@ async function renderAnalyticsBanner() {
       ? "Live house analytics"
       : live
         ? "Armed — waiting for a live check"
-        : "Filter off";
+        : "Tracking allowed";
   }
 }
 
@@ -147,8 +147,8 @@ function paintHouseSnapshot(data, extraMessage) {
 
   const label = document.getElementById("houseFilterStateLabel");
   if (label) {
-    if (mode === "off") label.textContent = "Filter off";
-    else if (mode === "network") label.textContent = "On my network — apply the list, then check";
+    if (mode === "off") label.textContent = "Tracking allowed";
+    else if (mode === "network") label.textContent = "Tracking disabled — apply the list, then check";
     else if (running) label.textContent = "Live — this computer";
     else label.textContent = "This computer — waiting to start";
   }
@@ -178,7 +178,7 @@ function paintHouseSnapshot(data, extraMessage) {
     return;
   }
   if (mode === "off") {
-    setHouseStatus("Nothing from this app is being applied to your traffic.");
+    setHouseStatus("Tracking is allowed. Known tracker sites can load on this device until you disable tracking.");
     return;
   }
   if (mode === "network") {
@@ -190,7 +190,7 @@ function paintHouseSnapshot(data, extraMessage) {
     setHouseStatus(`Local DNS is on. Set this computer to 127.0.0.1 or the router to ${ip}.`);
     return;
   }
-  setHouseStatus("Choose On my network to protect phones and Wi-Fi, or This computer for a local DNS server.");
+  setHouseStatus("Disable tracking to protect phones and Wi-Fi, or use This computer for a local DNS server.");
 }
 
 function renderHouseFilter() {
@@ -273,7 +273,7 @@ function probeUrl(url, timeoutMs) {
 
 async function checkThisNetwork() {
   if (!filterOn()) {
-    setHouseStatus("Turn the house filter on before checking this network.");
+    setHouseStatus("Disable tracking before checking this network.");
     return;
   }
   const resultEl = document.getElementById("houseTestResult");
