@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-2" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-2" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-2" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-3" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-3" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-3" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -118,38 +118,25 @@
             <section class="privacy-card" id="houseFilterCard">
               <h2>This house</h2>
               <p class="privacy-lead">
-                Run a DNS filter on a computer that stays on, then point the router at that computer. Phones and laptops
-                on this Wi-Fi inherit the house rules. DNS can block tracker domains. It cannot unsell data a company
-                already has, and it cannot see inside HTTPS.
+                The house filter is part of this agent. Start it here on a computer that stays on, then point the router
+                at that computer. Phones and laptops on this Wi-Fi inherit the house rules.
               </p>
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
-              <ol class="privacy-steps">
-                <li>Set house rules above.</li>
-                <li>
-                  On a home computer in this repo, run
-                  <code>sudo npm run privacy-dns</code>
-                  (Administrator on Windows).
-                </li>
-                <li>Copy the LAN IP the command prints, such as <code>192.168.1.42</code>.</li>
-                <li>
-                  In the router admin page (often <code>192.168.1.1</code>), set DNS to that IP. Save, then toggle
-                  airplane mode on phones.
-                </li>
-                <li>
-                  Open the filter status page at <code>http://LAN-IP:8787</code> from any device on this Wi-Fi.
-                </li>
-              </ol>
-              <div class="privacy-actions">
-                <button type="button" class="primary-btn" id="downloadHostsBtn">Download hosts list</button>
-                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
-                <button type="button" class="ghost-btn" id="downloadRulesBtn">Download house rules</button>
-                <button type="button" class="ghost-btn hidden" id="pushRulesBtn">Push rules to house filter</button>
-              </div>
+              <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
               <p class="privacy-lead" id="houseFilterStatus"></p>
-              <p class="privacy-lead">
-                Safer first night if you do not want to run a server: download the domain list and paste it into NextDNS
-                or AdGuard Home, then point the router at that service.
-              </p>
+              <ul class="privacy-log" id="houseLiveLog"></ul>
+              <div class="privacy-actions">
+                <button type="button" class="primary-btn" id="startHouseFilterBtn">Protect this house</button>
+                <button type="button" class="ghost-btn hidden" id="stopHouseFilterBtn">Stop filter</button>
+                <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts list</button>
+                <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
+              </div>
+              <ol class="privacy-steps" id="houseRouterSteps">
+                <li>Tap <strong>Protect this house</strong> on the home computer running AI Hub.</li>
+                <li>If the app asks for administrator rights, close Hub and start it with <code>sudo npm run dev</code> (Administrator on Windows), then tap again.</li>
+                <li>Copy the LAN IP shown above into the router DNS page (often <code>192.168.1.1</code>).</li>
+                <li>Save, then toggle airplane mode on phones.</li>
+              </ol>
             </section>
 
             <section class="privacy-card">
@@ -226,7 +213,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-2"></script>
-    <script defer src="./app.js?v=privacy-2"></script>
+    <script defer src="./house-filter.js?v=privacy-3"></script>
+    <script defer src="./app.js?v=privacy-3"></script>
   </body>
 </html>

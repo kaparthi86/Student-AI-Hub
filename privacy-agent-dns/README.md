@@ -4,21 +4,35 @@ Run this on a computer that stays on (a laptop at home, a mini PC, or a Raspberr
 
 It does **not** stop first-party cookies, logins, or companies that already have your email. It blocks known tracker **domains** at DNS.
 
-## Run
+## Run from the agent app
 
-From the repo root, after `npm install`:
+The filter is part of Privacy Agent. On a home computer:
 
 ```bash
-# Linux / macOS — port 53 usually needs admin
-sudo npm run privacy-dns
+npm run dev
+```
 
-# Windows — open Terminal as Administrator
-npm run privacy-dns
+Open `http://localhost:3001/privacy-agent/` and tap **Protect this house**.
+
+Port 53 usually needs administrator rights. If the app says so, close Hub and start it with:
+
+```bash
+sudo npm run dev
+```
+
+On Windows, open Terminal as Administrator, then `npm run dev`, and tap the button again.
+
+The same screen shows the LAN IP to paste into the router.
+
+## Run from the terminal (optional)
+
+```bash
+sudo npm run privacy-dns
 ```
 
 You should see this computer’s LAN IP, for example `192.168.1.42`.
 
-Status page on this machine or another device on the same Wi-Fi:
+Status page if you used the terminal helper:
 
 `http://THAT-LAN-IP:8787`
 
