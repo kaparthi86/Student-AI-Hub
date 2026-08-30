@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-4" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-4" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-4" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-5" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-5" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-5" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -80,8 +80,19 @@
           <div class="privacy-grid">
             <section class="privacy-card">
               <h2>House rules</h2>
-              <p class="privacy-lead">Three life decisions. Not two hundred cookie checkboxes.</p>
+              <p class="privacy-lead">Turn the live filter on, then set what can leave. Practice cards below are drills only.</p>
               <div class="privacy-rules">
+                <div class="privacy-rule" data-rule="filter">
+                  <div class="privacy-rule-copy">
+                    <strong>House filter</strong>
+                    <span>Live DNS on this computer or the whole Wi-Fi. Off means nothing is blocked on the network.</span>
+                  </div>
+                  <div class="privacy-choice">
+                    <button type="button" data-value="off">Off</button>
+                    <button type="button" data-value="computer">On this computer</button>
+                    <button type="button" data-value="house">On for the house</button>
+                  </div>
+                </div>
                 <div class="privacy-rule" data-rule="shopping">
                   <div class="privacy-rule-copy">
                     <strong>Shopping</strong>
@@ -118,8 +129,8 @@
             <section class="privacy-card" id="houseFilterCard">
               <h2>This house</h2>
               <p class="privacy-lead">
-                The house filter is part of this agent. Start it here on a computer that stays on, then point the router
-                at that computer. Phones and laptops on this Wi-Fi inherit the house rules.
+                This is the live product. Choose <strong>On this computer</strong> to test on your machine, or
+                <strong>On for the house</strong> to use the same filter on your Wi-Fi.
               </p>
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
               <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
@@ -128,17 +139,21 @@
               <p class="privacy-lead" id="houseTestResult"></p>
               <ul class="privacy-log" id="houseLiveLog"></ul>
               <div class="privacy-actions">
-                <button type="button" class="primary-btn" id="startHouseFilterBtn">Protect this house</button>
-                <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test a real block</button>
-                <button type="button" class="ghost-btn hidden" id="stopHouseFilterBtn">Stop filter</button>
+                <button type="button" class="primary-btn hidden" id="testHouseFilterBtn">Test a real block</button>
                 <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts list</button>
                 <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
               </div>
-              <ol class="privacy-steps" id="houseRouterSteps">
-                <li>Tap <strong>Protect this house</strong> on the home computer running AI Hub.</li>
-                <li>If the app asks for administrator rights, close Hub and start it with <code>sudo npm run dev</code> (Administrator on Windows), then tap again.</li>
-                <li>Copy the LAN IP shown above into the router DNS page (often <code>192.168.1.1</code>).</li>
-                <li>Save, then toggle airplane mode on phones.</li>
+              <ol class="privacy-steps hidden" id="houseComputerSteps">
+                <li>AI Hub must be running on this computer. If On fails, restart with <code>sudo npm run dev</code> (Administrator on Windows).</li>
+                <li>Set this computer’s DNS to <code>127.0.0.1</code> (Mac: System Settings → Network → DNS. Windows: adapter → IPv4 → Preferred DNS).</li>
+                <li>Tap <strong>Test a real block</strong>. You want <code>google-analytics.com → 0.0.0.0</code>.</li>
+                <li>Optional: in Terminal, <code>nslookup google-analytics.com 127.0.0.1</code> should return <code>0.0.0.0</code>.</li>
+              </ol>
+              <ol class="privacy-steps hidden" id="houseRouterSteps">
+                <li>Keep this computer on. The LAN IP above is the house DNS.</li>
+                <li>If On fails, restart Hub with <code>sudo npm run dev</code>, then choose On for the house again.</li>
+                <li>Router admin (often <code>192.168.1.1</code>) → DNS → that LAN IP → save.</li>
+                <li>Toggle airplane mode on your phone, then tap <strong>Test a real block</strong>.</li>
               </ol>
             </section>
 
@@ -216,7 +231,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-4"></script>
-    <script defer src="./app.js?v=privacy-4"></script>
+    <script defer src="./house-filter.js?v=privacy-5"></script>
+    <script defer src="./app.js?v=privacy-5"></script>
   </body>
 </html>
