@@ -82,7 +82,7 @@ PORT=3001 npm run dev
 
 Open: [http://localhost:3001](http://localhost:3001)
 
-Privacy Agent is a live Hub product. Open **Privacy Agent**, choose **On my network**, copy the house list link into AdGuard or NextDNS, then tap **Check this network**. Advanced users can still run a local DNS filter with `sudo npm run dev` and **This computer**. See `privacy-agent-dns/README.md`.
+Privacy Agent is a live Hub product. Open **Privacy Agent**, choose **Disable tracking**, copy the house list link into AdGuard or NextDNS, then tap **Check this network**. Advanced users can still run a local DNS filter with `sudo npm run dev` and **This computer**. See `privacy-agent-dns/README.md`.
 
 Verify Hugging Face env is picked up:
 

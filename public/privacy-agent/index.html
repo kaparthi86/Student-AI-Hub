@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-9" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-9" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-9" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-10" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-10" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-10" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -100,23 +100,23 @@
         </section>
 
         <p class="privacy-lead privacy-lead--intro">
-          Turn the house filter on, choose what to block, and put the same list on your phone or router. Then check this
+          Disable tracking to block known tracker sites. Then put the same list on your phone or router and check this
           network.
         </p>
 
         <div class="privacy-main">
           <section class="privacy-card">
-            <h2>House rules</h2>
-            <p class="privacy-lead">These rules build the tracker list this app applies to your traffic.</p>
+            <h2>Your tracking control</h2>
+            <p class="privacy-lead">This is the switch. Disable tracking to stop known websites from profiling you.</p>
             <div class="privacy-rules">
               <div class="privacy-rule" data-rule="filter">
                 <div class="privacy-rule-copy">
-                  <strong>House filter</strong>
-                  <span>Off parks the list. On my network is the live path for phones and Wi-Fi.</span>
+                  <strong>Website tracking</strong>
+                  <span>Disable tracking builds the house list. Allow tracking turns that protection off in this app.</span>
                 </div>
-                <div class="privacy-choice" role="group" aria-label="House filter">
-                  <button type="button" class="live-web-toggle" data-value="off">Off</button>
-                  <button type="button" class="live-web-toggle" data-value="network">On my network</button>
+                <div class="privacy-choice" role="group" aria-label="Website tracking">
+                  <button type="button" class="live-web-toggle" data-value="network">Disable tracking</button>
+                  <button type="button" class="live-web-toggle" data-value="off">Allow tracking</button>
                   <button type="button" class="live-web-toggle" data-value="computer">This computer</button>
                 </div>
               </div>
@@ -144,12 +144,12 @@
           </section>
 
           <section class="privacy-card" id="houseFilterCard">
-            <h2>Protect this network</h2>
-            <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
+            <h2>Apply it on this network</h2>
+            <p class="privacy-kicker" id="houseFilterStateLabel">Tracking allowed</p>
             <p class="privacy-lead" id="houseFilterStatus"></p>
             <p class="privacy-lead hidden" id="houseOffNote">
-              Filter is off. This app is not applying a list. If you already added it in AdGuard or NextDNS, remove that
-              custom list there too.
+              Tracking is allowed. This app is not blocking tracker sites. If you already added the house list in AdGuard
+              or NextDNS, remove that custom list there too.
             </p>
             <div class="privacy-live-controls hidden" id="houseLiveControls">
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
@@ -233,7 +233,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-9"></script>
-    <script defer src="./app.js?v=privacy-9"></script>
+    <script defer src="./house-filter.js?v=privacy-10"></script>
+    <script defer src="./app.js?v=privacy-10"></script>
   </body>
 </html>
