@@ -6,13 +6,15 @@ It does **not** stop first-party cookies, logins, or companies that already have
 
 ## Run from the agent app
 
-The filter is part of Privacy Agent. On a home computer:
+For most users, open Privacy Agent, choose **On my network**, copy the house list into AdGuard or NextDNS, then tap **Check this network**.
+
+Advanced local DNS, on a home computer:
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3001/privacy-agent/` and tap **Protect this house**.
+Open `http://localhost:3001/privacy-agent/` and choose **This computer**.
 
 Port 53 usually needs administrator rights. If the app says so, close Hub and start it with:
 

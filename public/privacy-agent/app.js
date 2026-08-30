@@ -1,5 +1,5 @@
 const STORAGE_KEY = "aihub.privacy-agent.v1";
-const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v1";
+const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v2";
 
 const SCENARIOS = [
   {
@@ -183,6 +183,7 @@ function actionLabel(action) {
 }
 
 const state = loadState();
+if (state.rules.filter === "house") state.rules.filter = "network";
 
 const els = {
   blocked: document.getElementById("statBlocked"),
@@ -300,57 +301,66 @@ function renderHouseLiveLog(recent) {
   });
 }
 
+function blocklistUrl(format) {
+  const query = new URLSearchParams({
+    shopping: state.rules.shopping,
+    health: state.rules.health,
+    identity: state.rules.identity,
+  });
+  if (format) query.set("format", format);
+  return `${window.location.origin}/api/privacy-blocklist?${query.toString()}`;
+}
+
 function paintHouseSnapshot(data, extraMessage) {
   const running = Boolean(data?.running);
   window.__houseFilterRunning = running;
   const mode = state.rules.filter || "off";
   const label = document.getElementById("houseFilterStateLabel");
   if (label) {
-    if (running && mode === "house") label.textContent = "Live — on for the house";
-    else if (running) label.textContent = "Live — on this computer";
-    else if (mode !== "off") label.textContent = "On chosen — waiting to start";
+    if (mode === "network") label.textContent = "On my network — apply the list, then check";
+    else if (running && mode === "computer") label.textContent = "Live — this computer";
+    else if (mode === "computer") label.textContent = "This computer — waiting to start";
     else label.textContent = "Filter off";
   }
   const liveCount = document.getElementById("houseLiveCount");
-  if (liveCount) liveCount.textContent = `Live house blocks: ${data?.stats?.blocked ?? 0}`;
-  document.getElementById("testHouseFilterBtn")?.classList.toggle("hidden", !running);
+  if (liveCount) {
+    liveCount.textContent = running ? `Live local blocks: ${data?.stats?.blocked ?? 0}` : "Live local blocks: 0";
+    liveCount.classList.toggle("hidden", mode !== "computer");
+  }
+  document.getElementById("testHouseFilterBtn")?.classList.toggle("hidden", !(running && mode === "computer"));
   document.getElementById("houseComputerSteps")?.classList.toggle("hidden", mode !== "computer");
-  document.getElementById("houseRouterSteps")?.classList.toggle("hidden", mode !== "house");
-  renderHouseLiveLog(data?.recent);
+  document.getElementById("houseNetworkSteps")?.classList.toggle("hidden", mode !== "network");
+  renderHouseLiveLog(mode === "computer" ? data?.recent : []);
   if (extraMessage) {
     setHouseStatus(extraMessage);
     return;
   }
-  if (data?.cloud) {
-    document.getElementById("testHouseFilterBtn")?.classList.add("hidden");
+  if (mode === "network") {
     setHouseStatus(
-      "You are on the public site. Open Privacy Agent on your home computer running AI Hub, then choose On this computer or On for the house."
+      "Your house list is ready. Add the link on your phone or router, then tap Check this network. This works for the live site — no Terminal."
     );
     return;
   }
-  if (running) {
+  if (mode === "computer" && running) {
     const ip = (data.lan && data.lan[0]) || "this computer";
-    const blocked = data.stats?.blocked ?? 0;
-    if (mode === "house") {
-      setHouseStatus(
-        `Live on your network from ${ip}. Set router DNS to ${ip}. ${data.domains} domains in the list. ${blocked} live blocks so far.`
-      );
-    } else {
-      setHouseStatus(
-        `Live on this computer. Set this device DNS to 127.0.0.1. ${data.domains} domains in the list. ${blocked} live blocks so far.`
-      );
-    }
+    setHouseStatus(`Local DNS is on. Set this computer to 127.0.0.1 or the router to ${ip}.`);
     return;
   }
-  setHouseStatus("Choose On this computer or On for the house to start the live filter.");
+  if (mode === "off") {
+    setHouseStatus("House filter is off. Nothing is being blocked on the network.");
+    return;
+  }
+  setHouseStatus("Choose On my network to protect phones and Wi-Fi, or This computer for a local DNS server.");
 }
 
 function renderHouseFilter() {
   const mount = document.getElementById("houseActiveLists");
   const filter = window.PrivacyHouseFilter;
+  const urlInput = document.getElementById("houseBlocklistUrl");
+  if (urlInput) urlInput.value = blocklistUrl();
   if (!mount || !filter) return;
   const lists = filter.enabledLists(state.rules);
-  mount.textContent = `Active lists for these rules: ${lists.map(listLabel).join(", ")}.`;
+  mount.textContent = `Active lists: ${lists.map(listLabel).join(", ")}.`;
 }
 
 async function refreshHouseSnapshot() {
@@ -360,7 +370,11 @@ async function refreshHouseSnapshot() {
     paintHouseSnapshot(data);
     return data;
   } catch {
-    setHouseStatus("Could not reach the house filter inside this app. Is AI Hub running on this computer?");
+    if (state.rules.filter === "network") {
+      paintHouseSnapshot({ running: false }, null);
+      return null;
+    }
+    setHouseStatus("Could not reach the local house filter. For 100-user launch, choose On my network.");
     return null;
   }
 }
@@ -412,7 +426,61 @@ async function currentBlockSet() {
   return filter.buildBlockSet(texts, state.rules);
 }
 
+function probeUrl(url, timeoutMs) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    const timer = window.setTimeout(() => {
+      image.onload = null;
+      image.onerror = null;
+      resolve("timeout");
+    }, timeoutMs);
+    image.onload = () => {
+      window.clearTimeout(timer);
+      resolve("load");
+    };
+    image.onerror = () => {
+      window.clearTimeout(timer);
+      resolve("error");
+    };
+    image.src = url;
+  });
+}
+
+async function checkThisNetwork() {
+  const resultEl = document.getElementById("houseTestResult");
+  if (resultEl) resultEl.textContent = "Checking this device’s network…";
+  const stamp = Date.now();
+  const safe = await probeUrl(`https://www.example.com/favicon.ico?cb=${stamp}`, 4000);
+  const tracker = await probeUrl(`https://www.google-analytics.com/analytics.js?cb=${stamp}`, 4000);
+  if (!resultEl) return;
+  if (safe !== "load") {
+    resultEl.textContent = "This device looks offline. Connect to Wi-Fi and check again.";
+    return;
+  }
+  if (tracker === "error" || tracker === "timeout") {
+    resultEl.textContent =
+      "Live check passed. This device cannot load google-analytics.com, so the house list is working on this network.";
+    return;
+  }
+  resultEl.textContent =
+    "This device can still reach google-analytics.com. Add the house list in AdGuard or NextDNS, set DNS, then check again.";
+}
+
 function bindHouseFilter() {
+  document.getElementById("copyBlocklistBtn")?.addEventListener("click", async () => {
+    const url = blocklistUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setHouseStatus("House list link copied. Paste it into AdGuard or NextDNS.");
+    } catch {
+      const input = document.getElementById("houseBlocklistUrl");
+      input?.select();
+      setHouseStatus("Copy the house list link from the box, then paste it into AdGuard or NextDNS.");
+    }
+  });
+  document.getElementById("checkNetworkBtn")?.addEventListener("click", () => {
+    checkThisNetwork();
+  });
   document.getElementById("testHouseFilterBtn")?.addEventListener("click", async () => {
     const resultEl = document.getElementById("houseTestResult");
     if (resultEl) resultEl.textContent = "Sending a real DNS query through the house filter…";
@@ -443,7 +511,7 @@ function bindHouseFilter() {
     setHouseStatus("Saved one domain per line. Use this only if you prefer NextDNS or AdGuard Home.");
   });
   refreshHouseSnapshot().then(() => {
-    if (state.rules.filter && state.rules.filter !== "off") applyFilterChoice(state.rules.filter);
+    if (state.rules.filter === "computer") applyFilterChoice("computer");
   });
   window.setInterval(refreshHouseSnapshot, 8000);
 }
@@ -468,17 +536,16 @@ function runScenario(id) {
 }
 
 async function applyFilterChoice(value) {
-  if (value === "off") {
+  if (value === "off" || value === "network") {
     try {
-      const res = await fetch(houseApi("/stop"), { method: "POST" });
-      const data = await res.json();
-      paintHouseSnapshot(data, "House filter is off. Nothing is being blocked on the network.");
+      await fetch(houseApi("/stop"), { method: "POST" }).catch(() => null);
     } catch {
-      setHouseStatus("Could not stop the house filter.");
+      /* hosted users will not have a local filter */
     }
+    paintHouseSnapshot({ running: false });
     return;
   }
-  setHouseStatus("Starting the live house filter…");
+  setHouseStatus("Starting the local DNS filter…");
   try {
     await fetch(houseApi("/rules"), {
       method: "POST",

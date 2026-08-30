@@ -236,7 +236,7 @@ const I18N = {
     tile_finance_sub: "Plan budgets and goals with clarity",
     tile_finance_cta: "Open ->",
     tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "Set house rules for what can leave",
+    tile_privacy_sub: "Live house rules for your phone and Wi-Fi",
     tile_privacy_cta: "Open ->",
     disclaimer_privacy:
       "Privacy Agent is an on-device demo. It does not yet filter live internet traffic. Vault data stays in this browser.",

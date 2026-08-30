@@ -266,6 +266,47 @@ a.workspace-hub-link {
   border-radius: 6px;
 }
 
+.privacy-url-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.privacy-url-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.privacy-url-row input {
+  flex: 1 1 220px;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  border: 1px solid rgba(28, 27, 25, 0.12);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.privacy-practice summary {
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.privacy-practice .privacy-week {
+  margin: 14px 0;
+}
+
+@media (max-width: 820px) {
+  .privacy-url-row .primary-btn {
+    width: 100%;
+  }
+}
+
 @media (max-width: 820px) {
   .privacy-week {
     grid-template-columns: 1fr;

@@ -82,13 +82,7 @@ PORT=3001 npm run dev
 
 Open: [http://localhost:3001](http://localhost:3001)
 
-Privacy Agent house filter is inside the app. On a home computer:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3001/privacy-agent/](http://localhost:3001/privacy-agent/) and tap **Protect this house**. If the app says it needs administrator rights, restart with `sudo npm run dev` (Administrator on Windows), then tap again. Point the router DNS at the LAN IP shown on that screen. See `privacy-agent-dns/README.md`.
+Privacy Agent is a live Hub product. Open **Privacy Agent**, choose **On my network**, copy the house list link into AdGuard or NextDNS, then tap **Check this network**. Advanced users can still run a local DNS filter with `sudo npm run dev` and **This computer**. See `privacy-agent-dns/README.md`.
 
 Verify Hugging Face env is picked up:
 

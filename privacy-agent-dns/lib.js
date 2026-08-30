@@ -342,6 +342,36 @@ function createRuntime() {
   };
 }
 
+function loadListTexts() {
+  const textById = {};
+  houseFilter.LIST_IDS.forEach((id) => {
+    const filePath = path.join(LIST_DIR, `${id}.txt`);
+    textById[id] = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
+  });
+  return textById;
+}
+
+function materializeBlocklist(rawRules) {
+  const rules = cleanRules(rawRules || {});
+  const set = houseFilter.buildBlockSet(loadListTexts(), rules);
+  const domains = Array.from(set).sort();
+  return {
+    rules,
+    lists: houseFilter.enabledLists(rules),
+    count: domains.length,
+    domains,
+    hosts: `${houseFilter.hostsFile(set)}\n`,
+    adblock: [
+      "! Title: Privacy Agent house list",
+      "! Homepage: https://www.my-student-coach.com/privacy-agent/",
+      "! Expires: 12 hours",
+      ...domains.map((domain) => `||${domain}^`),
+      "",
+    ].join("\n"),
+    plaintext: `${houseFilter.domainFile(set)}\n`,
+  };
+}
+
 function isCloudHost() {
   return Boolean(process.env.RENDER || process.env.RAILWAY_ENVIRONMENT || process.env.FLY_APP_NAME);
 }
@@ -367,6 +397,7 @@ function isHomeRequest(req) {
 
 module.exports = {
   createRuntime,
+  materializeBlocklist,
   isCloudHost,
   isHomeRequest,
   lanAddresses,

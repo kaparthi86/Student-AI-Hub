@@ -619,6 +619,28 @@ app.get("/api/privacy-dns/domains.txt", (req, res) => {
   res.type("text/plain").send(houseDnsRuntime.domainsText());
 });
 
+app.get("/api/privacy-blocklist", (req, res) => {
+  const pack = houseDnsLib.materializeBlocklist({
+    shopping: req.query.shopping,
+    health: req.query.health,
+    identity: req.query.identity,
+  });
+  const format = String(req.query.format || "adblock").toLowerCase();
+  res.set("Cache-Control", "public, max-age=300");
+  if (format === "json") {
+    return res.json({
+      ok: true,
+      count: pack.count,
+      lists: pack.lists,
+      rules: pack.rules,
+      url: `${req.protocol}://${req.get("host")}/api/privacy-blocklist?shopping=${pack.rules.shopping}&health=${pack.rules.health}&identity=${pack.rules.identity}`,
+    });
+  }
+  if (format === "hosts") return res.type("text/plain").send(pack.hosts);
+  if (format === "domains") return res.type("text/plain").send(pack.plaintext);
+  return res.type("text/plain").send(pack.adblock);
+});
+
 app.post("/api/privacy-dns/test", async (req, res) => {
   if (houseDnsLib.isCloudHost()) return houseDnsUnavailableOnCloud(res);
   if (!houseDnsLib.isHomeRequest(req)) {
