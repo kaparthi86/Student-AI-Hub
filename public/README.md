@@ -5,6 +5,7 @@ A prototype for a free student-focused AI app with:
 - Google login (Supabase Auth)
 - Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
 - **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
+- **Privacy Agent** (`/privacy-agent/`): on-device house rules, vault, and request simulator
 - Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
 
 ## 1) Setup

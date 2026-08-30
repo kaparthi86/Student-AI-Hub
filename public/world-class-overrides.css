@@ -1120,7 +1120,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 
 .hub-tiles {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
 }
@@ -1453,6 +1453,9 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 }
 .hub-shell .hub-tile:nth-child(3) {
   animation: hubTileIn 560ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+}
+.hub-shell .hub-tile:nth-child(4) {
+  animation: hubTileIn 560ms cubic-bezier(0.22, 1, 0.36, 1) 210ms both;
 }
 
 @keyframes hubTileIn {

@@ -544,6 +544,12 @@ app.get("/", (_req, res) => {
 app.get("/index.html", (_req, res) => {
   res.sendFile("index.html", { root: publicDir });
 });
+app.get("/privacy-agent", (_req, res) => {
+  res.redirect(302, "/privacy-agent/");
+});
+app.get("/privacy-agent/", (_req, res) => {
+  res.sendFile("privacy-agent/index.html", { root: publicDir });
+});
 
 function buildPrompt(mode, userInput) {
   if (mode === "code") {

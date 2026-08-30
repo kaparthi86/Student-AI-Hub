@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#F7F6F3" />
+    <title>Privacy Agent - AI Hub</title>
+    <meta
+      name="description"
+      content="Privacy Agent is an on-device filter between your life and advertising. Set house rules, keep a vault, and decide what can leave."
+    />
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png?v=launch-landing-1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css?v=privacy-1" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-1" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-1" />
+  </head>
+  <body>
+    <div class="bg-glow one" aria-hidden="true"></div>
+    <div class="bg-glow two" aria-hidden="true"></div>
+
+    <main class="container">
+      <section class="app app-shell workspace-shell card privacy-shell" id="privacyCard" aria-label="Privacy Agent">
+        <header class="app-head">
+          <div class="app-head-top">
+            <div class="app-brand app-brand--workspace" aria-label="Privacy Agent">
+              <span class="brand-mark" aria-hidden="true">
+                <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="12" fill="url(#privacyBrandGrad)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.92"
+                  />
+                  <defs>
+                    <linearGradient id="privacyBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+              <div class="brand-wordmark workspace-wordmark">
+                <a class="workspace-hub-link" href="../" aria-label="Back to AI Hub" title="Back to AI Hub">Back to AI Hub</a>
+                <span class="brand-title workspace-title">Privacy Agent</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <p class="privacy-lead" style="margin-top: 0">
+          You decide once. The agent keeps the promise. This MVP runs on your device — it does not yet sit on the live
+          internet wire.
+        </p>
+
+        <section class="privacy-week" aria-label="This week">
+          <p class="privacy-stat">
+            <span class="privacy-stat-value" id="statBlocked">0</span>
+            <span class="privacy-stat-label">Requests blocked</span>
+          </p>
+          <p class="privacy-stat">
+            <span class="privacy-stat-value" id="statReleased">0</span>
+            <span class="privacy-stat-label">Minimal claims released</span>
+          </p>
+          <p class="privacy-stat">
+            <span class="privacy-stat-value" id="statRevoked">0</span>
+            <span class="privacy-stat-label">Broker copies to take back</span>
+          </p>
+        </section>
+
+        <div class="privacy-main">
+          <div class="privacy-grid">
+            <section class="privacy-card">
+              <h2>House rules</h2>
+              <p class="privacy-lead">Three life decisions. Not two hundred cookie checkboxes.</p>
+              <div class="privacy-rules">
+                <div class="privacy-rule" data-rule="shopping">
+                  <div class="privacy-rule-copy">
+                    <strong>Shopping</strong>
+                    <span>Discounts and receipts, or no ad profile at all.</span>
+                  </div>
+                  <div class="privacy-choice">
+                    <button type="button" data-value="ok_for_discounts">OK for discounts</button>
+                    <button type="button" data-value="never">Never for ads</button>
+                  </div>
+                </div>
+                <div class="privacy-rule" data-rule="health">
+                  <div class="privacy-rule-copy">
+                    <strong>Health, family, location</strong>
+                    <span>Never sold into an advertising graph.</span>
+                  </div>
+                  <div class="privacy-choice">
+                    <button type="button" data-value="never">Never for ads</button>
+                    <button type="button" data-value="allow">Allow (not recommended)</button>
+                  </div>
+                </div>
+                <div class="privacy-rule" data-rule="identity">
+                  <div class="privacy-rule-copy">
+                    <strong>Real identity</strong>
+                    <span>Email and phone stay in the vault unless you are checking out.</span>
+                  </div>
+                  <div class="privacy-choice">
+                    <button type="button" data-value="checkout_ok">Checkout only</button>
+                    <button type="button" data-value="vault_only">Vault only</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="privacy-card">
+              <h2>Try a request</h2>
+              <p class="privacy-lead">Practice the agent. Each tap is a company asking for a piece of you.</p>
+              <div class="privacy-scenarios" id="privacyScenarios"></div>
+            </section>
+          </div>
+
+          <div class="privacy-grid">
+            <section class="privacy-card privacy-decision" id="privacyDecision" aria-live="polite"></section>
+
+            <section class="privacy-card">
+              <h2>Vault</h2>
+              <p class="privacy-lead">Use fake details. This stays in this browser. We do not upload it.</p>
+              <div class="privacy-vault">
+                <label>Name <input id="vault-name" data-vault="name" autocomplete="off" /></label>
+                <label>Email <input id="vault-email" data-vault="email" autocomplete="off" /></label>
+                <label>Phone <input id="vault-phone" data-vault="phone" autocomplete="off" /></label>
+                <label>City <input id="vault-city" data-vault="city" autocomplete="off" /></label>
+                <label>Interest <input id="vault-interest" data-vault="interest" autocomplete="off" /></label>
+              </div>
+              <div class="privacy-actions">
+                <button type="button" class="ghost-btn tiny-btn" id="clearVaultBtn">Clear vault</button>
+                <button type="button" class="ghost-btn tiny-btn" id="resetDemoBtn">Reset demo</button>
+              </div>
+            </section>
+
+            <section class="privacy-card">
+              <h2>Log</h2>
+              <p class="privacy-lead" id="privacyLogEmpty">No requests yet. Try one on the left.</p>
+              <ul class="privacy-log" id="privacyLog"></ul>
+            </section>
+          </div>
+        </div>
+
+        <footer class="app-fine-print" role="note" aria-label="Disclaimer">
+          <p class="fine-print-line">
+            Privacy Agent is an on-device demo. It does not yet filter live traffic, apps, or data brokers on the real
+            internet.
+          </p>
+          <p class="fine-print-line">
+            AI Hub is mission-driven — built to help people learn and plan, not to sell your data or push ads.
+          </p>
+        </footer>
+      </section>
+    </main>
+
+    <div
+      id="privacyDisclaimerModal"
+      class="settings-modal honor-code-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacyDisclaimerTitle"
+    >
+      <div class="settings-card honor-code-card">
+        <div class="settings-head">
+          <h3 id="privacyDisclaimerTitle">Your data stays on this device</h3>
+        </div>
+        <p class="honor-code-lead">
+          Privacy Agent is a practice control plane — house rules, a vault, and a decision log.
+        </p>
+        <p class="honor-code-body muted">
+          It does not sit between you and the live internet yet. Do not store real secrets here. Use fake details. We do
+          not sell vault data. There are no ads in this product.
+        </p>
+        <div class="honor-code-actions">
+          <button id="privacyDisclaimerAckBtn" class="primary-btn" type="button">I understand</button>
+          <button id="privacyDisclaimerBackBtn" class="ghost-btn" type="button">Back to Hub</button>
+        </div>
+      </div>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="../config.js"></script>
+    <script defer src="./app.js?v=privacy-1"></script>
+  </body>
+</html>
