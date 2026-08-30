@@ -79,6 +79,69 @@ function questionType(query) {
   }
 }
 
+function buildQuery(name, type) {
+  const header = Buffer.alloc(12);
+  header.writeUInt16BE(Math.floor(Math.random() * 65535), 0);
+  header.writeUInt16BE(0x0100, 2);
+  header.writeUInt16BE(1, 4);
+  return Buffer.concat([header, encodeName(name), Buffer.from([0, type || 1, 0, 1])]);
+}
+
+function parseARecord(reply) {
+  if (!reply || reply.length < 12) return null;
+  const answers = reply.readUInt16BE(6);
+  if (answers < 1) return null;
+  let pos = 12;
+  const question = decodeName(reply, pos);
+  pos = question.end + 4;
+  if (pos + 10 > reply.length) return null;
+  const answer = decodeName(reply, pos);
+  pos = answer.end;
+  const type = reply.readUInt16BE(pos);
+  pos += 2;
+  pos += 2;
+  pos += 4;
+  const rdlen = reply.readUInt16BE(pos);
+  pos += 2;
+  if (type === 1 && rdlen === 4 && pos + 4 <= reply.length) {
+    return `${reply[pos]}.${reply[pos + 1]}.${reply[pos + 2]}.${reply[pos + 3]}`;
+  }
+  return null;
+}
+
+function queryLocalA(name, port) {
+  return new Promise((resolve, reject) => {
+    const socket = dgram.createSocket("udp4");
+    const timer = setTimeout(() => {
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
+      reject(new Error("DNS test timed out. The house filter did not answer."));
+    }, 2500);
+    socket.on("message", (reply) => {
+      clearTimeout(timer);
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
+      resolve(parseARecord(reply));
+    });
+    socket.on("error", (err) => {
+      clearTimeout(timer);
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
+      reject(err);
+    });
+    socket.send(buildQuery(name, 1), port, "127.0.0.1");
+  });
+}
+
 function buildBlockResponse(query, qname, qtype) {
   const id = query.readUInt16BE(0);
   const header = Buffer.alloc(12);
@@ -243,12 +306,37 @@ function createRuntime() {
     });
   }
 
+  async function selfTest() {
+    if (!dnsServer || !runningPort) {
+      return {
+        ok: false,
+        running: false,
+        real: false,
+        error: "Start the house filter first, then test again.",
+      };
+    }
+    const tracker = "google-analytics.com";
+    const safe = "example.com";
+    const trackerAddress = await queryLocalA(tracker, runningPort);
+    const safeAddress = await queryLocalA(safe, runningPort);
+    const trackerBlocked = trackerAddress === "0.0.0.0";
+    const safeOpen = Boolean(safeAddress) && safeAddress !== "0.0.0.0";
+    return {
+      ...status(),
+      ok: true,
+      real: trackerBlocked && safeOpen,
+      tracker: { name: tracker, address: trackerAddress, blocked: trackerBlocked },
+      allowed: { name: safe, address: safeAddress, blocked: !safeOpen },
+    };
+  }
+
   loadLists();
   return {
     start,
     stop,
     status,
     setRules,
+    selfTest,
     hostsText: () => `${houseFilter.hostsFile(blockSet)}\n`,
     domainsText: () => `${houseFilter.domainFile(blockSet)}\n`,
   };

@@ -619,6 +619,19 @@ app.get("/api/privacy-dns/domains.txt", (req, res) => {
   res.type("text/plain").send(houseDnsRuntime.domainsText());
 });
 
+app.post("/api/privacy-dns/test", async (req, res) => {
+  if (houseDnsLib.isCloudHost()) return houseDnsUnavailableOnCloud(res);
+  if (!houseDnsLib.isHomeRequest(req)) {
+    return res.status(403).json({ ok: false, error: "Run the real-block test from a device on this home network." });
+  }
+  try {
+    const result = await houseDnsRuntime.selfTest();
+    return res.status(result.ok ? 200 : 409).json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, real: false, error: err.message || "DNS test failed." });
+  }
+});
+
 if (!houseDnsLib.isCloudHost()) {
   houseDnsRuntime.start({ port: Number(process.env.PRIVACY_DNS_PORT || 53) }).catch(() => {
     /* Port 53 usually needs admin. The Privacy Agent Start button reports this. */

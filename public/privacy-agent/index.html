@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-3" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-3" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-3" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-4" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-4" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-4" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -64,15 +64,15 @@
         <section class="privacy-week" aria-label="This week">
           <p class="privacy-stat">
             <span class="privacy-stat-value" id="statBlocked">0</span>
-            <span class="privacy-stat-label">Requests blocked</span>
+            <span class="privacy-stat-label">Practice blocked</span>
           </p>
           <p class="privacy-stat">
             <span class="privacy-stat-value" id="statReleased">0</span>
-            <span class="privacy-stat-label">Minimal claims released</span>
+            <span class="privacy-stat-label">Practice released</span>
           </p>
           <p class="privacy-stat">
             <span class="privacy-stat-value" id="statRevoked">0</span>
-            <span class="privacy-stat-label">Broker copies to take back</span>
+            <span class="privacy-stat-label">Practice revokes</span>
           </p>
         </section>
 
@@ -123,10 +123,13 @@
               </p>
               <p class="privacy-lead" id="houseActiveLists">Loading active lists…</p>
               <p class="privacy-kicker" id="houseFilterStateLabel">Filter off</p>
+              <p class="privacy-lead" id="houseLiveCount">Live house blocks: 0</p>
               <p class="privacy-lead" id="houseFilterStatus"></p>
+              <p class="privacy-lead" id="houseTestResult"></p>
               <ul class="privacy-log" id="houseLiveLog"></ul>
               <div class="privacy-actions">
                 <button type="button" class="primary-btn" id="startHouseFilterBtn">Protect this house</button>
+                <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test a real block</button>
                 <button type="button" class="ghost-btn hidden" id="stopHouseFilterBtn">Stop filter</button>
                 <button type="button" class="ghost-btn" id="downloadHostsBtn">Download hosts list</button>
                 <button type="button" class="ghost-btn" id="downloadDomainsBtn">Download domain list</button>
@@ -140,8 +143,8 @@
             </section>
 
             <section class="privacy-card">
-              <h2>Try a request</h2>
-              <p class="privacy-lead">Practice the agent. Each tap is a company asking for a piece of you.</p>
+              <h2>Practice a request</h2>
+              <p class="privacy-lead">This is a drill only. It does not block your Wi-Fi. Use This house for a real test.</p>
               <div class="privacy-scenarios" id="privacyScenarios"></div>
             </section>
           </div>
@@ -213,7 +216,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-3"></script>
-    <script defer src="./app.js?v=privacy-3"></script>
+    <script defer src="./house-filter.js?v=privacy-4"></script>
+    <script defer src="./app.js?v=privacy-4"></script>
   </body>
 </html>

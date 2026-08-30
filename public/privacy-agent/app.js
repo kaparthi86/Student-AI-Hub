@@ -303,8 +303,11 @@ function paintHouseSnapshot(data, extraMessage) {
   const running = Boolean(data?.running);
   window.__houseFilterRunning = running;
   const label = document.getElementById("houseFilterStateLabel");
-  if (label) label.textContent = running ? "Filter on — part of this agent" : "Filter off";
+  if (label) label.textContent = running ? "Filter on — live DNS" : "Filter off";
+  const liveCount = document.getElementById("houseLiveCount");
+  if (liveCount) liveCount.textContent = `Live house blocks: ${data?.stats?.blocked ?? 0}`;
   document.getElementById("startHouseFilterBtn")?.classList.toggle("hidden", running);
+  document.getElementById("testHouseFilterBtn")?.classList.toggle("hidden", !running);
   document.getElementById("stopHouseFilterBtn")?.classList.toggle("hidden", !running);
   renderHouseLiveLog(data?.recent);
   if (extraMessage) {
@@ -313,6 +316,7 @@ function paintHouseSnapshot(data, extraMessage) {
   }
   if (data?.cloud) {
     document.getElementById("startHouseFilterBtn")?.classList.add("hidden");
+    document.getElementById("testHouseFilterBtn")?.classList.add("hidden");
     document.getElementById("stopHouseFilterBtn")?.classList.add("hidden");
     setHouseStatus(
       "You are on the public site. Open Privacy Agent on your home computer running AI Hub to start the filter from this same screen."
@@ -419,6 +423,25 @@ function bindHouseFilter() {
       paintHouseSnapshot(data);
     } catch {
       setHouseStatus("Could not start the house filter from this page. Run AI Hub on this computer first.");
+    }
+  });
+  document.getElementById("testHouseFilterBtn")?.addEventListener("click", async () => {
+    const resultEl = document.getElementById("houseTestResult");
+    if (resultEl) resultEl.textContent = "Sending a real DNS query through the house filter…";
+    try {
+      const res = await fetch(houseApi("/test"), { method: "POST" });
+      const data = await res.json();
+      paintHouseSnapshot(data);
+      if (!resultEl) return;
+      if (data.real) {
+        resultEl.textContent = `Real block confirmed. ${data.tracker.name} → ${data.tracker.address}. ${data.allowed.name} still resolves to ${data.allowed.address}.`;
+        return;
+      }
+      resultEl.textContent =
+        data.error ||
+        `Not a real house block yet. Tracker ${data.tracker?.name || ""} → ${data.tracker?.address || "no answer"}.`;
+    } catch {
+      if (resultEl) resultEl.textContent = "Could not run the real DNS test. Is AI Hub running on this computer?";
     }
   });
   document.getElementById("stopHouseFilterBtn")?.addEventListener("click", async () => {
