@@ -235,6 +235,11 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Plan budgets and goals with clarity",
     tile_finance_cta: "Open ->",
+    tile_privacy_title: "Privacy Agent",
+    tile_privacy_sub: "Set house rules for what can leave",
+    tile_privacy_cta: "Open ->",
+    disclaimer_privacy:
+      "Privacy Agent is an on-device demo. It does not yet filter live internet traffic. Vault data stays in this browser.",
     soon_health_title: "Health AI",
     soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
     soon_health_note: "Not medical advice. Never for emergencies.",
@@ -550,6 +555,11 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Planifica presupuestos y metas con claridad",
     tile_finance_cta: "Abrir ->",
+    tile_privacy_title: "Privacy Agent",
+    tile_privacy_sub: "Decide que datos pueden salir",
+    tile_privacy_cta: "Abrir ->",
+    disclaimer_privacy:
+      "Privacy Agent es una demo en este dispositivo. Aun no filtra el trafico real. El vault se queda en este navegador.",
     soon_health_title: "Health AI",
     soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
     soon_health_note: "No es consejo medico. Nunca para emergencias.",
@@ -783,6 +793,11 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budget aur goals clear planning ke saath",
     tile_finance_cta: "Open ->",
+    tile_privacy_title: "Privacy Agent",
+    tile_privacy_sub: "House rules set karein ? kya bahar ja sakta hai",
+    tile_privacy_cta: "Open ->",
+    disclaimer_privacy:
+      "Privacy Agent is device par demo hai. Live internet filter abhi nahi. Vault is browser mein rehta hai.",
     soon_health_title: "Health AI",
     soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
     soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
@@ -1017,6 +1032,11 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budgets, goals clear ga plan cheyyandi",
     tile_finance_cta: "Open ->",
+    tile_privacy_title: "Privacy Agent",
+    tile_privacy_sub: "House rules petti emi bayataki vellalo decide cheyyandi",
+    tile_privacy_cta: "Open ->",
+    disclaimer_privacy:
+      "Privacy Agent ee device lo demo. Live internet filter inka ledu. Vault ee browser lo untundi.",
     soon_health_title: "Health AI",
     soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
     soon_health_note: "Medical advice kadu. Emergencies ki kadu.",
@@ -1276,6 +1296,10 @@ function applyTranslations() {
     tileFinanceTitle: "tile_finance_title",
     tileFinanceSub: "tile_finance_sub",
     tileFinanceCta: "tile_student_cta",
+    tilePrivacyBadge: "tile_student_badge",
+    tilePrivacyTitle: "tile_privacy_title",
+    tilePrivacySub: "tile_privacy_sub",
+    tilePrivacyCta: "tile_student_cta",
     soonNotifyBtn: "soon_notify",
     soonBackBtn: "soon_back",
     soonModalCloseBtn: "soon_close",
@@ -3817,9 +3841,9 @@ function desiredVerticalFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search || "");
     const raw = (params.get("vertical") || params.get("v") || "").toLowerCase();
-    if (raw === "student" || raw === "health" || raw === "finance") return raw;
+    if (raw === "student" || raw === "health" || raw === "finance" || raw === "privacy") return raw;
     const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "student" || hash === "health" || hash === "finance") return hash;
+    if (hash === "student" || hash === "health" || hash === "finance" || hash === "privacy") return hash;
   } catch {
     /* ignore */
   }
@@ -3889,6 +3913,10 @@ function showApp(session) {
   }
   if (desired === "finance") {
     showFinanceWorkspace();
+    return;
+  }
+  if (desired === "privacy") {
+    window.location.replace("./privacy-agent/");
     return;
   }
   showHubHome();
@@ -4044,6 +4072,7 @@ document.querySelectorAll(".hub-tile").forEach((tile) => {
     const vertical = tile.getAttribute("data-vertical");
     if (vertical === "student") showStudentWorkspace();
     else if (vertical === "finance") showFinanceWorkspace();
+    else if (vertical === "privacy") window.location.assign("./privacy-agent/");
     else if (vertical === "health") openSoonModal(vertical);
   });
 });
