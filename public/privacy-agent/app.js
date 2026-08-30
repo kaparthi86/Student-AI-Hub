@@ -97,7 +97,7 @@ async function renderAnalyticsBanner() {
     status.textContent = liveNow
       ? "The agent is between you and the ad internet on this device."
       : live
-        ? "The agent has your house list ready. Apply it on your phone or router to make the block real."
+        ? "The agent has your house list ready. Check this device to see if a tracker still loads here."
         : "The agent is standing down. Known tracker sites can load again.";
   }
 
@@ -201,7 +201,7 @@ function paintHouseSnapshot(data, extraMessage) {
     return;
   }
   if (mode === "network") {
-    setHouseStatus("Add the house list on your phone or router, then tap Check this network.");
+    setHouseStatus("Rules are saved here. Tap Check this device to see if a known tracker still loads in this browser.");
     return;
   }
   if (running) {
@@ -317,7 +317,7 @@ async function checkThisNetwork() {
   saveAnalytics(analytics);
   renderAnalyticsBanner();
   resultEl.textContent =
-    "This device can still reach google-analytics.com. Add the house list in AdGuard or NextDNS, set DNS, then check again.";
+    "This browser can still reach google-analytics.com. Tracking is not blocked here yet.";
 }
 
 function bindHouseFilter() {
@@ -325,10 +325,10 @@ function bindHouseFilter() {
     const url = blocklistUrl();
     try {
       await navigator.clipboard.writeText(url);
-      setHouseStatus("House list link copied. Paste it into AdGuard or NextDNS.");
+      setHouseStatus("House list link copied.");
     } catch {
       document.getElementById("houseBlocklistUrl")?.select();
-      setHouseStatus("Copy the house list link from the box, then paste it into AdGuard or NextDNS.");
+      setHouseStatus("Copy the house list link from the box.");
     }
   });
   document.getElementById("checkNetworkBtn")?.addEventListener("click", () => {

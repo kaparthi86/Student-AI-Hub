@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-11" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-11" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-11" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-12" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-12" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-12" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -99,11 +99,17 @@
             </p>
           </div>
           <p class="privacy-lead privacy-lead--tight" id="privacyNextStep"></p>
+          <div class="privacy-actions">
+            <button type="button" class="primary-btn" id="checkNetworkBtn">Check this device</button>
+            <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test local DNS</button>
+          </div>
+          <p class="privacy-lead privacy-lead--tight" id="houseTestResult"></p>
+          <p class="privacy-lead hidden" id="houseLiveCount">Live local blocks: 0</p>
         </section>
 
         <p class="privacy-lead privacy-lead--intro">
           This is your house privacy control. Disable tracking to stop known websites from building an ad profile on you.
-          Your rules stay on this device. The list goes on your phone or router so the block is real.
+          Your rules stay on this device.
         </p>
 
         <div class="privacy-main">
@@ -164,40 +170,33 @@
             <p class="privacy-lead privacy-lead--tight" id="houseActiveLists">Loading protected categories…</p>
           </section>
 
-          <section class="privacy-card" id="houseFilterCard">
-            <h2>Make it live on your network</h2>
+          <details class="privacy-card privacy-optional" id="houseFilterCard">
+            <summary>Optional: apply the list outside this app</summary>
+            <p class="privacy-lead">
+              A website cannot filter your whole phone. This list is here if you already use a DNS app or this computer’s
+              local filter.
+            </p>
             <p class="privacy-kicker" id="houseFilterStateLabel">Tracking allowed</p>
             <p class="privacy-lead" id="houseFilterStatus"></p>
             <p class="privacy-lead hidden" id="houseOffNote">
-              Tracking is allowed. The agent is not blocking tracker sites. If you already added the house list in
-              AdGuard or NextDNS, remove that custom list there too.
+              Tracking is allowed. The agent is not applying a list from this app.
             </p>
             <div class="privacy-live-controls hidden" id="houseLiveControls">
-              <label class="privacy-url-label" for="houseBlocklistUrl">Your house list</label>
+              <label class="privacy-url-label" for="houseBlocklistUrl">House list link</label>
               <div class="privacy-url-row">
                 <input id="houseBlocklistUrl" readonly />
                 <button type="button" class="primary-btn" id="copyBlocklistBtn">Copy link</button>
               </div>
-              <div class="privacy-actions">
-                <button type="button" class="primary-btn" id="checkNetworkBtn">Check this network</button>
-                <button type="button" class="ghost-btn hidden" id="testHouseFilterBtn">Test local DNS</button>
-              </div>
-              <p class="privacy-lead" id="houseTestResult"></p>
-              <p class="privacy-lead hidden" id="houseLiveCount">Live local blocks: 0</p>
               <ol class="privacy-steps hidden" id="houseNetworkSteps">
-                <li>Copy the house list link above.</li>
+                <li>Copy the house list link.</li>
                 <li>
-                  Phone (fastest): install
+                  If you use
                   <a href="https://adguard.com/en/adguard-ios/overview.html" target="_blank" rel="noopener">AdGuard</a>
                   or
-                  <a href="https://nextdns.io" target="_blank" rel="noopener">NextDNS</a>
-                  (free). Add this link as a custom filter or denylist.
+                  <a href="https://nextdns.io" target="_blank" rel="noopener">NextDNS</a>,
+                  add this link as a custom filter.
                 </li>
-                <li>
-                  Whole house: in NextDNS, add the same link, then set the router DNS to the addresses NextDNS shows
-                  you.
-                </li>
-                <li>Come back here and tap <strong>Check this network</strong>.</li>
+                <li>Come back and tap <strong>Check this device</strong> above.</li>
               </ol>
               <ol class="privacy-steps hidden" id="houseComputerSteps">
                 <li>This mode only works when AI Hub is running on this computer.</li>
@@ -206,7 +205,7 @@
                 <li>Tap <strong>Test local DNS</strong>. You want <code>google-analytics.com → 0.0.0.0</code>.</li>
               </ol>
             </div>
-          </section>
+          </details>
         </div>
 
         <footer class="app-fine-print" role="note" aria-label="Disclaimer">
@@ -253,7 +252,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-11"></script>
-    <script defer src="./app.js?v=privacy-11"></script>
+    <script defer src="./house-filter.js?v=privacy-12"></script>
+    <script defer src="./app.js?v=privacy-12"></script>
   </body>
 </html>
