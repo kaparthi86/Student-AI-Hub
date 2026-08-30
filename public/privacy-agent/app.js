@@ -1,5 +1,6 @@
 const STORAGE_KEY = "aihub.privacy-agent.v1";
 const DISCLAIMER_KEY = "aihub.privacy-agent.disclaimer.v2";
+const ANALYTICS_KEY = "aihub.privacy-agent.analytics.v1";
 
 const SCENARIOS = [
   {
@@ -83,6 +84,86 @@ function loadState() {
 
 function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadAnalytics() {
+  try {
+    return {
+      networkProtected: false,
+      localBlocked: 0,
+      ...JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "{}"),
+    };
+  } catch {
+    return { networkProtected: false, localBlocked: 0 };
+  }
+}
+
+function saveAnalytics(next) {
+  localStorage.setItem(ANALYTICS_KEY, JSON.stringify(next));
+}
+
+const analytics = loadAnalytics();
+
+function tickerChip(kind, name) {
+  const item = document.createElement("span");
+  item.className = "privacy-analytics-item";
+  item.dataset.kind = kind;
+  const tag = document.createElement("em");
+  tag.textContent = kind;
+  const label = document.createElement("span");
+  label.textContent = name;
+  item.append(tag, label);
+  return item;
+}
+
+function resetAnalytics() {
+  analytics.networkProtected = false;
+  analytics.localBlocked = 0;
+  saveAnalytics(analytics);
+}
+
+async function renderAnalyticsBanner() {
+  const trackingEl = document.getElementById("analyticsTracking");
+  const blockedEl = document.getElementById("analyticsBlocked");
+  const deviceEl = document.getElementById("analyticsDevice");
+  const track = document.getElementById("analyticsTrack");
+  const banner = document.getElementById("privacyAnalytics");
+  if (!trackingEl || !blockedEl || !deviceEl || !track) return;
+  const domains = Array.from(await currentBlockSet()).sort();
+  const tracking = domains.length;
+  const filterOn = Boolean(state.rules.filter && state.rules.filter !== "off");
+  if (!filterOn && analytics.networkProtected) {
+    analytics.networkProtected = false;
+    saveAnalytics(analytics);
+  }
+  const liveNow = filterOn && (analytics.networkProtected || analytics.localBlocked > 0);
+  const blocked = liveNow ? tracking : Number(analytics.localBlocked || 0);
+  const deviceLabel = liveNow ? "Protected" : filterOn ? "Armed" : "Exposed";
+  trackingEl.textContent = String(tracking);
+  blockedEl.textContent = String(blocked);
+  deviceEl.textContent = deviceLabel;
+  if (banner) banner.dataset.state = deviceLabel.toLowerCase();
+  const chips = [
+    tickerChip("list", `${tracking} tracker ${tracking === 1 ? "site" : "sites"}`),
+    tickerChip(blocked ? "blocked" : "wait", `${blocked} ${blocked === 1 ? "site blocked" : "sites blocked"} now`),
+    tickerChip(filterOn ? (state.rules.filter === "network" ? "on" : "armed") : "off", filterOn
+      ? state.rules.filter === "network"
+        ? "House filter on · network"
+        : "House filter on · this computer"
+      : "House filter off · list parked"),
+    tickerChip(
+      liveNow ? "blocked" : filterOn ? "armed" : "tracking",
+      liveNow ? "This device is protected" : filterOn ? "Armed — waiting for a live check" : "This device is exposed"
+    ),
+  ];
+  if (analytics.localBlocked > 0) {
+    chips.push(tickerChip("live", `${analytics.localBlocked} local DNS ${analytics.localBlocked === 1 ? "drop" : "drops"}`));
+  }
+  chips.push(tickerChip("list", "Practice drills stay out of this banner"));
+  domains.slice(0, 16).forEach((domain) => {
+    chips.push(tickerChip(liveNow ? "covered" : "tracking", domain));
+  });
+  track.replaceChildren(...chips, ...chips.map((chip) => chip.cloneNode(true)));
 }
 
 function decide(scenario, rules, vault) {
@@ -266,6 +347,7 @@ function persistAndPaint(lastDecision) {
   renderDecision(lastDecision);
   renderLog();
   renderHouseFilter();
+  renderAnalyticsBanner();
   syncHouseRules();
 }
 
@@ -331,6 +413,9 @@ function paintHouseSnapshot(data, extraMessage) {
   document.getElementById("houseComputerSteps")?.classList.toggle("hidden", mode !== "computer");
   document.getElementById("houseNetworkSteps")?.classList.toggle("hidden", mode !== "network");
   renderHouseLiveLog(mode === "computer" ? data?.recent : []);
+  analytics.localBlocked = running ? Number(data?.stats?.blocked || 0) : 0;
+  saveAnalytics(analytics);
+  renderAnalyticsBanner();
   if (extraMessage) {
     setHouseStatus(extraMessage);
     return;
@@ -460,8 +545,14 @@ async function checkThisNetwork() {
   if (tracker === "error" || tracker === "timeout") {
     resultEl.textContent =
       "Live check passed. This device cannot load google-analytics.com, so the house list is working on this network.";
+    analytics.networkProtected = true;
+    saveAnalytics(analytics);
+    renderAnalyticsBanner();
     return;
   }
+  analytics.networkProtected = false;
+  saveAnalytics(analytics);
+  renderAnalyticsBanner();
   resultEl.textContent =
     "This device can still reach google-analytics.com. Add the house list in AdGuard or NextDNS, set DNS, then check again.";
 }
@@ -600,6 +691,7 @@ function bindVault() {
     state.rules = next.rules;
     state.vault = next.vault;
     state.log = [];
+    resetAnalytics();
     persistAndPaint(null);
     applyFilterChoice("off");
   });

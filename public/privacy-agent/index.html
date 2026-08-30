@@ -19,9 +19,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../styles.css?v=privacy-6" />
-    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-6" />
-    <link rel="stylesheet" href="./styles.css?v=privacy-6" />
+    <link rel="stylesheet" href="../styles.css?v=privacy-7" />
+    <link rel="stylesheet" href="../world-class-overrides.css?v=privacy-7" />
+    <link rel="stylesheet" href="./styles.css?v=privacy-7" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -55,6 +55,26 @@
             </div>
           </div>
         </header>
+
+        <section class="privacy-analytics" id="privacyAnalytics" data-state="exposed" aria-label="House analytics">
+          <div class="privacy-analytics-stats">
+            <p>
+              <strong id="analyticsTracking">0</strong>
+              <span>sites tracking</span>
+            </p>
+            <p>
+              <strong id="analyticsBlocked">0</strong>
+              <span>blocked now</span>
+            </p>
+            <p>
+              <strong id="analyticsDevice">—</strong>
+              <span>this device</span>
+            </p>
+          </div>
+          <div class="privacy-analytics-ticker" aria-hidden="true">
+            <div class="privacy-analytics-track" id="analyticsTrack"></div>
+          </div>
+        </section>
 
         <p class="privacy-lead" style="margin-top: 0">
           Set house rules, turn the filter on, and put the same list on your phone or router. Then check this network.
@@ -240,7 +260,7 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="../config.js"></script>
-    <script defer src="./house-filter.js?v=privacy-6"></script>
-    <script defer src="./app.js?v=privacy-6"></script>
+    <script defer src="./house-filter.js?v=privacy-7"></script>
+    <script defer src="./app.js?v=privacy-7"></script>
   </body>
 </html>
