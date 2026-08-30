@@ -8,9 +8,10 @@
   const LIST_IDS = ["always", "advertising", "health", "brokers"];
 
   function enabledLists(rules) {
-    const next = ["always", "brokers"];
+    const next = ["always"];
     if ((rules || {}).shopping === "never") next.push("advertising");
     if ((rules || {}).health !== "allow") next.push("health");
+    if ((rules || {}).identity !== "checkout_ok") next.push("brokers");
     return unique(next);
   }
 
