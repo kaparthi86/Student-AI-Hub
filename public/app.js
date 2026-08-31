@@ -223,6 +223,7 @@ const I18N = {
     resume_student: "Resume Student AI",
     resume_finance: "Resume Finance AI",
     live_web_unavailable: "Live web needs a search key on the server",
+    visual_kicker: "Visual",
     auth_brand_kicker: "Learning, health, and money - in one Hub",
     hub_brand: "AI Hub",
     hub_tagline: "Focused AI for learning, health, and money",
@@ -2840,11 +2841,27 @@ function sanitizeHubChartItem(row) {
   return { label, value: clampChartMoney(row.value), tone };
 }
 
+function sanitizeHubTextItem(row, textMax = 140) {
+  if (!row || typeof row !== "object") return null;
+  const label = cleanChartLabel(row.label, 40);
+  const text = cleanChartLabel(row.text || row.detail || row.body, textMax);
+  if (!label && !text) return null;
+  return { label: label || text.slice(0, 28), text: text || label };
+}
+
 function sanitizeHubChartSpec(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const title = cleanChartLabel(raw.title, 80);
   const kicker = cleanChartLabel(raw.kicker, 48);
   const note = cleanChartLabel(raw.note, 180);
+  const steps = Array.isArray(raw.steps)
+    ? raw.steps.map((row) => sanitizeHubTextItem(row, 140)).filter(Boolean).slice(0, 6)
+    : [];
+  const compare = Array.isArray(raw.compare)
+    ? raw.compare.map((row) => sanitizeHubTextItem(row, 120)).filter(Boolean).slice(0, 3)
+    : [];
+  if (steps.length) return { kind: "steps", title, kicker: kicker || t("visual_kicker"), note, steps };
+  if (compare.length >= 2) return { kind: "compare", title, kicker: kicker || t("visual_kicker"), note, compare };
   let hero = null;
   if (raw.hero && typeof raw.hero === "object") {
     const label = cleanChartLabel(raw.hero.label, 48);
@@ -2859,7 +2876,7 @@ function sanitizeHubChartSpec(raw) {
     ? raw.bars.map(sanitizeHubChartItem).filter(Boolean).slice(0, 8)
     : [];
   if (!hero && !mix.length && !bars.length) return null;
-  return { title, kicker, note, hero, mix, bars };
+  return { kind: "chart", title, kicker, note, hero, mix, bars };
 }
 
 function parseJsonObjectLoose(raw) {
@@ -2966,9 +2983,54 @@ function appendChartBars(parent, bars) {
   parent.appendChild(list);
 }
 
+function appendVisualSteps(parent, steps) {
+  if (!steps.length) return;
+  const list = document.createElement("ol");
+  list.className = "hub-visual-steps";
+  steps.forEach((row, i) => {
+    const item = document.createElement("li");
+    const num = document.createElement("span");
+    num.className = "hub-visual-step-n";
+    num.textContent = String(i + 1);
+    const body = document.createElement("div");
+    body.className = "hub-visual-step-body";
+    const lab = document.createElement("strong");
+    lab.textContent = row.label;
+    body.appendChild(lab);
+    if (row.text && row.text !== row.label) {
+      const p = document.createElement("p");
+      p.textContent = row.text;
+      body.appendChild(p);
+    }
+    item.appendChild(num);
+    item.appendChild(body);
+    list.appendChild(item);
+  });
+  parent.appendChild(list);
+}
+
+function appendVisualCompare(parent, compare) {
+  if (compare.length < 2) return;
+  const grid = document.createElement("div");
+  grid.className = "hub-visual-compare";
+  compare.forEach((row) => {
+    const card = document.createElement("article");
+    const lab = document.createElement("h4");
+    lab.textContent = row.label;
+    card.appendChild(lab);
+    if (row.text && row.text !== row.label) {
+      const p = document.createElement("p");
+      p.textContent = row.text;
+      card.appendChild(p);
+    }
+    grid.appendChild(card);
+  });
+  parent.appendChild(grid);
+}
+
 function buildHubChartElement(spec) {
   const card = document.createElement("article");
-  card.className = "hub-chart";
+  card.className = spec.kind === "chart" ? "hub-chart" : `hub-chart hub-chart--${spec.kind || "study"}`;
   if (spec.kicker) {
     const kicker = document.createElement("p");
     kicker.className = "hub-chart-kicker";
@@ -2980,6 +3042,26 @@ function buildHubChartElement(spec) {
     title.className = "hub-chart-title";
     title.textContent = spec.title;
     card.appendChild(title);
+  }
+  if (spec.kind === "steps") {
+    appendVisualSteps(card, spec.steps || []);
+    if (spec.note) {
+      const note = document.createElement("p");
+      note.className = "hub-chart-note";
+      note.textContent = spec.note;
+      card.appendChild(note);
+    }
+    return card;
+  }
+  if (spec.kind === "compare") {
+    appendVisualCompare(card, spec.compare || []);
+    if (spec.note) {
+      const note = document.createElement("p");
+      note.className = "hub-chart-note";
+      note.textContent = spec.note;
+      card.appendChild(note);
+    }
+    return card;
   }
   if (spec.hero) {
     const hero = document.createElement("div");
@@ -3064,16 +3146,20 @@ function snapshotGoalChart(goal) {
 function fillAssistantBubbleBody(bubble, text, extra = {}) {
   bubble.querySelectorAll(".bubble-text, .hub-chart").forEach((el) => el.remove());
   const extracted = extractHubCharts(text);
-  const charts = [];
+  const pendingCharts = [];
   const pending = extra && extra.charts;
   if (Array.isArray(pending)) {
     pending.forEach((spec) => {
       const clean = sanitizeHubChartSpec(spec);
-      if (clean) charts.push(clean);
+      if (clean) pendingCharts.push(clean);
     });
   }
-  if (!charts.length) charts.push(...extracted.charts);
-  charts.forEach((spec) => bubble.appendChild(buildHubChartElement(spec)));
+  const extractedCharts = extracted.charts;
+  const usePending = pendingCharts.length > 0;
+  const visuals = usePending ? pendingCharts : extractedCharts;
+  if (usePending) {
+    visuals.forEach((spec) => bubble.appendChild(buildHubChartElement(spec)));
+  }
   const rendered = renderAssistantHtml(extracted.markdown);
   if ("plain" in rendered) {
     if (rendered.plain) {
@@ -3088,6 +3174,9 @@ function fillAssistantBubbleBody(bubble, text, extra = {}) {
     body.innerHTML = rendered.html;
     bubble.appendChild(body);
     enhanceMarkdownCodeBlocks(body);
+  }
+  if (!usePending) {
+    visuals.forEach((spec) => bubble.appendChild(buildHubChartElement(spec)));
   }
   wireAssistantCopy(bubble, extracted.markdown);
   mountAssistantFeedback(bubble, extracted.markdown);

@@ -1238,6 +1238,7 @@ function responseContractInstruction(mode) {
       "Notebook contract:",
       "8) Use only provided source materials; otherwise say Not in document.",
       "9) Prefer steps and bullets grounded in the notes; name the source file when useful.",
+      "10) If the notes clearly contain a process or a contrast, you may add one hub-chart fence grounded only in those notes (same JSON kinds as Ask: chart, steps, or compare).",
     ].join(" ");
   }
   // learn / Ask
@@ -1247,6 +1248,7 @@ function responseContractInstruction(mode) {
     "8) Teach the smallest useful explanation after the direct answer - typically under ~180 words unless the student asks for depth.",
     "9) If the topic is multi-step, use numbered steps with one idea each.",
     "10) If a common misconception exists, call it out in one short line.",
+    "11) If a quantity comparison, a 3-6 step process, or a 2-3 item contrast would make the idea clearer, add exactly one fenced block tagged hub-chart after the prose. JSON only, one kind: {\"kind\":\"chart\",\"title\":\"...\",\"bars\":[{\"label\":\"A\",\"value\":2}]} or {\"kind\":\"steps\",\"title\":\"...\",\"steps\":[{\"label\":\"Name\",\"text\":\"One sentence.\"}]} or {\"kind\":\"compare\",\"title\":\"...\",\"compare\":[{\"label\":\"A\",\"text\":\"...\"},{\"label\":\"B\",\"text\":\"...\"}]}. At most 6 steps or 3 compare cards. Skip the fence when words are enough. No HTML, images, or mermaid.",
   ].join(" ");
 }
 
