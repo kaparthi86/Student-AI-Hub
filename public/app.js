@@ -235,11 +235,9 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Plan budgets and goals with clarity",
     tile_finance_cta: "Open ->",
-    tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "Disable website tracking for your phone and Wi-Fi",
-    tile_privacy_cta: "Open ->",
+    hub_privacy_note: "AI Hub does not sell your data or show ads from your chats.",
     disclaimer_privacy:
-      "Privacy Agent sits between you and the ad internet. It blocks known tracker domains when you apply the house list on your phone, router, or this computer.",
+      "AI Hub does not sell your personal data or show advertising based on your chats.",
     soon_health_title: "Health AI",
     soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
     soon_health_note: "Not medical advice. Never for emergencies.",
@@ -555,11 +553,9 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Planifica presupuestos y metas con claridad",
     tile_finance_cta: "Abrir ->",
-    tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "Decide que datos pueden salir",
-    tile_privacy_cta: "Abrir ->",
+    hub_privacy_note: "AI Hub no vende tus datos ni muestra anuncios a partir de tus chats.",
     disclaimer_privacy:
-      "Privacy Agent bloquea dominios de rastreo conocidos cuando aplicas la lista en tu telefono, router o esta computadora.",
+      "AI Hub no vende tus datos personales ni muestra publicidad basada en tus chats.",
     soon_health_title: "Health AI",
     soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
     soon_health_note: "No es consejo medico. Nunca para emergencias.",
@@ -793,11 +789,9 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budget aur goals clear planning ke saath",
     tile_finance_cta: "Open ->",
-    tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "House rules set karein ? kya bahar ja sakta hai",
-    tile_privacy_cta: "Open ->",
+    hub_privacy_note: "AI Hub aapka data nahi bechta aur chats se ads nahi dikhata.",
     disclaimer_privacy:
-      "Privacy Agent known tracker domains ko block karta hai jab aap house list phone, router, ya is computer par apply karte hain.",
+      "AI Hub personal data nahi bechta aur chats par ads nahi dikhata.",
     soon_health_title: "Health AI",
     soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
     soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
@@ -1032,11 +1026,9 @@ const I18N = {
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budgets, goals clear ga plan cheyyandi",
     tile_finance_cta: "Open ->",
-    tile_privacy_title: "Privacy Agent",
-    tile_privacy_sub: "House rules petti emi bayataki vellalo decide cheyyandi",
-    tile_privacy_cta: "Open ->",
+    hub_privacy_note: "AI Hub mee data ammukodu, chats nundi ads chupinchadu.",
     disclaimer_privacy:
-      "Privacy Agent known tracker domains ni block chestundi when you apply the house list on your phone, router, or this computer.",
+      "AI Hub personal data ammukodu, chats meeda ads chupinchadu.",
     soon_health_title: "Health AI",
     soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
     soon_health_note: "Medical advice kadu. Emergencies ki kadu.",
@@ -1296,10 +1288,6 @@ function applyTranslations() {
     tileFinanceTitle: "tile_finance_title",
     tileFinanceSub: "tile_finance_sub",
     tileFinanceCta: "tile_student_cta",
-    tilePrivacyBadge: "tile_student_badge",
-    tilePrivacyTitle: "tile_privacy_title",
-    tilePrivacySub: "tile_privacy_sub",
-    tilePrivacyCta: "tile_student_cta",
     soonNotifyBtn: "soon_notify",
     soonBackBtn: "soon_back",
     soonModalCloseBtn: "soon_close",
@@ -1425,7 +1413,7 @@ function applyTranslations() {
       hintList.appendChild(li);
     });
   }
-  document.querySelectorAll(".fine-print-line[data-i18n], .brand-kicker[data-i18n]").forEach((el) => {
+  document.querySelectorAll(".fine-print-line[data-i18n], .brand-kicker[data-i18n], [data-i18n='hub_privacy_note']").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (key) el.textContent = t(key);
   });
@@ -3841,9 +3829,9 @@ function desiredVerticalFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search || "");
     const raw = (params.get("vertical") || params.get("v") || "").toLowerCase();
-    if (raw === "student" || raw === "health" || raw === "finance" || raw === "privacy") return raw;
+    if (raw === "student" || raw === "health" || raw === "finance") return raw;
     const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "student" || hash === "health" || hash === "finance" || hash === "privacy") return hash;
+    if (hash === "student" || hash === "health" || hash === "finance") return hash;
   } catch {
     /* ignore */
   }
@@ -3913,10 +3901,6 @@ function showApp(session) {
   }
   if (desired === "finance") {
     showFinanceWorkspace();
-    return;
-  }
-  if (desired === "privacy") {
-    window.location.replace("./privacy-agent/");
     return;
   }
   showHubHome();
@@ -4072,7 +4056,6 @@ document.querySelectorAll(".hub-tile").forEach((tile) => {
     const vertical = tile.getAttribute("data-vertical");
     if (vertical === "student") showStudentWorkspace();
     else if (vertical === "finance") showFinanceWorkspace();
-    else if (vertical === "privacy") window.location.assign("./privacy-agent/");
     else if (vertical === "health") openSoonModal(vertical);
   });
 });

@@ -519,6 +519,10 @@ app.use("/api", (req, res, next) => {
   if (req.method === "GET" && req.path === "/health") return next();
   return apiLimiter(req, res, next);
 });
+/** Privacy Agent is no longer a Hub product. Send old bookmarks to the Hub home. */
+app.use("/privacy-agent", (_req, res) => {
+  res.redirect(302, "/");
+});
 app.use(
   express.static(publicDir, {
     setHeaders(res, filePath) {
@@ -544,12 +548,6 @@ app.get("/", (_req, res) => {
 app.get("/index.html", (_req, res) => {
   res.sendFile("index.html", { root: publicDir });
 });
-app.get("/privacy-agent", (_req, res) => {
-  res.redirect(302, "/privacy-agent/");
-});
-app.get("/privacy-agent/", (_req, res) => {
-  res.sendFile("privacy-agent/index.html", { root: publicDir });
-});
 
 const houseDnsLib = require("./privacy-agent-dns/lib");
 const houseDnsRuntime = houseDnsLib.createRuntime();
@@ -559,7 +557,7 @@ function houseDnsUnavailableOnCloud(res) {
     ok: false,
     cloud: true,
     error:
-      "The house filter has to run on a computer in your home, not on the public website. Open AI Hub on that computer (http://localhost:3001/privacy-agent/) and tap Protect this house.",
+      "The house filter has to run on a computer in your home, not on the public website.",
   });
 }
 
