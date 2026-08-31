@@ -2926,7 +2926,7 @@ function appendChartMix(parent, mix) {
     const swatch = document.createElement("span");
     swatch.className = `hub-chart-swatch hub-chart-seg is-${row.tone || "neutral"}`;
     const name = document.createElement("span");
-    name.textContent = `${row.label} · ${Math.round(pctOf(row.value, sum))}%`;
+    name.textContent = `${row.label} (${Math.round(pctOf(row.value, sum))}%)`;
     const val = document.createElement("span");
     val.className = "hub-chart-legend-value";
     val.textContent = formatMoney(row.value);
@@ -3076,11 +3076,13 @@ function fillAssistantBubbleBody(bubble, text, extra = {}) {
   charts.forEach((spec) => bubble.appendChild(buildHubChartElement(spec)));
   const rendered = renderAssistantHtml(extracted.markdown);
   if ("plain" in rendered) {
-    const pre = document.createElement("pre");
-    pre.className = "bubble-text";
-    pre.textContent = rendered.plain;
-    bubble.appendChild(pre);
-  } else {
+    if (rendered.plain) {
+      const pre = document.createElement("pre");
+      pre.className = "bubble-text";
+      pre.textContent = rendered.plain;
+      bubble.appendChild(pre);
+    }
+  } else if (String(rendered.html || "").trim()) {
     const body = document.createElement("div");
     body.className = "bubble-text bubble-md";
     body.innerHTML = rendered.html;
