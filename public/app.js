@@ -187,6 +187,7 @@ let financeBudget = {
   ],
 };
 let financeGoals = [];
+let pendingFinanceChart = null;
 let financeDisclaimerAckThisSession = false;
 /** @type {File[]} */
 let notebookFiles = [];
@@ -321,6 +322,16 @@ const I18N = {
     finance_split_needs: "Needs",
     finance_split_wants: "Wants",
     finance_split_aside: "Set aside",
+    finance_split_over: "Over spend",
+    finance_chart_month: "This month",
+    finance_chart_kicker: "Your plan",
+    finance_chart_share: "Share of take-home",
+    finance_chart_goal: "Savings goal",
+    finance_goal_monthly_short: "Per month",
+    finance_goal_vs_left: "Monthly save vs leftover",
+    finance_goal_fits: "This monthly amount fits in leftover.",
+    finance_goal_tight_fit: "This monthly amount uses most of leftover.",
+    finance_goal_needs_room: "Leftover is smaller than this monthly amount.",
     finance_cat_housing: "Housing",
     finance_cat_food: "Food",
     finance_cat_transport: "Transport",
@@ -2269,7 +2280,7 @@ function renderThreadFromHistory(container, history, mode, studyMode) {
     if (LEARN_VISION_ENABLED && role === "user" && item.imageMime && item.imageBase64) {
       imageDataUrl = `data:${item.imageMime};base64,${item.imageBase64}`;
     }
-    const row = appendBubble(container, role, content, { mode, studyMode, imageDataUrl });
+    const row = appendBubble(container, role, content, { mode, studyMode, imageDataUrl, charts: item.charts });
     if (role === "assistant" && item.sources) mountBubbleSources(row.bubble, item.sources);
   }
 }
@@ -2351,6 +2362,9 @@ function polishModelMarkdown(text) {
 
   const fences = [];
   s = s.replace(/```[\s\S]*?```/g, (block) => {
+    if (/^```(?:hub-chart|hubchart)\b/i.test(String(block).trim())) {
+      return "\n";
+    }
     const key = `@@CODEFENCE${fences.length}@@`;
     fences.push(block);
     return key;
@@ -2793,9 +2807,274 @@ function mountAssistantFeedback(bubble, rawText) {
   });
 }
 
-function fillAssistantBubbleBody(bubble, text) {
-  bubble.querySelectorAll(".bubble-text").forEach((el) => el.remove());
-  const rendered = renderAssistantHtml(text);
+const HUB_CHART_TONES = new Set(["ok", "tight", "over", "neutral", "need", "want", "save"]);
+
+function clampChartMoney(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.max(-1e9, Math.min(1e9, x));
+}
+
+function cleanChartLabel(raw, max = 40) {
+  return String(raw || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u001f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+function leftoverTone(income, leftover) {
+  if (!income) return "neutral";
+  if (leftover < 0) return "over";
+  if (leftover / income < 0.08) return "tight";
+  return "ok";
+}
+
+function sanitizeHubChartItem(row) {
+  if (!row || typeof row !== "object") return null;
+  const label = cleanChartLabel(row.label);
+  if (!label) return null;
+  let tone = String(row.tone || "neutral").toLowerCase();
+  if (!HUB_CHART_TONES.has(tone)) tone = "neutral";
+  return { label, value: clampChartMoney(row.value), tone };
+}
+
+function sanitizeHubChartSpec(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const title = cleanChartLabel(raw.title, 80);
+  const kicker = cleanChartLabel(raw.kicker, 48);
+  const note = cleanChartLabel(raw.note, 180);
+  let hero = null;
+  if (raw.hero && typeof raw.hero === "object") {
+    const label = cleanChartLabel(raw.hero.label, 48);
+    let tone = String(raw.hero.tone || "neutral").toLowerCase();
+    if (!HUB_CHART_TONES.has(tone)) tone = "neutral";
+    if (label) hero = { label, value: clampChartMoney(raw.hero.value), tone };
+  }
+  const mix = Array.isArray(raw.mix)
+    ? raw.mix.map(sanitizeHubChartItem).filter(Boolean).slice(0, 5)
+    : [];
+  const bars = Array.isArray(raw.bars)
+    ? raw.bars.map(sanitizeHubChartItem).filter(Boolean).slice(0, 8)
+    : [];
+  if (!hero && !mix.length && !bars.length) return null;
+  return { title, kicker, note, hero, mix, bars };
+}
+
+function parseJsonObjectLoose(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    /* continue */
+  }
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function extractHubCharts(text) {
+  const charts = [];
+  const markdown = String(text ?? "").replace(/```(?:hub-chart|hubchart)\s*([\s\S]*?)```/gi, (_, body) => {
+    const spec = sanitizeHubChartSpec(parseJsonObjectLoose(body));
+    if (spec) charts.push(spec);
+    return "\n";
+  });
+  return { markdown, charts };
+}
+
+function takePendingFinanceChart() {
+  const spec = pendingFinanceChart;
+  pendingFinanceChart = null;
+  return spec;
+}
+
+function pctOf(part, whole) {
+  if (!whole) return 0;
+  return Math.max(0, Math.min(100, (Math.abs(part) / Math.abs(whole)) * 100));
+}
+
+function appendChartMix(parent, mix) {
+  const sum = mix.reduce((n, row) => n + Math.abs(row.value), 0);
+  if (!mix.length || sum <= 0) return;
+  const track = document.createElement("div");
+  track.className = "hub-chart-track";
+  track.setAttribute("role", "img");
+  track.setAttribute("aria-label", mix.map((row) => `${row.label} ${formatMoney(row.value)}`).join(", "));
+  mix.forEach((row) => {
+    const width = pctOf(row.value, sum);
+    if (width < 0.4) return;
+    const seg = document.createElement("span");
+    seg.className = `hub-chart-seg is-${row.tone || "neutral"}`;
+    seg.style.width = `${width}%`;
+    track.appendChild(seg);
+  });
+  parent.appendChild(track);
+  const legend = document.createElement("ul");
+  legend.className = "hub-chart-legend";
+  mix.forEach((row) => {
+    const li = document.createElement("li");
+    const swatch = document.createElement("span");
+    swatch.className = `hub-chart-swatch hub-chart-seg is-${row.tone || "neutral"}`;
+    const name = document.createElement("span");
+    name.textContent = `${row.label} · ${Math.round(pctOf(row.value, sum))}%`;
+    const val = document.createElement("span");
+    val.className = "hub-chart-legend-value";
+    val.textContent = formatMoney(row.value);
+    li.appendChild(swatch);
+    li.appendChild(name);
+    li.appendChild(val);
+    legend.appendChild(li);
+  });
+  parent.appendChild(legend);
+}
+
+function appendChartBars(parent, bars) {
+  if (!bars.length) return;
+  const scale = Math.max(...bars.map((row) => Math.abs(row.value)), 1);
+  const list = document.createElement("div");
+  list.className = "hub-chart-bars";
+  bars.forEach((row) => {
+    const item = document.createElement("div");
+    item.className = "hub-chart-row";
+    const lab = document.createElement("span");
+    lab.className = "hub-chart-row-label";
+    lab.textContent = row.label;
+    const val = document.createElement("span");
+    val.className = "hub-chart-row-value";
+    val.textContent = formatMoney(row.value);
+    const track = document.createElement("div");
+    track.className = "hub-chart-bar-track";
+    const fill = document.createElement("span");
+    fill.className = `hub-chart-bar-fill is-${row.tone || "neutral"}`;
+    fill.style.width = `${pctOf(row.value, scale)}%`;
+    track.appendChild(fill);
+    item.appendChild(lab);
+    item.appendChild(val);
+    item.appendChild(track);
+    list.appendChild(item);
+  });
+  parent.appendChild(list);
+}
+
+function buildHubChartElement(spec) {
+  const card = document.createElement("article");
+  card.className = "hub-chart";
+  if (spec.kicker) {
+    const kicker = document.createElement("p");
+    kicker.className = "hub-chart-kicker";
+    kicker.textContent = spec.kicker;
+    card.appendChild(kicker);
+  }
+  if (spec.title) {
+    const title = document.createElement("h3");
+    title.className = "hub-chart-title";
+    title.textContent = spec.title;
+    card.appendChild(title);
+  }
+  if (spec.hero) {
+    const hero = document.createElement("div");
+    hero.className = "hub-chart-hero";
+    const lab = document.createElement("span");
+    lab.className = "hub-chart-hero-label";
+    lab.textContent = spec.hero.label;
+    const val = document.createElement("span");
+    val.className = `hub-chart-hero-value is-${spec.hero.tone || "neutral"}`;
+    val.textContent = formatMoney(spec.hero.value);
+    hero.appendChild(lab);
+    hero.appendChild(val);
+    card.appendChild(hero);
+  }
+  appendChartMix(card, spec.mix || []);
+  appendChartBars(card, spec.bars || []);
+  if (spec.note) {
+    const note = document.createElement("p");
+    note.className = "hub-chart-note";
+    note.textContent = spec.note;
+    card.appendChild(note);
+  }
+  return card;
+}
+
+function snapshotBudgetChart() {
+  const { income, leftover, needs, wants, aside } = budgetTotals();
+  if (!income) return null;
+  const bars = (financeBudget.categories || [])
+    .map((cat) => ({ label: categoryLabel(cat), value: parseMoney(cat.amount), tone: "need" }))
+    .filter((row) => row.value > 0)
+    .slice(0, 8);
+  const tone = leftoverTone(income, leftover);
+  const mix = [
+    { label: t("finance_split_needs"), value: needs, tone: "need" },
+    { label: t("finance_split_wants"), value: wants, tone: "want" },
+    leftover < 0
+      ? { label: t("finance_split_over"), value: Math.abs(leftover), tone: "over" }
+      : { label: t("finance_split_aside"), value: aside, tone: "save" },
+  ].filter((row) => row.value > 0);
+  return sanitizeHubChartSpec({
+    title: t("finance_chart_month"),
+    kicker: t("finance_chart_kicker"),
+    hero: { label: t("finance_leftover_kicker"), value: leftover, tone },
+    mix,
+    bars,
+    note:
+      tone === "over"
+        ? t("finance_leftover_over")
+        : tone === "tight"
+          ? t("finance_leftover_tight")
+          : t("finance_leftover_ok"),
+  });
+}
+
+function snapshotGoalChart(goal) {
+  if (!goal) return null;
+  const monthly = goal.months ? goal.target / goal.months : goal.target;
+  const { leftover, income } = budgetTotals();
+  const bars = [{ label: t("finance_goal_monthly_short"), value: monthly, tone: "save" }];
+  let note = "";
+  if (income) {
+    bars.unshift({
+      label: t("finance_leftover_kicker"),
+      value: leftover,
+      tone: leftover < monthly ? "over" : "save",
+    });
+    if (leftover < 0) note = t("finance_leftover_over");
+    else if (leftover < monthly) note = t("finance_goal_needs_room");
+    else if (monthly / leftover > 0.7) note = t("finance_goal_tight_fit");
+    else note = t("finance_goal_fits");
+  }
+  return sanitizeHubChartSpec({
+    title: goal.name,
+    kicker: t("finance_chart_goal"),
+    hero: { label: t("finance_goal_monthly_short"), value: monthly, tone: "save" },
+    bars,
+    note,
+  });
+}
+
+function fillAssistantBubbleBody(bubble, text, extra = {}) {
+  bubble.querySelectorAll(".bubble-text, .hub-chart").forEach((el) => el.remove());
+  const extracted = extractHubCharts(text);
+  const charts = [];
+  const pending = extra && extra.charts;
+  if (Array.isArray(pending)) {
+    pending.forEach((spec) => {
+      const clean = sanitizeHubChartSpec(spec);
+      if (clean) charts.push(clean);
+    });
+  }
+  if (!charts.length) charts.push(...extracted.charts);
+  charts.forEach((spec) => bubble.appendChild(buildHubChartElement(spec)));
+  const rendered = renderAssistantHtml(extracted.markdown);
   if ("plain" in rendered) {
     const pre = document.createElement("pre");
     pre.className = "bubble-text";
@@ -2808,9 +3087,9 @@ function fillAssistantBubbleBody(bubble, text) {
     bubble.appendChild(body);
     enhanceMarkdownCodeBlocks(body);
   }
-  wireAssistantCopy(bubble, text);
-  mountAssistantFeedback(bubble, text);
-  mountAssistantPractice(bubble, text);
+  wireAssistantCopy(bubble, extracted.markdown);
+  mountAssistantFeedback(bubble, extracted.markdown);
+  mountAssistantPractice(bubble, extracted.markdown);
 }
 
 /** @returns {{ wrap: HTMLDivElement, bubble: HTMLDivElement }} */
@@ -2868,7 +3147,7 @@ function appendBubble(container, role, text, meta = {}) {
     head.appendChild(label);
     head.appendChild(copyBtn);
     bubble.appendChild(head);
-    fillAssistantBubbleBody(bubble, text);
+    fillAssistantBubbleBody(bubble, text, meta);
   }
 
   wrap.appendChild(bubble);
@@ -2935,9 +3214,9 @@ function startStreamingAssistantBubble(container) {
       }
       scroll();
     },
-    finalize(markdownRaw) {
+    finalize(markdownRaw, extra = {}) {
       body.remove();
-      fillAssistantBubbleBody(bubble, markdownRaw);
+      fillAssistantBubbleBody(bubble, markdownRaw, extra);
       scroll();
     },
     showError(markdownRaw) {
@@ -3216,6 +3495,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     showToast(t("toast_analyze_first"));
     return false;
   }
+  const financeCharts = mode === "finance" && pendingFinanceChart ? [pendingFinanceChart] : [];
 
   appendBubble(threadEl, "user", trimmed, { imageDataUrl: attach?.dataUrl });
 
@@ -3360,7 +3640,11 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
           /* keep default */
         }
       }
-      const assistantBubble = appendBubble(threadEl, "assistant", output, { mode, studyMode: normalizeStudyMode(studyMode) });
+      const assistantBubble = appendBubble(threadEl, "assistant", output, {
+        mode,
+        studyMode: normalizeStudyMode(studyMode),
+        charts: financeCharts,
+      });
       if (jsonSources.length) mountBubbleSources(assistantBubble.bubble, jsonSources);
       const userRow = { role: "user", content: trimmed };
       if (attach) {
@@ -3370,6 +3654,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       history.push(userRow);
       const assistantRow = { role: "assistant", content: output };
       if (jsonSources.length) assistantRow.sources = jsonSources;
+      if (financeCharts.length) {
+        takePendingFinanceChart();
+        assistantRow.charts = financeCharts;
+      }
       history.push(assistantRow);
       saveSessionState();
       if (mode === "learn") syncLearnLayout();
@@ -3395,7 +3683,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       t("stream_empty_fallback");
     const streamPlainOnly = !String(fullOut || "").trim();
     streamUi.setStreamingText(finalText, { plain: streamPlainOnly });
-    streamUi.finalize(finalText);
+    streamUi.finalize(finalText, { charts: financeCharts });
     if (streamSources.length) mountBubbleSources(streamUi.bubble, streamSources);
 
     const userRow = { role: "user", content: trimmed };
@@ -3406,6 +3694,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     history.push(userRow);
     const assistantRow = { role: "assistant", content: finalText };
     if (streamSources.length) assistantRow.sources = streamSources;
+    if (financeCharts.length) {
+      takePendingFinanceChart();
+      assistantRow.charts = financeCharts;
+    }
     history.push(assistantRow);
     saveSessionState();
     if (mode === "learn") syncLearnLayout();
@@ -3429,6 +3721,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       });
     }
     setStatus(statusEl, "status_failed");
+    pendingFinanceChart = null;
     return false;
   } finally {
     sendBtn.disabled = false;
@@ -5289,6 +5582,14 @@ function renderFinanceBudget() {
       row.appendChild(name);
       row.appendChild(amount);
       row.appendChild(remove);
+      const bar = document.createElement("div");
+      bar.className = "finance-cat-bar";
+      const fill = document.createElement("span");
+      const income = parseMoney(financeBudget.income);
+      const amt = parseMoney(cat.amount);
+      fill.style.width = `${income ? pctOf(amt, income) : 0}%`;
+      bar.appendChild(fill);
+      row.appendChild(bar);
       list.appendChild(row);
     });
   }
@@ -5296,7 +5597,7 @@ function renderFinanceBudget() {
 }
 
 function updateFinanceLeftover() {
-  const { income, leftover, needs, wants, aside } = budgetTotals();
+  const { income, leftover } = budgetTotals();
   const valueEl = document.getElementById("financeLeftoverValue");
   const noteEl = document.getElementById("financeLeftoverNote");
   const splitEl = document.getElementById("financeSplit");
@@ -5315,26 +5616,19 @@ function updateFinanceLeftover() {
     else if (leftover / income < 0.08) noteEl.textContent = t("finance_leftover_tight");
     else noteEl.textContent = t("finance_leftover_ok");
   }
+  const mixEl = document.getElementById("financeMixPanel");
+  if (mixEl) {
+    mixEl.innerHTML = "";
+    if (income > 0) {
+      mixEl.hidden = false;
+      const spec = snapshotBudgetChart();
+      if (spec?.mix?.length) appendChartMix(mixEl, spec.mix);
+    } else {
+      mixEl.hidden = true;
+    }
+  }
   if (splitEl) {
     splitEl.innerHTML = "";
-    if (income > 0) {
-      [
-        ["finance_split_needs", needs],
-        ["finance_split_wants", wants],
-        ["finance_split_aside", aside],
-      ].forEach(([key, amt]) => {
-        const pill = document.createElement("div");
-        pill.className = "finance-split-pill";
-        const strong = document.createElement("strong");
-        const pct = Math.round((amt / income) * 100);
-        strong.textContent = `${pct}%`;
-        const span = document.createElement("span");
-        span.textContent = `${t(key)} · ${formatMoney(amt)}`;
-        pill.appendChild(strong);
-        pill.appendChild(span);
-        splitEl.appendChild(pill);
-      });
-    }
   }
 }
 
@@ -5375,6 +5669,10 @@ function renderFinanceGoals() {
     const monthlyEl = document.createElement("p");
     monthlyEl.className = "finance-goal-monthly";
     monthlyEl.textContent = t("finance_goal_monthly", { amount: formatMoney(monthly) });
+    const compare = document.createElement("div");
+    compare.className = "finance-goal-compare";
+    const goalChart = snapshotGoalChart(goal);
+    if (goalChart?.bars?.length) appendChartBars(compare, goalChart.bars);
     const actions = document.createElement("div");
     actions.className = "finance-goal-actions";
     const plan = document.createElement("button");
@@ -5390,6 +5688,7 @@ function renderFinanceGoals() {
           `That is about ${formatMoney(monthly)} per month.`,
           "Give a calm plan: where the monthly amount could come from, what to watch, and one first step.",
         ].join("\n"),
+        snapshotGoalChart(goal),
       );
     });
     const remove = document.createElement("button");
@@ -5406,15 +5705,17 @@ function renderFinanceGoals() {
     card.appendChild(title);
     card.appendChild(meta);
     card.appendChild(monthlyEl);
+    if (compare.childNodes.length) card.appendChild(compare);
     card.appendChild(actions);
     list.appendChild(card);
   });
 }
 
-function sendFinancePrompt(raw) {
+function sendFinancePrompt(raw, chartSpec) {
   if (!gateFinanceSend()) return;
   const trimmed = String(raw || "").trim();
   if (!trimmed) return;
+  pendingFinanceChart = sanitizeHubChartSpec(chartSpec) || pendingFinanceChart;
   setFinanceTab("ask");
   financeSessionOpen = true;
   syncFinanceLayout();
@@ -5462,7 +5763,7 @@ function wireFinanceWorkspace() {
       showToast(t("finance_need_income"));
       return;
     }
-    sendFinancePrompt(budgetExplainPrompt());
+    sendFinancePrompt(budgetExplainPrompt(), snapshotBudgetChart());
   });
   document.getElementById("financeGoalForm")?.addEventListener("submit", (e) => {
     e.preventDefault();

@@ -1218,6 +1218,7 @@ function responseContractInstruction(mode) {
       "8) If the user shares account numbers, passwords, or SSNs, tell them to remove that information and not send secrets.",
       "9) When they provide numbers, do the arithmetic clearly (leftover, monthly save, simple percentages).",
       "10) End when they can take a small next step. For high-stakes topics, one short line: talk to a qualified professional for personal decisions.",
+      "11) When they share monthly money numbers, after the prose include exactly one fenced block tagged hub-chart with JSON only: {\"title\":\"This month\",\"kicker\":\"Your plan\",\"hero\":{\"label\":\"Left after this plan\",\"value\":0,\"tone\":\"ok\"},\"mix\":[{\"label\":\"Needs\",\"value\":0,\"tone\":\"need\"},{\"label\":\"Wants\",\"value\":0,\"tone\":\"want\"},{\"label\":\"Set aside\",\"value\":0,\"tone\":\"save\"}],\"bars\":[{\"label\":\"Housing\",\"value\":0}]}. Use only their numbers. tone must be ok, tight, over, need, want, or save. No HTML and no extra commentary inside the fence.",
     ].join(" ");
   }
   if (mode === "code") {
