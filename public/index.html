@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=hub-focus-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=hub-focus-1" />
+    <link rel="stylesheet" href="./styles.css?v=hub-focus-2" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=hub-focus-2" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -284,16 +284,28 @@
 
         <div class="hub-tiles" role="list" aria-label="Workspaces">
           <button type="button" class="hub-tile hub-tile--live" data-vertical="student" role="listitem" id="tileStudent">
-            <span class="hub-tile-badge" id="tileStudentBadge">Available now</span>
+            <span class="hub-tile-top">
+              <span class="hub-tile-badge" id="tileStudentBadge">Available now</span>
+              <span class="hub-tile-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="12" fill="url(#tileStudentGrad)" />
+                  <path
+                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                    fill="white"
+                    fill-opacity="0.92"
+                  />
+                  <defs>
+                    <linearGradient id="tileStudentGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+            </span>
             <span class="hub-tile-title" id="tileStudentTitle">Student AI</span>
             <span class="hub-tile-sub" id="tileStudentSub">Ask, code, and study in one place</span>
             <span class="hub-tile-cta" id="tileStudentCta">Open -&gt;</span>
-          </button>
-          <button type="button" class="hub-tile hub-tile--soon" data-vertical="health" role="listitem" id="tileHealth">
-            <span class="hub-tile-badge hub-tile-badge--soon" id="tileHealthBadge">Soon</span>
-            <span class="hub-tile-title" id="tileHealthTitle">Health AI</span>
-            <span class="hub-tile-sub" id="tileHealthSub">Understand wellness in plain language</span>
-            <span class="hub-tile-cta" id="tileHealthCta">Coming soon</span>
           </button>
           <button
             type="button"
@@ -302,10 +314,42 @@
             role="listitem"
             id="tileFinance"
           >
-            <span class="hub-tile-badge" id="tileFinanceBadge">Available now</span>
+            <span class="hub-tile-top">
+              <span class="hub-tile-badge" id="tileFinanceBadge">Available now</span>
+              <span class="hub-tile-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="40" height="40" rx="12" fill="url(#tileFinanceGrad)" />
+                  <path
+                    d="M13 26V18h4v8h-4zm5 0V13h4v13h-4zm5 0v-5h4v5h-4z"
+                    fill="white"
+                    fill-opacity="0.92"
+                  />
+                  <defs>
+                    <linearGradient id="tileFinanceGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#1D5BD8" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
+            </span>
             <span class="hub-tile-title" id="tileFinanceTitle">Finance AI</span>
             <span class="hub-tile-sub" id="tileFinanceSub">Plan budgets and goals with clarity</span>
             <span class="hub-tile-cta" id="tileFinanceCta">Open -&gt;</span>
+          </button>
+          <button type="button" class="hub-tile hub-tile--soon" data-vertical="health" role="listitem" id="tileHealth">
+            <span class="hub-tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="#E8E6E1" />
+                <path d="M18 13h4v14h-4V13zm-7 7h18v4H11v-4z" fill="#6F6B63" fill-opacity="0.85" />
+              </svg>
+            </span>
+            <span class="hub-tile-copy">
+              <span class="hub-tile-badge hub-tile-badge--soon" id="tileHealthBadge">Soon</span>
+              <span class="hub-tile-title" id="tileHealthTitle">Health AI</span>
+              <span class="hub-tile-sub" id="tileHealthSub">Understand wellness in plain language</span>
+            </span>
+            <span class="hub-tile-cta" id="tileHealthCta">Coming soon</span>
           </button>
         </div>
         <p class="hub-privacy-note">
