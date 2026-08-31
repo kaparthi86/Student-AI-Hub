@@ -500,6 +500,7 @@ const I18N = {
     chip_simpler: "Simpler",
     chip_example: "Example",
     chip_study_next: "What next?",
+    chip_visual: "Show a visual",
     chips_followup_aria: "Quick follow-ups and read aloud",
     starter_prompt_summarize:
       "Make your last answer shorter: keep only the key points in tight bullets I can remember.\n\n",
@@ -513,6 +514,8 @@ const I18N = {
       "Give one clear worked example for your last answer. Show the steps briefly, then state what to notice.\n\n",
     starter_prompt_study_next:
       "Based on what we just covered, tell me what I should practice next in 3 short steps. Keep it concrete.\n\n",
+    starter_prompt_visual:
+      "Add a Hub visual for your last answer. Keep the prose to 1-2 sentences and do not write a numbered step list. Then one hub-chart fence (JSON only): steps, compare, bars, fraction, or numberline. Use fraction bars for parts of a whole and a number line for placing values.\n\n",
     copy_thread: "Copy conversation",
     copy_thread_aria: "Copy entire conversation",
     toast_thread_copied: "Conversation copied",
@@ -737,6 +740,7 @@ const I18N = {
     chip_simpler: "Mas simple",
     chip_example: "Ejemplo",
     chip_study_next: "Que sigue?",
+    chip_visual: "Ver visual",
     chips_followup_aria: "Seguimientos rapidos y lectura en voz alta",
     starter_prompt_summarize:
       "Resume tu ultima respuesta en vietas cortas. Destaca los terminos clave que debo recordar.\n\n",
@@ -749,6 +753,8 @@ const I18N = {
       "Dame un ejemplo trabajado claro de tu ultima respuesta. Muestra pasos breves y que debo notar.\n\n",
     starter_prompt_study_next:
       "Segun lo que acabamos de ver, dime que practicar despues en 3 pasos concretos.\n\n",
+    starter_prompt_visual:
+      "Anade un visual de Hub a tu ultima respuesta. Deja el texto en 1-2 frases, sin lista numerada. Luego un bloque hub-chart (solo JSON): steps, compare, bars, fraction o numberline. Usa barras de fraccion para partes de un todo y una recta numerica para colocar valores.\n\n",
     copy_thread: "Copiar conversacion",
     copy_thread_aria: "Copiar toda la conversacion",
     toast_thread_copied: "Conversacion copiada",
@@ -975,6 +981,7 @@ const I18N = {
     chip_simpler: "Simple",
     chip_example: "Example",
     chip_study_next: "Aage kya?",
+    chip_visual: "Show a visual",
     chips_followup_aria: "Quick follow-ups aur read aloud",
     starter_prompt_summarize:
       "Apne last answer ko short bullets mein summarize karo. Key terms highlight karo.\n\n",
@@ -987,6 +994,8 @@ const I18N = {
       "Last answer ka ek clear worked example do. Short steps, phir kya notice karna hai.\n\n",
     starter_prompt_study_next:
       "Abhi jo cover kiya uske baad main kya practice karun - 3 concrete steps.\n\n",
+    starter_prompt_visual:
+      "Last answer ke liye ek Hub visual add karo. Prose 1-2 sentences, numbered step list mat likho. Phir ek hub-chart fence (JSON only): steps, compare, bars, fraction, ya numberline. Fraction bars parts-of-a-whole ke liye, number line values place karne ke liye.\n\n",
     copy_thread: "Conversation copy",
     copy_thread_aria: "Poori conversation copy karein",
     toast_thread_copied: "Conversation copy ho gayi",
@@ -1211,6 +1220,7 @@ const I18N = {
     chip_simpler: "Simple",
     chip_example: "Example",
     chip_study_next: "Tarvata enti?",
+    chip_visual: "Show a visual",
     chips_followup_aria: "Quick follow-ups mariyu read aloud",
     starter_prompt_summarize:
       "Mee last answer ni short bullets lo summarize cheyyandi. Gurtupettukovalasina key terms highlight cheyyandi.\n\n",
@@ -1223,6 +1233,8 @@ const I18N = {
       "Last answer ki oka clear worked example ivvandi. Short steps, tarvata emi notice cheyalo.\n\n",
     starter_prompt_study_next:
       "Ippudu cover chesindanni batti nenu tarvata emi practice cheyyali - 3 concrete steps.\n\n",
+    starter_prompt_visual:
+      "Last answer ki oka Hub visual add cheyyandi. Prose 1-2 sentences, numbered step list vadakandi. Tarvata oka hub-chart fence (JSON only): steps, compare, bars, fraction, leda numberline. Fraction bars parts-of-a-whole ki, number line values place cheyadaniki.\n\n",
     copy_thread: "Conversation copy",
     copy_thread_aria: "Mottam conversation copy cheyyandi",
     toast_thread_copied: "Conversation copy ayyindi",
@@ -1634,6 +1646,7 @@ const STARTER_CHIP_LABEL_KEYS = {
   simpler: "chip_simpler",
   example: "chip_example",
   studyNext: "chip_study_next",
+  visual: "chip_visual",
 };
 
 const STARTER_PROMPT_KEYS = {
@@ -1643,6 +1656,7 @@ const STARTER_PROMPT_KEYS = {
   simpler: "starter_prompt_simpler",
   example: "starter_prompt_example",
   studyNext: "starter_prompt_study_next",
+  visual: "starter_prompt_visual",
 };
 
 const NOTEBOOK_STARTER_PROMPT_KEYS = {
@@ -1657,6 +1671,7 @@ function analyzeAssistantForFollowups(raw) {
   const text = String(raw || "");
   return {
     hasSteps: /^\s*\d+\.\s/m.test(text),
+    hasVisual: /```(?:hub-chart|hubchart)\b/i.test(text),
     isLong: text.length > 900,
     hasCode: /```/.test(text),
     isShort: text.length > 0 && text.length < 280,
@@ -1670,6 +1685,7 @@ function analyzeAssistantForFollowups(raw) {
 function pickSmartFollowupKeys(analysis, scope) {
   const a = analysis || analyzeAssistantForFollowups("");
   const keys = scope === "finance" ? ["simpler", "example"] : ["simpler", "example", "practice"];
+  if (scope === "learn" && !a.hasVisual) keys.splice(2, 0, "visual");
   if (!a.hasSteps) keys.push("steps");
   else if (scope === "notebook") keys.push("studyPlan");
   else if (scope === "finance") keys.push("summarize");
@@ -2849,19 +2865,134 @@ function sanitizeHubTextItem(row, textMax = 140) {
   return { label: label || text.slice(0, 28), text: text || label };
 }
 
+function hubChartKindHint(raw) {
+  return String(raw?.kind || "")
+    .toLowerCase()
+    .replace(/[-_\s]/g, "");
+}
+
+function sanitizeHubFractionParts(row) {
+  if (!row || typeof row !== "object") return null;
+  let d = Number(row.d ?? row.denominator ?? row.parts ?? row.whole);
+  let n = Number(row.n ?? row.numerator ?? row.filled ?? row.value);
+  if (!Number.isFinite(d) || d < 2) return null;
+  d = Math.max(2, Math.min(16, Math.round(d)));
+  if (!Number.isFinite(n)) n = 0;
+  n = Math.max(0, Math.min(d, Math.round(n)));
+  const label = cleanChartLabel(row.label, 24) || `${n}/${d}`;
+  return { label, n, d };
+}
+
+function sanitizeHubFractions(raw) {
+  const rows = [];
+  if (Array.isArray(raw.fractions)) {
+    raw.fractions.forEach((row) => {
+      const part = sanitizeHubFractionParts(row);
+      if (part) rows.push(part);
+    });
+  } else {
+    const part = sanitizeHubFractionParts(raw);
+    if (part) rows.push(part);
+  }
+  return rows.slice(0, 3);
+}
+
+function formatHubTick(n) {
+  if (!Number.isFinite(n)) return "0";
+  if (Number.isInteger(n)) return String(n);
+  return String(Math.round(n * 100) / 100);
+}
+
+function generateHubNumberLineTicks(min, max) {
+  const span = max - min;
+  if (!(span > 0)) return [min, max];
+  if (Number.isInteger(min) && Number.isInteger(max) && span <= 12) {
+    const out = [];
+    for (let i = min; i <= max; i += 1) out.push(i);
+    return out;
+  }
+  const steps = 5;
+  const out = [];
+  for (let i = 0; i <= steps; i += 1) out.push(min + (span * i) / steps);
+  return out;
+}
+
+function sanitizeHubNumberLine(raw) {
+  let min = Number(raw.min ?? raw.start ?? 0);
+  let max = Number(raw.max ?? raw.end ?? 10);
+  if (!Number.isFinite(min)) min = 0;
+  if (!Number.isFinite(max)) max = 10;
+  if (max === min) max = min + 1;
+  if (max < min) {
+    const swap = min;
+    min = max;
+    max = swap;
+  }
+  min = Math.max(-200, Math.min(200, min));
+  max = Math.max(-200, Math.min(200, max));
+  if (max - min > 100) max = min + 100;
+  const markSource = Array.isArray(raw.marks)
+    ? raw.marks
+    : Array.isArray(raw.points)
+      ? raw.points
+      : raw.value != null
+        ? [raw]
+        : [];
+  const marks = markSource
+    .map((row) => {
+      if (row == null || (typeof row !== "object" && !Number.isFinite(Number(row)))) return null;
+      const value = Number(typeof row === "object" ? row.value ?? row.n ?? row.x : row);
+      if (!Number.isFinite(value)) return null;
+      const clamped = Math.max(min, Math.min(max, value));
+      const label =
+        typeof row === "object"
+          ? cleanChartLabel(row.label, 18) || formatHubTick(clamped)
+          : formatHubTick(clamped);
+      return { value: clamped, label };
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+  let ticks = Array.isArray(raw.ticks)
+    ? raw.ticks
+        .map((n) => Number(n))
+        .filter((n) => Number.isFinite(n) && n >= min && n <= max)
+        .slice(0, 13)
+    : generateHubNumberLineTicks(min, max);
+  if (!ticks.length) ticks = generateHubNumberLineTicks(min, max);
+  return { min, max, marks, ticks };
+}
+
 function sanitizeHubChartSpec(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const title = cleanChartLabel(raw.title, 80);
   const kicker = cleanChartLabel(raw.kicker, 48);
   const note = cleanChartLabel(raw.note, 180);
+  const kindHint = hubChartKindHint(raw);
   const steps = Array.isArray(raw.steps)
     ? raw.steps.map((row) => sanitizeHubTextItem(row, 140)).filter(Boolean).slice(0, 6)
     : [];
   const compare = Array.isArray(raw.compare)
     ? raw.compare.map((row) => sanitizeHubTextItem(row, 120)).filter(Boolean).slice(0, 3)
     : [];
-  if (steps.length) return { kind: "steps", title, kicker: kicker || t("visual_kicker"), note, steps };
-  if (compare.length >= 2) return { kind: "compare", title, kicker: kicker || t("visual_kicker"), note, compare };
+  if (kindHint === "fraction" || Array.isArray(raw.fractions)) {
+    const fractions = sanitizeHubFractions(raw);
+    if (fractions.length) {
+      return { kind: "fraction", title, kicker: kicker || t("visual_kicker"), note, fractions };
+    }
+    if (kindHint === "fraction") return null;
+  }
+  if (kindHint === "numberline") {
+    const line = sanitizeHubNumberLine(raw);
+    return { kind: "numberline", title, kicker: kicker || t("visual_kicker"), note, ...line };
+  }
+  if (kindHint === "steps" || steps.length) {
+    if (steps.length) return { kind: "steps", title, kicker: kicker || t("visual_kicker"), note, steps };
+    if (kindHint === "steps") return null;
+  }
+  if (kindHint === "compare" || compare.length >= 2) {
+    if (compare.length >= 2) return { kind: "compare", title, kicker: kicker || t("visual_kicker"), note, compare };
+    if (kindHint === "compare") return null;
+  }
   let hero = null;
   if (raw.hero && typeof raw.hero === "object") {
     const label = cleanChartLabel(raw.hero.label, 48);
@@ -3028,6 +3159,80 @@ function appendVisualCompare(parent, compare) {
   parent.appendChild(grid);
 }
 
+function appendVisualFraction(parent, fractions) {
+  if (!fractions.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "hub-visual-fractions";
+  wrap.setAttribute("role", "img");
+  wrap.setAttribute(
+    "aria-label",
+    fractions.map((row) => row.label || `${row.n} of ${row.d}`).join("; ")
+  );
+  fractions.forEach((frac) => {
+    const block = document.createElement("div");
+    block.className = "hub-visual-fraction";
+    const bar = document.createElement("div");
+    bar.className = "hub-visual-fraction-bar";
+    bar.style.gridTemplateColumns = `repeat(${frac.d}, minmax(0, 1fr))`;
+    for (let i = 0; i < frac.d; i += 1) {
+      const cell = document.createElement("span");
+      cell.className = i < frac.n ? "is-filled" : "is-empty";
+      bar.appendChild(cell);
+    }
+    const lab = document.createElement("p");
+    lab.className = "hub-visual-fraction-label";
+    lab.textContent = frac.label;
+    block.appendChild(bar);
+    block.appendChild(lab);
+    wrap.appendChild(block);
+  });
+  parent.appendChild(wrap);
+}
+
+function appendVisualNumberLine(parent, spec) {
+  const min = Number(spec.min);
+  const max = Number(spec.max);
+  const span = max - min || 1;
+  const marks = Array.isArray(spec.marks) ? spec.marks : [];
+  const ticks = Array.isArray(spec.ticks) ? spec.ticks : [];
+  const wrap = document.createElement("div");
+  wrap.className = "hub-visual-numberline";
+  wrap.setAttribute("role", "img");
+  wrap.setAttribute(
+    "aria-label",
+    [
+      `${formatHubTick(min)} to ${formatHubTick(max)}`,
+      ...marks.map((row) => row.label || formatHubTick(row.value)),
+    ].join(", ")
+  );
+  const rail = document.createElement("div");
+  rail.className = "hub-visual-numberline-rail";
+  ticks.forEach((tick) => {
+    const el = document.createElement("span");
+    el.className = "hub-visual-numberline-tick";
+    el.style.left = `${((tick - min) / span) * 100}%`;
+    const lab = document.createElement("span");
+    lab.textContent = formatHubTick(tick);
+    el.appendChild(lab);
+    rail.appendChild(el);
+  });
+  marks.forEach((mark) => {
+    const el = document.createElement("span");
+    el.className = "hub-visual-numberline-mark";
+    el.style.left = `${((mark.value - min) / span) * 100}%`;
+    const lab = document.createElement("span");
+    lab.className = "hub-visual-numberline-mark-label";
+    lab.textContent = mark.label;
+    const dot = document.createElement("span");
+    dot.className = "hub-visual-numberline-dot";
+    el.appendChild(lab);
+    el.appendChild(dot);
+    rail.appendChild(el);
+  });
+  wrap.appendChild(rail);
+  parent.appendChild(wrap);
+}
+
 function buildHubChartElement(spec) {
   const card = document.createElement("article");
   card.className = spec.kind === "chart" ? "hub-chart" : `hub-chart hub-chart--${spec.kind || "study"}`;
@@ -3045,39 +3250,29 @@ function buildHubChartElement(spec) {
   }
   if (spec.kind === "steps") {
     appendVisualSteps(card, spec.steps || []);
-    if (spec.note) {
-      const note = document.createElement("p");
-      note.className = "hub-chart-note";
-      note.textContent = spec.note;
-      card.appendChild(note);
-    }
-    return card;
-  }
-  if (spec.kind === "compare") {
+  } else if (spec.kind === "compare") {
     appendVisualCompare(card, spec.compare || []);
-    if (spec.note) {
-      const note = document.createElement("p");
-      note.className = "hub-chart-note";
-      note.textContent = spec.note;
-      card.appendChild(note);
+  } else if (spec.kind === "fraction") {
+    appendVisualFraction(card, spec.fractions || []);
+  } else if (spec.kind === "numberline") {
+    appendVisualNumberLine(card, spec);
+  } else {
+    if (spec.hero) {
+      const hero = document.createElement("div");
+      hero.className = "hub-chart-hero";
+      const lab = document.createElement("span");
+      lab.className = "hub-chart-hero-label";
+      lab.textContent = spec.hero.label;
+      const val = document.createElement("span");
+      val.className = `hub-chart-hero-value is-${spec.hero.tone || "neutral"}`;
+      val.textContent = formatMoney(spec.hero.value);
+      hero.appendChild(lab);
+      hero.appendChild(val);
+      card.appendChild(hero);
     }
-    return card;
+    appendChartMix(card, spec.mix || []);
+    appendChartBars(card, spec.bars || []);
   }
-  if (spec.hero) {
-    const hero = document.createElement("div");
-    hero.className = "hub-chart-hero";
-    const lab = document.createElement("span");
-    lab.className = "hub-chart-hero-label";
-    lab.textContent = spec.hero.label;
-    const val = document.createElement("span");
-    val.className = `hub-chart-hero-value is-${spec.hero.tone || "neutral"}`;
-    val.textContent = formatMoney(spec.hero.value);
-    hero.appendChild(lab);
-    hero.appendChild(val);
-    card.appendChild(hero);
-  }
-  appendChartMix(card, spec.mix || []);
-  appendChartBars(card, spec.bars || []);
   if (spec.note) {
     const note = document.createElement("p");
     note.className = "hub-chart-note";

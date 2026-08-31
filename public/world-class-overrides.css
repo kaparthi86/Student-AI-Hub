@@ -2267,7 +2267,9 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 }
 
 .hub-chart--steps .hub-chart-kicker,
-.hub-chart--compare .hub-chart-kicker {
+.hub-chart--compare .hub-chart-kicker,
+.hub-chart--fraction .hub-chart-kicker,
+.hub-chart--numberline .hub-chart-kicker {
   color: #1d5bd8;
 }
 
@@ -2342,6 +2344,100 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   font-size: 0.85rem;
   line-height: 1.4;
   color: var(--muted);
+}
+
+.hub-visual-fractions {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.hub-visual-fraction-bar {
+  display: grid;
+  gap: 3px;
+  height: 28px;
+}
+
+.hub-visual-fraction-bar span {
+  display: block;
+  border-radius: 5px;
+  min-width: 0;
+}
+
+.hub-visual-fraction-bar span.is-filled {
+  background: linear-gradient(180deg, #5b8dff, #2f6fed);
+}
+
+.hub-visual-fraction-bar span.is-empty {
+  background: rgba(47, 111, 237, 0.12);
+  border: 1px solid rgba(47, 111, 237, 0.22);
+}
+
+.hub-visual-fraction-label {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hub-visual-numberline {
+  margin: 18px 8px 8px;
+}
+
+.hub-visual-numberline-rail {
+  position: relative;
+  height: 52px;
+  margin: 0 10px;
+  border-bottom: 3px solid #1d5bd8;
+}
+
+.hub-visual-numberline-tick,
+.hub-visual-numberline-mark {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hub-visual-numberline-tick {
+  height: 100%;
+  justify-content: flex-end;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.hub-visual-numberline-tick::after {
+  content: "";
+  width: 2px;
+  height: 10px;
+  background: #1d5bd8;
+}
+
+.hub-visual-numberline-mark {
+  height: 100%;
+  justify-content: flex-start;
+  z-index: 1;
+}
+
+.hub-visual-numberline-mark-label {
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #1d5bd8;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.hub-visual-numberline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #c9a227;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #1d5bd8;
 }
 
 .finance-section-label {
