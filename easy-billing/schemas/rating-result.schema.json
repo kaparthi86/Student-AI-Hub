@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://easybilling.dev/schemas/rating-result.json",
+  "title": "RatingResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rating_run_id",
+    "tenant_id",
+    "account_id",
+    "status",
+    "window",
+    "rate_card_id",
+    "rate_card_version",
+    "currency",
+    "fact_refs",
+    "lines",
+    "total_amount"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "rating_run_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "account_id": { "type": "string" },
+    "contract_id": { "type": ["string", "null"] },
+    "contract_version": { "type": ["integer", "null"] },
+    "status": { "type": "string", "enum": ["simulated", "frozen"] },
+    "window": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" }
+      }
+    },
+    "rate_card_id": { "type": "string" },
+    "rate_card_version": { "type": "integer", "minimum": 1 },
+    "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+    "fact_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fact_id", "quantity"],
+        "properties": {
+          "fact_id": { "type": "string" },
+          "quantity": { "type": "string" }
+        }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "line_id",
+          "legal_entity_id",
+          "meter_id",
+          "rule_id",
+          "quantity",
+          "unit_price",
+          "amount"
+        ],
+        "properties": {
+          "line_id": { "type": "string" },
+          "fact_id": { "type": "string" },
+          "legal_entity_id": { "type": "string" },
+          "meter_id": { "type": "string" },
+          "rule_id": { "type": "string" },
+          "quantity": { "type": "string" },
+          "unit_price": { "type": "string" },
+          "amount": { "type": "string" },
+          "dimensions": { "type": "object" }
+        }
+      }
+    },
+    "minimum_applied": { "type": "string" },
+    "total_amount": { "type": "string" }
+  }
+}
