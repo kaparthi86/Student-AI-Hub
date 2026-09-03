@@ -24,7 +24,11 @@ Do **not** deploy Neo Clouds using AI Hub’s root `render.yaml` or AI Hub’s d
 
 ## Step 1 — Standalone GitHub repo
 
-Create a new public repo, e.g. **`neo-clouds-marketplace`**, empty (no README).
+Create a new repo, e.g. **`neo-clouds-marketplace`**, empty (no README).
+
+**Private is fine.** Render can deploy from a private repo if your GitHub account is connected. Use private while you launch; switch to public later if you want others to fork the marketplace.
+
+Public is only required if you want the “open-source GPU marketplace” pitch to include a public source repo. The product at **neocloudsmarketplace.com** works the same either way.
 
 From this monorepo (one-time export):
 
