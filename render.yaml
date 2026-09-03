@@ -1,14 +1,14 @@
-# Render Blueprint — Neo Clouds Marketplace
+# Render Blueprint — Neo Clouds Marketplace (standalone product)
+# Repo: neo-clouds-marketplace (NOT Student-AI-Hub)
+# Domain: neocloudsmarketplace.com
 # Docs: https://render.com/docs/blueprint-spec
-# Deploy: Render → New → Blueprint → pick this file (Root Directory: neo-clouds)
 services:
   - type: web
     name: neo-clouds-marketplace
     runtime: node
     region: oregon
     plan: free
-    rootDir: .
-    buildCommand: echo "No build step — Node ESM only"
+    buildCommand: echo "Neo Clouds — no build step"
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:

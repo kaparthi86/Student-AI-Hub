@@ -1,163 +1,134 @@
-# Launch Neo Clouds — step by step (like AI Hub)
+# Launch Neo Clouds at neocloudsmarketplace.com
 
-Your domain: **https://neocloudsmarketplace.com**
+Neo Clouds is a **separate product** from Student AI Hub. It gets its own GitHub repo, Render service, and domain.
 
-This guide mirrors the AI Hub launch path: deploy → DNS → verify → share.
+**Canonical URL:** https://neocloudsmarketplace.com
+
+See also: [PRODUCT.md](./PRODUCT.md)
 
 ---
 
-## Step 1 — Local smoke test
+## Overview
+
+| Step | What |
+|---|---|
+| 1 | Standalone repo (not Student AI Hub) |
+| 2 | Render web service `neo-clouds-marketplace` |
+| 3 | DNS → `neocloudsmarketplace.com` |
+| 4 | Verify `/api/health` |
+| 5 | Share the link |
+
+Do **not** deploy Neo Clouds using AI Hub’s root `render.yaml` or AI Hub’s domain.
+
+---
+
+## Step 1 — Standalone GitHub repo
+
+Create a new public repo, e.g. **`neo-clouds-marketplace`**, empty (no README).
+
+From this monorepo (one-time export):
 
 ```bash
 cd neo-clouds
-cp .env.example .env
-node --test          # all tests green
-npm start            # http://localhost:8788
+chmod +x scripts/publish-standalone.sh
+./scripts/publish-standalone.sh git@github.com:YOUR_USER/neo-clouds-marketplace.git
 ```
 
-Open:
+Or copy the `neo-clouds/` folder to the new repo root manually. The repo root should contain `package.json`, `render.yaml`, `src/`, `public/` — not a `neo-clouds/` subfolder.
 
-| URL | Expect |
-|---|---|
-| `/` | Marketplace UI with demo listings (if `SEED_DEMO=1`) |
-| `/api/health` | `"ok": true`, `"indexHtmlDeployed": true` |
-| `/privacy.html` | Privacy page |
-| `/terms.html` | Terms page |
-
-Click **Get API Key** → register as customer → **Reserve** on a listing.
+**Ongoing development:** work in the standalone repo, or sync from `neo-clouds/` in Student-AI-Hub when needed.
 
 ---
 
-## Step 2 — Push to GitHub
-
-Do **not** commit `.env`. Secrets go in the host UI only.
+## Step 2 — Local smoke test
 
 ```bash
-git add neo-clouds
-git commit -m "Prepare Neo Clouds for launch on neocloudsmarketplace.com"
-git push origin cursor/neo-clouds-marketplace-e68b
+cp .env.example .env
+node --test
+npm start
 ```
 
-Merge PR #59 to `main` when ready (or deploy from the feature branch first).
+Open http://localhost:8788 — listings, **Get API Key**, reserve, `#models` chat.
 
 ---
 
-## Step 3 — Deploy on Render
+## Step 3 — Deploy on Render (Neo Clouds only)
 
 1. [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**
-2. Connect your GitHub repo
-3. Point at **`neo-clouds/render.yaml`** (Root Directory for the blueprint file is `neo-clouds`)
-4. Render creates service **`neo-clouds-marketplace`**
+2. Connect **`neo-clouds-marketplace`** repo (not Student-AI-Hub)
+3. Blueprint file: **`render.yaml`** at repo root
+4. Service name: **`neo-clouds-marketplace`**
+5. Root Directory: **leave blank** (repo root)
 
-Default env (already in blueprint):
+Environment (defaults in `render.yaml`):
 
-| Variable | Launch value |
+| Variable | Launch |
 |---|---|
 | `NODE_ENV` | `production` |
 | `CANONICAL_DOMAIN` | `neocloudsmarketplace.com` |
-| `SEED_DEMO` | `1` (demo listings until real providers join) |
-| `BETA_TESTING` | `0` (public launch) |
+| `SEED_DEMO` | `1` |
+| `BETA_TESTING` | `0` |
 
-For **invite-only early access**, set:
-
-- `BETA_TESTING=1`
-- `BETA_MESSAGE=Your custom banner text`
-
-5. Wait for deploy. Copy the `*.onrender.com` URL.
+Invite-only beta: `BETA_TESTING=1` + `BETA_MESSAGE=...`
 
 ---
 
-## Step 4 — Custom domain (neocloudsmarketplace.com)
+## Step 4 — Custom domain
 
-1. Render → your web service → **Settings → Custom Domains**
-2. Add **`neocloudsmarketplace.com`**
-3. At your registrar (where you bought the domain), create the DNS records Render shows:
+1. Render → **neo-clouds-marketplace** → **Settings → Custom Domains**
+2. Add **`neocloudsmarketplace.com`** (and optionally `www.neocloudsmarketplace.com`)
+3. At your domain registrar, add the DNS records Render shows
+4. Wait for Verified + TLS
 
-   | Type | Typical use |
-   |---|---|
-   | **CNAME** | `www` → Render hostname |
-   | **ALIAS / ANAME** or **A** | apex `@` → Render (follow Render’s exact instructions) |
-
-4. Wait for **Verified** + TLS (often 5–30 minutes, sometimes longer for apex)
-
-Pick one canonical host:
-
-- Prefer **`https://www.neocloudsmarketplace.com`** *or* apex — redirect the other at Render or your DNS host.
+Pick one canonical host (apex or `www`) and redirect the other.
 
 ---
 
-## Step 5 — Launch checks (same idea as AI Hub `/api/health`)
+## Step 5 — Launch checks
 
 ```bash
-curl -s https://neocloudsmarketplace.com/api/health | jq
+curl -s https://neocloudsmarketplace.com/api/health
 ```
 
-Confirm:
+Expect:
 
 - `"ok": true`
+- `"service": "neo-clouds-marketplace"`
+- `"canonicalDomain": "neocloudsmarketplace.com"`
 - `"indexHtmlDeployed": true`
-- `"betaMessage": ""` for public launch (non-empty only in beta mode)
-- `"listings"` > 0 when `SEED_DEMO=1`
 
-Browser checks:
+Browser:
 
-- `/` — hero, stats strip, GPU cards
-- **Get API Key** — register customer, key saved
-- **Reserve** — reservation succeeds
-- `#models` — model cards, **Try** chat streams
-- `/privacy.html` + `/terms.html` load
+- `/` — GPU marketplace
+- `/privacy.html`, `/terms.html`
+- **Get API Key** → reserve → inference **Try**
 
 ---
 
-## Step 6 — Turn off demo seed (when real providers join)
+## Step 6 — Go live message
 
-In Render **Environment**:
-
-```
-SEED_DEMO=0
-```
-
-Redeploy. Real providers register with role **provider**, attest nodes, create listings.
-
-Provider flow:
-
-1. **Get API Key** → role **Provider**
-2. `POST /v1/nodes` → register GPU host
-3. `POST /v1/nodes/:id/attest`
-4. `POST /v1/listings` → set price
-5. Optional: `POST /v1/models` → inference model on that node
+> **Neo Clouds** — open GPU marketplace  
+> https://neocloudsmarketplace.com  
+> Browse H100/A100 listings, get an API key, reserve compute, run inference.
 
 ---
 
-## Step 7 — Message you can paste
+## Step 7 — After real providers join
 
-> **Neo Clouds** is live — an open GPU marketplace.  
-> **Link:** https://neocloudsmarketplace.com  
-> Browse H100/A100 listings, get a free API key, reserve compute, or try inference models.  
-> Early access: reservations and inference may be simulated until providers connect real hardware.
+Render → `SEED_DEMO=0` → redeploy.
+
+Provider flow: **Get API Key (Provider)** → register node → attest → listing → optional model.
 
 ---
 
-## Step 8 — Before a large traffic wave
+## Step 8 — Scale checklist
 
 | Item | Action |
 |---|---|
-| Hosting | Upgrade Render plan (free tier cold-starts ~30s) |
-| Demo data | `SEED_DEMO=0` when you have real listings |
-| Billing | Wire Easy Billing Meter (reservations + inference usage) |
-| Persistence | v1 is in-memory — plan Postgres/Redis before production scale |
-| Real GPUs | SSH key exchange + vLLM worker on provider nodes |
-| Monitoring | Uptime check on `/api/health` |
-
----
-
-## Optional — extract to its own repo
-
-Neo Clouds is in `neo-clouds/` inside Student AI Hub today. For a clean product repo:
-
-1. Create `github.com/you/neo-clouds-marketplace`
-2. Copy `neo-clouds/` to repo root
-3. Deploy from that repo with `render.yaml` at root (`rootDir: .`)
+| Hosting | Upgrade Render (free tier cold-starts) |
+| Persistence | Postgres/Redis before high traffic |
+| Billing | Easy Billing Meter API (optional) |
+| Real GPUs | SSH + vLLM on provider nodes |
 
 ---
 
@@ -165,8 +136,7 @@ Neo Clouds is in `neo-clouds/` inside Student AI Hub today. For a clean product 
 
 | Problem | Fix |
 |---|---|
-| `/` is 404 | Render **Root Directory** must be `neo-clouds` if blueprint is at repo root, or `.` if repo is Neo Clouds only |
-| Empty marketplace | Set `SEED_DEMO=1` or register a provider and create listings |
-| Reserve fails | Customer API key required (`nck_...`) |
-| Domain not verifying | DNS propagation; confirm CNAME/A matches Render exactly |
-| Cold start slow | Upgrade plan or use a uptime ping every 10 min (not ideal long-term) |
+| AI Hub page on your domain | Wrong Render service — domain must point to **neo-clouds-marketplace**, not student-ai-hub |
+| `/` 404 | Render Root Directory must be blank for standalone repo |
+| Empty listings | `SEED_DEMO=1` or add provider listings |
+| Domain not verifying | DNS propagation; match Render records exactly |
