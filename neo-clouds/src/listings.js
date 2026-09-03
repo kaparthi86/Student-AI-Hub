@@ -33,6 +33,8 @@ export function createListing(providerId, body) {
     listing_id: makeId('lst'),
     provider_id: providerId,
     node_id: body.node_id,
+    accelerator_type: node.accelerator_type || 'gpu',
+    accelerator_model: node.accelerator_model || node.gpu_model,
     gpu_model: node.gpu_model,
     gpu_count: node.gpu_count,
     vram_gb: node.vram_gb_per_gpu * node.gpu_count,
@@ -57,7 +59,11 @@ export function createListing(providerId, body) {
 export function listListings(filters = {}) {
   let results = [...store.listings.values()];
 
+  if (filters.accelerator_type) {
+    results = results.filter(l => (l.accelerator_type || 'gpu') === String(filters.accelerator_type).toLowerCase());
+  }
   if (filters.gpu_model) results = results.filter(l => l.gpu_model === filters.gpu_model);
+  if (filters.accelerator_model) results = results.filter(l => (l.accelerator_model || l.gpu_model) === filters.accelerator_model);
   if (filters.region) results = results.filter(l => l.region === filters.region);
   if (filters.spot !== undefined) results = results.filter(l => l.spot === (filters.spot === 'true' || filters.spot === true));
   if (filters.interconnect) results = results.filter(l => l.interconnect === filters.interconnect);

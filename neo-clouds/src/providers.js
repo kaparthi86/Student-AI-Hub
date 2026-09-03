@@ -4,14 +4,26 @@
 
 import { store, makeId } from './store.js';
 
-const VALID_INTERCONNECTS = ['NVLink', 'InfiniBand', 'PCIe', 'none'];
+const VALID_INTERCONNECTS = ['NVLink', 'InfiniBand', 'PCIe', 'ICI', 'Ethernet', 'none'];
+const VALID_ACCELERATORS = ['gpu', 'tpu'];
+
+function normalizeAcceleratorType(body) {
+  const raw = String(body.accelerator_type || body.kind || 'gpu').toLowerCase();
+  if (!VALID_ACCELERATORS.includes(raw)) {
+    throw new Error('accelerator_type must be gpu or tpu');
+  }
+  return raw;
+}
 
 function validateNode(body) {
-  const { hostname, gpu_model, gpu_count, vram_gb_per_gpu, region } = body;
+  const { hostname, region } = body;
+  const model = body.accelerator_model || body.gpu_model;
+  const count = body.accelerator_count ?? body.gpu_count;
+  const memory = body.memory_gb_per_chip ?? body.vram_gb_per_gpu;
   if (!hostname || typeof hostname !== 'string') throw new Error('hostname is required');
-  if (!gpu_model || typeof gpu_model !== 'string') throw new Error('gpu_model is required');
-  if (!Number.isInteger(gpu_count) || gpu_count < 1) throw new Error('gpu_count must be integer >= 1');
-  if (!Number.isInteger(vram_gb_per_gpu) || vram_gb_per_gpu < 1) throw new Error('vram_gb_per_gpu must be integer >= 1');
+  if (!model || typeof model !== 'string') throw new Error('gpu_model or accelerator_model is required');
+  if (!Number.isInteger(count) || count < 1) throw new Error('gpu_count / accelerator_count must be integer >= 1');
+  if (!Number.isInteger(memory) || memory < 1) throw new Error('vram_gb_per_gpu / memory_gb_per_chip must be integer >= 1');
   if (!region || typeof region !== 'string') throw new Error('region is required');
   const interconnect = body.interconnect || 'none';
   if (!VALID_INTERCONNECTS.includes(interconnect)) throw new Error(`interconnect must be one of ${VALID_INTERCONNECTS.join(', ')}`);
@@ -19,13 +31,21 @@ function validateNode(body) {
 
 export function registerNode(providerId, body) {
   validateNode(body);
+  const accelerator_type = normalizeAcceleratorType(body);
+  const model = body.accelerator_model || body.gpu_model;
+  const count = body.accelerator_count ?? body.gpu_count;
+  const memory = body.memory_gb_per_chip ?? body.vram_gb_per_gpu;
   const node = {
     node_id: makeId('node'),
     provider_id: providerId,
     hostname: body.hostname,
-    gpu_model: body.gpu_model,
-    gpu_count: body.gpu_count,
-    vram_gb_per_gpu: body.vram_gb_per_gpu,
+    accelerator_type,
+    accelerator_model: model,
+    gpu_model: model,
+    gpu_count: count,
+    accelerator_count: count,
+    vram_gb_per_gpu: memory,
+    memory_gb_per_chip: memory,
     interconnect: body.interconnect || 'none',
     region: body.region,
     attestation_status: 'pending',

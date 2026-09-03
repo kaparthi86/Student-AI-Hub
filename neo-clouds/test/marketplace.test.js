@@ -409,6 +409,7 @@ describe('6 – Stats and leaderboard', async () => {
     assert.ok(typeof r.body.models === 'object');
     assert.ok(typeof r.body.reservations === 'object');
     assert.ok(Array.isArray(r.body.gpu_models));
+    assert.ok(Array.isArray(r.body.accelerator_types));
     assert.ok(Array.isArray(r.body.regions));
     assert.equal(r.body.currency, 'USD');
   });
@@ -483,6 +484,29 @@ describe('7 – Launch readiness', async () => {
     assert.equal(r.body.ok, true);
     assert.equal(r.body.service, 'neo-clouds-marketplace');
     assert.equal(r.body.indexHtmlDeployed, true);
+  });
+
+  it('registers a TPU node and filters listings by accelerator_type', async () => {
+    const p = await req(server, 'POST', '/v1/auth/register', {
+      name: 'TPU Lab', email: `tpu-${Date.now()}@test.com`, role: 'provider',
+    });
+    const n = await req(server, 'POST', '/v1/nodes', {
+      hostname: 'tpu-1',
+      accelerator_type: 'tpu',
+      accelerator_model: 'TPU-v5e-8',
+      gpu_model: 'TPU-v5e-8',
+      gpu_count: 8,
+      vram_gb_per_gpu: 16,
+      interconnect: 'ICI',
+      region: 'us-central1',
+    }, p.body.api_key);
+    assert.equal(n.status, 201);
+    assert.equal(n.body.accelerator_type, 'tpu');
+    await req(server, 'POST', `/v1/nodes/${n.body.node_id}/attest`, {}, p.body.api_key);
+    await req(server, 'POST', '/v1/listings', { node_id: n.body.node_id, price_per_hour: '1.60' }, p.body.api_key);
+    const tpus = await req(server, 'GET', '/v1/listings?accelerator_type=tpu');
+    assert.equal(tpus.status, 200);
+    assert.ok(tpus.body.some(l => l.accelerator_type === 'tpu'));
   });
 
   it('GET /v1/listings works without auth (public browse)', async () => {
