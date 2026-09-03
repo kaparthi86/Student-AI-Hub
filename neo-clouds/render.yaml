@@ -1,0 +1,24 @@
+# Render Blueprint — Neo Clouds Marketplace (standalone product)
+# Repo: neo-clouds-marketplace (NOT Student-AI-Hub)
+# Domain: neocloudsmarketplace.com
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: neo-clouds-marketplace
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: echo "Neo Clouds — no build step"
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CANONICAL_DOMAIN
+        value: neocloudsmarketplace.com
+      - key: SEED_DEMO
+        value: "1"
+      - key: BETA_TESTING
+        value: "0"
+      - key: BETA_MESSAGE
+        sync: false
