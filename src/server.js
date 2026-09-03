@@ -14,6 +14,7 @@ import { createListing, listListings, getListing, updateListing, deleteListing }
 import { createReservation, listReservations, getReservation, cancelReservation, completeReservation } from './reservations.js';
 import { registerModel, listModels, deleteModel, chatCompletionSync, chatCompletionStream, queryUsage, usageSummary } from './inference.js';
 import { getStats, getLeaderboard } from './stats.js';
+import { healthPayload, betaBannerText } from './health.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -136,8 +137,6 @@ export function buildRouter() {
 
   router.get('/v1/listings', async (req, res) => {
     try {
-      const account = authenticate(req);
-      requireAuth(account);
       const url = new URL(req.url, 'http://x');
       const filters = Object.fromEntries(url.searchParams);
       ok(res, listListings(filters));
@@ -146,8 +145,6 @@ export function buildRouter() {
 
   router.get('/v1/listings/:listing_id', async (req, res) => {
     try {
-      const account = authenticate(req);
-      requireAuth(account);
       ok(res, getListing(req.params.listing_id));
     } catch (e) { handleError(res, e); }
   });
@@ -224,8 +221,6 @@ export function buildRouter() {
 
   router.get('/v1/models', async (req, res) => {
     try {
-      const account = authenticate(req);
-      requireAuth(account);
       ok(res, listModels());
     } catch (e) { handleError(res, e); }
   });
@@ -287,8 +282,6 @@ export function buildRouter() {
 
   router.get('/v1/leaderboard', async (req, res) => {
     try {
-      const account = authenticate(req);
-      requireAuth(account);
       ok(res, getLeaderboard());
     } catch (e) { handleError(res, e); }
   });
@@ -306,9 +299,32 @@ export function createMarketplaceServer() {
     const url = new URL(req.url, 'http://x');
     const pathname = url.pathname;
 
+    // Health (Render + uptime monitors)
+    if (pathname === '/health' || pathname === '/api/health') {
+      return ok(res, healthPayload());
+    }
+
+    if (pathname === '/api/config') {
+      return ok(res, {
+        betaMessage: betaBannerText(),
+        canonicalDomain: process.env.CANONICAL_DOMAIN || 'neocloudsmarketplace.com',
+      });
+    }
+
+    // Legal
+    if (pathname === '/privacy.html') {
+      return serveStatic(res, join(PUBLIC_DIR, 'privacy.html'), 'text/html; charset=utf-8');
+    }
+    if (pathname === '/terms.html') {
+      return serveStatic(res, join(PUBLIC_DIR, 'terms.html'), 'text/html; charset=utf-8');
+    }
+    if (pathname === '/manifest.webmanifest') {
+      return serveStatic(res, join(PUBLIC_DIR, 'manifest.webmanifest'), 'application/manifest+json');
+    }
+
     // Static files
     if (pathname === '/' || pathname === '/index.html') {
-      return serveStatic(res, join(PUBLIC_DIR, 'index.html'), 'text/html');
+      return serveStatic(res, join(PUBLIC_DIR, 'index.html'), 'text/html; charset=utf-8');
     }
     if (pathname.startsWith('/public/')) {
       const filePath = join(PUBLIC_DIR, pathname.slice('/public/'.length));

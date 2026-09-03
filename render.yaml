@@ -1,0 +1,24 @@
+# Render Blueprint — Neo Clouds Marketplace
+# Docs: https://render.com/docs/blueprint-spec
+# Deploy: Render → New → Blueprint → pick this file (Root Directory: neo-clouds)
+services:
+  - type: web
+    name: neo-clouds-marketplace
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: echo "No build step — Node ESM only"
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CANONICAL_DOMAIN
+        value: neocloudsmarketplace.com
+      - key: SEED_DEMO
+        value: "1"
+      - key: BETA_TESTING
+        value: "0"
+      - key: BETA_MESSAGE
+        sync: false

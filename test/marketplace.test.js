@@ -468,3 +468,38 @@ describe('7 – HTTP integration', async () => {
     assert.equal(comp.body.status, 'completed');
   });
 });
+
+// ---------------------------------------------------------------------------
+// 7. Launch readiness
+// ---------------------------------------------------------------------------
+describe('7 – Launch readiness', async () => {
+  let server;
+  before(async () => { server = await startServer(); });
+  after(async () => { await stopServer(server); });
+
+  it('GET /api/health returns ok and indexHtmlDeployed', async () => {
+    const r = await req(server, 'GET', '/api/health');
+    assert.equal(r.status, 200);
+    assert.equal(r.body.ok, true);
+    assert.equal(r.body.service, 'neo-clouds-marketplace');
+    assert.equal(r.body.indexHtmlDeployed, true);
+  });
+
+  it('GET /v1/listings works without auth (public browse)', async () => {
+    const r = await req(server, 'GET', '/v1/listings');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body));
+  });
+
+  it('GET /v1/models works without auth', async () => {
+    const r = await req(server, 'GET', '/v1/models');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body));
+  });
+
+  it('GET /v1/leaderboard works without auth', async () => {
+    const r = await req(server, 'GET', '/v1/leaderboard');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body));
+  });
+});

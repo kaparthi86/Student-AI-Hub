@@ -1,60 +1,58 @@
 # Neo Clouds — Open-Source GPU Marketplace
 
-Neo Clouds is an open-source GPU compute marketplace where **providers** list GPU capacity with prices and **customers** browse, filter, and reserve instances through a simple REST API.
+**Neo Clouds** is an open GPU compute marketplace and inference platform — browse provider listings, reserve GPU hours, and call models through an OpenAI-compatible API.
 
-## How it differs from Vast.ai
-
-| | Vast.ai | Neo Clouds |
-|---|---|---|
-| Source | Closed | **Open** |
-| Protocol | Proprietary | **Standard REST** |
-| Composability | Monolithic | **Embed or extend freely** |
-| Auth model | Required | Pluggable (v1: none) |
-| Pricing arithmetic | Float | **BigInt (no rounding errors)** |
-
-Neo Clouds is designed to be embedded in larger platforms, federations, or private clouds. Fork it, extend it, run it yourself.
+**Launch domain:** [neocloudsmarketplace.com](https://neocloudsmarketplace.com)  
+**Launch guide:** [LAUNCH.md](./LAUNCH.md) (step-by-step, same flow as AI Hub)
 
 ## Quickstart
 
 ```bash
 cd neo-clouds
-node src/marketplace.js
-# Listening on port 8788
-```
-
-Set `PORT` env var to override the default port.
-
-## API Summary
-
-All routes are under `/v1` except `/health`.
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `POST` | `/v1/providers` | Register a provider |
-| `GET` | `/v1/providers` | List providers |
-| `POST` | `/v1/providers/:provider_id/listings` | Add a GPU listing |
-| `GET` | `/v1/listings` | Browse listings (filterable) |
-| `GET` | `/v1/listings/:listing_id` | Get one listing |
-| `PATCH` | `/v1/listings/:listing_id` | Update price / availability |
-| `DELETE` | `/v1/listings/:listing_id` | Remove listing |
-| `POST` | `/v1/reservations` | Reserve a listing |
-| `GET` | `/v1/reservations` | List reservations (filter by customer_id) |
-| `GET` | `/v1/reservations/:reservation_id` | Get one reservation |
-| `POST` | `/v1/reservations/:reservation_id/cancel` | Cancel a reservation |
-| `GET` | `/v1/stats` | Live marketplace statistics |
-
-### Listing filter params
-
-`GET /v1/listings?gpu_model=H100-SXM5-80GB&region=us-east-1&spot=false&min_vram_gb=40&max_price_per_hour=3.00&available=true`
-
-## Running tests
-
-```bash
-cd neo-clouds
+cp .env.example .env
 node --test
+npm start
+# → http://localhost:8788
 ```
 
-## Metering (future)
+Set `SEED_DEMO=1` in `.env` to load demo H100/A100 listings and models on boot.
 
-Integrate the **Easy Billing Meter** (`/easy-billing/`) to emit usage events per reservation-hour. The reservation `total_price` field is already computed with BigInt arithmetic compatible with the billing meter's scale factor.
+## What you get
+
+| Layer | Features |
+|---|---|
+| **Marketplace** | Provider nodes, attestation, listings, reservations |
+| **Inference** | OpenAI-compatible `/v1/chat/completions`, streaming, usage metering |
+| **Web UI** | Dark marketplace at `/` — browse without login, API key for reserve/chat |
+| **Launch** | `/api/health`, Privacy + Terms, Render blueprint, beta banner |
+
+## Deploy
+
+See **[LAUNCH.md](./LAUNCH.md)** for the full checklist. Short version:
+
+1. Deploy `neo-clouds/render.yaml` on Render
+2. Point **neocloudsmarketplace.com** at the service
+3. Verify `/api/health` → `indexHtmlDeployed: true`
+4. Share the URL
+
+## API (summary)
+
+| Method | Path | Auth |
+|---|---|---|
+| `GET` | `/api/health` | No |
+| `POST` | `/v1/auth/register` | No |
+| `GET` | `/v1/listings` | No (browse) |
+| `GET` | `/v1/models` | No (browse) |
+| `GET` | `/v1/stats` | No |
+| `POST` | `/v1/reservations` | Customer key |
+| `POST` | `/v1/chat/completions` | Any key |
+
+Full detail in source and tests.
+
+## Easy Billing (next)
+
+Wire reservations and inference usage to [Easy Billing](../easy-billing/) Meter for per-GPU-hour and per-token invoicing.
+
+## License
+
+Open-source — fork, extend, run your own marketplace.
