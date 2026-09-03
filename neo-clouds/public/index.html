@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Neo Clouds — open GPU marketplace. Browse H100 and A100 listings, reserve compute, and run inference like Hugging Face.">
+<meta name="theme-color" content="#0d1117">
+<link rel="manifest" href="/manifest.webmanifest">
 <title>Neo Clouds — Open GPU Marketplace</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -105,6 +108,12 @@
   .key-setup { background: var(--surface); border: 1px solid var(--gold-dim); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
   .key-setup h3 { color: var(--gold); margin-bottom: 8px; font-size: 0.9rem; }
 
+  .beta-banner { background: rgba(240,180,41,.12); border-bottom: 1px solid var(--gold-dim); color: var(--gold); text-align: center; padding: 10px 16px; font-size: 0.85rem; display: none; }
+  .beta-banner.visible { display: block; }
+
+  footer { text-align: center; padding: 32px 16px 48px; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 40px; }
+  footer a { color: var(--blue); text-decoration: none; margin: 0 8px; }
+
   @media (max-width: 600px) {
     .card-grid { grid-template-columns: 1fr; }
     .stats-strip { gap: 8px; }
@@ -112,6 +121,8 @@
 </style>
 </head>
 <body>
+
+<div class="beta-banner" id="beta-banner"></div>
 
 <nav>
   <div class="logo">☁ Neo Clouds</div>
@@ -132,13 +143,15 @@
   </div>
   <main>
     <div class="key-setup" id="key-setup-section">
-      <div>
-        <h3>API Key</h3>
+      <div style="flex:1;min-width:240px">
+        <h3>Get started</h3>
+        <p style="color:var(--muted);font-size:.8rem;margin-bottom:10px">Browse listings without a key. Reserve GPUs or run inference with an API key.</p>
         <div class="form-group" style="margin:0">
-          <input type="text" id="api-key-input" placeholder="nck_... or nkp_..." style="width:320px">
+          <input type="text" id="api-key-input" placeholder="nck_... or nkp_..." style="width:100%;max-width:360px">
         </div>
       </div>
       <button class="btn btn-outline btn-sm" onclick="saveKey()">Save Key</button>
+      <button class="btn btn-gold btn-sm" onclick="openRegister()">Get API Key</button>
     </div>
     <div class="card-grid" id="listings-grid"></div>
     <p id="listings-empty" style="color:var(--muted);display:none">No listings found.</p>
@@ -175,6 +188,32 @@
     <h3 style="margin-bottom:12px;color:var(--muted)">GPU Model Distribution</h3>
     <div id="gpu-chart" style="font-family:monospace;font-size:0.85rem;line-height:2;background:var(--surface);padding:16px;border-radius:var(--radius);border:1px solid var(--border)"></div>
   </main>
+</div>
+
+<!-- Register modal -->
+<div class="modal-overlay hidden" id="register-modal">
+  <div class="modal">
+    <h2>Get an API key</h2>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="reg-name" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@company.com">
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="reg-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)">
+        <option value="customer">Customer — reserve GPUs &amp; run inference</option>
+        <option value="provider">Provider — list GPU nodes &amp; models</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('register-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="submitRegister()">Create key</button>
+    </div>
+  </div>
 </div>
 
 <!-- Reserve modal -->
@@ -225,6 +264,8 @@ if (urlParams.get('api_key')) {
 }
 if (API_KEY) document.getElementById('api-key-input').value = API_KEY;
 
+loadSiteConfig();
+
 // ---------------------------------------------------------------------------
 // Routing
 // ---------------------------------------------------------------------------
@@ -250,11 +291,53 @@ navigate(location.hash || '#listings');
 // ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
+async function publicApi(path) {
+  const res = await fetch('/v1' + path);
+  return res.json();
+}
+
 async function api(method, path, body) {
-  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` } };
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (API_KEY) opts.headers['Authorization'] = `Bearer ${API_KEY}`;
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch('/v1' + path, opts);
   return res.json();
+}
+
+async function loadSiteConfig() {
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+    const banner = document.getElementById('beta-banner');
+    if (cfg.betaMessage) {
+      banner.textContent = cfg.betaMessage;
+      banner.classList.add('visible');
+    }
+  } catch { /* ignore */ }
+}
+
+function openRegister() {
+  document.getElementById('register-modal').classList.remove('hidden');
+}
+
+async function submitRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const role = document.getElementById('reg-role').value;
+  if (!name || !email) { toast('Name and email required', true); return; }
+  try {
+    const res = await fetch('/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error);
+    API_KEY = data.api_key;
+    localStorage.setItem('neo_api_key', API_KEY);
+    document.getElementById('api-key-input').value = API_KEY;
+    closeModal('register-modal');
+    toast(`Key saved (${role}). Keep it secret.`);
+  } catch (e) { toast(e.message, true); }
 }
 
 function saveKey() {
@@ -280,7 +363,7 @@ async function loadListings() {
   const empty = document.getElementById('listings-empty');
   grid.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
   try {
-    const data = await api('GET', '/listings');
+    const data = await publicApi('/listings');
     if (!Array.isArray(data)) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
     grid.innerHTML = '';
     empty.style.display = data.length === 0 ? 'block' : 'none';
@@ -344,7 +427,7 @@ async function loadModels() {
   const empty = document.getElementById('models-empty');
   grid.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
   try {
-    const data = await api('GET', '/models');
+    const data = await publicApi('/models');
     if (!Array.isArray(data)) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
     grid.innerHTML = '';
     empty.style.display = data.length === 0 ? 'block' : 'none';
@@ -438,7 +521,7 @@ async function loadProviders() {
   const tbody = document.getElementById('providers-tbody');
   tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted)">Loading…</td></tr>';
   try {
-    const data = await api('GET', '/leaderboard');
+    const data = await publicApi('/leaderboard');
     if (!Array.isArray(data) || data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted)">No providers yet.</td></tr>';
       return;
@@ -516,5 +599,9 @@ function closeModal(id) {
   document.getElementById(id).classList.add('hidden');
 }
 </script>
+<footer>
+  <p>Neo Clouds Marketplace · Open-source GPU compute</p>
+  <p><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/api/health">Health</a></p>
+</footer>
 </body>
 </html>

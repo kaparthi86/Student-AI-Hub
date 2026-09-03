@@ -1,0 +1,10 @@
+{
+  "name": "Neo Clouds Marketplace",
+  "short_name": "Neo Clouds",
+  "description": "Open GPU marketplace — browse, reserve, and run inference.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": []
+}
