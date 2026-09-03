@@ -6,7 +6,7 @@ Open GPU marketplace and inference platform — **separate from [Student AI Hub]
 **Launch guide:** [LAUNCH.md](./LAUNCH.md)  
 **Product boundary:** [PRODUCT.md](./PRODUCT.md)
 
-Providers list GPU capacity. Customers browse by model, region, and price, reserve hours, and call models via an OpenAI-compatible API.
+Providers list **GPUs and TPUs**. Customers browse by accelerator type, model, region, and price, reserve hours, and call models via an OpenAI-compatible API.
 
 ## Quickstart
 
