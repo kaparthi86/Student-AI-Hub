@@ -139,21 +139,26 @@
 <!-- Listings page -->
 <div id="page-listings" class="page active">
   <div class="hero">
-    <h1>Open GPU Marketplace</h1>
-    <p>Rent bare-metal GPU nodes directly from providers — no middlemen, instant access.</p>
+    <h1>GPU &amp; TPU Marketplace</h1>
+    <p>Rent accelerators from providers — NVIDIA GPUs and Google-style TPUs, listed with a price.</p>
     <div class="stats-strip" id="hero-stats"></div>
   </div>
   <main>
     <div class="key-setup" id="key-setup-section">
       <div style="flex:1;min-width:240px">
         <h3>Get started</h3>
-        <p style="color:var(--muted);font-size:.8rem;margin-bottom:10px">Browse listings without a key. Reserve GPUs or run inference with an API key.</p>
+        <p style="color:var(--muted);font-size:.8rem;margin-bottom:10px">Browse GPUs and TPUs without a key. Reserve or run inference with an API key.</p>
         <div class="form-group" style="margin:0">
           <input type="text" id="api-key-input" placeholder="nck_... or nkp_..." style="width:100%;max-width:360px">
         </div>
       </div>
       <button class="btn btn-outline btn-sm" onclick="saveKey()">Save Key</button>
       <button class="btn btn-gold btn-sm" onclick="openRegister()">Get API Key</button>
+    </div>
+    <div class="badges" style="margin-bottom:16px">
+      <button class="btn btn-outline btn-sm" id="filter-all" onclick="setAccelFilter('')">All</button>
+      <button class="btn btn-outline btn-sm" id="filter-gpu" onclick="setAccelFilter('gpu')">GPUs</button>
+      <button class="btn btn-outline btn-sm" id="filter-tpu" onclick="setAccelFilter('tpu')">TPUs</button>
     </div>
     <div class="card-grid" id="listings-grid"></div>
     <p id="listings-empty" style="color:var(--muted);display:none">No listings found.</p>
@@ -207,8 +212,8 @@
     <div class="form-group">
       <label>Role</label>
       <select id="reg-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)">
-        <option value="customer">Customer — reserve GPUs &amp; run inference</option>
-        <option value="provider">Provider — list GPU nodes &amp; models</option>
+        <option value="customer">Customer — reserve GPUs/TPUs &amp; run inference</option>
+        <option value="provider">Provider — list GPU or TPU nodes</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -221,7 +226,7 @@
 <!-- Reserve modal -->
 <div class="modal-overlay hidden" id="reserve-modal">
   <div class="modal">
-    <h2>Reserve GPU</h2>
+    <h2>Reserve accelerator</h2>
     <p id="reserve-info" style="color:var(--muted);font-size:.85rem;margin-bottom:14px"></p>
     <div class="form-group">
       <label>Hours (1–720)</label>
@@ -360,12 +365,20 @@ function toast(msg, isError = false) {
 // ---------------------------------------------------------------------------
 // Listings
 // ---------------------------------------------------------------------------
+let accelFilter = '';
+
+function setAccelFilter(kind) {
+  accelFilter = kind;
+  loadListings();
+}
+
 async function loadListings() {
   const grid = document.getElementById('listings-grid');
   const empty = document.getElementById('listings-empty');
   grid.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
   try {
-    const data = await publicApi('/listings');
+    const q = accelFilter ? `?accelerator_type=${encodeURIComponent(accelFilter)}` : '';
+    const data = await publicApi('/listings' + q);
     if (!Array.isArray(data)) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
     grid.innerHTML = '';
     empty.style.display = data.length === 0 ? 'block' : 'none';
@@ -382,7 +395,7 @@ function listingCard(l) {
     <div class="card-header">
       <div>
         <div class="gpu-model">${esc(l.gpu_model)}</div>
-        <div class="meta" style="margin-top:4px">${l.gpu_count}× GPU · ${l.vram_gb}GB VRAM</div>
+        <div class="meta" style="margin-top:4px">${l.gpu_count}× ${(l.accelerator_type || 'gpu').toUpperCase()} · ${l.vram_gb}GB memory</div>
       </div>
       <div style="text-align:right">
         <div class="price">$${esc(l.price_per_hour)}</div>
@@ -390,6 +403,7 @@ function listingCard(l) {
       </div>
     </div>
     <div class="badges">
+      <span class="badge badge-interconnect">${esc((l.accelerator_type || 'gpu').toUpperCase())}</span>
       ${l.interconnect !== 'none' ? `<span class="badge badge-interconnect">${esc(l.interconnect)}</span>` : ''}
       ${l.spot ? '<span class="badge badge-spot">SPOT</span>' : ''}
       <span class="badge ${l.available ? 'badge-available' : 'badge-unavailable'}">${l.available ? 'Available' : 'In Use'}</span>

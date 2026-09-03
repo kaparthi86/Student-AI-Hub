@@ -23,6 +23,11 @@ export function seedDemoMarketplace() {
     email: 'demo-provider-b@neoclouds.local',
     role: 'provider',
   });
+  const providerC = registerAccount({
+    name: 'Helios TPU',
+    email: 'demo-provider-tpu@neoclouds.local',
+    role: 'provider',
+  });
   registerAccount({
     name: 'Demo Customer',
     email: 'demo-customer@neoclouds.local',
@@ -84,6 +89,26 @@ export function seedDemoMarketplace() {
     storage_gb: 500,
   });
 
+  const nodeTpu = registerNode(providerC.account_id, {
+    hostname: 'tpu-helios-us-central1',
+    accelerator_type: 'tpu',
+    accelerator_model: 'TPU-v5e-8',
+    gpu_model: 'TPU-v5e-8',
+    gpu_count: 8,
+    vram_gb_per_gpu: 16,
+    interconnect: 'ICI',
+    region: 'us-central1',
+  });
+  attestNode(providerC.account_id, nodeTpu.node_id);
+  createListing(providerC.account_id, {
+    node_id: nodeTpu.node_id,
+    price_per_hour: '1.60',
+    spot: false,
+    tags: ['tpu', 'training'],
+    network_bandwidth_gbps: 200,
+    storage_gb: 1000,
+  });
+
   registerModel(providerA.account_id, {
     node_id: nodeA.node_id,
     model_name: 'meta-llama/Llama-3.1-8B-Instruct',
@@ -106,6 +131,6 @@ export function seedDemoMarketplace() {
   return {
     demo_provider_keys_note:
       'Demo provider keys are only returned once at seed time in server logs when SEED_DEMO=1.',
-    providers: [providerA.name, providerB.name],
+    providers: [providerA.name, providerB.name, providerC.name],
   };
 }
