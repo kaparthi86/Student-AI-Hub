@@ -1,0 +1,13 @@
+{
+  "name": "neo-clouds-marketplace",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Open-source GPU compute marketplace",
+  "scripts": {
+    "start": "node src/marketplace.js",
+    "test": "node --test test/marketplace.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
