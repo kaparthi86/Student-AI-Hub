@@ -8,7 +8,7 @@
 | Product | Student + Finance AI tutoring | GPU marketplace + inference API |
 | Users | Students, learners | GPU providers + ML customers |
 | Deploy | Root `render.yaml` → `student-ai-hub` | **`neo-clouds/render.yaml`** → `neo-clouds-marketplace` |
-| Repo (recommended) | `Student-AI-Hub` | **`neo-clouds-marketplace`** (standalone) |
+| Repo (recommended) | `Student-AI-Hub` | **`neo-clouds-marketplace`** (standalone; private OK) |
 
 Run **two Render web services**, two domains, two codebases. Do not point `neocloudsmarketplace.com` at the AI Hub service.
 
