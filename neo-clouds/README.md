@@ -1,58 +1,49 @@
-# Neo Clouds — Open-Source GPU Marketplace
+# Neo Clouds Marketplace
 
-**Neo Clouds** is an open GPU compute marketplace and inference platform — browse provider listings, reserve GPU hours, and call models through an OpenAI-compatible API.
+Open GPU marketplace and inference platform — **separate from [Student AI Hub](https://github.com/kaparthi86/Student-AI-Hub)**.
 
-**Launch domain:** [neocloudsmarketplace.com](https://neocloudsmarketplace.com)  
-**Launch guide:** [LAUNCH.md](./LAUNCH.md) (step-by-step, same flow as AI Hub)
+**Live site:** [neocloudsmarketplace.com](https://neocloudsmarketplace.com)  
+**Launch guide:** [LAUNCH.md](./LAUNCH.md)  
+**Product boundary:** [PRODUCT.md](./PRODUCT.md)
+
+Providers list GPU capacity. Customers browse by model, region, and price, reserve hours, and call models via an OpenAI-compatible API.
 
 ## Quickstart
 
 ```bash
-cd neo-clouds
 cp .env.example .env
 node --test
 npm start
 # → http://localhost:8788
 ```
 
-Set `SEED_DEMO=1` in `.env` to load demo H100/A100 listings and models on boot.
+`SEED_DEMO=1` loads sample H100/A100 listings and models.
 
-## What you get
+## Deploy (standalone)
 
-| Layer | Features |
-|---|---|
-| **Marketplace** | Provider nodes, attestation, listings, reservations |
-| **Inference** | OpenAI-compatible `/v1/chat/completions`, streaming, usage metering |
-| **Web UI** | Dark marketplace at `/` — browse without login, API key for reserve/chat |
-| **Launch** | `/api/health`, Privacy + Terms, Render blueprint, beta banner |
+1. Use repo **`neo-clouds-marketplace`** (not Student-AI-Hub) — see [LAUNCH.md](./LAUNCH.md)
+2. Render Blueprint → `render.yaml` at repo root
+3. Custom domain → **neocloudsmarketplace.com**
+4. Verify `/api/health`
 
-## Deploy
+## Features
 
-See **[LAUNCH.md](./LAUNCH.md)** for the full checklist. Short version:
+- GPU listings, reservations, provider nodes + attestation
+- OpenAI-compatible `/v1/chat/completions` with streaming
+- Public browse; API keys for reserve and inference
+- Privacy, Terms, health check, beta banner
 
-1. Deploy `neo-clouds/render.yaml` on Render
-2. Point **neocloudsmarketplace.com** at the service
-3. Verify `/api/health` → `indexHtmlDeployed: true`
-4. Share the URL
-
-## API (summary)
+## API
 
 | Method | Path | Auth |
 |---|---|---|
 | `GET` | `/api/health` | No |
 | `POST` | `/v1/auth/register` | No |
-| `GET` | `/v1/listings` | No (browse) |
-| `GET` | `/v1/models` | No (browse) |
-| `GET` | `/v1/stats` | No |
+| `GET` | `/v1/listings` | No |
+| `GET` | `/v1/models` | No |
 | `POST` | `/v1/reservations` | Customer key |
 | `POST` | `/v1/chat/completions` | Any key |
 
-Full detail in source and tests.
-
-## Easy Billing (next)
-
-Wire reservations and inference usage to [Easy Billing](../easy-billing/) Meter for per-GPU-hour and per-token invoicing.
-
 ## License
 
-Open-source — fork, extend, run your own marketplace.
+Open source — fork and run your own marketplace.
