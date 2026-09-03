@@ -30,15 +30,24 @@ Create a new repo, e.g. **`neo-clouds-marketplace`**, empty (no README).
 
 Public is only required if you want the “open-source GPU marketplace” pitch to include a public source repo. The product at **neocloudsmarketplace.com** works the same either way.
 
-From this monorepo (one-time export):
+**If you are working in Cursor Cloud**, this environment cannot push to the private repo (GitHub token is only for Student-AI-Hub). Use this instead — the standalone tree is already on a public branch:
 
 ```bash
-cd neo-clouds
-chmod +x scripts/publish-standalone.sh
-./scripts/publish-standalone.sh git@github.com:YOUR_USER/neo-clouds-marketplace.git
+git clone --depth 1 -b cursor/neo-clouds-standalone-e68b https://github.com/kaparthi86/Student-AI-Hub.git neo-clouds-src
+cd neo-clouds-src
+git remote set-url origin https://github.com/kaparthi86/neo-clouds-marketplace.git
+git push -u origin HEAD:main
 ```
 
-Or copy the `neo-clouds/` folder to the new repo root manually. The repo root should contain `package.json`, `render.yaml`, `src/`, `public/` — not a `neo-clouds/` subfolder.
+That copies only Neo Clouds files (`src/`, `public/`, `render.yaml`) onto your private repo `main`.
+
+Or, from this folder on a machine that can see the private repo:
+
+```bash
+./scripts/publish-standalone.sh https://github.com/kaparthi86/neo-clouds-marketplace.git
+```
+
+The repo root should contain `package.json`, `render.yaml`, `src/`, `public/` — not a nested `neo-clouds/` folder.
 
 **Ongoing development:** work in the standalone repo, or sync from `neo-clouds/` in Student-AI-Hub when needed.
 
