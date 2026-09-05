@@ -157,7 +157,3 @@ For a **very short** test you can use `npx localtunnel --port 3001` or [ngrok](h
 - PDF support uses `pdf-parse` (best-effort text extraction).
 - Large documents are truncated server-side for safety; increase `MAX_DOC_CHARS` in `server.js` if needed.
 - Public launch checklist: marketing landing on `/`, Privacy + Terms pages, **`BETA_TESTING=0`**, paid/always-on hosting before a large wave, `SUPABASE_SERVICE_ROLE_KEY` + feedback table for thumbs votes, and HF quota/spend alerts. Rate limits and server-side session auth are already in `server.js`.
-
-## Related products (separate deploy)
-
-**Neo Clouds Marketplace** (`neo-clouds/`) is not part of AI Hub. It launches at **neocloudsmarketplace.com** with its own Render service and repo. See `neo-clouds/LAUNCH.md`.
