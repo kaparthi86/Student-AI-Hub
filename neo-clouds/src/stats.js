@@ -20,6 +20,7 @@ export function getStats() {
   });
 
   const gpuModels = [...new Set(nodes.map(n => n.gpu_model))];
+  const acceleratorTypes = [...new Set(nodes.map(n => n.accelerator_type || 'gpu'))];
   const regions = [...new Set(nodes.map(n => n.region))];
 
   let cheapest = null;
@@ -39,6 +40,7 @@ export function getStats() {
     models: { total: models.length, available: models.filter(m => m.status === 'available').length },
     reservations: { active: reservations.filter(r => r.status === 'active').length, total: reservations.length },
     gpu_models: gpuModels,
+    accelerator_types: acceleratorTypes,
     regions,
     cheapest_per_hour: cheapest ? cheapest.str : null,
     currency: 'USD',

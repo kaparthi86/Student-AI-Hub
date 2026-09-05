@@ -11,12 +11,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const indexHtmlPath = join(PUBLIC_DIR, 'index.html');
 
+export const DEFAULT_HONESTY_BANNER =
+  'Early access: listings, reservations, and inference are simulated — not real GPU or TPU access yet. Reservations do not charge you. No payments are collected.';
+
+/** Always shown. BETA_MESSAGE overrides the wording; BETA_TESTING no longer hides it. */
+export function honestyBannerText() {
+  return process.env.BETA_MESSAGE || DEFAULT_HONESTY_BANNER;
+}
+
 export function betaBannerText() {
-  if (process.env.BETA_TESTING !== '1') return '';
-  return (
-    process.env.BETA_MESSAGE ||
-    'Neo Clouds is in early access. GPU listings and inference are simulated until providers connect real hardware.'
-  );
+  return honestyBannerText();
 }
 
 export function healthPayload() {
@@ -26,6 +30,8 @@ export function healthPayload() {
     ok: true,
     service: 'neo-clouds-marketplace',
     betaMessage: betaBannerText(),
+    simulated: true,
+    paymentsEnabled: false,
     indexHtmlDeployed,
     seedDemoEnabled: process.env.SEED_DEMO === '1',
     accounts: store.accounts.size,

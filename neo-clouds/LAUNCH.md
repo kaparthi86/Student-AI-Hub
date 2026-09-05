@@ -82,7 +82,7 @@ Environment (defaults in `render.yaml`):
 | `SEED_DEMO` | `1` |
 | `BETA_TESTING` | `0` |
 
-Invite-only beta: `BETA_TESTING=1` + `BETA_MESSAGE=...`
+The homepage always shows that reserve/inference are simulated and that nothing is charged. Optional `BETA_MESSAGE` overrides that wording. Do not add Stripe or checkout until real hardware is live.
 
 ---
 

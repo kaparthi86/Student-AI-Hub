@@ -307,6 +307,8 @@ export function createMarketplaceServer() {
     if (pathname === '/api/config') {
       return ok(res, {
         betaMessage: betaBannerText(),
+        simulated: true,
+        paymentsEnabled: false,
         canonicalDomain: process.env.CANONICAL_DOMAIN || 'neocloudsmarketplace.com',
       });
     }
