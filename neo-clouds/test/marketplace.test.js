@@ -239,6 +239,8 @@ describe('4 – Reservations', async () => {
     assert.ok(r.body.connection_info);
     assert.equal(r.body.connection_info.ssh_port, 22);
     assert.equal(r.body.hours, 3);
+    assert.equal(r.body.simulated, true);
+    assert.equal(r.body.payment_collected, false);
     reservationId = r.body.reservation_id;
   });
 
@@ -344,6 +346,8 @@ describe('5 – Inference gateway', async () => {
     assert.ok(r.body.choices[0].message.content);
     assert.ok(r.body.usage.prompt_tokens > 0);
     assert.ok(r.body.usage.cost_usd);
+    assert.equal(r.body.usage.simulated, true);
+    assert.equal(r.body.usage.payment_collected, false);
   });
 
   it('POST /v1/chat/completions resolves model by model_id too', async () => {
@@ -375,6 +379,8 @@ describe('5 – Inference gateway', async () => {
     const r = await req(server, 'GET', '/v1/usage/summary', undefined, customerKey);
     assert.equal(r.status, 200);
     assert.ok(r.body.total_input_tokens >= 0);
+    assert.equal(r.body.simulated, true);
+    assert.equal(r.body.payment_collected, false);
     assert.ok(r.body.total_cost_usd !== undefined);
   });
 
@@ -484,6 +490,18 @@ describe('7 – Launch readiness', async () => {
     assert.equal(r.body.ok, true);
     assert.equal(r.body.service, 'neo-clouds-marketplace');
     assert.equal(r.body.indexHtmlDeployed, true);
+    assert.equal(r.body.simulated, true);
+    assert.equal(r.body.paymentsEnabled, false);
+    assert.match(r.body.betaMessage, /simulated/i);
+    assert.match(r.body.betaMessage, /do not charge|payments/i);
+  });
+
+  it('GET /api/config always advertises simulated + no payments', async () => {
+    const r = await req(server, 'GET', '/api/config');
+    assert.equal(r.status, 200);
+    assert.equal(r.body.simulated, true);
+    assert.equal(r.body.paymentsEnabled, false);
+    assert.match(r.body.betaMessage, /simulated/i);
   });
 
   it('registers a TPU node and filters listings by accelerator_type', async () => {

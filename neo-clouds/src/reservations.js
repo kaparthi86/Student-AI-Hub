@@ -35,6 +35,8 @@ export function createReservation(customerId, body) {
     hours,
     total_price: formatPrice(total),
     currency: 'USD',
+    simulated: true,
+    payment_collected: false,
     status: 'active',
     reserved_at: new Date().toISOString(),
     starts_at: startsAt.toISOString(),
@@ -44,7 +46,7 @@ export function createReservation(customerId, body) {
     connection_info: {
       ssh_host: node.hostname,
       ssh_port: 22,
-      note: 'SSH key exchange not yet implemented',
+      note: 'Simulated reservation. No real SSH or accelerator is provisioned. You were not charged.',
     },
   };
 

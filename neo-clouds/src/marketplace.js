@@ -31,9 +31,7 @@ try {
     if (seedInfo) {
       console.log('SEED_DEMO=1 — demo listings and models loaded.');
     }
-    if (process.env.BETA_TESTING === '1') {
-      console.log(`Beta banner: ${process.env.BETA_MESSAGE || '(default message)'}`);
-    }
+    console.log('Honesty: reservations and inference are simulated; payments are disabled.');
   });
 } catch (err) {
   console.error('FATAL startup:', err);

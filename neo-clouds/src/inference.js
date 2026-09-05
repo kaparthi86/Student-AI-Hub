@@ -48,7 +48,7 @@ export function deleteModel(providerId, modelId) {
 // Chat completions
 // ---------------------------------------------------------------------------
 
-const CANNED_RESPONSE = 'Hello! I am a Neo Clouds simulated AI assistant. Your request has been received and processed on our GPU cluster. This is a demonstration response showing that the inference gateway is operational.';
+const CANNED_RESPONSE = 'Hello! I am a Neo Clouds simulated assistant. This is a canned demonstration response — no real GPU or TPU ran this request, and you were not charged.';
 
 function resolveModel(modelRef) {
   for (const m of store.models.values()) {
@@ -84,6 +84,8 @@ function recordUsage({ model, inputTokens, outputTokens, customerId }) {
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     cost_usd: cost,
+    simulated: true,
+    payment_collected: false,
     timestamp: new Date().toISOString(),
   });
   return cost;
@@ -118,6 +120,8 @@ export function chatCompletionSync(account, body) {
       completion_tokens: outputTokens,
       total_tokens: inputTokens + outputTokens,
       cost_usd: costUsd,
+      simulated: true,
+      payment_collected: false,
     },
   };
 }
@@ -180,5 +184,7 @@ export function usageSummary(account, filters) {
     total_input_tokens: totalIn,
     total_output_tokens: totalOut,
     total_cost_usd: formatPrice(totalCost),
+    simulated: true,
+    payment_collected: false,
   };
 }
