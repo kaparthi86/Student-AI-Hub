@@ -1218,6 +1218,7 @@ function responseContractInstruction(mode) {
       "8) If the user shares account numbers, passwords, or SSNs, tell them to remove that information and not send secrets.",
       "9) When they provide numbers, do the arithmetic clearly (leftover, monthly save, simple percentages).",
       "10) End when they can take a small next step. For high-stakes topics, one short line: talk to a qualified professional for personal decisions.",
+      "11) When they share monthly money numbers, after the prose include exactly one fenced block tagged hub-chart with JSON only: {\"title\":\"This month\",\"kicker\":\"Your plan\",\"hero\":{\"label\":\"Left after this plan\",\"value\":0,\"tone\":\"ok\"},\"mix\":[{\"label\":\"Needs\",\"value\":0,\"tone\":\"need\"},{\"label\":\"Wants\",\"value\":0,\"tone\":\"want\"},{\"label\":\"Set aside\",\"value\":0,\"tone\":\"save\"}],\"bars\":[{\"label\":\"Housing\",\"value\":0}]}. Use only their numbers. tone must be ok, tight, over, need, want, or save. No HTML and no extra commentary inside the fence.",
     ].join(" ");
   }
   if (mode === "code") {
@@ -1237,15 +1238,24 @@ function responseContractInstruction(mode) {
       "Notebook contract:",
       "8) Use only provided source materials; otherwise say Not in document.",
       "9) Prefer steps and bullets grounded in the notes; name the source file when useful.",
+      "10) If the notes clearly contain a process, contrast, fraction, or number line, you may add one hub-chart fence grounded only in those notes (same JSON kinds as Ask: chart, steps, compare, fraction, or numberline).",
     ].join(" ");
   }
   // learn / Ask
   return [
-    ...shared,
+    "Response contract (follow strictly):",
+    "1) Start with a direct answer in 1-2 sentences. Do not restate the question.",
+    "2) Then the smallest useful explanation in short paragraphs or hyphen bullets. Do not write a numbered step list in the prose when you include a steps visual.",
+    "3) Prefer one concrete example over vague advice. Keep paragraphs to 1-3 short sentences.",
+    "4) No filler openers (avoid So, Great question, Sure, Absolutely, As an AI, I'd be happy to).",
+    "5) No decorative **bold** or *italic* asterisks. Use ## headings sparingly and only with real titles.",
+    "6) Stay within scope: teach and practice help only - do not write work the student should submit as their own.",
+    "7) End when the student can act. Do not pad with generic encouragement or recap fluff.",
     "Ask contract:",
     "8) Teach the smallest useful explanation after the direct answer - typically under ~180 words unless the student asks for depth.",
-    "9) If the topic is multi-step, use numbered steps with one idea each.",
-    "10) If a common misconception exists, call it out in one short line.",
+    "9) If the idea is a process, put the procedure in one hub-chart steps visual. Do not also repeat those steps as 1. 2. 3. in the prose.",
+    "10) If a common misconception exists, call it out in one short line after the visual (or after the prose if there is no visual).",
+    "11) If a quantity comparison, a fraction, a number line, a 3-6 step process, or a 2-3 item contrast would make the idea clearer, add exactly one fenced block tagged hub-chart after the prose. JSON only, one kind: {\"kind\":\"chart\",\"title\":\"...\",\"bars\":[{\"label\":\"A\",\"value\":2}]} or {\"kind\":\"steps\",\"title\":\"...\",\"steps\":[{\"label\":\"Name\",\"text\":\"One sentence.\"}]} or {\"kind\":\"compare\",\"title\":\"...\",\"compare\":[{\"label\":\"A\",\"text\":\"...\"},{\"label\":\"B\",\"text\":\"...\"}]} or {\"kind\":\"fraction\",\"title\":\"...\",\"fractions\":[{\"n\":3,\"d\":4,\"label\":\"3/4\"}]} or {\"kind\":\"numberline\",\"title\":\"...\",\"min\":0,\"max\":10,\"marks\":[{\"value\":3,\"label\":\"3\"}]}. At most 6 steps, 3 compare cards, 3 fractions, or 6 number-line marks. Denominator 2-16. Skip the fence when words are enough. No HTML, images, or mermaid.",
   ].join(" ");
 }
 
@@ -1282,7 +1292,8 @@ function modeStyleInstruction(studyMode) {
   return [
     "Style: Explain.",
     "Honor the response contract above on every turn.",
-    "If the idea has a sequence, use numbered steps (1. 2. 3.), one idea per step.",
+    "If you included a hub-chart steps visual, do not also write those same steps as a numbered list in the prose.",
+    "If the idea has a sequence and you are not using a visual, use numbered steps (1. 2. 3.), one idea per step.",
     "Otherwise use short clean paragraphs or hyphen bullets. Avoid markdown clutter.",
   ].join(" ");
 }
