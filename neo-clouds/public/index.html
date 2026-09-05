@@ -362,7 +362,7 @@ function toast(msg, isError = false) {
   el.className = 'toast' + (isError ? ' error' : '');
   el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), 5000);
 }
 
 // ---------------------------------------------------------------------------
