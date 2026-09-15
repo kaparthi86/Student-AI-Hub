@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="AI Hub" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=launch-landing-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=no-health-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>AI Hub</title>
@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=hub-focus-2" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=hub-focus-2" />
+    <link rel="stylesheet" href="./styles.css?v=no-health-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=no-health-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -231,7 +231,7 @@
             AI Hub can make mistakes. Check important facts.
           </p>
           <p class="fine-print-line" data-i18n="disclaimer_hub">
-            For learning, wellness, and money planning help &mdash; not a substitute for professional medical, legal, or
+            For learning and money planning help &mdash; not a substitute for professional legal or
             financial advice.
           </p>
           <p class="fine-print-line" data-i18n="disclaimer_nonprofit">
@@ -278,7 +278,7 @@
             </svg>
           </span>
           <h1 class="hub-brand" id="hubBrandTitle">AI Hub</h1>
-          <p class="hub-tagline" id="hubTagline">Focused AI for learning, health, and money</p>
+          <p class="hub-tagline" id="hubTagline">Focused AI for learning and money</p>
           <p class="hub-welcome muted hidden" id="hubWelcome"></p>
         </div>
 
@@ -336,20 +336,6 @@
             <span class="hub-tile-title" id="tileFinanceTitle">Finance AI</span>
             <span class="hub-tile-sub" id="tileFinanceSub">Plan budgets and goals with clarity</span>
             <span class="hub-tile-cta" id="tileFinanceCta">Open -&gt;</span>
-          </button>
-          <button type="button" class="hub-tile hub-tile--soon" data-vertical="health" role="listitem" id="tileHealth">
-            <span class="hub-tile-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="40" height="40" rx="12" fill="#E8E6E1" />
-                <path d="M18 13h4v14h-4V13zm-7 7h18v4H11v-4z" fill="#6F6B63" fill-opacity="0.85" />
-              </svg>
-            </span>
-            <span class="hub-tile-copy">
-              <span class="hub-tile-badge hub-tile-badge--soon" id="tileHealthBadge">Soon</span>
-              <span class="hub-tile-title" id="tileHealthTitle">Health AI</span>
-              <span class="hub-tile-sub" id="tileHealthSub">Understand wellness in plain language</span>
-            </span>
-            <span class="hub-tile-cta" id="tileHealthCta">Coming soon</span>
           </button>
         </div>
         <p class="hub-privacy-note">
@@ -1042,30 +1028,6 @@
     </main>
 
     <div
-      id="soonModal"
-      class="settings-modal soon-modal hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="soonModalTitle"
-      aria-describedby="soonModalBody soonModalNote"
-    >
-      <div class="settings-card soon-card">
-        <div class="settings-head">
-          <h3 id="soonModalTitle">Health AI</h3>
-          <button id="soonModalCloseBtn" class="ghost-btn tiny-btn" type="button" aria-label="Close">Close</button>
-        </div>
-        <p id="soonModalBody" class="soon-body">
-          We’re building a calm wellness guide — plain-language answers, habits, and clear limits.
-        </p>
-        <p id="soonModalNote" class="muted soon-note">Not medical advice. Never for emergencies.</p>
-        <div class="soon-actions">
-          <button id="soonNotifyBtn" class="primary-btn" type="button">Notify me</button>
-          <button id="soonBackBtn" class="ghost-btn" type="button">Back to Hub</button>
-        </div>
-      </div>
-    </div>
-
-    <div
       id="honorCodeModal"
       class="settings-modal honor-code-modal hidden"
       role="dialog"
@@ -1182,6 +1144,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=hub-focus-1"></script>
+    <script defer src="./app.js?v=no-health-1"></script>
   </body>
 </html>

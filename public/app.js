@@ -160,13 +160,10 @@ const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
 const FINANCE_DISCLAIMER_ACK_KEY = "ai_hub_finance_disclaimer_ack_v1";
 const FINANCE_SESSION_KEY = "ai_hub_finance_v1";
-const HUB_WAITLIST_KEY = "ai_hub_waitlist_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
 /** @type {"hub" | "student" | "finance" | null} */
 let activeSurface = null;
-/** @type {"health" | "finance" | null} */
-let soonVertical = null;
 
 let deferredInstallPrompt = null;
 let chatSessionOpen = false;
@@ -217,45 +214,28 @@ const I18N = {
     sources_label: "Sources",
     status_searching_web: "Searching the web...",
     tile_student_badge: "Available now",
-    tile_soon_badge: "Soon",
     hub_hint: "Choose a workspace to get started",
     resume_student: "Resume Student AI",
     resume_finance: "Resume Finance AI",
     live_web_unavailable: "Live web needs a search key on the server",
-    auth_brand_kicker: "Learning, health, and money - in one Hub",
+    auth_brand_kicker: "Learning and money - in one Hub",
     hub_brand: "AI Hub",
-    hub_tagline: "Focused AI for learning, health, and money",
+    hub_tagline: "Focused AI for learning and money",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code, and study in one place",
     tile_student_cta: "Open ->",
-    tile_health_title: "Health AI",
-    tile_health_sub: "Understand wellness in plain language",
-    tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Plan budgets and goals with clarity",
     tile_finance_cta: "Open ->",
     hub_privacy_note: "AI Hub does not sell your data or show ads from your chats.",
     disclaimer_privacy:
       "AI Hub does not sell your personal data or show advertising based on your chats.",
-    soon_health_title: "Health AI",
-    soon_health_body: "We're building a calm wellness guide - plain-language answers, habits, and clear limits.",
-    soon_health_note: "Not medical advice. Never for emergencies.",
-    soon_finance_title: "Finance AI",
-    soon_finance_body: "We're building a clear money-planning space - budgets, goals, and practical explanations.",
-    soon_finance_note: "Educational only. Not financial advice.",
-    soon_notify: "Notify me",
-    soon_back: "Back to Hub",
-    soon_signin_notify: "Sign in to get notified",
-    soon_close: "Close",
-    toast_waitlist_health: "You're on the list for Health AI.",
-    toast_waitlist_finance: "You're on the list for Finance AI.",
-    toast_waitlist_already: "You're already on the list for {vertical}.",
     nav_hub: "AI Hub",
     nav_back_hub: "Back to AI Hub",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub can make mistakes. Check important facts.",
-    disclaimer_hub: "For learning, wellness, and money planning help - not a substitute for professional medical, legal, or financial advice.",
+    disclaimer_hub: "For learning and money planning help - not a substitute for professional legal or financial advice.",
     disclaimer_nonprofit: "AI Hub is mission-driven - built to help people learn and plan, not to sell your data or push ads.",
     disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
     disclaimer_finance:
@@ -536,44 +516,27 @@ const I18N = {
     sources_label: "Fuentes",
     status_searching_web: "Buscando en la web...",
     tile_student_badge: "Disponible ahora",
-    tile_soon_badge: "Pronto",
     hub_hint: "Elige un espacio para empezar",
     resume_student: "Reanudar Student AI",
     live_web_unavailable: "Web en vivo necesita una clave de busqueda en el servidor",
-    auth_brand_kicker: "Aprendizaje, salud y dinero - en un Hub",
+    auth_brand_kicker: "Aprendizaje y dinero - en un Hub",
     hub_brand: "AI Hub",
-    hub_tagline: "IA enfocada en aprendizaje, salud y dinero",
+    hub_tagline: "IA enfocada en aprendizaje y dinero",
     hub_welcome: "Bienvenido de nuevo, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Pregunta, programa y estudia en un solo lugar",
     tile_student_cta: "Abrir ->",
-    tile_health_title: "Health AI",
-    tile_health_sub: "Entiende el bienestar en lenguaje claro",
-    tile_health_cta: "Proximamente",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Planifica presupuestos y metas con claridad",
     tile_finance_cta: "Abrir ->",
     hub_privacy_note: "AI Hub no vende tus datos ni muestra anuncios a partir de tus chats.",
     disclaimer_privacy:
       "AI Hub no vende tus datos personales ni muestra publicidad basada en tus chats.",
-    soon_health_title: "Health AI",
-    soon_health_body: "Estamos creando una guia de bienestar calmada: respuestas claras, habitos y limites evidentes.",
-    soon_health_note: "No es consejo medico. Nunca para emergencias.",
-    soon_finance_title: "Finance AI",
-    soon_finance_body: "Estamos creando un espacio claro para planificar tu dinero: presupuestos, metas y explicaciones practicas.",
-    soon_finance_note: "Solo educativo. No es consejo financiero.",
-    soon_notify: "Avisame",
-    soon_back: "Volver al Hub",
-    soon_signin_notify: "Inicia sesion para que te avisemos",
-    soon_close: "Cerrar",
-    toast_waitlist_health: "Estas en la lista de Health AI.",
-    toast_waitlist_finance: "Estas en la lista de Finance AI.",
-    toast_waitlist_already: "Ya estas en la lista de {vertical}.",
     nav_hub: "AI Hub",
     nav_back_hub: "Volver al Hub",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub puede equivocarse. Verifica datos importantes.",
-    disclaimer_hub: "Ayuda para aprendizaje, bienestar y planificacion financiera - no sustituye consejo medico, legal o financiero profesional.",
+    disclaimer_hub: "Ayuda para aprendizaje y planificacion financiera - no sustituye consejo legal o financiero profesional.",
     disclaimer_nonprofit: "AI Hub es un proyecto con mision: ayudar a aprender y planificar, no vender tus datos ni mostrar anuncios.",
     disclaimer_student: "En Student AI: solo para estudio y practica; sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     honor_title: "Estudia con integridad",
@@ -772,44 +735,27 @@ const I18N = {
     sources_label: "Sources",
     status_searching_web: "Web search ho rahi hai...",
     tile_student_badge: "Ab available",
-    tile_soon_badge: "Soon",
     hub_hint: "Shuru karne ke liye workspace chunen",
     resume_student: "Student AI resume karein",
     live_web_unavailable: "Live web ke liye server par search key chahiye",
-    auth_brand_kicker: "Learning, health aur money - ek Hub mein",
+    auth_brand_kicker: "Learning aur money - ek Hub mein",
     hub_brand: "AI Hub",
-    hub_tagline: "Learning, health aur money ke liye focused AI",
+    hub_tagline: "Learning aur money ke liye focused AI",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code aur study ek jagah",
     tile_student_cta: "Open ->",
-    tile_health_title: "Health AI",
-    tile_health_sub: "Wellness ko simple language mein samjhein",
-    tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budget aur goals clear planning ke saath",
     tile_finance_cta: "Open ->",
     hub_privacy_note: "AI Hub aapka data nahi bechta aur chats se ads nahi dikhata.",
     disclaimer_privacy:
       "AI Hub personal data nahi bechta aur chats par ads nahi dikhata.",
-    soon_health_title: "Health AI",
-    soon_health_body: "Hum ek calm wellness guide bana rahe hain - simple answers, habits, aur clear limits.",
-    soon_health_note: "Medical advice nahi. Emergency ke liye nahi.",
-    soon_finance_title: "Finance AI",
-    soon_finance_body: "Hum clear money-planning space bana rahe hain - budgets, goals, practical explanations.",
-    soon_finance_note: "Sirf education. Financial advice nahi.",
-    soon_notify: "Notify me",
-    soon_back: "Hub par wapas",
-    soon_signin_notify: "Notify ke liye sign in karein",
-    soon_close: "Close",
-    toast_waitlist_health: "Aap Health AI list mein ho.",
-    toast_waitlist_finance: "Aap Finance AI list mein ho.",
-    toast_waitlist_already: "Aap pehle se {vertical} list mein ho.",
     nav_hub: "AI Hub",
     nav_back_hub: "Hub par wapas",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub galti kar sakta hai. Important facts check karein.",
-    disclaimer_hub: "Learning, wellness aur money planning help ke liye - ye professional medical, legal ya financial advice nahi hai.",
+    disclaimer_hub: "Learning aur money planning help ke liye - ye professional legal ya financial advice nahi hai.",
     disclaimer_nonprofit: "AI Hub mission-driven hai - seekhne aur plan karne mein madad ke liye, data bechne ya ads dikhane ke liye nahi.",
     disclaimer_student: "Student AI mein: sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
     honor_title: "Imaandari se padhein",
@@ -1009,44 +955,27 @@ const I18N = {
     sources_label: "Sources",
     status_searching_web: "Web search avuthundi...",
     tile_student_badge: "Ippudu available",
-    tile_soon_badge: "Soon",
     hub_hint: "Start cheyadaniki workspace select cheyyandi",
     resume_student: "Student AI resume cheyyandi",
     live_web_unavailable: "Live web kosam server lo search key kavali",
-    auth_brand_kicker: "Learning, health, money - oka Hub lo",
+    auth_brand_kicker: "Learning mariyu money - oka Hub lo",
     hub_brand: "AI Hub",
-    hub_tagline: "Learning, health, money kosam focused AI",
+    hub_tagline: "Learning mariyu money kosam focused AI",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code, study oka chota",
     tile_student_cta: "Open ->",
-    tile_health_title: "Health AI",
-    tile_health_sub: "Wellness ni simple language lo understand cheyyandi",
-    tile_health_cta: "Coming soon",
     tile_finance_title: "Finance AI",
     tile_finance_sub: "Budgets, goals clear ga plan cheyyandi",
     tile_finance_cta: "Open ->",
     hub_privacy_note: "AI Hub mee data ammukodu, chats nundi ads chupinchadu.",
     disclaimer_privacy:
       "AI Hub personal data ammukodu, chats meeda ads chupinchadu.",
-    soon_health_title: "Health AI",
-    soon_health_body: "Calm wellness guide build chestunnam - simple answers, habits, clear limits.",
-    soon_health_note: "Medical advice kadu. Emergencies ki kadu.",
-    soon_finance_title: "Finance AI",
-    soon_finance_body: "Clear money-planning space build chestunnam - budgets, goals, practical explanations.",
-    soon_finance_note: "Education only. Financial advice kadu.",
-    soon_notify: "Notify me",
-    soon_back: "Hub ki back",
-    soon_signin_notify: "Notify kosam sign in cheyyandi",
-    soon_close: "Close",
-    toast_waitlist_health: "Meeru Health AI list lo unnaru.",
-    toast_waitlist_finance: "Meeru Finance AI list lo unnaru.",
-    toast_waitlist_already: "Meeru already {vertical} list lo unnaru.",
     nav_hub: "AI Hub",
     nav_back_hub: "Hub ki back",
     nav_student: "Student AI",
     disclaimer_base: "AI Hub tappu cheyagaladu. Important facts verify cheyyandi.",
-    disclaimer_hub: "Learning, wellness, money planning help kosam - idi professional medical, legal leda financial advice kadu.",
+    disclaimer_hub: "Learning mariyu money planning help kosam - idi professional legal leda financial advice kadu.",
     disclaimer_nonprofit: "AI Hub mission-driven - learn cheyadaniki mariyu plan cheyadaniki, data ammakundaniki leda ads kosam kadu.",
     disclaimer_student: "Student AI lo: study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
     honor_title: "Niti tho chadavandi",
@@ -1275,22 +1204,15 @@ function applyTranslations() {
     hubResumeStudent: "resume_student",
     hubResumeFinance: "resume_finance",
     tileStudentBadge: "tile_student_badge",
-    tileHealthBadge: "tile_soon_badge",
     tileFinanceBadge: "tile_student_badge",
     liveWebToggleLabel: "live_web_label",
     liveWebHint: "live_web_hint",
     tileStudentTitle: "tile_student_title",
     tileStudentSub: "tile_student_sub",
     tileStudentCta: "tile_student_cta",
-    tileHealthTitle: "tile_health_title",
-    tileHealthSub: "tile_health_sub",
-    tileHealthCta: "tile_health_cta",
     tileFinanceTitle: "tile_finance_title",
     tileFinanceSub: "tile_finance_sub",
     tileFinanceCta: "tile_student_cta",
-    soonNotifyBtn: "soon_notify",
-    soonBackBtn: "soon_back",
-    soonModalCloseBtn: "soon_close",
     backToHubBtn: "nav_back_hub",
     backToHubFromFinanceBtn: "nav_back_hub",
     crumbStudent: "nav_student",
@@ -1426,7 +1348,6 @@ function applyTranslations() {
   syncHubWelcome();
   syncLiveWebToggleUi();
   syncHubResumeButton();
-  if (soonVertical) fillSoonModal(soonVertical);
   ["authDisclaimerFooter", "appDisclaimerFooter", "hubDisclaimerFooter", "financeDisclaimerFooter"].forEach((id) => {
     const footer = document.getElementById(id);
     if (footer) footer.setAttribute("aria-label", t("disclaimer_aria"));
@@ -3782,56 +3703,14 @@ function syncHubWelcome(session) {
   el.classList.remove("hidden");
 }
 
-function readWaitlist() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(HUB_WAITLIST_KEY) || "{}");
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeWaitlist(next) {
-  localStorage.setItem(HUB_WAITLIST_KEY, JSON.stringify(next || {}));
-}
-
-function hideSoonModal() {
-  const modal = document.getElementById("soonModal");
-  modal?.classList.add("hidden");
-  soonVertical = null;
-}
-
-function fillSoonModal(vertical) {
-  const title = document.getElementById("soonModalTitle");
-  const body = document.getElementById("soonModalBody");
-  const note = document.getElementById("soonModalNote");
-  if (!title || !body || !note) return;
-  if (vertical === "finance") {
-    title.textContent = t("soon_finance_title");
-    body.textContent = t("soon_finance_body");
-    note.textContent = t("soon_finance_note");
-  } else {
-    title.textContent = t("soon_health_title");
-    body.textContent = t("soon_health_body");
-    note.textContent = t("soon_health_note");
-  }
-}
-
-function openSoonModal(vertical) {
-  soonVertical = vertical === "finance" ? "finance" : "health";
-  fillSoonModal(soonVertical);
-  const modal = document.getElementById("soonModal");
-  modal?.classList.remove("hidden");
-  window.setTimeout(() => document.getElementById("soonNotifyBtn")?.focus(), 30);
-}
 
 function desiredVerticalFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search || "");
     const raw = (params.get("vertical") || params.get("v") || "").toLowerCase();
-    if (raw === "student" || raw === "health" || raw === "finance") return raw;
+    if (raw === "student" || raw === "finance") return raw;
     const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "student" || hash === "health" || hash === "finance") return hash;
+    if (hash === "student" || hash === "finance") return hash;
   } catch {
     /* ignore */
   }
@@ -3839,7 +3718,6 @@ function desiredVerticalFromUrl() {
 }
 
 function showHubHome() {
-  hideSoonModal();
   hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.add("hidden");
@@ -3853,7 +3731,6 @@ function showHubHome() {
 }
 
 function showStudentWorkspace() {
-  hideSoonModal();
   hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.add("hidden");
@@ -3871,7 +3748,6 @@ function showStudentWorkspace() {
 }
 
 function showFinanceWorkspace() {
-  hideSoonModal();
   hideHonorCodeModal();
   closeAccountMenu();
   authCard?.classList.add("hidden");
@@ -3904,16 +3780,12 @@ function showApp(session) {
     return;
   }
   showHubHome();
-  if (desired === "health") {
-    openSoonModal(desired);
-  }
 }
 
 function showAuth(message = "") {
   document.getElementById("pwaInstallBar")?.classList.add("hidden");
   document.getElementById("pwaIosSteps")?.classList.add("hidden");
   document.getElementById("pwaInstallHelpSteps")?.classList.add("hidden");
-  hideSoonModal();
   hideFinanceDisclaimerModal();
   closeAccountMenu();
   authCard?.classList.remove("hidden");
@@ -4043,8 +3915,7 @@ document.addEventListener("pointerdown", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     closeAccountMenu();
-    hideSoonModal();
-  }
+    }
 });
 
 document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
@@ -4056,31 +3927,9 @@ document.querySelectorAll(".hub-tile").forEach((tile) => {
     const vertical = tile.getAttribute("data-vertical");
     if (vertical === "student") showStudentWorkspace();
     else if (vertical === "finance") showFinanceWorkspace();
-    else if (vertical === "health") openSoonModal(vertical);
   });
 });
 
-document.getElementById("soonModalCloseBtn")?.addEventListener("click", hideSoonModal);
-document.getElementById("soonBackBtn")?.addEventListener("click", () => {
-  hideSoonModal();
-  showHubHome();
-});
-document.getElementById("soonNotifyBtn")?.addEventListener("click", () => {
-  if (!soonVertical) return;
-  const list = readWaitlist();
-  const label = soonVertical === "finance" ? t("tile_finance_title") : t("tile_health_title");
-  if (list[soonVertical]) {
-    showToast(t("toast_waitlist_already").replace("{vertical}", label));
-    return;
-  }
-  list[soonVertical] = { at: new Date().toISOString() };
-  writeWaitlist(list);
-  showToast(soonVertical === "finance" ? t("toast_waitlist_finance") : t("toast_waitlist_health"));
-  hideSoonModal();
-});
-document.getElementById("soonModal")?.addEventListener("click", (e) => {
-  if (e.target?.id === "soonModal") hideSoonModal();
-});
 
 const notebookDropzone = document.getElementById("notebookDropzone");
 
