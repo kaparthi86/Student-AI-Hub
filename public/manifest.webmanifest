@@ -1,7 +1,7 @@
 {
   "name": "AI Hub",
   "short_name": "AI Hub",
-  "description": "Focused AI for learning, health, and money. Start with Student AI.",
+  "description": "Focused AI for learning and money. Start with Student AI and Finance AI.",
   "start_url": "/",
   "scope": "/",
   "id": "/",
