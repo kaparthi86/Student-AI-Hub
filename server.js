@@ -1277,8 +1277,23 @@ function chatSystemBase(mode) {
 }
 
 function modeStyleInstruction(studyMode) {
-  // Quiz UI was removed; keep explain as the only style path for chat.
-  void studyMode;
+  const mode = String(studyMode || "explain").trim().toLowerCase();
+  if (mode === "quiz") {
+    return [
+      "Style: Quiz.",
+      "Ask one short question that checks understanding.",
+      "Do not reveal the answer until the student tries.",
+      "Stay within the honor code. Do not hand over work they should submit.",
+    ].join(" ");
+  }
+  if (mode === "guide") {
+    return [
+      "Style: Guide.",
+      "Do not give the final answer, a full solution, or code the student could submit.",
+      "Give the next hint or ask one question that moves them forward.",
+      "Stay within the honor code.",
+    ].join(" ");
+  }
   return [
     "Style: Explain.",
     "Honor the response contract above on every turn.",
@@ -2163,6 +2178,73 @@ app.get("/api/feedback-review", requireSession, async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+const workspaceDir = path.join(__dirname, "data", "workspaces");
+
+function workspaceFileFor(userId) {
+  const safe = String(userId || "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 80);
+  return safe ? path.join(workspaceDir, `${safe}.json`) : "";
+}
+
+async function readWorkspaceRecord(userId) {
+  const admin = getSupabaseAdminClient();
+  if (admin && userId) {
+    const { data, error } = await admin
+      .from("user_workspace")
+      .select("payload, updated_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!error && data?.payload) {
+      return { payload: data.payload, updatedAt: data.updated_at, stored: "supabase" };
+    }
+  }
+  const file = workspaceFileFor(userId);
+  if (!file) return null;
+  try {
+    const parsed = JSON.parse(await fs.promises.readFile(file, "utf8"));
+    return { payload: parsed.payload || null, updatedAt: parsed.updatedAt || null, stored: "file" };
+  } catch {
+    return null;
+  }
+}
+
+app.get("/api/workspace", requireSession, async (req, res) => {
+  const userId = req.user?.id || "";
+  if (!userId) return res.json({ payload: null });
+  try {
+    const record = await readWorkspaceRecord(userId);
+    return res.json({ payload: record?.payload || null, updatedAt: record?.updatedAt || null, stored: record?.stored || null });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Could not load workspace" });
+  }
+});
+
+app.put("/api/workspace", requireSession, async (req, res) => {
+  const userId = req.user?.id || "";
+  if (!userId) return res.status(401).json({ error: "Sign in required." });
+  const payload = req.body?.payload;
+  if (!payload || typeof payload !== "object") return res.status(400).json({ error: "payload required" });
+  const updatedAt = new Date().toISOString();
+  payload.updatedAt = updatedAt;
+  const raw = JSON.stringify({ payload, updatedAt });
+  if (raw.length > 400000) return res.status(413).json({ error: "Workspace is too large." });
+  const admin = getSupabaseAdminClient();
+  if (admin) {
+    const { error } = await admin.from("user_workspace").upsert(
+      { user_id: userId, payload, updated_at: updatedAt },
+      { onConflict: "user_id" },
+    );
+    if (!error) return res.json({ ok: true, stored: "supabase", updatedAt });
+  }
+  try {
+    const file = workspaceFileFor(userId);
+    await fs.promises.mkdir(workspaceDir, { recursive: true });
+    await fs.promises.writeFile(file, raw, "utf8");
+    return res.json({ ok: true, stored: "file", updatedAt });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Could not save workspace" });
   }
 });
 
