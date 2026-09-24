@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://easybilling.dev/schemas/invoice.json",
+  "title": "Invoice",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invoice_id",
+    "tenant_id",
+    "account_id",
+    "legal_entity_id",
+    "legal_country",
+    "currency",
+    "status",
+    "rating_run_id",
+    "lines",
+    "total_amount"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "invoice_id": { "type": "string" },
+    "invoice_number": { "type": ["string", "null"] },
+    "tenant_id": { "type": "string" },
+    "account_id": { "type": "string" },
+    "legal_entity_id": { "type": "string" },
+    "legal_country": { "type": "string", "minLength": 2, "maxLength": 2 },
+    "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+    "status": { "type": "string", "enum": ["draft", "final", "void"] },
+    "rating_run_id": { "type": "string" },
+    "lines": { "type": "array" },
+    "total_amount": { "type": "string" },
+    "collection": {
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string" },
+        "status": { "type": "string" },
+        "external_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
