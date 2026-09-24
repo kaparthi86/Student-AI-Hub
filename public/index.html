@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=hub-focus-2" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=hub-focus-2" />
+    <link rel="stylesheet" href="./styles.css?v=hub-return-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=hub-return-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -146,9 +146,9 @@
               </span>
               <h1 class="landing-brand-title" id="authBrandTitle">AI <span class="brand-hub">Hub</span></h1>
             </div>
-            <p class="landing-headline" id="authSigninTitle">Student AI for learning and practice</p>
+            <p class="landing-headline" id="authSigninTitle">Learn and plan with focused AI</p>
             <p class="landing-support" id="authSigninTagline">
-              Free Ask, Code, and Notebook - study help that stays on your side of the honor code.
+              Student AI for study. Finance AI for budgets and goals. Free, and on your side of the honor code.
             </p>
             <div class="landing-cta">
               <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn" type="button">
@@ -251,7 +251,7 @@
               aria-haspopup="menu"
               aria-expanded="false"
             >
-              <span aria-hidden="true">···</span>
+              <span class="account-avatar" data-account-avatar aria-hidden="true">A</span>
             </button>
             <div class="account-menu-panel hidden" role="menu">
               <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
@@ -278,9 +278,19 @@
             </svg>
           </span>
           <h1 class="hub-brand" id="hubBrandTitle">AI Hub</h1>
-          <p class="hub-tagline" id="hubTagline">Focused AI for learning, health, and money</p>
+          <p class="hub-tagline" id="hubTagline">Student AI for study. Finance AI for budgets and goals.</p>
           <p class="hub-welcome muted hidden" id="hubWelcome"></p>
         </div>
+
+        <section id="hubContinue" class="hub-continue hidden" aria-label="Continue">
+          <p class="hub-continue-kicker" id="hubContinueKicker">Continue</p>
+          <h2 class="hub-continue-title" id="hubContinueTitle"></h2>
+          <p class="hub-continue-sub" id="hubContinueSub"></p>
+          <div class="hub-continue-actions">
+            <button type="button" class="primary-btn" id="hubContinueBtn">Continue</button>
+            <button type="button" class="ghost-btn hub-continue-alt hidden" id="hubContinueAlt"></button>
+          </div>
+        </section>
 
         <div class="hub-tiles" role="list" aria-label="Workspaces">
           <button type="button" class="hub-tile hub-tile--live" data-vertical="student" role="listitem" id="tileStudent">
@@ -337,7 +347,7 @@
             <span class="hub-tile-sub" id="tileFinanceSub">Plan budgets and goals with clarity</span>
             <span class="hub-tile-cta" id="tileFinanceCta">Open -&gt;</span>
           </button>
-          <button type="button" class="hub-tile hub-tile--soon" data-vertical="health" role="listitem" id="tileHealth">
+          <button type="button" class="hub-tile hub-tile--soon hidden" data-vertical="health" role="listitem" id="tileHealth" hidden>
             <span class="hub-tile-icon" aria-hidden="true">
               <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="#E8E6E1" />
@@ -418,7 +428,7 @@
                 aria-expanded="false"
                 aria-controls="accountMenuPanel"
               >
-                <span aria-hidden="true">···</span>
+                <span class="account-avatar" data-account-avatar aria-hidden="true">A</span>
               </button>
               <div id="accountMenuPanel" class="account-menu-panel hidden" role="menu">
                 <button id="openSettingsBtn" class="account-menu-item open-settings-btn" type="button" role="menuitem">
@@ -441,6 +451,11 @@
         </div>
 
         <section id="panelChat" class="panel perplexity-panel">
+          <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
+            <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
+            <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
+            <button type="button" class="study-mode-btn" data-study-mode="guide" aria-pressed="false">Don't give the answer</button>
+          </div>
           <div id="chatSearchShell" class="search-hero">
             <input
               type="file"
@@ -522,6 +537,14 @@
               <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
             </div>
             <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
+            <div id="firstSession" class="first-session" role="group" aria-label="Start here">
+              <p class="empty-prompts-label">Start here</p>
+              <div class="first-session-actions">
+                <button type="button" class="starter-chip" data-first="explain">Explain a topic</button>
+                <button type="button" class="starter-chip" data-first="quiz">Quiz me</button>
+                <button type="button" class="starter-chip" data-first="code">Debug an error</button>
+              </div>
+            </div>
             <div id="chatEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="chatEmptyPromptsLabel">
               <p class="empty-prompts-label muted" id="chatEmptyPromptsLabel">Try asking:</p>
               <div class="empty-prompts-chips starter-chips">
@@ -861,7 +884,7 @@
                 aria-haspopup="menu"
                 aria-expanded="false"
               >
-                <span aria-hidden="true">···</span>
+                <span class="account-avatar" data-account-avatar aria-hidden="true">A</span>
               </button>
               <div class="account-menu-panel hidden" role="menu">
                 <button class="account-menu-item open-settings-btn" type="button" role="menuitem">Settings</button>
@@ -872,12 +895,12 @@
         </header>
 
         <div class="tabs" id="financeTabs">
-          <button class="tab active" data-finance-tab="ask" type="button" id="tabFinanceAsk">Ask</button>
-          <button class="tab" data-finance-tab="budget" type="button" id="tabFinanceBudget">Budget</button>
+          <button class="tab" data-finance-tab="ask" type="button" id="tabFinanceAsk">Ask</button>
+          <button class="tab active" data-finance-tab="budget" type="button" id="tabFinanceBudget">Budget</button>
           <button class="tab" data-finance-tab="goals" type="button" id="tabFinanceGoals">Goals</button>
         </div>
 
-        <section id="panelFinanceAsk" class="panel perplexity-panel">
+        <section id="panelFinanceAsk" class="panel perplexity-panel hidden">
           <div id="financeSearchShell" class="search-hero">
             <p class="search-title" id="financeSearchTitle">What money question is on your mind?</p>
             <div class="search-bar search-bar--branded search-bar--learn-hero">
@@ -968,11 +991,11 @@
           </div>
         </section>
 
-        <section id="panelFinanceBudget" class="panel finance-panel hidden">
+        <section id="panelFinanceBudget" class="panel finance-panel">
           <div class="finance-planner">
             <p class="search-title" id="financeBudgetTitle">This month, in one view</p>
             <p class="muted finance-planner-lead" id="financeBudgetLead">
-              Enter take-home pay and what you spend. Numbers stay on this device until you ask Finance AI to explain the plan.
+              This plan stays on this device. Enter take-home pay and what you spend, then ask Finance AI to explain it.
             </p>
             <label class="finance-field">
               <span id="financeIncomeLabel">Monthly take-home</span>
@@ -1182,6 +1205,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=hub-focus-1"></script>
+    <script defer src="./app.js?v=hub-return-1"></script>
   </body>
 </html>

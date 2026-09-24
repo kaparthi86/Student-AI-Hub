@@ -174,7 +174,12 @@ let codeSessionOpen = false;
 let notebookSessionOpen = false;
 const financeHistory = [];
 let financeSessionOpen = false;
-let financeTab = "ask";
+let financeTab = "budget";
+let learnStudyMode = "explain";
+let lastWorkspace = "student";
+let applyingRemoteWorkspace = false;
+const WORKSPACE_STAMP_KEY = "ai_hub_workspace_stamp_v1";
+const LAST_WORKSPACE_KEY = "ai_hub_last_workspace_v1";
 let financeBudget = {
   income: "",
   categories: [
@@ -207,8 +212,8 @@ const UI_LANG_LABELS = {
 
 const I18N = {
   en: {
-    signin_title: "Student AI for learning and practice",
-    signin_tagline: "Free Ask, Code, and Notebook - study help that stays on your side of the honor code.",
+    signin_title: "Learn and plan with focused AI",
+    signin_tagline: "Student AI for study. Finance AI for budgets and goals. Free, and on your side of the honor code.",
     free_for_students: "Free for students",
     brand_kicker: "Ask, learn, code & notebook in one place",
     live_web_label: "Live web",
@@ -222,9 +227,10 @@ const I18N = {
     resume_student: "Resume Student AI",
     resume_finance: "Resume Finance AI",
     live_web_unavailable: "Live web needs a search key on the server",
-    auth_brand_kicker: "Learning, health, and money - in one Hub",
+    visual_kicker: "Visual",
+    auth_brand_kicker: "Student AI for study. Finance AI for a plan.",
     hub_brand: "AI Hub",
-    hub_tagline: "Focused AI for learning, health, and money",
+    hub_tagline: "Student AI for study. Finance AI for budgets and goals.",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code, and study in one place",
@@ -262,7 +268,7 @@ const I18N = {
       "Finance AI is educational only - not financial, tax, or investment advice. Do not share account numbers or passwords.",
     mission_title: "Our mission",
     mission_lead: "AI Hub helps people learn and plan with focused AI.",
-    mission_sub: "Starting with Student AI - learning and practice, not shortcuts.",
+    mission_sub: "Student AI for learning and practice. Finance AI for a budget you can come back to.",
     honor_title: "Study with integrity",
     honor_lead: "Student AI is for learning and practice - not for handing in AI work as your own.",
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
@@ -540,9 +546,9 @@ const I18N = {
     hub_hint: "Elige un espacio para empezar",
     resume_student: "Reanudar Student AI",
     live_web_unavailable: "Web en vivo necesita una clave de busqueda en el servidor",
-    auth_brand_kicker: "Aprendizaje, salud y dinero - en un Hub",
+    auth_brand_kicker: "Student AI para estudiar. Finance AI para un plan.",
     hub_brand: "AI Hub",
-    hub_tagline: "IA enfocada en aprendizaje, salud y dinero",
+    hub_tagline: "Student AI para estudiar. Finance AI para presupuestos y metas.",
     hub_welcome: "Bienvenido de nuevo, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Pregunta, programa y estudia en un solo lugar",
@@ -776,9 +782,9 @@ const I18N = {
     hub_hint: "Shuru karne ke liye workspace chunen",
     resume_student: "Student AI resume karein",
     live_web_unavailable: "Live web ke liye server par search key chahiye",
-    auth_brand_kicker: "Learning, health aur money - ek Hub mein",
+    auth_brand_kicker: "Student AI padhai ke liye. Finance AI ek plan ke liye.",
     hub_brand: "AI Hub",
-    hub_tagline: "Learning, health aur money ke liye focused AI",
+    hub_tagline: "Student AI padhai ke liye. Finance AI budget aur goals ke liye.",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code aur study ek jagah",
@@ -1013,9 +1019,9 @@ const I18N = {
     hub_hint: "Start cheyadaniki workspace select cheyyandi",
     resume_student: "Student AI resume cheyyandi",
     live_web_unavailable: "Live web kosam server lo search key kavali",
-    auth_brand_kicker: "Learning, health, money - oka Hub lo",
+    auth_brand_kicker: "Student AI chaduvu kosam. Finance AI plan kosam.",
     hub_brand: "AI Hub",
-    hub_tagline: "Learning, health, money kosam focused AI",
+    hub_tagline: "Student AI chaduvu kosam. Finance AI budget mariyu goals kosam.",
     hub_welcome: "Welcome back, {name}",
     tile_student_title: "Student AI",
     tile_student_sub: "Ask, code, study oka chota",
@@ -1985,6 +1991,8 @@ function readLastAssistantAloud(history = chatHistory) {
 }
 
 function normalizeStudyMode(raw) {
+  const m = String(raw || "explain").trim().toLowerCase();
+  if (m === "quiz" || m === "guide") return m;
   return "explain";
 }
 
@@ -2251,11 +2259,13 @@ function saveSessionState() {
       notebookSourceMeta,
     };
     localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(payload));
+    localStorage.setItem(WORKSPACE_STAMP_KEY, new Date().toISOString());
   } catch {
     /* ignore quota issues */
   }
   saveFinanceState();
   syncHubResumeButton();
+  scheduleWorkspaceSync();
 }
 
 function renderThreadFromHistory(container, history, mode, studyMode) {
@@ -2620,6 +2630,7 @@ function syncLearnLayout() {
   chatAnswerShell.classList.toggle("hidden", !showThread);
   chatCopyThreadBtn?.classList.toggle("hidden", chatHistory.length === 0);
   if (showThread) renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  syncFirstSession();
 }
 
 function syncCodeLayout() {
@@ -3023,19 +3034,99 @@ function setLiveWebSearching(on) {
   btn.classList.toggle("is-searching", Boolean(on) && isLiveWebEnabled());
 }
 
+function lastUserLine(history) {
+  if (!Array.isArray(history)) return "";
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const item = history[i];
+    if (item && item.role === "user" && String(item.content || "").trim()) {
+      return String(item.content).trim().replace(/\s+/g, " ").slice(0, 90);
+    }
+  }
+  return "";
+}
+
+function budgetHasNumbers() {
+  if (String(financeBudget?.income || "").trim()) return true;
+  return (financeBudget?.categories || []).some((c) => String(c?.amount || "").trim());
+}
+
 function syncHubResumeButton() {
-  const studentBtn = document.getElementById("hubResumeStudent");
-  const financeBtn = document.getElementById("hubResumeFinance");
-  const hasStudent = Array.isArray(chatHistory) && chatHistory.length > 0;
-  const hasFinance = Array.isArray(financeHistory) && financeHistory.length > 0;
-  if (studentBtn) {
-    studentBtn.classList.toggle("hidden", !hasStudent);
-    studentBtn.textContent = t("resume_student");
+  const card = document.getElementById("hubContinue");
+  const title = document.getElementById("hubContinueTitle");
+  const sub = document.getElementById("hubContinueSub");
+  const btn = document.getElementById("hubContinueBtn");
+  const alt = document.getElementById("hubContinueAlt");
+  const hasStudent =
+    (Array.isArray(chatHistory) && chatHistory.length > 0) ||
+    (Array.isArray(codeHistory) && codeHistory.length > 0);
+  const hasFinance =
+    (Array.isArray(financeHistory) && financeHistory.length > 0) || budgetHasNumbers() || financeGoals.length > 0;
+  document.getElementById("hubResumeStudent")?.classList.add("hidden");
+  document.getElementById("hubResumeFinance")?.classList.add("hidden");
+  if (!card || !title || !btn) return;
+  if (!hasStudent && !hasFinance) {
+    card.classList.add("hidden");
+    return;
   }
-  if (financeBtn) {
-    financeBtn.classList.toggle("hidden", !hasFinance);
-    financeBtn.textContent = t("resume_finance");
+  let primary = lastWorkspace === "finance" && hasFinance ? "finance" : "student";
+  if (primary === "student" && !hasStudent) primary = "finance";
+  if (primary === "finance" && !hasFinance) primary = "student";
+  const studentLine = lastUserLine(chatHistory) || lastUserLine(codeHistory) || "Pick up your last study thread.";
+  const financeLine = lastUserLine(financeHistory) || "Your budget and goals are on this device.";
+  if (primary === "finance") {
+    title.textContent = "Finance plan";
+    if (sub) sub.textContent = financeLine;
+    btn.textContent = "Continue Finance AI";
+    btn.dataset.workspace = "finance";
+  } else {
+    title.textContent = "Student AI";
+    if (sub) sub.textContent = studentLine;
+    btn.textContent = "Continue Student AI";
+    btn.dataset.workspace = "student";
   }
+  const other = primary === "finance" ? hasStudent : hasFinance;
+  if (alt) {
+    alt.classList.toggle("hidden", !other);
+    alt.textContent = primary === "finance" ? "Open Student AI" : "Open Finance AI";
+    alt.dataset.workspace = primary === "finance" ? "student" : "finance";
+  }
+  card.classList.remove("hidden");
+}
+
+function initialsFromName(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length || parts[0] === "Student") return "A";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function syncAccountAvatars(name) {
+  const initials = initialsFromName(name);
+  document.querySelectorAll("[data-account-avatar]").forEach((el) => {
+    el.textContent = initials;
+  });
+  document.querySelectorAll(".account-menu-btn").forEach((btn) => {
+    const label = name && name !== "Student" ? `Account, ${name}` : "Account menu";
+    btn.setAttribute("aria-label", label);
+  });
+}
+
+function setLearnStudyMode(next) {
+  learnStudyMode = normalizeStudyMode(next);
+  document.querySelectorAll("#studyModeBar .study-mode-btn").forEach((btn) => {
+    const on = btn.getAttribute("data-study-mode") === learnStudyMode;
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+function syncFirstSession() {
+  const el = document.getElementById("firstSession");
+  if (!el) return;
+  el.classList.toggle("hidden", chatHistory.length > 0 || codeHistory.length > 0);
 }
 
 function isLiveWebEnabled() {
@@ -3420,14 +3511,27 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   } catch (error) {
     setLiveWebSearching(false);
     cancelStreamPaintTimers();
+    const errText = `${t("error_prefix")}: ${formatChatErrorForUi(error)}`;
+    let bubble;
     if (streamUi.bubble.isConnected) {
-      streamUi.showError(`${t("error_prefix")}: ${formatChatErrorForUi(error)}`);
+      streamUi.showError(errText);
+      bubble = streamUi.bubble;
     } else {
-      appendBubble(threadEl, "assistant", `${t("error_prefix")}: ${formatChatErrorForUi(error)}`, {
+      bubble = appendBubble(threadEl, "assistant", errText, {
         mode,
         studyMode: normalizeStudyMode(studyMode),
-      });
+      }).bubble;
     }
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "ghost-btn tiny-btn chat-retry-btn";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", () => {
+      retry.disabled = true;
+      bubble.closest(".msg")?.remove();
+      void sendChatMessage(mode, trimmed, history, threadEl, statusEl, sendBtn, studyMode, visionAttachment);
+    });
+    bubble.appendChild(retry);
     setStatus(statusEl, "status_failed");
     return false;
   } finally {
@@ -3861,6 +3965,12 @@ function showStudentWorkspace() {
   financeCard?.classList.add("hidden");
   appCard?.classList.remove("hidden");
   activeSurface = "student";
+  lastWorkspace = "student";
+  try {
+    localStorage.setItem(LAST_WORKSPACE_KEY, "student");
+  } catch {
+    /* ignore */
+  }
   document.title = "Student AI - AI Hub";
   window.setTimeout(() => {
     maybeOfferPwaInstallBar();
@@ -3879,8 +3989,14 @@ function showFinanceWorkspace() {
   appCard?.classList.add("hidden");
   financeCard?.classList.remove("hidden");
   activeSurface = "finance";
+  lastWorkspace = "finance";
+  try {
+    localStorage.setItem(LAST_WORKSPACE_KEY, "finance");
+  } catch {
+    /* ignore */
+  }
   document.title = "Finance AI - AI Hub";
-  setFinanceTab(financeTab || "ask");
+  setFinanceTab(financeTab || "budget");
   syncFinanceLayout();
   renderFinanceBudget();
   renderFinanceGoals();
@@ -3893,7 +4009,9 @@ function showFinanceWorkspace() {
 function showApp(session) {
   const display = getSessionDisplayName(session);
   if (userName) userName.textContent = display;
+  syncAccountAvatars(display);
   syncHubWelcome(session);
+  void pullWorkspace();
   const desired = desiredVerticalFromUrl();
   if (desired === "student") {
     showStudentWorkspace();
@@ -3904,9 +4022,6 @@ function showApp(session) {
     return;
   }
   showHubHome();
-  if (desired === "health") {
-    openSoonModal(desired);
-  }
 }
 
 function showAuth(message = "") {
@@ -4238,6 +4353,7 @@ function wireSearchFlow({
   clearVisionAttachment,
   requireHonorCode = true,
   gate,
+  getStudyMode,
 } = {}) {
   const run = (raw, activeBtn) => {
     if (requireHonorCode !== false) {
@@ -4253,7 +4369,8 @@ function wireSearchFlow({
     if (!trimmed && !attach) return;
     if (typeof clearVisionAttachment === "function") clearVisionAttachment();
     if (!history.length) onFirstSend();
-    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, "explain", attach);
+    const studyMode = typeof getStudyMode === "function" ? getStudyMode() : "explain";
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, studyMode, attach);
     followupInput.value = "";
     followupInput.focus();
   };
@@ -4306,6 +4423,7 @@ const chatSearchFlow = wireSearchFlow({
   },
   getVisionAttachment: LEARN_VISION_ENABLED ? () => learnChatVisionAttachment : undefined,
   clearVisionAttachment: LEARN_VISION_ENABLED ? clearLearnChatVisionAttachment : undefined,
+  getStudyMode: () => learnStudyMode,
 });
 
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
@@ -5034,6 +5152,7 @@ applySafariPerfClass();
 setUiLanguage(prefsAtBoot.uiLanguage);
 syncLiveWebToggleUi();
 syncHubResumeButton();
+syncFirstSession();
 void refreshLiveWebCapability();
 document.getElementById("liveWebToggle")?.addEventListener("click", () => {
   setLiveWebEnabled(!isLiveWebEnabled());
@@ -5044,6 +5163,38 @@ document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
 document.getElementById("hubResumeFinance")?.addEventListener("click", () => {
   showFinanceWorkspace();
 });
+document.getElementById("hubContinueBtn")?.addEventListener("click", (e) => {
+  const which = e.currentTarget?.dataset?.workspace;
+  if (which === "finance") showFinanceWorkspace();
+  else showStudentWorkspace();
+});
+document.getElementById("hubContinueAlt")?.addEventListener("click", (e) => {
+  const which = e.currentTarget?.dataset?.workspace;
+  if (which === "finance") showFinanceWorkspace();
+  else showStudentWorkspace();
+});
+document.querySelectorAll("#studyModeBar .study-mode-btn").forEach((btn) => {
+  btn.addEventListener("click", () => setLearnStudyMode(btn.getAttribute("data-study-mode")));
+});
+document.querySelectorAll("#firstSession [data-first]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const kind = btn.getAttribute("data-first");
+    if (kind === "code") {
+      setMainTab("code");
+      document.getElementById("codeSearchInput")?.focus();
+      return;
+    }
+    setLearnStudyMode(kind === "quiz" ? "quiz" : "explain");
+    setMainTab("chat");
+    document.getElementById("chatSearchInput")?.focus();
+  });
+});
+try {
+  const savedWorkspace = localStorage.getItem(LAST_WORKSPACE_KEY);
+  if (savedWorkspace === "finance" || savedWorkspace === "student") lastWorkspace = savedWorkspace;
+} catch {
+  /* ignore */
+}
 
 /* ---- Finance AI workspace ---- */
 function parseMoney(raw) {
@@ -5073,6 +5224,140 @@ function categoryLabel(cat) {
   return String(cat?.name || cat?.nameKey || "Category");
 }
 
+function slimHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.slice(-30).map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const next = {
+      role: item.role === "assistant" ? "assistant" : "user",
+      content: String(item.content || "").slice(0, 4000),
+    };
+    if (Array.isArray(item.charts)) next.charts = item.charts;
+    if (Array.isArray(item.sources)) next.sources = item.sources.slice(0, 6);
+    return next;
+  }).filter(Boolean);
+}
+
+function workspaceSnapshot() {
+  return {
+    updatedAt: new Date().toISOString(),
+    learnStudyMode,
+    lastWorkspace,
+    chatHistory: slimHistory(chatHistory),
+    codeHistory: slimHistory(codeHistory),
+    notebookHistory: slimHistory(notebookHistory),
+    financeHistory: slimHistory(financeHistory),
+    financeBudget,
+    financeGoals,
+    financeTab,
+    chatSessionOpen,
+    codeSessionOpen,
+    notebookSessionOpen,
+    financeSessionOpen,
+  };
+}
+
+let workspaceSyncTimer = null;
+function scheduleWorkspaceSync() {
+  if (applyingRemoteWorkspace) return;
+  clearTimeout(workspaceSyncTimer);
+  workspaceSyncTimer = setTimeout(() => {
+    void pushWorkspace();
+  }, 900);
+}
+
+async function pushWorkspace() {
+  if (applyingRemoteWorkspace) return;
+  const payload = workspaceSnapshot();
+  try {
+    localStorage.setItem(WORKSPACE_STAMP_KEY, payload.updatedAt);
+  } catch {
+    /* ignore */
+  }
+  try {
+    await fetchAuthed("/api/workspace", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload }),
+    });
+  } catch {
+    /* device copy still stands */
+  }
+}
+
+function replaceHistory(target, incoming) {
+  if (!Array.isArray(incoming)) return;
+  target.splice(0, target.length, ...incoming.filter((x) => x && typeof x.content === "string"));
+}
+
+function applyWorkspace(payload) {
+  if (!payload || typeof payload !== "object") return;
+  applyingRemoteWorkspace = true;
+  try {
+    replaceHistory(chatHistory, payload.chatHistory);
+    replaceHistory(codeHistory, payload.codeHistory);
+    replaceHistory(notebookHistory, payload.notebookHistory);
+    replaceHistory(financeHistory, payload.financeHistory);
+    if (payload.financeBudget && typeof payload.financeBudget === "object") {
+      financeBudget = payload.financeBudget;
+    }
+    if (Array.isArray(payload.financeGoals)) financeGoals = payload.financeGoals;
+    if (payload.financeTab === "ask" || payload.financeTab === "budget" || payload.financeTab === "goals") {
+      financeTab = payload.financeTab;
+    }
+    chatSessionOpen = payload.chatSessionOpen === true || chatHistory.length > 0;
+    codeSessionOpen = payload.codeSessionOpen === true || codeHistory.length > 0;
+    notebookSessionOpen = payload.notebookSessionOpen === true || notebookHistory.length > 0;
+    financeSessionOpen = payload.financeSessionOpen === true || financeHistory.length > 0;
+    if (payload.lastWorkspace === "finance" || payload.lastWorkspace === "student") {
+      lastWorkspace = payload.lastWorkspace;
+    }
+    setLearnStudyMode(payload.learnStudyMode);
+    renderThreadFromHistory(chatThread, chatHistory, "learn", learnStudyMode);
+    renderThreadFromHistory(codeThread, codeHistory, "code", "explain");
+    renderThreadFromHistory(notebookThread, notebookHistory, "notebook", "explain");
+    renderThreadFromHistory(financeThread, financeHistory, "finance", "explain");
+    try {
+      localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify({
+        chatHistory,
+        codeHistory,
+        notebookHistory,
+        chatSessionOpen,
+        codeSessionOpen,
+        notebookSessionOpen,
+      }));
+      localStorage.setItem(WORKSPACE_STAMP_KEY, payload.updatedAt || new Date().toISOString());
+      localStorage.setItem(LAST_WORKSPACE_KEY, lastWorkspace);
+    } catch {
+      /* ignore */
+    }
+    saveFinanceState();
+    syncLearnLayout();
+    syncCodeLayout();
+    syncNotebookLayout();
+    syncFinanceLayout();
+    setFinanceTab(financeTab);
+    syncHubResumeButton();
+  } finally {
+    applyingRemoteWorkspace = false;
+  }
+}
+
+async function pullWorkspace() {
+  try {
+    const res = await fetchAuthed("/api/workspace");
+    if (!res.ok) return;
+    const data = await res.json();
+    const payload = data?.payload;
+    if (!payload) return;
+    const remoteAt = Date.parse(payload.updatedAt || data.updatedAt || 0);
+    const localAt = Date.parse(localStorage.getItem(WORKSPACE_STAMP_KEY) || "0");
+    if (Number.isFinite(remoteAt) && remoteAt > localAt) applyWorkspace(payload);
+  } catch {
+    /* stay on this device */
+  }
+}
+
 function saveFinanceState() {
   try {
     localStorage.setItem(
@@ -5088,6 +5373,7 @@ function saveFinanceState() {
   } catch {
     /* ignore */
   }
+  scheduleWorkspaceSync();
 }
 
 function restoreFinanceState() {

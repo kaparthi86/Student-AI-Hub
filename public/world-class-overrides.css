@@ -2194,3 +2194,94 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
     text-align: left;
   }
 }
+
+.hub-continue {
+  margin: 0 auto 18px;
+  max-width: 720px;
+  padding: 18px 18px 16px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+}
+.hub-continue-kicker {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6f6b63;
+}
+.hub-continue-title {
+  margin: 0 0 6px;
+  font-size: 1.25rem;
+}
+.hub-continue-sub {
+  margin: 0 0 14px;
+  color: #3d3a36;
+}
+.hub-continue-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.account-avatar {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #1c1b19;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.study-mode-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+.study-mode-btn {
+  border: 1px solid rgba(28, 27, 25, 0.12);
+  background: transparent;
+  color: #1c1b19;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.study-mode-btn.is-active {
+  background: #1c1b19;
+  color: #fff;
+  border-color: #1c1b19;
+}
+.first-session {
+  margin: 8px 0 4px;
+}
+.first-session-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chat-retry-btn {
+  margin-top: 10px;
+}
+@media (max-width: 720px) {
+  .workspace-shell .followup-bar {
+    position: sticky;
+    bottom: 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-chart-seg,
+  .hub-chart-bar-fill,
+  .finance-cat-bar > span {
+    transition: none !important;
+  }
+}
