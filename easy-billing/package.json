@@ -1,0 +1,14 @@
+{
+  "name": "easy-billing",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Easy Billing suite: Meter, Rate, and Ledger as separate products with a shared fact contract.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/suite.js",
+    "test": "node --test"
+  }
+}
