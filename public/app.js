@@ -3709,9 +3709,9 @@ function desiredVerticalFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search || "");
     const raw = (params.get("vertical") || params.get("v") || "").toLowerCase();
-    if (raw === "student") return raw;
+    if (raw === "student" || raw === "hub") return raw;
     const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "student") return hash;
+    if (hash === "student" || hash === "hub") return hash;
   } catch {
     /* ignore */
   }
@@ -3757,12 +3757,14 @@ function showApp(session) {
   syncAccountAvatars(display);
   syncHubWelcome(session);
   void pullWorkspace();
+  // Default after login/landing: Student AI. Hub stays available via Back to AI Hub
+  // or an explicit ?vertical=hub / #hub deep link.
   const desired = desiredVerticalFromUrl();
-  if (desired === "student") {
-    showStudentWorkspace();
+  if (desired === "hub") {
+    showHubHome();
     return;
   }
-  showHubHome();
+  showStudentWorkspace();
 }
 
 function showAuth(message = "") {
