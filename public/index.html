@@ -27,8 +27,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=student-only-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=student-only-1" />
+    <link rel="stylesheet" href="./styles.css?v=coach-home-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=coach-home-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -396,13 +396,109 @@
           </div>
         </header>
 
-        <div class="tabs">
-          <button class="tab active" data-tab="chat" type="button" id="tabChat">Ask</button>
-          <button class="tab" data-tab="code" type="button" id="tabCode">Code</button>
-          <button class="tab" data-tab="notebook" type="button" id="tabNotebook">Notebook</button>
-        </div>
+        <nav class="tabs coach-nav" role="tablist" aria-label="My Student Coach">
+          <button class="tab active" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="true">Home</button>
+          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Ask</button>
+          <button class="tab" data-tab="code" type="button" id="tabCode" role="tab" aria-selected="false">Code</button>
+          <button class="tab" data-tab="notebook" type="button" id="tabNotebook" role="tab" aria-selected="false">Notebook</button>
+          <button class="tab tab--soon" data-tab="planner" type="button" id="tabPlanner" role="tab" aria-selected="false">
+            <span id="tabPlannerLabel">Planner</span>
+            <span class="tab-soon-badge" id="tabPlannerBadge">Soon</span>
+          </button>
+          <button class="tab tab--soon" data-tab="exam" type="button" id="tabExam" role="tab" aria-selected="false">
+            <span id="tabExamLabel">Exam Prep</span>
+            <span class="tab-soon-badge" id="tabExamBadge">Soon</span>
+          </button>
+          <button class="tab tab--soon" data-tab="progress" type="button" id="tabProgress" role="tab" aria-selected="false">
+            <span id="tabProgressLabel">Progress</span>
+            <span class="tab-soon-badge" id="tabProgressBadge">Soon</span>
+          </button>
+        </nav>
 
-        <section id="panelChat" class="panel perplexity-panel">
+        <section id="panelHome" class="panel coach-home-panel">
+          <div class="coach-home">
+            <header class="coach-home-hero">
+              <p class="coach-kicker" id="coachKicker">My Student Coach</p>
+              <h2 class="coach-welcome" id="coachWelcome">Welcome back</h2>
+              <p class="coach-sub muted" id="coachSub">
+                Your personalized study companion — ask questions, practice, and keep notes in one place.
+              </p>
+              <div class="coach-hero-actions">
+                <button type="button" class="primary-btn" id="coachContinueBtn">Continue learning</button>
+                <button type="button" class="ghost-btn" id="coachAskBtn">Ask the tutor</button>
+              </div>
+            </header>
+
+            <section class="coach-section" aria-labelledby="coachPrioritiesTitle">
+              <div class="coach-section-head">
+                <h3 class="coach-section-title" id="coachPrioritiesTitle">Today&apos;s priorities</h3>
+                <p class="coach-section-lead muted" id="coachPrioritiesLead">Start with one clear next step.</p>
+              </div>
+              <ul class="coach-priority-list" id="coachPriorityList"></ul>
+            </section>
+
+            <section class="coach-section" aria-labelledby="coachToolsTitle">
+              <div class="coach-section-head">
+                <h3 class="coach-section-title" id="coachToolsTitle">Study tools</h3>
+                <p class="coach-section-lead muted" id="coachToolsLead">Core tools available now.</p>
+              </div>
+              <div class="coach-tool-grid" id="coachToolGrid">
+                <button type="button" class="coach-tool-card" data-coach-tab="chat">
+                  <span class="coach-tool-label" id="coachToolAskTitle">AI Tutor</span>
+                  <span class="coach-tool-sub muted" id="coachToolAskSub">Step-by-step help in Ask</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="code">
+                  <span class="coach-tool-label" id="coachToolCodeTitle">Code</span>
+                  <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and learn with guidance</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="notebook">
+                  <span class="coach-tool-label" id="coachToolNotebookTitle">My Notebook</span>
+                  <span class="coach-tool-sub muted" id="coachToolNotebookSub">Summarize notes and practice</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="coach-section" aria-labelledby="coachNextTitle">
+              <div class="coach-section-head">
+                <h3 class="coach-section-title" id="coachNextTitle">Coming next</h3>
+                <p class="coach-section-lead muted" id="coachNextLead">Phase 1 roadmap — on the way.</p>
+              </div>
+              <div class="coach-soon-grid">
+                <button type="button" class="coach-soon-card" data-coach-tab="planner">
+                  <span class="coach-tool-label" id="coachSoonPlannerTitle">Study Planner</span>
+                  <span class="coach-tool-sub muted" id="coachSoonPlannerSub">AI schedules and deadlines</span>
+                  <span class="tab-soon-badge">Soon</span>
+                </button>
+                <button type="button" class="coach-soon-card" data-coach-tab="exam">
+                  <span class="coach-tool-label" id="coachSoonExamTitle">Exam Prep</span>
+                  <span class="coach-tool-sub muted" id="coachSoonExamSub">Practice tests from your notes</span>
+                  <span class="tab-soon-badge">Soon</span>
+                </button>
+                <button type="button" class="coach-soon-card" data-coach-tab="progress">
+                  <span class="coach-tool-label" id="coachSoonProgressTitle">My Progress</span>
+                  <span class="coach-tool-sub muted" id="coachSoonProgressSub">Streaks, strengths, and reviews</span>
+                  <span class="tab-soon-badge">Soon</span>
+                </button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="panelComingSoon" class="panel coach-soon-panel hidden" hidden>
+          <div class="coach-soon-empty">
+            <p class="coach-kicker" id="soonPanelKicker">Coming soon</p>
+            <h2 class="coach-welcome" id="soonPanelTitle">Study Planner</h2>
+            <p class="coach-sub muted" id="soonPanelBody">
+              This workspace is on the Phase 1 roadmap. Use Ask, Code, and Notebook today while we build it.
+            </p>
+            <div class="coach-hero-actions">
+              <button type="button" class="primary-btn" id="soonBackHomeBtn">Back to Home</button>
+              <button type="button" class="ghost-btn" id="soonGoAskBtn">Ask the tutor</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelChat" class="panel perplexity-panel hidden">
           <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
             <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
             <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
@@ -889,6 +985,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=student-landing-1"></script>
+    <script defer src="./app.js?v=coach-home-1"></script>
   </body>
 </html>

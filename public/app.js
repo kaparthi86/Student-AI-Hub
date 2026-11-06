@@ -16,10 +16,14 @@ const prefRestoreSessions = document.getElementById("prefRestoreSessions");
 const prefUiLanguage = document.getElementById("prefUiLanguage");
 const toastStack = document.getElementById("toastStack");
 
+const panelHome = document.getElementById("panelHome");
+const panelComingSoon = document.getElementById("panelComingSoon");
 const panelChat = document.getElementById("panelChat");
 const panelCode = document.getElementById("panelCode");
 const panelNotebook = document.getElementById("panelNotebook");
 const practiceDock = document.getElementById("practiceDock");
+const COACH_TABS = new Set(["home", "chat", "code", "notebook", "planner", "exam", "progress"]);
+const COACH_SOON_TABS = new Set(["planner", "exam", "progress"]);
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -66,7 +70,7 @@ const notebookFollowupSubmit = document.getElementById("notebookFollowupSubmit")
 const notebookCopyThreadBtn = document.getElementById("notebookCopyThreadBtn");
 const NOTEBOOK_MAX_FILES = 5;
 
-let mainTab = "chat";
+let mainTab = "home";
 let supabaseClient = null;
 
 /** Learn Ask hero + follow-up: Web Speech with silence auto-stop and tap-to-stop. */
@@ -221,10 +225,54 @@ const I18N = {
     logout: "Logout",
     welcome: "Welcome",
     app_tagline: "Ask a question, get an answer, keep the conversation going.",
+    tab_home: "Home",
     tab_ask: "Ask",
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
+    tab_planner: "Planner",
+    tab_exam: "Exam Prep",
+    tab_progress: "Progress",
+    tab_soon: "Soon",
+    coach_kicker: "My Student Coach",
+    coach_welcome: "Welcome back, {name}",
+    coach_welcome_new: "Welcome, {name}",
+    coach_sub: "Your personalized study companion ? ask questions, practice, and keep notes in one place.",
+    coach_continue: "Continue learning",
+    coach_start: "Start learning",
+    coach_ask_cta: "Ask the tutor",
+    coach_priorities_title: "Today's priorities",
+    coach_priorities_lead: "Start with one clear next step.",
+    coach_tools_title: "Study tools",
+    coach_tools_lead: "Core tools available now.",
+    coach_next_title: "Coming next",
+    coach_next_lead: "Phase 1 roadmap ? on the way.",
+    coach_tool_ask_title: "AI Tutor",
+    coach_tool_ask_sub: "Step-by-step help in Ask",
+    coach_tool_code_title: "Code",
+    coach_tool_code_sub: "Debug and learn with guidance",
+    coach_tool_notebook_title: "My Notebook",
+    coach_tool_notebook_sub: "Summarize notes and practice",
+    coach_soon_planner_title: "Study Planner",
+    coach_soon_planner_sub: "AI schedules and deadlines",
+    coach_soon_exam_title: "Exam Prep",
+    coach_soon_exam_sub: "Practice tests from your notes",
+    coach_soon_progress_title: "My Progress",
+    coach_soon_progress_sub: "Streaks, strengths, and reviews",
+    coach_priority_continue_ask: "Continue your last Ask thread",
+    coach_priority_continue_code: "Pick up your Code session",
+    coach_priority_continue_notebook: "Return to Notebook",
+    coach_priority_ask: "Ask one clear question in AI Tutor",
+    coach_priority_practice: "Practice a topic after Ask",
+    coach_priority_notes: "Upload notes in Notebook",
+    soon_kicker: "Coming soon",
+    soon_planner_title: "Study Planner",
+    soon_planner_body: "AI-generated schedules, deadlines, and weekly targets are on the roadmap. Use Ask and Notebook today while we build it.",
+    soon_exam_title: "Exam Prep",
+    soon_exam_body: "Mock exams, adaptive practice, and topic analysis are coming next. Practice from Ask or Notebook in the meantime.",
+    soon_progress_title: "My Progress",
+    soon_progress_body: "Streaks, subject strengths, and weekly reviews are planned for Phase 1. Keep studying ? history already syncs on this device.",
+    soon_back_home: "Back to Home",
     chip_practice: "Practice",
     practice_this_topic: "Practice this topic",
     practice_check: "Check",
@@ -1120,9 +1168,40 @@ function applyTranslations() {
     logoutBtn: "logout",
     welcomePrefix: "welcome",
     appTaglineMain: "app_tagline",
+    tabHome: "tab_home",
     tabChat: "tab_ask",
     tabCode: "tab_code",
     tabNotebook: "tab_notebook",
+    tabPlannerLabel: "tab_planner",
+    tabExamLabel: "tab_exam",
+    tabProgressLabel: "tab_progress",
+    tabPlannerBadge: "tab_soon",
+    tabExamBadge: "tab_soon",
+    tabProgressBadge: "tab_soon",
+    coachKicker: "coach_kicker",
+    coachSub: "coach_sub",
+    coachAskBtn: "coach_ask_cta",
+    coachPrioritiesTitle: "coach_priorities_title",
+    coachPrioritiesLead: "coach_priorities_lead",
+    coachToolsTitle: "coach_tools_title",
+    coachToolsLead: "coach_tools_lead",
+    coachNextTitle: "coach_next_title",
+    coachNextLead: "coach_next_lead",
+    coachToolAskTitle: "coach_tool_ask_title",
+    coachToolAskSub: "coach_tool_ask_sub",
+    coachToolCodeTitle: "coach_tool_code_title",
+    coachToolCodeSub: "coach_tool_code_sub",
+    coachToolNotebookTitle: "coach_tool_notebook_title",
+    coachToolNotebookSub: "coach_tool_notebook_sub",
+    coachSoonPlannerTitle: "coach_soon_planner_title",
+    coachSoonPlannerSub: "coach_soon_planner_sub",
+    coachSoonExamTitle: "coach_soon_exam_title",
+    coachSoonExamSub: "coach_soon_exam_sub",
+    coachSoonProgressTitle: "coach_soon_progress_title",
+    coachSoonProgressSub: "coach_soon_progress_sub",
+    soonPanelKicker: "soon_kicker",
+    soonBackHomeBtn: "soon_back_home",
+    soonGoAskBtn: "coach_ask_cta",
     practiceSubmitAnswer: "practice_check",
     practiceSkipBtn: "practice_skip",
     practiceAgainBtn: "practice_again",
@@ -2450,16 +2529,24 @@ function renderAssistantHtml(text) {
 }
 
 function setMainTab(next) {
-  mainTab = next === "code" ? "code" : next === "notebook" ? "notebook" : "chat";
+  mainTab = COACH_TABS.has(next) ? next : "home";
   if (mainTab !== "chat") stopAllLearnVoice();
   if (mainTab !== "chat") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.tab === mainTab);
+  document.querySelectorAll(".coach-nav .tab, .tabs .tab").forEach((tab) => {
+    const on = tab.dataset.tab === mainTab;
+    tab.classList.toggle("active", on);
+    tab.setAttribute("aria-selected", on ? "true" : "false");
   });
-  panelChat.classList.toggle("hidden", mainTab !== "chat");
-  panelCode.classList.toggle("hidden", mainTab !== "code");
-  panelNotebook.classList.toggle("hidden", mainTab !== "notebook");
+  const isSoon = COACH_SOON_TABS.has(mainTab);
+  panelHome?.classList.toggle("hidden", mainTab !== "home");
+  panelComingSoon?.classList.toggle("hidden", !isSoon);
+  if (panelComingSoon) panelComingSoon.hidden = !isSoon;
+  panelChat?.classList.toggle("hidden", mainTab !== "chat");
+  panelCode?.classList.toggle("hidden", mainTab !== "code");
+  panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
+  if (mainTab === "home") renderCoachHome();
+  if (isSoon) renderComingSoonPanel(mainTab);
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
     syncNotebookLayout();
@@ -2467,6 +2554,129 @@ function setMainTab(next) {
   if (practiceDock && !practiceDock.classList.contains("hidden")) {
     placePracticeDock();
   }
+}
+
+function coachDisplayName() {
+  const raw = String(userName?.textContent || "").trim();
+  return raw && raw !== "Student" ? raw.split(/\s+/)[0] : t("nav_student");
+}
+
+function hasCoachHistory() {
+  return (
+    (Array.isArray(chatHistory) && chatHistory.length > 0) ||
+    (Array.isArray(codeHistory) && codeHistory.length > 0) ||
+    (Array.isArray(notebookHistory) && notebookHistory.length > 0)
+  );
+}
+
+function preferredContinueTab() {
+  if (Array.isArray(chatHistory) && chatHistory.length > 0) return "chat";
+  if (Array.isArray(codeHistory) && codeHistory.length > 0) return "code";
+  if (Array.isArray(notebookHistory) && notebookHistory.length > 0) return "notebook";
+  return "chat";
+}
+
+function renderComingSoonPanel(tab) {
+  const titleEl = document.getElementById("soonPanelTitle");
+  const bodyEl = document.getElementById("soonPanelBody");
+  const kickerEl = document.getElementById("soonPanelKicker");
+  if (kickerEl) kickerEl.textContent = t("soon_kicker");
+  const key = tab === "exam" ? "exam" : tab === "progress" ? "progress" : "planner";
+  if (titleEl) titleEl.textContent = t(`soon_${key}_title`);
+  if (bodyEl) bodyEl.textContent = t(`soon_${key}_body`);
+}
+
+function renderCoachHome() {
+  const name = coachDisplayName();
+  const welcomeEl = document.getElementById("coachWelcome");
+  const continueBtn = document.getElementById("coachContinueBtn");
+  const list = document.getElementById("coachPriorityList");
+  const returning = hasCoachHistory();
+  if (welcomeEl) {
+    welcomeEl.textContent = t(returning ? "coach_welcome" : "coach_welcome_new", { name });
+  }
+  if (continueBtn) {
+    continueBtn.textContent = t(returning ? "coach_continue" : "coach_start");
+  }
+  const coachSub = document.getElementById("coachSub");
+  if (coachSub) coachSub.textContent = t("coach_sub");
+  const coachKicker = document.getElementById("coachKicker");
+  if (coachKicker) coachKicker.textContent = t("coach_kicker");
+
+  if (!list) return;
+  const priorities = [];
+  const askLine = lastUserLine(chatHistory);
+  const codeLine = lastUserLine(codeHistory);
+  if (askLine) {
+    priorities.push({
+      tab: "chat",
+      label: t("coach_priority_continue_ask"),
+      detail: askLine,
+    });
+  }
+  if (codeLine) {
+    priorities.push({
+      tab: "code",
+      label: t("coach_priority_continue_code"),
+      detail: codeLine,
+    });
+  }
+  if (Array.isArray(notebookHistory) && notebookHistory.length > 0) {
+    priorities.push({
+      tab: "notebook",
+      label: t("coach_priority_continue_notebook"),
+      detail: lastUserLine(notebookHistory) || t("coach_tool_notebook_sub"),
+    });
+  }
+  if (!priorities.length) {
+    priorities.push(
+      { tab: "chat", label: t("coach_priority_ask"), detail: t("coach_tool_ask_sub") },
+      { tab: "notebook", label: t("coach_priority_notes"), detail: t("coach_tool_notebook_sub") },
+      { tab: "chat", label: t("coach_priority_practice"), detail: t("practice_this_topic") }
+    );
+  }
+  list.replaceChildren(
+    ...priorities.slice(0, 3).map((item) => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "coach-priority-item";
+      btn.dataset.coachTab = item.tab;
+      const title = document.createElement("span");
+      title.className = "coach-priority-title";
+      title.textContent = item.label;
+      const detail = document.createElement("span");
+      detail.className = "coach-priority-detail muted";
+      detail.textContent = item.detail;
+      btn.append(title, detail);
+      li.appendChild(btn);
+      return li;
+    })
+  );
+}
+
+function wireCoachHome() {
+  const go = (tab) => {
+    if (!tab) return;
+    setMainTab(tab);
+  };
+  document.getElementById("coachContinueBtn")?.addEventListener("click", () => {
+    go(preferredContinueTab());
+  });
+  document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
+  document.getElementById("soonBackHomeBtn")?.addEventListener("click", () => go("home"));
+  document.getElementById("soonGoAskBtn")?.addEventListener("click", () => go("chat"));
+  // Delegate so dynamically rendered priority rows stay clickable.
+  panelHome?.addEventListener("click", (e) => {
+    const target = e.target.closest?.("[data-coach-tab]");
+    if (!target || !panelHome.contains(target)) return;
+    go(target.getAttribute("data-coach-tab"));
+  });
+  panelComingSoon?.addEventListener("click", (e) => {
+    const target = e.target.closest?.("[data-coach-tab]");
+    if (!target || !panelComingSoon.contains(target)) return;
+    go(target.getAttribute("data-coach-tab"));
+  });
 }
 
 function syncLearnLayout() {
@@ -3741,7 +3951,9 @@ function showStudentWorkspace() {
   } catch {
     /* ignore */
   }
-  document.title = "Student AI - AI Hub";
+  document.title = "My Student Coach";
+  if (mainTab === "home" || !COACH_TABS.has(mainTab)) setMainTab("home");
+  else renderCoachHome();
   window.setTimeout(() => {
     maybeOfferPwaInstallBar();
   }, 850);
@@ -4964,7 +5176,8 @@ async function pullWorkspace() {
 
 initMarkdown();
 initPwaInstallSupport();
-setMainTab("chat");
+wireCoachHome();
+setMainTab("home");
 wireSettingsUi();
 wireHonorCodeModal();
 wireDefaultPageHintModal();
@@ -4981,6 +5194,7 @@ const restoreAfterPaint = () => {
   syncCodeLayout();
   syncNotebookLayout();
   syncNotebookAnalyzeVisibility();
+  if (mainTab === "home") renderCoachHome();
 };
 if (typeof requestAnimationFrame === "function") {
   requestAnimationFrame(() => requestAnimationFrame(restoreAfterPaint));
