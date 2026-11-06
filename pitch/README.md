@@ -1,6 +1,6 @@
 # AI Hub — Investor Pitch Deck
 
-World-class HTML pitch deck for **AI Hub** (Student AI live wedge → Health AI + Finance AI).
+World-class HTML pitch deck for **AI Hub** (Student AI — Ask, Code, Notebook).
 
 ## Open
 

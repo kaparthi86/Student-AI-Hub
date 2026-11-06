@@ -2084,8 +2084,7 @@ textarea:focus {
   /* Chat/Code: scroll lives inside the thread, not the whole page */
   .workspace-shell #panelChat:not(.hidden),
   .workspace-shell #panelCode:not(.hidden),
-  .workspace-shell #panelNotebook:not(.hidden),
-  .workspace-shell #panelFinanceAsk:not(.hidden) {
+  .workspace-shell #panelNotebook:not(.hidden) {
     overflow: hidden;
   }
 
