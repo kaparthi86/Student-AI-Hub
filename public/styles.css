@@ -7,6 +7,10 @@
   --muted: #6F6B63;
   --primary: #2F6FED;
   --primary-2: #1D5BD8;
+  --navy: #142D4C;
+  --teal: #287A89;
+  --mist: #F1F5F9;
+  --soft-green: #E7F4EF;
   --border: rgba(28, 27, 25, 0.10);
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-bg-strong: rgba(255, 255, 255, 0.9);
@@ -2086,6 +2090,11 @@ textarea:focus {
   .workspace-shell #panelCode:not(.hidden),
   .workspace-shell #panelNotebook:not(.hidden) {
     overflow: hidden;
+  }
+
+  .workspace-shell #panelHome:not(.hidden),
+  .workspace-shell #panelComingSoon:not(.hidden) {
+    overflow: auto;
   }
 
   .workspace-shell .answer-shell {

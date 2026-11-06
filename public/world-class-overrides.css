@@ -635,7 +635,8 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   background: var(--bg2);
 }
 
-/* Segmented tabs — same on all breakpoints */
+/* Coach nav — scrollable segmented control */
+.tabs.coach-nav,
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -646,6 +647,24 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   background: var(--bg2);
   border: 1px solid rgba(28, 27, 25, 0.08);
   box-shadow: none;
+}
+
+.tabs.coach-nav {
+  display: flex;
+  grid-template-columns: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  gap: 4px;
+}
+
+.tabs.coach-nav .tab {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tab,
@@ -671,6 +690,217 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   border: none;
   box-shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 4px 12px rgba(28, 27, 25, 0.06);
   font-weight: 700;
+}
+
+.tab-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: var(--soft-green);
+  border-radius: 999px;
+  padding: 2px 7px;
+  line-height: 1.2;
+}
+
+/* Coach Home dashboard */
+.coach-home-panel,
+.coach-soon-panel {
+  padding: 4px 2px 18px;
+}
+
+.coach-home,
+.coach-soon-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 920px;
+}
+
+.coach-home-hero,
+.coach-soon-empty {
+  padding: 18px 18px 16px;
+  border-radius: var(--radius-lg, 18px);
+  background:
+    linear-gradient(135deg, rgba(20, 45, 76, 0.06), rgba(40, 122, 137, 0.08)),
+    var(--surface);
+  border: 1px solid rgba(20, 45, 76, 0.08);
+}
+
+.coach-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.coach-welcome {
+  margin: 0;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.coach-sub {
+  margin: 8px 0 0;
+  max-width: 46ch;
+  line-height: 1.45;
+}
+
+.coach-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.coach-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.coach-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coach-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.coach-section-lead {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.coach-priority-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coach-priority-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background var(--motion-fast);
+}
+
+.coach-priority-item:hover {
+  border-color: rgba(40, 122, 137, 0.35);
+  background: var(--mist);
+  transform: translateY(-1px);
+}
+
+.coach-priority-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.coach-priority-detail {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coach-tool-grid,
+.coach-soon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.coach-tool-card,
+.coach-soon-card {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 108px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), transform var(--motion-fast), background var(--motion-fast);
+}
+
+.coach-tool-card:hover,
+.coach-soon-card:hover {
+  border-color: rgba(47, 111, 237, 0.35);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.coach-soon-card {
+  background: linear-gradient(180deg, #fff, var(--soft-green));
+}
+
+.coach-tool-label {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.coach-tool-sub {
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.coach-soon-card .tab-soon-badge {
+  margin-top: auto;
+}
+
+@media (max-width: 720px) {
+  .tabs.coach-nav {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    box-shadow: none;
+    background: var(--bg2);
+    border: 1px solid rgba(28, 27, 25, 0.08);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .coach-tool-grid,
+  .coach-soon-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .coach-home-hero,
+  .coach-soon-empty {
+    padding: 16px;
+  }
+
+  .coach-hero-actions .primary-btn,
+  .coach-hero-actions .ghost-btn {
+    width: 100%;
+  }
 }
 
 /* Ask hero craft */
