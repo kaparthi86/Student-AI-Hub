@@ -1538,6 +1538,78 @@ function wireStarterChipsAsSend(container, sendFn, busyButton, customStarters = 
   });
 }
 
+/** Shared Ask / Code search + follow-up send wiring. Restored after Finance removal dropped it. */
+function wireSearchFlow({
+  searchInput,
+  searchSubmit,
+  followupInput,
+  followupSubmit,
+  mode,
+  history,
+  threadEl,
+  statusEl,
+  onFirstSend,
+  getVisionAttachment,
+  clearVisionAttachment,
+  requireHonorCode = true,
+  gate,
+  getStudyMode,
+} = {}) {
+  const run = (raw, activeBtn) => {
+    if (requireHonorCode !== false) {
+      if (isHonorCodeModalOpen() || !hasAcknowledgedHonorCode()) {
+        maybeOfferHonorCodeModal();
+        return;
+      }
+    }
+    if (typeof gate === "function" && !gate()) return;
+    const attach = typeof getVisionAttachment === "function" ? getVisionAttachment() : null;
+    const msg = typeof raw === "string" ? raw : "";
+    const trimmed = msg.trim();
+    if (!trimmed && !attach) return;
+    if (typeof clearVisionAttachment === "function") clearVisionAttachment();
+    if (!history.length && typeof onFirstSend === "function") onFirstSend();
+    const studyMode = typeof getStudyMode === "function" ? getStudyMode() : "explain";
+    void sendChatMessage(mode, trimmed, history, threadEl, statusEl, activeBtn, studyMode, attach);
+    if (followupInput) {
+      followupInput.value = "";
+      followupInput.focus();
+    }
+  };
+
+  searchSubmit?.addEventListener("click", () => {
+    const msg = searchInput?.value || "";
+    if (searchInput) searchInput.value = "";
+    run(msg, searchSubmit);
+  });
+
+  followupSubmit?.addEventListener("click", () => {
+    run(followupInput?.value || "", followupSubmit);
+  });
+
+  searchInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      searchSubmit?.click();
+    }
+  });
+
+  followupInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      followupSubmit?.click();
+    }
+  });
+
+  return {
+    sendFromFollowup: (raw) => {
+      if (typeof clearVisionAttachment === "function") clearVisionAttachment();
+      if (followupInput) followupInput.value = "";
+      run(raw, followupSubmit);
+    },
+  };
+}
+
 function stopReadAloud() {
   try {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
@@ -3773,8 +3845,12 @@ async function initAuth() {
 googleLoginBtn?.addEventListener("click", async () => {
   if (!supabaseClient) {
     if (authStatus) {
-      authStatus.textContent =
-        "Google login is not ready yet. Check public/config.js and that the Supabase script loaded, then refresh.";
+      const missing = [];
+      if (!window.supabase) missing.push("Supabase script");
+      if (!window.APP_CONFIG?.supabaseUrl || !window.APP_CONFIG?.supabaseAnonKey) missing.push("config.js keys");
+      authStatus.textContent = missing.length
+        ? `Google login is not ready (${missing.join(", ")} missing). Refresh and try again.`
+        : "Google login is still starting. Wait a moment and try again.";
     }
     return;
   }
@@ -3798,6 +3874,9 @@ googleLoginBtn?.addEventListener("click", async () => {
   }
 });
 
+// Start auth as soon as the login button is wired so later Ask/Code setup
+// cannot block Join with Google if something else throws.
+void initAuth();
 
 function closeAccountMenu() {
   document.querySelectorAll(".account-menu").forEach((menu) => {
@@ -4891,7 +4970,6 @@ wireEmptyStatePrompts();
 wireCopyThreadButtons();
 maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
-initAuth();
 initBetaBanner();
 
 // Restore threads after first paint so Safari is not parsing Markdown during boot.
