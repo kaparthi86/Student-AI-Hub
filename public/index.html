@@ -6,18 +6,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
     />
-    <meta name="theme-color" content="#F7F6F3" />
+    <meta name="theme-color" content="#142D4C" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="AI Hub" />
+    <meta name="apple-mobile-web-app-title" content="My Student Coach" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=student-only-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=simplify-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
-    <title>AI Hub</title>
+    <title>My Student Coach</title>
     <meta
       name="description"
-      content="AI Hub helps people learn and plan with focused AI. Start with Student AI: Ask, Code, and Notebook."
+      content="My Student Coach — your personal AI study companion for understanding topics, studying notes, and preparing for exams."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,17 +27,18 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=p1-labs-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=p1-labs-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=p1-labs-1" />
+    <link rel="stylesheet" href="./styles.css?v=simplify-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=simplify-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=simplify-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=simplify-1" />
   </head>
-  <body>
+  <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
     <div class="bg-glow two" aria-hidden="true"></div>
 
     <main class="container">
       <div id="betaBanner" class="beta-banner hidden" role="status" aria-live="polite"></div>
-      <div id="pwaInstallBar" class="pwa-install-bar hidden" role="region" aria-label="Install AI Hub">
+      <div id="pwaInstallBar" class="pwa-install-bar pwa-install-bar--secondary hidden" role="region" aria-label="Install My Student Coach">
         <div class="pwa-install-bar-row">
           <img
             class="pwa-install-bar-icon"
@@ -48,9 +49,9 @@
             decoding="async"
           />
           <div class="pwa-install-bar-copy">
-            <div class="pwa-install-bar-title" id="pwaInstallTitle">Install AI Hub</div>
+            <div class="pwa-install-bar-title" id="pwaInstallTitle">Install My Student Coach</div>
             <p class="pwa-install-bar-sub muted" id="pwaInstallSub">
-              Add our icon to your home screen or desktop for quick access until the mobile app ships.
+              Optional: add a home-screen icon for quicker access.
             </p>
           </div>
           <div class="pwa-install-bar-actions">
@@ -66,93 +67,47 @@
         </div>
         <div id="pwaIosSteps" class="pwa-ios-steps hidden muted" role="note">
           <strong>Safari on iPhone or iPad:</strong> tap the Share button <span aria-hidden="true">(□↑)</span>, then
-          <strong>Add to Home Screen</strong>, then Add. You will get our branded icon on your home screen.
+          <strong>Add to Home Screen</strong>, then Add.
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-      <section class="auth auth-shell landing" id="authCard" aria-label="AI Hub">
-        <div class="landing-hero">
-          <div class="landing-hero-visual" aria-hidden="true">
-            <svg class="landing-hero-scene" viewBox="0 0 960 720" xmlns="http://www.w3.org/2000/svg" focusable="false">
-              <defs>
-                <linearGradient id="landingDeskGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#E8EEF8" />
-                  <stop offset="55%" stop-color="#F3F1EC" />
-                  <stop offset="100%" stop-color="#E4E0D8" />
-                </linearGradient>
-                <linearGradient id="landingPageGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#FFFEFB" />
-                  <stop offset="100%" stop-color="#F4F2EC" />
-                </linearGradient>
-                <filter id="landingSoft" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="1.2" />
-                </filter>
-              </defs>
-              <rect width="960" height="720" fill="url(#landingDeskGrad)" />
-              <ellipse cx="720" cy="120" rx="220" ry="90" fill="rgba(255,255,255,0.55)" />
-              <path
-                d="M80 150h520c18 0 32 14 32 32v420c0 18-14 32-32 32H80c-18 0-32-14-32-32V182c0-18 14-32 32-32z"
-                fill="url(#landingPageGrad)"
-                stroke="rgba(28,27,25,0.08)"
-              />
-              <path d="M340 150v484" stroke="rgba(28,27,25,0.06)" stroke-width="2" />
-              <g class="landing-note-lines" stroke="rgba(47,111,237,0.22)" stroke-width="3" stroke-linecap="round">
-                <path d="M120 230h180" />
-                <path d="M120 270h150" />
-                <path d="M120 310h170" />
-                <path d="M120 350h130" />
-                <path d="M380 230h180" />
-                <path d="M380 270h160" />
-                <path d="M380 310h140" />
-                <path d="M380 350h170" />
-                <path d="M380 390h120" />
-              </g>
-              <g transform="translate(620 210)">
-                <rect width="260" height="340" rx="18" fill="#FFFFFF" stroke="rgba(28,27,25,0.10)" />
-                <rect x="24" y="28" width="120" height="14" rx="7" fill="#2F6FED" fill-opacity="0.9" />
-                <rect x="24" y="64" width="200" height="10" rx="5" fill="rgba(28,27,25,0.12)" />
-                <rect x="24" y="88" width="170" height="10" rx="5" fill="rgba(28,27,25,0.10)" />
-                <rect x="24" y="130" width="212" height="88" rx="12" fill="rgba(47,111,237,0.08)" />
-                <rect x="40" y="150" width="160" height="8" rx="4" fill="rgba(28,27,25,0.14)" />
-                <rect x="40" y="170" width="140" height="8" rx="4" fill="rgba(28,27,25,0.10)" />
-                <rect x="40" y="190" width="150" height="8" rx="4" fill="rgba(28,27,25,0.10)" />
-                <rect x="24" y="240" width="180" height="10" rx="5" fill="rgba(28,27,25,0.10)" />
-                <rect x="24" y="268" width="150" height="10" rx="5" fill="rgba(28,27,25,0.08)" />
-                <rect x="24" y="296" width="190" height="10" rx="5" fill="rgba(28,27,25,0.08)" />
-              </g>
-              <g class="landing-pen" transform="translate(540 470) rotate(-18)">
-                <rect width="14" height="120" rx="4" fill="#1C1B19" />
-                <rect y="100" width="14" height="28" fill="#2F6FED" />
-                <path d="M0 128h14l-7 18z" fill="#6F6B63" />
-              </g>
-            </svg>
-          </div>
-          <div class="landing-hero-content">
-            <div class="landing-brand" aria-label="AI Hub">
-              <span class="brand-mark landing-brand-mark" aria-hidden="true">
-                <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
-                  <path
-                    d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
-                    fill="white"
-                    fill-opacity="0.92"
-                  />
-                  <defs>
-                    <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#2F6FED" />
-                      <stop offset="1" stop-color="#1D5BD8" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </span>
-              <h1 class="landing-brand-title" id="authBrandTitle">AI <span class="brand-hub">Hub</span></h1>
-            </div>
-            <p class="landing-headline" id="authSigninTitle">Learn and plan with focused AI</p>
-            <p class="landing-support" id="authSigninTagline">
-              Free Ask, Code, and Notebook - study help that stays on your side of the honor code.
+      <section class="auth auth-shell landing msc-landing" id="authCard" aria-label="My Student Coach">
+        <header class="msc-topnav">
+          <a class="msc-logo" href="#authCard" aria-label="My Student Coach home">
+            <span class="brand-mark landing-brand-mark" aria-hidden="true">
+              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
+                <path
+                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                  fill="white"
+                  fill-opacity="0.92"
+                />
+                <defs>
+                  <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#287A89" />
+                    <stop offset="1" stop-color="#142D4C" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="msc-logo-text" id="authBrandTitle">My Student Coach</span>
+          </a>
+          <nav class="msc-topnav-links" aria-label="Landing">
+            <a href="#mscFeatures">Features</a>
+            <a href="#mscAbout">About</a>
+            <a href="#mscStart">Sign in</a>
+          </nav>
+        </header>
+
+        <div class="landing-hero msc-hero" id="mscStart">
+          <div class="landing-hero-content msc-hero-content">
+            <p class="msc-eyebrow" id="authBrandKicker">Your personal AI study companion</p>
+            <h1 class="landing-headline msc-headline" id="authSigninTitle">Study smarter. Learn better. Achieve more.</h1>
+            <p class="landing-support msc-support" id="authSigninTagline">
+              Your personal AI coach for studying, understanding difficult topics, and preparing for exams.
             </p>
-            <div class="landing-cta">
-              <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn" type="button">
+            <div class="landing-cta msc-cta">
+              <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn msc-primary-cta" type="button">
                 <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
                   <path
                     fill="#4285F4"
@@ -171,54 +126,67 @@
                     d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
                   />
                 </svg>
-                <span>Join with Google</span>
+                <span>Get Started Free</span>
               </button>
+              <p class="msc-cta-note muted">Learn at your own pace. Stay in control.</p>
               <p id="authStatus" class="muted auth-status landing-auth-status"></p>
             </div>
           </div>
         </div>
 
-        <section class="landing-mission" aria-label="Mission">
+        <section class="msc-section" id="mscHow" aria-label="How it works">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title" id="landingMissionTitle">Our mission</h2>
-            <p class="landing-section-lead landing-mission-statement" id="landingMissionLead">
-              AI Hub helps people learn and plan with focused AI.
-            </p>
-            <p class="landing-mission-sub" id="landingMissionSub">
-              Starting with Student AI &mdash; learning and practice, not shortcuts.
-            </p>
+            <h2 class="landing-section-title">How it works</h2>
+            <ol class="msc-steps">
+              <li><strong>Ask</strong><span>Bring a question, notes, or a stuck problem.</span></li>
+              <li><strong>Learn</strong><span>Get clear explanations, practice, and study plans.</span></li>
+              <li><strong>Improve</strong><span>Build understanding — not shortcuts.</span></li>
+            </ol>
           </div>
         </section>
 
-        <section class="landing-below" aria-label="About Student AI">
+        <section class="landing-below msc-section" id="mscFeatures" aria-label="Features">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title">Built for real study sessions</h2>
-            <p class="landing-section-lead">
-              Open Student AI after you sign in - three tools, one focused workspace.
-            </p>
-            <ul class="landing-tools">
+            <h2 class="landing-section-title">Everything you need to succeed</h2>
+            <ul class="landing-tools msc-feature-cards">
               <li>
-                <strong>Ask</strong>
-                <span>Clear explanations and follow-ups when a topic will not click.</span>
+                <strong>AI Tutor</strong>
+                <span>Understand difficult topics with personalized explanations.</span>
               </li>
               <li>
-                <strong>Code</strong>
-                <span>Debug and learn programming with the error context you paste in.</span>
+                <strong>Smart Notebook</strong>
+                <span>Turn your notes into summaries, quizzes, and study plans.</span>
               </li>
               <li>
-                <strong>Notebook</strong>
-                <span>Upload notes and get a summary, key ideas, quiz, and study plan.</span>
+                <strong>Coding Coach</strong>
+                <span>Learn programming and understand errors.</span>
+              </li>
+              <li>
+                <strong>Study Planner</strong>
+                <span>Organize your studies and prepare for exams. <em class="msc-soon">Coming soon</em></span>
               </li>
             </ul>
           </div>
         </section>
 
-        <section class="landing-integrity" aria-label="Academic integrity">
+        <section class="landing-integrity msc-section" id="mscAbout" aria-label="About">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title">Study with integrity</h2>
-            <p class="landing-section-lead">
-              Student AI is for learning and practice - not for handing in AI work as your own. Follow your honor code.
+            <h2 class="landing-section-title" id="landingMissionTitle">Why My Student Coach</h2>
+            <p class="landing-section-lead" id="landingMissionLead">
+              Personalized learning with study integrity and privacy at the center.
             </p>
+            <p class="landing-mission-sub" id="landingMissionSub">
+              Built for learning and practice — not for handing in AI work as your own.
+              <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a>
+            </p>
+          </div>
+        </section>
+
+        <section class="msc-section msc-final-cta" aria-label="Get started">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">Your success starts with one step</h2>
+            <p class="landing-section-lead">Join My Student Coach and make learning easier.</p>
+            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn">Get Started Free</button>
           </div>
         </section>
 
@@ -226,21 +194,15 @@
           <nav class="landing-legal" aria-label="Legal">
             <a href="./privacy.html">Privacy</a>
             <a href="./terms.html">Terms</a>
-            <a href="mailto:student-ai-hub-support@googlegroups.com">Feedback</a>
+            <a href="mailto:student-ai-hub-support@googlegroups.com">Support</a>
           </nav>
           <p class="fine-print-line" data-i18n="disclaimer_base">
-            AI Hub can make mistakes. Check important facts.
-          </p>
-          <p class="fine-print-line" data-i18n="disclaimer_hub">
-            For learning and study help &mdash; not a substitute for professional advice. Check important facts.
-          </p>
-          <p class="fine-print-line" data-i18n="disclaimer_nonprofit">
-            AI Hub is mission-driven &mdash; built to help people learn and plan, not to sell your data or push ads.
+            My Student Coach can make mistakes. Check important facts.
           </p>
         </footer>
       </section>
 
-      <section class="hub hub-shell hidden" id="hubCard" aria-label="AI Hub home">
+      <section class="hub hub-shell hidden" id="hubCard" aria-label="My Student Coach home">
         <header class="hub-top">
           <div class="hub-top-brand" aria-hidden="true"></div>
           <div class="head-actions account-menu">
@@ -277,8 +239,8 @@
               </defs>
             </svg>
           </span>
-          <h1 class="hub-brand" id="hubBrandTitle">AI Hub</h1>
-          <p class="hub-tagline" id="hubTagline">Ask, code, and study in one place</p>
+          <h1 class="hub-brand" id="hubBrandTitle">My Student Coach</h1>
+          <p class="hub-tagline" id="hubTagline">Study smarter. Learn better.</p>
           <p class="hub-welcome muted hidden" id="hubWelcome"></p>
         </div>
 
@@ -313,7 +275,7 @@
                 </svg>
               </span>
             </span>
-            <span class="hub-tile-title" id="tileStudentTitle">Student AI</span>
+            <span class="hub-tile-title" id="tileStudentTitle">My Student Coach</span>
             <span class="hub-tile-sub" id="tileStudentSub">Ask, code, and study in one place</span>
             <span class="hub-tile-cta" id="tileStudentCta">Open -&gt;</span>
           </button>
@@ -324,7 +286,7 @@
         </p>
         <div class="hub-secondary">
           <button type="button" class="ghost-btn hub-resume-btn hidden" id="hubResumeStudent">
-            Resume Student AI
+            Continue
           </button>
         </div>
         <footer class="app-fine-print hub-fine-print" role="note" id="hubDisclaimerFooter" aria-label="Disclaimer">
@@ -341,7 +303,7 @@
       <section class="app app-shell workspace-shell card hidden" id="appCard">
         <header class="app-head">
           <div class="app-head-top">
-            <div class="app-brand app-brand--workspace" aria-label="Student AI">
+            <div class="app-brand app-brand--workspace" aria-label="My Student Coach">
               <span class="brand-mark" aria-hidden="true">
                 <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="12" fill="url(#brandGrad)" />
@@ -352,8 +314,8 @@
                   />
                   <defs>
                     <linearGradient id="brandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#2F6FED" />
-                      <stop offset="1" stop-color="#1D5BD8" />
+                      <stop stop-color="#287A89" />
+                      <stop offset="1" stop-color="#142D4C" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -363,12 +325,12 @@
                   type="button"
                   class="workspace-hub-link"
                   id="backToHubBtn"
-                  aria-label="Back to AI Hub"
-                  title="Back to AI Hub"
+                  aria-label="Home overview"
+                  title="Home overview"
                 >
-                  Back to AI Hub
+                  Overview
                 </button>
-                <span class="brand-title workspace-title" id="crumbStudent">Student AI</span>
+                <span class="brand-title workspace-title" id="crumbStudent">My Student Coach</span>
               </div>
             </div>
             <div class="head-actions account-menu">
@@ -397,116 +359,80 @@
           </div>
         </header>
 
-        <nav class="tabs coach-nav" role="tablist" aria-label="My Student Coach">
+        <nav class="tabs coach-nav msc-main-nav" role="tablist" aria-label="My Student Coach">
           <button class="tab active" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="true">Home</button>
-          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Ask</button>
-          <button class="tab" data-tab="code" type="button" id="tabCode" role="tab" aria-selected="false">Code</button>
-          <button class="tab" data-tab="notebook" type="button" id="tabNotebook" role="tab" aria-selected="false">Notebook</button>
-          <button class="tab" data-tab="voice" type="button" id="tabVoice" role="tab" aria-selected="false">Voice</button>
-          <button class="tab" data-tab="flashcards" type="button" id="tabFlashcards" role="tab" aria-selected="false">Cards</button>
-          <button class="tab" data-tab="math" type="button" id="tabMath" role="tab" aria-selected="false">Math</button>
-          <button class="tab" data-tab="focus" type="button" id="tabFocus" role="tab" aria-selected="false">Focus</button>
-          <button class="tab" data-tab="gaps" type="button" id="tabGaps" role="tab" aria-selected="false">Gaps</button>
+          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">AI Coach</button>
+          <details class="msc-nav-menu" id="learnMenu">
+            <summary class="tab msc-nav-summary">Learn</summary>
+            <div class="msc-nav-panel" role="menu">
+              <button type="button" class="msc-nav-item" data-tab="chat" role="menuitem">AI Tutor</button>
+              <button type="button" class="msc-nav-item" data-tab="notebook" role="menuitem" id="tabNotebook">Notebook</button>
+              <button type="button" class="msc-nav-item" data-tab="code" role="menuitem" id="tabCode">Coding Coach</button>
+              <button type="button" class="msc-nav-item" data-tab="math" role="menuitem" id="tabMath">Math &amp; Science</button>
+              <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
+              <button type="button" class="msc-nav-item" data-tab="voice" role="menuitem" id="tabVoice">Voice Tutor</button>
+              <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep <span class="tab-soon-badge">Soon</span></button>
+            </div>
+          </details>
           <button class="tab tab--soon" data-tab="planner" type="button" id="tabPlanner" role="tab" aria-selected="false">
             <span id="tabPlannerLabel">Planner</span>
             <span class="tab-soon-badge" id="tabPlannerBadge">Soon</span>
           </button>
-          <button class="tab tab--soon" data-tab="exam" type="button" id="tabExam" role="tab" aria-selected="false">
-            <span id="tabExamLabel">Exam Prep</span>
-            <span class="tab-soon-badge" id="tabExamBadge">Soon</span>
-          </button>
-          <button class="tab tab--soon" data-tab="progress" type="button" id="tabProgress" role="tab" aria-selected="false">
-            <span id="tabProgressLabel">Progress</span>
-            <span class="tab-soon-badge" id="tabProgressBadge">Soon</span>
-          </button>
+          <details class="msc-nav-menu" id="profileMenu">
+            <summary class="tab msc-nav-summary">Profile</summary>
+            <div class="msc-nav-panel" role="menu">
+              <button type="button" class="msc-nav-item" data-tab="progress" role="menuitem" id="tabProgress">My Progress <span class="tab-soon-badge">Soon</span></button>
+              <button type="button" class="msc-nav-item" data-tab="gaps" role="menuitem" id="tabGaps">Knowledge Gaps</button>
+              <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
+              <button type="button" class="msc-nav-item open-settings-btn" role="menuitem">Settings</button>
+              <button type="button" class="msc-nav-item" id="profileInstallBtn" role="menuitem">Install app</button>
+              <a class="msc-nav-item" href="mailto:student-ai-hub-support@googlegroups.com" role="menuitem">Help &amp; Support</a>
+            </div>
+          </details>
         </nav>
 
         <section id="panelHome" class="panel coach-home-panel">
-          <div class="coach-home">
-            <header class="coach-home-hero">
-              <p class="coach-kicker" id="coachKicker">My Student Coach</p>
-              <h2 class="coach-welcome" id="coachWelcome">Welcome back</h2>
-              <p class="coach-sub muted" id="coachSub">
-                Your personalized study companion — ask questions, practice, and keep notes in one place.
-              </p>
+          <div class="coach-home msc-home">
+            <header class="coach-home-hero msc-home-hero">
+              <p class="coach-kicker" id="coachKicker">Welcome back</p>
+              <h2 class="coach-welcome" id="coachWelcome">What would you like to learn?</h2>
+              <p class="coach-sub muted" id="coachSub">Your AI coach is ready to help.</p>
               <div class="coach-hero-actions">
-                <button type="button" class="primary-btn" id="coachContinueBtn">Continue learning</button>
-                <button type="button" class="ghost-btn" id="coachAskBtn">Ask the tutor</button>
+                <button type="button" class="primary-btn" id="coachAskBtn">Ask your AI Coach</button>
+                <button type="button" class="ghost-btn" id="coachContinueBtn">Continue learning</button>
               </div>
             </header>
 
-            <section class="coach-section" aria-labelledby="coachPrioritiesTitle">
-              <div class="coach-section-head">
-                <h3 class="coach-section-title" id="coachPrioritiesTitle">Today&apos;s priorities</h3>
-                <p class="coach-section-lead muted" id="coachPrioritiesLead">Start with one clear next step.</p>
-              </div>
-              <ul class="coach-priority-list" id="coachPriorityList"></ul>
-            </section>
-
             <section class="coach-section" aria-labelledby="coachToolsTitle">
               <div class="coach-section-head">
-                <h3 class="coach-section-title" id="coachToolsTitle">Study tools</h3>
-                <p class="coach-section-lead muted" id="coachToolsLead">Core tools available now.</p>
+                <h3 class="coach-section-title" id="coachToolsTitle">What can I help you with?</h3>
+                <p class="coach-section-lead muted" id="coachToolsLead">Pick one path. More tools stay under Learn.</p>
               </div>
-              <div class="coach-tool-grid" id="coachToolGrid">
+              <div class="coach-tool-grid msc-home-actions" id="coachToolGrid">
                 <button type="button" class="coach-tool-card" data-coach-tab="chat">
-                  <span class="coach-tool-label" id="coachToolAskTitle">AI Tutor</span>
-                  <span class="coach-tool-sub muted" id="coachToolAskSub">Step-by-step help in Ask</span>
+                  <span class="coach-tool-label" id="coachToolAskTitle">Explain a topic</span>
+                  <span class="coach-tool-sub muted" id="coachToolAskSub">Understand anything</span>
                 </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="voice">
-                  <span class="coach-tool-label">Voice Tutor</span>
-                  <span class="coach-tool-sub muted">Speak with your coach</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="math">
-                  <span class="coach-tool-label">Math &amp; Science</span>
-                  <span class="coach-tool-sub muted">Step-by-step problem help</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="flashcards">
-                  <span class="coach-tool-label">Flashcards</span>
-                  <span class="coach-tool-sub muted">Remember what you learn</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="focus">
-                  <span class="coach-tool-label">Focus Mode</span>
-                  <span class="coach-tool-sub muted">Timed study sessions</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="gaps">
-                  <span class="coach-tool-label">Knowledge Gaps</span>
-                  <span class="coach-tool-sub muted">Fix weak areas next</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="code">
-                  <span class="coach-tool-label" id="coachToolCodeTitle">Code</span>
-                  <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and learn with guidance</span>
+                <button type="button" class="coach-tool-card" data-coach-tab="chat" data-coach-mode="quiz">
+                  <span class="coach-tool-label">Practice a quiz</span>
+                  <span class="coach-tool-sub muted">Test your knowledge</span>
                 </button>
                 <button type="button" class="coach-tool-card" data-coach-tab="notebook">
-                  <span class="coach-tool-label" id="coachToolNotebookTitle">My Notebook</span>
-                  <span class="coach-tool-sub muted" id="coachToolNotebookSub">Summarize notes and practice</span>
+                  <span class="coach-tool-label" id="coachToolNotebookTitle">Study my notes</span>
+                  <span class="coach-tool-sub muted" id="coachToolNotebookSub">Upload your documents</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="code">
+                  <span class="coach-tool-label" id="coachToolCodeTitle">Learn coding</span>
+                  <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and understand</span>
                 </button>
               </div>
             </section>
 
-            <section class="coach-section" aria-labelledby="coachNextTitle">
-              <div class="coach-section-head">
-                <h3 class="coach-section-title" id="coachNextTitle">Coming next</h3>
-                <p class="coach-section-lead muted" id="coachNextLead">Still on the roadmap.</p>
-              </div>
-              <div class="coach-soon-grid">
-                <button type="button" class="coach-soon-card" data-coach-tab="planner">
-                  <span class="coach-tool-label" id="coachSoonPlannerTitle">Study Planner</span>
-                  <span class="coach-tool-sub muted" id="coachSoonPlannerSub">AI schedules and deadlines</span>
-                  <span class="tab-soon-badge">Soon</span>
-                </button>
-                <button type="button" class="coach-soon-card" data-coach-tab="exam">
-                  <span class="coach-tool-label" id="coachSoonExamTitle">Exam Prep</span>
-                  <span class="coach-tool-sub muted" id="coachSoonExamSub">Practice tests from your notes</span>
-                  <span class="tab-soon-badge">Soon</span>
-                </button>
-                <button type="button" class="coach-soon-card" data-coach-tab="progress">
-                  <span class="coach-tool-label" id="coachSoonProgressTitle">My Progress</span>
-                  <span class="coach-tool-sub muted" id="coachSoonProgressSub">Streaks, strengths, and reviews</span>
-                  <span class="tab-soon-badge">Soon</span>
-                </button>
-              </div>
-            </section>
+            <ul class="coach-priority-list msc-priority-list" id="coachPriorityList" hidden></ul>
+            <p class="muted msc-trust-line">
+              For learning and practice only.
+              <a href="./terms.html">Study integrity</a> · <a href="./privacy.html">Privacy</a>
+            </p>
           </div>
         </section>
 
@@ -624,11 +550,14 @@
         </section>
 
         <section id="panelChat" class="panel perplexity-panel hidden">
-          <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
-            <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
-            <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
-            <button type="button" class="study-mode-btn" data-study-mode="guide" aria-pressed="false">Don't give the answer</button>
-          </div>
+          <details class="msc-advanced-options">
+            <summary>Learning mode options</summary>
+            <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
+              <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
+              <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
+              <button type="button" class="study-mode-btn" data-study-mode="guide" aria-pressed="false">Don't give the answer</button>
+            </div>
+          </details>
           <div id="chatSearchShell" class="search-hero">
             <input
               type="file"
@@ -1124,7 +1053,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=p1-labs-1"></script>
-    <script defer src="./coach-labs.js?v=p1-labs-1"></script>
+    <script defer src="./app.js?v=simplify-1"></script>
+    <script defer src="./coach-labs.js?v=simplify-1"></script>
   </body>
 </html>

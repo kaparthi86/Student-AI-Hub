@@ -195,10 +195,10 @@ const UI_LANG_LABELS = {
 
 const I18N = {
   en: {
-    signin_title: "Learn and plan with focused AI",
-    signin_tagline: "Ask, code, and study in one place Free, and on your side of the honor code.",
+    signin_title: "Study smarter. Learn better. Achieve more.",
+    signin_tagline: "Your personal AI coach for studying, understanding difficult topics, and preparing for exams.",
     free_for_students: "Free for students",
-    brand_kicker: "Ask, learn, code & notebook in one place",
+    brand_kicker: "Your personal AI study companion",
     live_web_label: "Live web",
     live_web_hint: "Use current web sources when relevant",
     live_web_hint_off: "Answers use the model only (no live web)",
@@ -209,38 +209,38 @@ const I18N = {
     resume_student: "Resume Student AI",
     live_web_unavailable: "Live web needs a search key on the server",
     visual_kicker: "Visual",
-    auth_brand_kicker: "Student AI for learning and practice",
-    hub_brand: "AI Hub",
-    hub_tagline: "Ask, code, and study in one place",
+    auth_brand_kicker: "Your personal AI study companion",
+    hub_brand: "My Student Coach",
+    hub_tagline: "Study smarter. Learn better.",
     hub_welcome: "Welcome back, {name}",
-    tile_student_title: "Student AI",
-    tile_student_sub: "Ask, code, and study in one place",
+    tile_student_title: "My Student Coach",
+    tile_student_sub: "Ask, learn, and practice in one place",
     tile_student_cta: "Open ->",
-    hub_privacy_note: "AI Hub does not sell your data or show ads from your chats.",
+    hub_privacy_note: "My Student Coach does not sell your data or show ads from your chats.",
     disclaimer_privacy:
       "AI Hub does not sell your personal data or show advertising based on your chats.",
-    nav_hub: "AI Hub",
-    nav_back_hub: "Back to AI Hub",
-    nav_student: "Student AI",
-    disclaimer_base: "AI Hub can make mistakes. Check important facts.",
-    disclaimer_hub: "For learning and study help - not a substitute for professional advice. Check important facts.",
-    disclaimer_nonprofit: "AI Hub is mission-driven - built to help people learn and plan, not to sell your data or push ads.",
+    nav_hub: "Overview",
+    nav_back_hub: "Overview",
+    nav_student: "My Student Coach",
+    disclaimer_base: "My Student Coach can make mistakes. Check important facts.",
+    disclaimer_hub: "For learning and study help - not a substitute for professional advice.",
+    disclaimer_nonprofit: "Mission-driven - built to help students learn, not to sell your data or push ads.",
     disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
-          mission_title: "Our mission",
-    mission_lead: "AI Hub helps people learn and plan with focused AI.",
-    mission_sub: "Starting with Student AI - learning and practice, not shortcuts.",
+          mission_title: "Why My Student Coach",
+    mission_lead: "Personalized learning with study integrity and privacy at the center.",
+    mission_sub: "Built for learning and practice - not for handing in AI work as your own.",
     honor_title: "Study with integrity",
-    honor_lead: "Student AI is for learning and practice - not for handing in AI work as your own.",
+    honor_lead: "My Student Coach is for learning and practice - not for handing in AI work as your own.",
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
     honor_ack: "I understand",
-    honor_back: "Back to Hub",
-    continue_google: "Join with Google",
+    honor_back: "Back",
+    continue_google: "Get Started Free",
     settings: "Settings",
     logout: "Logout",
     welcome: "Welcome",
     app_tagline: "Ask a question, get an answer, keep the conversation going.",
     tab_home: "Home",
-    tab_ask: "Ask",
+    tab_ask: "AI Coach",
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
@@ -248,25 +248,25 @@ const I18N = {
     tab_exam: "Exam Prep",
     tab_progress: "Progress",
     tab_soon: "Soon",
-    coach_kicker: "My Student Coach",
-    coach_welcome: "Welcome back, {name}",
-    coach_welcome_new: "Welcome, {name}",
-    coach_sub: "Your personalized study companion ? ask questions, practice, and keep notes in one place.",
+    coach_kicker: "Welcome back",
+    coach_welcome: "What would you like to learn, {name}?",
+    coach_welcome_new: "What would you like to learn, {name}?",
+    coach_sub: "Your AI coach is ready to help.",
     coach_continue: "Continue learning",
     coach_start: "Start learning",
-    coach_ask_cta: "Ask the tutor",
+    coach_ask_cta: "Ask your AI Coach",
     coach_priorities_title: "Today's priorities",
     coach_priorities_lead: "Start with one clear next step.",
-    coach_tools_title: "Study tools",
-    coach_tools_lead: "Core tools available now.",
+    coach_tools_title: "What can I help you with?",
+    coach_tools_lead: "Pick one path. More tools stay under Learn.",
     coach_next_title: "Coming next",
-    coach_next_lead: "Phase 1 roadmap ? on the way.",
-    coach_tool_ask_title: "AI Tutor",
-    coach_tool_ask_sub: "Step-by-step help in Ask",
-    coach_tool_code_title: "Code",
-    coach_tool_code_sub: "Debug and learn with guidance",
-    coach_tool_notebook_title: "My Notebook",
-    coach_tool_notebook_sub: "Summarize notes and practice",
+    coach_next_lead: "Still on the roadmap.",
+    coach_tool_ask_title: "Explain a topic",
+    coach_tool_ask_sub: "Understand anything",
+    coach_tool_code_title: "Learn coding",
+    coach_tool_code_sub: "Debug and understand",
+    coach_tool_notebook_title: "Study my notes",
+    coach_tool_notebook_sub: "Upload your documents",
     coach_soon_planner_title: "Study Planner",
     coach_soon_planner_sub: "AI schedules and deadlines",
     coach_soon_exam_title: "Exam Prep",
@@ -362,7 +362,7 @@ const I18N = {
     attached_image: "Attached image",
     show_steps: "Yes, show me how",
     hide_steps: "Hide steps",
-    pwa_install_title: "Install AI Hub",
+    pwa_install_title: "Install My Student Coach",
     pwa_install_btn: "Install",
     pwa_ios_help_btn: "iPhone / iPad",
     pwa_not_now: "Not now",
@@ -2561,11 +2561,23 @@ function setMainTab(next) {
   if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
   if (mainTab !== "chat" && mainTab !== "voice" && mainTab !== "math") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat" && mainTab !== "math") clearLearnChatVisionAttachment();
-  document.querySelectorAll(".coach-nav .tab, .tabs .tab").forEach((tab) => {
+  const learnTabs = new Set(["chat", "code", "notebook", "math", "flashcards", "voice", "exam"]);
+  const profileTabs = new Set(["progress", "gaps", "focus"]);
+  document.querySelectorAll(".coach-nav .tab[data-tab], .tabs .tab[data-tab]").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
     tab.setAttribute("aria-selected", on ? "true" : "false");
   });
+  document.getElementById("learnMenu")?.querySelector(".msc-nav-summary")?.classList.toggle(
+    "active",
+    learnTabs.has(mainTab) && mainTab !== "chat"
+  );
+  document.getElementById("profileMenu")?.querySelector(".msc-nav-summary")?.classList.toggle(
+    "active",
+    profileTabs.has(mainTab)
+  );
+  // AI Coach tab stays active for chat; Learn highlights for other learn tools.
+  document.getElementById("tabChat")?.classList.toggle("active", mainTab === "chat");
   const isSoon = COACH_SOON_TABS.has(mainTab);
   panelHome?.classList.toggle("hidden", mainTab !== "home");
   panelComingSoon?.classList.toggle("hidden", !isSoon);
@@ -2638,62 +2650,27 @@ function renderCoachHome() {
   if (coachSub) coachSub.textContent = t("coach_sub");
   const coachKicker = document.getElementById("coachKicker");
   if (coachKicker) coachKicker.textContent = t("coach_kicker");
+  const askBtn = document.getElementById("coachAskBtn");
+  if (askBtn) askBtn.textContent = t("coach_ask_cta");
 
-  if (!list) return;
-  const priorities = [];
-  const askLine = lastUserLine(chatHistory);
-  const codeLine = lastUserLine(codeHistory);
-  if (askLine) {
-    priorities.push({
-      tab: "chat",
-      label: t("coach_priority_continue_ask"),
-      detail: askLine,
-    });
+  // Simplified home: action cards only. Continue still uses history helpers.
+  if (list) {
+    list.hidden = true;
+    list.replaceChildren();
   }
-  if (codeLine) {
-    priorities.push({
-      tab: "code",
-      label: t("coach_priority_continue_code"),
-      detail: codeLine,
-    });
-  }
-  if (Array.isArray(notebookHistory) && notebookHistory.length > 0) {
-    priorities.push({
-      tab: "notebook",
-      label: t("coach_priority_continue_notebook"),
-      detail: lastUserLine(notebookHistory) || t("coach_tool_notebook_sub"),
-    });
-  }
-  if (!priorities.length) {
-    priorities.push(
-      { tab: "chat", label: t("coach_priority_ask"), detail: t("coach_tool_ask_sub") },
-      { tab: "notebook", label: t("coach_priority_notes"), detail: t("coach_tool_notebook_sub") },
-      { tab: "chat", label: t("coach_priority_practice"), detail: t("practice_this_topic") }
-    );
-  }
-  list.replaceChildren(
-    ...priorities.slice(0, 3).map((item) => {
-      const li = document.createElement("li");
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "coach-priority-item";
-      btn.dataset.coachTab = item.tab;
-      const title = document.createElement("span");
-      title.className = "coach-priority-title";
-      title.textContent = item.label;
-      const detail = document.createElement("span");
-      detail.className = "coach-priority-detail muted";
-      detail.textContent = item.detail;
-      btn.append(title, detail);
-      li.appendChild(btn);
-      return li;
-    })
-  );
+}
+
+function closeCoachNavMenus() {
+  document.querySelectorAll(".msc-nav-menu[open]").forEach((el) => {
+    el.open = false;
+  });
 }
 
 function wireCoachHome() {
-  const go = (tab) => {
+  const go = (tab, mode) => {
     if (!tab) return;
+    if (mode && typeof setLearnStudyMode === "function") setLearnStudyMode(mode);
+    closeCoachNavMenus();
     setMainTab(tab);
   };
   document.getElementById("coachContinueBtn")?.addEventListener("click", () => {
@@ -2702,16 +2679,32 @@ function wireCoachHome() {
   document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
   document.getElementById("soonBackHomeBtn")?.addEventListener("click", () => go("home"));
   document.getElementById("soonGoAskBtn")?.addEventListener("click", () => go("chat"));
+  document.getElementById("landingStartAgainBtn")?.addEventListener("click", () => {
+    document.getElementById("mscStart")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    googleLoginBtn?.focus();
+  });
+  document.getElementById("profileInstallBtn")?.addEventListener("click", () => {
+    closeCoachNavMenus();
+    maybeOfferPwaInstallBar(true);
+  });
+  // Learn / Profile menu items
+  document.querySelectorAll(".msc-nav-item[data-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => go(btn.getAttribute("data-tab")));
+  });
   // Delegate so dynamically rendered priority rows stay clickable.
   panelHome?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !panelHome.contains(target)) return;
-    go(target.getAttribute("data-coach-tab"));
+    go(target.getAttribute("data-coach-tab"), target.getAttribute("data-coach-mode"));
   });
   panelComingSoon?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !panelComingSoon.contains(target)) return;
     go(target.getAttribute("data-coach-tab"));
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest?.(".msc-nav-menu")) return;
+    closeCoachNavMenus();
   });
 }
 
@@ -3755,10 +3748,25 @@ function initPwaInstallSupport() {
   wirePwaInstallBar();
 }
 
-function maybeOfferPwaInstallBar() {
+function maybeOfferPwaInstallBar(force = false) {
   const bar = document.getElementById("pwaInstallBar");
   const sub = document.getElementById("pwaInstallSub");
-  if (!bar || !shouldOfferPwaInstallBar()) return;
+  // Keep install optional and out of the primary first-run experience.
+  if (!bar || (!force && !shouldOfferPwaInstallBar())) return;
+  if (!force) {
+    try {
+      if (sessionStorage.getItem("msc_pwa_auto_offered_v1") === "1") return;
+      // Only auto-offer after the student has used a tool once this session.
+      const used =
+        (Array.isArray(chatHistory) && chatHistory.length > 0) ||
+        (Array.isArray(codeHistory) && codeHistory.length > 0) ||
+        (Array.isArray(notebookHistory) && notebookHistory.length > 0);
+      if (!used) return;
+      sessionStorage.setItem("msc_pwa_auto_offered_v1", "1");
+    } catch {
+      /* ignore */
+    }
+  }
 
   bar.classList.remove("hidden");
 
@@ -3973,7 +3981,7 @@ function showHubHome() {
   activeSurface = "hub";
   syncHubWelcome();
   syncHubResumeButton();
-  document.title = "AI Hub";
+  document.title = "My Student Coach";
 }
 
 function showStudentWorkspace() {
@@ -3992,8 +4000,8 @@ function showStudentWorkspace() {
   if (mainTab === "home" || !COACH_TABS.has(mainTab)) setMainTab("home");
   else renderCoachHome();
   window.setTimeout(() => {
-    maybeOfferPwaInstallBar();
-  }, 850);
+    maybeOfferPwaInstallBar(false);
+  }, 12000);
   if (!maybeOfferHonorCodeModal()) {
     maybeOfferDefaultPageHint();
   }
@@ -4026,7 +4034,7 @@ function showAuth(message = "") {
   appCard?.classList.add("hidden");
   activeSurface = null;
   if (authStatus) authStatus.textContent = message;
-  document.title = "AI Hub";
+  document.title = "My Student Coach";
 }
 
 /** OAuth return URL without a #fragment (Supabase redirect allowlists match origin/path/query). */
@@ -4172,7 +4180,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
-  btn.addEventListener("click", () => showHubHome());
+  btn.addEventListener("click", () => setMainTab("home"));
 });
 
 document.querySelectorAll(".hub-tile").forEach((tile) => {
@@ -4317,7 +4325,7 @@ document.querySelectorAll(".logout-btn").forEach((btn) => {
   });
 });
 
-document.querySelectorAll("#appCard .tab").forEach((tab) => {
+document.querySelectorAll("#appCard .tab[data-tab]").forEach((tab) => {
   tab.addEventListener("click", () => setMainTab(tab.dataset.tab));
 });
 

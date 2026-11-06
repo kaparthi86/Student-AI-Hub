@@ -1,13 +1,13 @@
 {
-  "name": "AI Hub",
-  "short_name": "AI Hub",
-  "description": "AI Hub — Student AI for Ask, Code, and Notebook. Learning and practice, not shortcuts.",
+  "name": "My Student Coach",
+  "short_name": "Student Coach",
+  "description": "My Student Coach — your personal AI study companion for learning and practice.",
   "start_url": "/",
   "scope": "/",
   "id": "/",
   "display": "standalone",
-  "background_color": "#F7F6F3",
-  "theme_color": "#F7F6F3",
+  "background_color": "#FFFFFF",
+  "theme_color": "#142D4C",
   "orientation": "any",
   "categories": ["education", "productivity"],
   "icons": [
