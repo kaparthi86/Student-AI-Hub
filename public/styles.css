@@ -5,8 +5,8 @@
   --card: rgba(255, 255, 255, 0.92);
   --text: #1C1B19;
   --muted: #6F6B63;
-  --primary: #2F6FED;
-  --primary-2: #1D5BD8;
+  --primary: #287A89;
+  --primary-2: #1F6571;
   --navy: #142D4C;
   --teal: #287A89;
   --mist: #F1F5F9;
@@ -22,7 +22,7 @@
   --glass-saturate: 1.1;
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --glass-shadow: 0 12px 36px rgba(28, 27, 25, 0.08);
-  --glass-focus: 0 0 0 3px rgba(47, 111, 237, 0.28);
+  --glass-focus: 0 0 0 3px rgba(40, 122, 137, 0.28);
   --motion-fast: 160ms ease;
   --motion-med: 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -280,7 +280,7 @@ body::before {
 }
 
 /*
- * Logged-in hub: Student AI Hub is ONE primary full-bleed shell.
+ * Logged-in shell: My Student Coach is ONE primary full-bleed shell.
  * Auth keeps the floating .card; the wallpaper is no longer a second "screen".
  */
 body:has(.workspace-shell:not(.hidden)) {
@@ -479,7 +479,7 @@ p {
 }
 
 .primary-btn {
-  background: linear-gradient(120deg, #2F6FED, #1D5BD8);
+  background: linear-gradient(120deg, #287A89, #1F6571);
   color: white;
   font-weight: 700;
   box-shadow: 0 8px 20px rgba(47, 111, 237, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -567,7 +567,7 @@ p {
 }
 
 .brand-hub {
-  background: linear-gradient(120deg, #1C1B19 0%, #3a4658 40%, #2F6FED 85%, #1D5BD8 100%);
+  background: linear-gradient(120deg, #1C1B19 0%, #3a4658 40%, #287A89 85%, #1F6571 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -679,7 +679,7 @@ textarea:focus {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(120deg, #1C1B19, #334155 55%, #2F6FED);
+  background: linear-gradient(120deg, #1C1B19, #334155 55%, #287A89);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1498,7 +1498,7 @@ textarea:focus {
 }
 
 .bubble-md a:hover {
-  color: #1D5BD8;
+  color: #1F6571;
 }
 
 .bubble-md hr {
