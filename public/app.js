@@ -2666,6 +2666,25 @@ function closeCoachNavMenus() {
   });
 }
 
+function wireCoachNavMenus() {
+  const menus = Array.from(document.querySelectorAll(".msc-nav-menu"));
+  menus.forEach((menu) => {
+    menu.addEventListener("toggle", () => {
+      if (!menu.open) return;
+      menus.forEach((other) => {
+        if (other !== menu) other.open = false;
+      });
+    });
+    // Some WebKit builds struggle with <summary class="tab"> inside overflow flex rows —
+    // explicit click toggle keeps Learn / Profile responsive.
+    const summary = menu.querySelector(":scope > summary");
+    summary?.addEventListener("click", (e) => {
+      // Let native details toggle run; only stop bubbling into tablist handlers.
+      e.stopPropagation();
+    });
+  });
+}
+
 function wireCoachHome() {
   const go = (tab, mode) => {
     if (!tab) return;
@@ -2673,6 +2692,7 @@ function wireCoachHome() {
     closeCoachNavMenus();
     setMainTab(tab);
   };
+  wireCoachNavMenus();
   document.getElementById("coachContinueBtn")?.addEventListener("click", () => {
     go(preferredContinueTab());
   });
@@ -2689,7 +2709,14 @@ function wireCoachHome() {
   });
   // Learn / Profile menu items
   document.querySelectorAll(".msc-nav-item[data-tab]").forEach((btn) => {
-    btn.addEventListener("click", () => go(btn.getAttribute("data-tab")));
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      go(btn.getAttribute("data-tab"));
+    });
+  });
+  document.querySelectorAll("#profileMenu .open-settings-btn").forEach((btn) => {
+    btn.addEventListener("click", () => closeCoachNavMenus());
   });
   // Delegate so dynamically rendered priority rows stay clickable.
   panelHome?.addEventListener("click", (e) => {
@@ -2705,6 +2732,9 @@ function wireCoachHome() {
   document.addEventListener("pointerdown", (e) => {
     if (e.target.closest?.(".msc-nav-menu")) return;
     closeCoachNavMenus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCoachNavMenus();
   });
 }
 

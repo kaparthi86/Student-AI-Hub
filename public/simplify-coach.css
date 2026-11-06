@@ -214,39 +214,67 @@ body.brand-msc .primary-btn {
   display: none !important;
 }
 
-/* Workspace nav */
-.msc-main-nav {
+/* Workspace nav — overflow must stay visible so Learn/Profile panels are not clipped */
+.tabs.coach-nav.msc-main-nav {
+  overflow: visible !important;
   align-items: stretch;
+  flex-wrap: wrap;
 }
 
 .msc-nav-menu {
   position: relative;
   flex: 0 0 auto;
+  z-index: 1;
+}
+
+.msc-nav-menu[open] {
+  z-index: 120;
 }
 
 .msc-nav-summary {
   list-style: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
 }
 
-.msc-nav-summary::-webkit-details-marker {
+.msc-nav-summary::-webkit-details-marker,
+.msc-nav-summary::marker {
   display: none;
+  content: "";
+}
+
+.msc-nav-summary::after {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  opacity: 0.7;
+}
+
+.msc-nav-menu[open] > .msc-nav-summary::after {
+  transform: rotate(225deg) translateY(-1px);
 }
 
 .msc-nav-panel {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 30;
-  min-width: 210px;
+  z-index: 130;
+  min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
   padding: 8px;
   border-radius: 14px;
-  border: 1px solid rgba(20, 45, 76, 0.1);
+  border: 1px solid rgba(20, 45, 76, 0.12);
   background: #fff;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  box-shadow: 0 12px 28px rgba(20, 45, 76, 0.1);
+  box-shadow: 0 16px 36px rgba(20, 45, 76, 0.16);
 }
 
 .msc-nav-item {
@@ -340,6 +368,7 @@ body.brand-msc .primary-btn {
   right: 0;
 }
 
+/* Escape scroll/overflow ancestors on small screens */
 @media (max-width: 720px) {
   .msc-nav-panel {
     position: fixed;
@@ -349,7 +378,8 @@ body.brand-msc .primary-btn {
     bottom: max(12px, env(safe-area-inset-bottom, 0px));
     min-width: 0;
     width: auto;
-    max-height: 50vh;
+    max-width: none;
+    max-height: min(55vh, 420px);
     overflow: auto;
   }
 }

@@ -2261,3 +2261,9 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   .hub-chart-seg,
   .hub-chart-bar-fill,
 }
+
+
+/* Learn/Profile menus: do not clip absolute panels under the segmented nav */
+.tabs.coach-nav.msc-main-nav {
+  overflow: visible;
+}
