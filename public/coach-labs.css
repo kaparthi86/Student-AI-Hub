@@ -1,0 +1,186 @@
+/* P1 learning labs + accessibility prefs */
+
+.coach-lab-panel {
+  padding: 4px 2px 18px;
+}
+
+.coach-lab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 920px;
+}
+
+.coach-lab-hero {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(20, 45, 76, 0.06), rgba(40, 122, 137, 0.08)), #fff;
+  border: 1px solid rgba(20, 45, 76, 0.08);
+}
+
+.voice-tutor-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.voice-tutor-mic {
+  min-height: 88px;
+  border-radius: 999px;
+  border: 1px solid rgba(40, 122, 137, 0.35);
+  background: var(--soft-green, #e7f4ef);
+  color: var(--navy, #142d4c);
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.voice-tutor-mic.is-listening {
+  background: rgba(47, 111, 237, 0.12);
+  border-color: rgba(47, 111, 237, 0.45);
+}
+
+.voice-tutor-transcript {
+  min-height: 140px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.voice-line {
+  margin: 0;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.voice-line--coach {
+  color: var(--navy, #142d4c);
+}
+
+.flash-build-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flash-topic-input,
+.math-problem-input {
+  flex: 1 1 220px;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(28, 27, 25, 0.1);
+  background: #fff;
+  color: var(--text, #1c1b19);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.math-problem-input {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.flash-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flash-card {
+  min-height: 180px;
+  padding: 22px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.flash-card-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal, #287a89);
+}
+
+.flash-card-text {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: var(--navy, #142d4c);
+}
+
+.focus-timer {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(2.8rem, 8vw, 4.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--navy, #142d4c);
+  line-height: 1;
+}
+
+.gaps-output,
+.math-thread {
+  min-height: 160px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+  background: #fff;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.math-thread {
+  max-height: 48vh;
+  overflow: auto;
+}
+
+.coach-tool-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+/* Accessibility prefs */
+html[data-font-scale="sm"] {
+  font-size: 15px;
+}
+html[data-font-scale="md"] {
+  font-size: 16px;
+}
+html[data-font-scale="lg"] {
+  font-size: 18px;
+}
+
+html.a11y-contrast {
+  --bg: #ffffff;
+  --bg2: #f1f5f9;
+  --text: #0b1220;
+  --muted: #334155;
+  --primary: #0b3d91;
+  --primary-2: #082e6d;
+}
+
+html.a11y-dyslexia,
+html.a11y-dyslexia body {
+  font-family: "Comic Neue", "Trebuchet MS", "Verdana", sans-serif;
+  letter-spacing: 0.02em;
+  word-spacing: 0.04em;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .flash-build-row .primary-btn,
+  .flash-build-row .ghost-btn,
+  .coach-lab .coach-hero-actions .primary-btn,
+  .coach-lab .coach-hero-actions .ghost-btn {
+    width: 100%;
+  }
+}

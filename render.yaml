@@ -24,3 +24,6 @@ services:
         value: "0"
       - key: BETA_MESSAGE
         sync: false
+      # Ask image/diagram understanding (client UI also enabled in public/app.js)
+      - key: ENABLE_LEARN_VISION
+        value: "1"
