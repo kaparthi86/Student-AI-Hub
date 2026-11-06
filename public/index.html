@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="My Student Coach" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=strip-bold-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=login-gateway-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>My Student Coach</title>
@@ -27,10 +27,10 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=strip-bold-1" />
+    <link rel="stylesheet" href="./styles.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=login-gateway-1" />
   </head>
   <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -71,9 +71,10 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-      <section class="auth auth-shell landing msc-landing" id="authCard" aria-label="My Student Coach">
+            <!-- Marketing landing (sells the vision) -->
+      <section class="auth auth-shell landing msc-landing" id="landingCard" aria-label="My Student Coach">
         <header class="msc-topnav">
-          <a class="msc-logo" href="#authCard" aria-label="My Student Coach home">
+          <a class="msc-logo" href="#landingCard" aria-label="My Student Coach home">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
@@ -95,7 +96,7 @@
           <nav class="msc-topnav-links" aria-label="Landing">
             <a href="#mscFeatures">Features</a>
             <a href="#mscAbout">About</a>
-            <a href="#mscStart">Sign in</a>
+            <a href="#login" id="landingNavSignIn" data-open-login>Sign in</a>
           </nav>
         </header>
 
@@ -107,29 +108,10 @@
               Your personal AI coach for studying, understanding difficult topics, and preparing for exams.
             </p>
             <div class="landing-cta msc-cta">
-              <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn msc-primary-cta" type="button">
-                <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
-                  <path
-                    fill="#4285F4"
-                    d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
-                  />
-                </svg>
-                <span>Get Started Free</span>
+              <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
+                Get Started Free
               </button>
               <p class="msc-cta-note muted">Learn at your own pace. Stay in control.</p>
-              <p id="authStatus" class="muted auth-status landing-auth-status"></p>
             </div>
           </div>
         </div>
@@ -186,20 +168,79 @@
           <div class="landing-below-inner">
             <h2 class="landing-section-title">Your success starts with one step</h2>
             <p class="landing-section-lead">Join My Student Coach and make learning easier.</p>
-            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn">Get Started Free</button>
+            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn" data-open-login>Get Started Free</button>
           </div>
         </section>
 
-        <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo" id="authDisclaimerFooter">
+        <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo">
           <nav class="landing-legal" aria-label="Legal">
             <a href="./privacy.html">Privacy</a>
             <a href="./terms.html">Terms</a>
             <a href="mailto:student-ai-hub-support@googlegroups.com">Support</a>
           </nav>
-          <p class="fine-print-line" data-i18n="disclaimer_base">
-            My Student Coach can make mistakes. Check important facts.
-          </p>
         </footer>
+      </section>
+
+      <!-- Login gateway (one screen — Google only; email/password not implemented) -->
+      <section class="auth msc-login-shell hidden" id="authCard" aria-label="Sign in to My Student Coach" hidden>
+        <div class="msc-login-card">
+          <a class="msc-logo msc-login-logo" href="#landingCard" id="loginBrandLink" aria-label="My Student Coach home">
+            <span class="brand-mark landing-brand-mark" aria-hidden="true">
+              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="url(#loginBrandGrad)" />
+                <path
+                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                  fill="white"
+                  fill-opacity="0.92"
+                />
+                <defs>
+                  <linearGradient id="loginBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#287A89" />
+                    <stop offset="1" stop-color="#142D4C" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="msc-logo-text" id="loginBrandTitle">My Student Coach</span>
+          </a>
+          <h1 class="msc-login-title" id="loginWelcomeTitle">Welcome back!</h1>
+          <p class="msc-login-support muted" id="loginWelcomeSupport">
+            Your personal AI learning companion is ready.
+          </p>
+          <button id="googleLoginBtn" class="auth-google-btn google-btn msc-login-google" type="button">
+                <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
+                  <path
+                    fill="#4285F4"
+                    d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
+                  />
+                </svg>
+            <span id="googleLoginBtnLabel">Continue with Google</span>
+          </button>
+          <p id="authStatus" class="muted auth-status msc-login-status" role="status" aria-live="polite"></p>
+          <p class="msc-login-privacy" id="loginPrivacyLine">Your learning journey. Your data. Your privacy.</p>
+          <nav class="msc-login-legal" aria-label="Legal">
+            <a href="./terms.html">Terms of Service</a>
+            <span aria-hidden="true">·</span>
+            <a href="./privacy.html">Privacy Policy</a>
+            <span aria-hidden="true">·</span>
+            <a href="mailto:student-ai-hub-support@googlegroups.com">Help</a>
+          </nav>
+          <button type="button" class="ghost-btn tiny-btn msc-login-about" id="loginBackToLandingBtn">
+            About My Student Coach
+          </button>
+        </div>
       </section>
 
       <section class="hub hub-shell hidden msc-hub-retired" id="hubCard" aria-hidden="true" aria-label="My Student Coach home">
@@ -1047,7 +1088,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=strip-bold-1"></script>
-    <script defer src="./coach-labs.js?v=strip-bold-1"></script>
+    <script defer src="./app.js?v=login-gateway-1"></script>
+    <script defer src="./coach-labs.js?v=login-gateway-1"></script>
   </body>
 </html>

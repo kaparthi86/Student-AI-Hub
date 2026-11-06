@@ -2,6 +2,7 @@
 let LEARN_VISION_ENABLED = true;
 
 const authCard = document.getElementById("authCard");
+const landingCard = document.getElementById("landingCard");
 const hubCard = document.getElementById("hubCard");
 const appCard = document.getElementById("appCard");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
@@ -234,7 +235,13 @@ const I18N = {
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
     honor_ack: "I understand",
     honor_back: "Back to Home",
-    continue_google: "Get Started Free",
+    continue_google: "Continue with Google",
+    sign_in: "Sign in",
+    login_welcome: "Welcome back!",
+    login_support: "Your personal AI learning companion is ready.",
+    login_privacy: "Your learning journey. Your data. Your privacy.",
+    login_about: "About My Student Coach",
+    landing_get_started: "Get Started Free",
     settings: "Settings",
     logout: "Logout",
     welcome: "Welcome",
@@ -520,7 +527,13 @@ const I18N = {
     honor_body: "Sigue el codigo de honor de tu escuela. No entregues salida de IA si tu curso lo prohibe. Verifica datos importantes - la IA puede equivocarse.",
     honor_ack: "Entiendo",
     honor_back: "Volver al inicio",
-    continue_google: "Empezar gratis",
+    continue_google: "Continuar con Google",
+    sign_in: "Iniciar sesion",
+    login_welcome: "Bienvenido de nuevo!",
+    login_support: "Tu companero de aprendizaje con IA esta listo.",
+    login_privacy: "Tu aprendizaje. Tus datos. Tu privacidad.",
+    login_about: "Acerca de My Student Coach",
+    landing_get_started: "Empezar gratis",
     settings: "Configuración",
     logout: "Cerrar sesión",
     welcome: "Bienvenido",
@@ -736,7 +749,13 @@ const I18N = {
     honor_body: "Apne school ka honor code follow karein. Course mana kare to AI output submit na karein. Important facts check karein - AI galat ho sakta hai.",
     honor_ack: "Samajh gaya",
     honor_back: "Home par wapas",
-    continue_google: "Google se join karein",
+    continue_google: "Google se continue karein",
+    sign_in: "Sign in",
+    login_welcome: "Welcome back!",
+    login_support: "Aapka personal AI learning companion ready hai.",
+    login_privacy: "Aapki learning. Aapka data. Aapki privacy.",
+    login_about: "My Student Coach ke bare mein",
+    landing_get_started: "Free shuru karein",
     settings: "Settings",
     logout: "Logout",
     welcome: "Swagat hai",
@@ -953,7 +972,13 @@ const I18N = {
     honor_body: "Me school honor code follow avvandi. Course mana chesthe AI output submit cheyyakandi. Important facts check cheyyandi - AI tappu cheyavachu.",
     honor_ack: "Artham ayindi",
     honor_back: "Home ki back",
-    continue_google: "Google tho join avandi",
+    continue_google: "Google tho continue avandi",
+    sign_in: "Sign in",
+    login_welcome: "Welcome back!",
+    login_support: "Mee personal AI learning companion ready undi.",
+    login_privacy: "Mee learning. Mee data. Mee privacy.",
+    login_about: "My Student Coach gurinchi",
+    landing_get_started: "Free start cheyyandi",
     settings: "Settings",
     logout: "Logout",
     welcome: "Swagatam",
@@ -1177,6 +1202,13 @@ function applyTranslations() {
     tileStudentCta: "tile_student_cta",
     backToHubBtn: "nav_back_hub",
     crumbStudent: "nav_student",
+    loginWelcomeTitle: "login_welcome",
+    loginWelcomeSupport: "login_support",
+    loginPrivacyLine: "login_privacy",
+    loginBackToLandingBtn: "login_about",
+    landingGetStartedBtn: "landing_get_started",
+    landingStartAgainBtn: "landing_get_started",
+    landingNavSignIn: "sign_in",
     googleLoginBtn: "continue_google",
     openSettingsBtn: "settings",
     logoutBtn: "logout",
@@ -2718,9 +2750,22 @@ function wireCoachHome() {
   document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
   document.getElementById("soonBackHomeBtn")?.addEventListener("click", () => go("home"));
   document.getElementById("soonGoAskBtn")?.addEventListener("click", () => go("chat"));
-  document.getElementById("landingStartAgainBtn")?.addEventListener("click", () => {
-    document.getElementById("mscStart")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    googleLoginBtn?.focus();
+  document.querySelectorAll("[data-open-login]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showLoginGateway();
+    });
+  });
+  document.getElementById("loginBackToLandingBtn")?.addEventListener("click", () => {
+    showLanding();
+  });
+  document.getElementById("loginBrandLink")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    showLanding();
+  });
+  window.addEventListener("hashchange", () => {
+    if (activeSurface) return;
+    if (wantsLoginHash()) showLoginGateway();
   });
   document.getElementById("profileInstallBtn")?.addEventListener("click", () => {
     closeCoachNavMenus();
@@ -3868,7 +3913,7 @@ function acknowledgeHonorCode() {
     /* ignore quota / private mode */
   }
   hideHonorCodeModal();
-  maybeOfferDefaultPageHint();
+  // Start-page / install hints stay opt-in via Profile → Install app (not after honor ack).
 }
 
 function maybeOfferHonorCodeModal() {
@@ -4030,7 +4075,9 @@ function showHubHome() {
 
 function showStudentWorkspace() {
   closeAccountMenu();
+  landingCard?.classList.add("hidden");
   authCard?.classList.add("hidden");
+  authCard?.setAttribute("hidden", "");
   hubCard?.classList.add("hidden");
   appCard?.classList.remove("hidden");
   activeSurface = "student";
@@ -4043,12 +4090,11 @@ function showStudentWorkspace() {
   document.title = "My Student Coach";
   if (mainTab === "home" || !COACH_TABS.has(mainTab)) setMainTab("home");
   else renderCoachHome();
+  // Install suggestion only after the student has used a tool (see maybeOfferPwaInstallBar).
   window.setTimeout(() => {
     maybeOfferPwaInstallBar(false);
   }, 12000);
-  if (!maybeOfferHonorCodeModal()) {
-    maybeOfferDefaultPageHint();
-  }
+  // Honor code is contextual on Ask/Code/Notebook send — not a login barrier.
 }
 
 
@@ -4062,17 +4108,69 @@ function showApp(session) {
   showStudentWorkspace();
 }
 
-function showAuth(message = "") {
+function hidePwaChrome() {
   document.getElementById("pwaInstallBar")?.classList.add("hidden");
   document.getElementById("pwaIosSteps")?.classList.add("hidden");
   document.getElementById("pwaInstallHelpSteps")?.classList.add("hidden");
+}
+
+function wantsLoginHash() {
+  try {
+    const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
+    return hash === "login" || hash === "signin" || hash === "sign-in";
+  } catch {
+    return false;
+  }
+}
+
+function showLanding() {
+  hidePwaChrome();
   closeAccountMenu();
-  authCard?.classList.remove("hidden");
+  hideHonorCodeModal();
+  landingCard?.classList.remove("hidden");
+  authCard?.classList.add("hidden");
+  authCard?.setAttribute("hidden", "");
   hubCard?.classList.add("hidden");
   appCard?.classList.add("hidden");
   activeSurface = null;
-  if (authStatus) authStatus.textContent = message;
+  try {
+    const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
+    if (hash === "login" || hash === "signin" || hash === "sign-in") {
+      history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+  } catch {
+    /* ignore */
+  }
   document.title = "My Student Coach";
+}
+
+function showLoginGateway(message = "") {
+  hidePwaChrome();
+  closeAccountMenu();
+  hideHonorCodeModal();
+  landingCard?.classList.add("hidden");
+  authCard?.classList.remove("hidden");
+  authCard?.removeAttribute("hidden");
+  hubCard?.classList.add("hidden");
+  appCard?.classList.add("hidden");
+  activeSurface = null;
+  if (authStatus) authStatus.textContent = message || "";
+  try {
+    if (!wantsLoginHash()) {
+      history.replaceState(null, "", `${window.location.pathname}${window.location.search}#login`);
+    }
+  } catch {
+    /* ignore */
+  }
+  document.title = "Sign in · My Student Coach";
+  window.setTimeout(() => {
+    googleLoginBtn?.focus();
+  }, 40);
+}
+
+/** Logged-out entry: login gateway (or landing when browsing the marketing page). */
+function showAuth(message = "") {
+  showLoginGateway(message);
 }
 
 /** OAuth return URL without a #fragment (Supabase redirect allowlists match origin/path/query). */
@@ -4127,16 +4225,25 @@ async function initAuth() {
 
   try {
     const { data, error } = await supabaseClient.auth.getSession();
-    if (error) showAuth(`Auth error: ${describeAuthFailure(error)}`);
+    if (error) showLoginGateway(`Auth error: ${describeAuthFailure(error)}`);
     else if (data.session) showApp(data.session);
+    else if (wantsLoginHash()) showLoginGateway();
+    else showLanding();
   } catch (err) {
-    showAuth(describeAuthFailure(err));
+    showLoginGateway(describeAuthFailure(err));
   }
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     if (session) showApp(session);
-    else showAuth();
+    else showLoginGateway();
   });
+}
+
+function setGoogleLoginLoading(on) {
+  if (!googleLoginBtn) return;
+  googleLoginBtn.classList.toggle("is-loading", Boolean(on));
+  googleLoginBtn.disabled = Boolean(on);
+  googleLoginBtn.setAttribute("aria-busy", on ? "true" : "false");
 }
 
 googleLoginBtn?.addEventListener("click", async () => {
@@ -4159,14 +4266,19 @@ googleLoginBtn?.addEventListener("click", async () => {
     }
     return;
   }
+  setGoogleLoginLoading(true);
   if (authStatus) authStatus.textContent = t("opening_google_login");
   try {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo },
     });
-    if (error && authStatus) authStatus.textContent = `Login failed: ${describeAuthFailure(error)}`;
+    if (error) {
+      setGoogleLoginLoading(false);
+      if (authStatus) authStatus.textContent = `Login failed: ${describeAuthFailure(error)}`;
+    }
   } catch (err) {
+    setGoogleLoginLoading(false);
     if (authStatus) authStatus.textContent = describeAuthFailure(err);
   }
 });
