@@ -65,11 +65,11 @@ const HF_MODEL_VISION_RAW = normalizeEnvString(process.env.HF_MODEL_VISION);
 const HF_MODEL_VISION = HF_MODEL_VISION_RAW ? ensureInferenceRoutingSuffix(HF_MODEL_VISION_RAW) : "";
 
 /**
- * Ask-tab image attach / multimodal (VQA). Off by default; set ENABLE_LEARN_VISION=1 on the server.
- * The browser UI is gated separately in public/app.js (`LEARN_VISION_ENABLED`); turn both on to ship the feature.
+ * Ask-tab image attach / multimodal (VQA). On by default; set ENABLE_LEARN_VISION=0 to disable.
+ * The browser UI is gated separately in public/app.js (`LEARN_VISION_ENABLED`).
  */
-const ENABLE_LEARN_VISION = ["1", "true", "yes"].includes(
-  String(process.env.ENABLE_LEARN_VISION || "").trim().toLowerCase()
+const ENABLE_LEARN_VISION = !["0", "false", "no"].includes(
+  String(process.env.ENABLE_LEARN_VISION ?? "1").trim().toLowerCase()
 );
 
 /** Live web grounding for Ask (learn mode). Prefer Tavily; Brave/Serper also supported. */
@@ -1224,6 +1224,16 @@ function responseContractInstruction(mode) {
       "9) Prefer steps and bullets grounded in the notes; name the source file when useful.",
     ].join(" ");
   }
+  if (mode === "math") {
+    return [
+      ...shared,
+      "Math & Science contract:",
+      "8) Show step-by-step reasoning with numbered steps; one idea per step.",
+      "9) Name formulas and units clearly. Call out common mistakes in one short line.",
+      "10) After the solution, offer one similar practice prompt the student can try.",
+      "11) Do not skip algebra steps the student needs to learn.",
+    ].join(" ");
+  }
   // learn / Ask
   return [
     ...shared,
@@ -1243,6 +1253,14 @@ function chatSystemBase(mode) {
       identity,
       responseContractInstruction("code"),
       "Use Markdown code fences for code only. Use numbered steps for procedures. Use hyphen bullets (-) for lists.",
+    ].join(" ");
+  }
+  if (mode === "math") {
+    return [
+      "You are a patient mathematics and science tutor for students in My Student Coach (Student AI).",
+      identity,
+      responseContractInstruction("math"),
+      "Prefer clear step-by-step solutions. Use plain text for equations when LaTeX is unnecessary.",
     ].join(" ");
   }
   return [
@@ -1631,10 +1649,17 @@ app.post("/api/chat", requireSession, async (req, res) => {
   try {
     const modeRaw = String(req.body?.mode || "").trim().toLowerCase();
     const mode =
-      modeRaw === "code" ? "code" : modeRaw === "notebook" ? "notebook" : "learn";
+      modeRaw === "code"
+        ? "code"
+        : modeRaw === "notebook"
+          ? "notebook"
+          : modeRaw === "math"
+            ? "math"
+            : "learn";
     const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
-    const studyMode = "explain";
-    const learnVisionOn = mode === "learn" && ENABLE_LEARN_VISION;
+    const studyModeRaw = String(req.body?.studyMode || "explain").trim().toLowerCase();
+    const studyMode = ["explain", "quiz", "guide"].includes(studyModeRaw) ? studyModeRaw : "explain";
+    const learnVisionOn = (mode === "learn" || mode === "math") && ENABLE_LEARN_VISION;
     const imageMimeIn = req.body?.imageMime;
     const imageB64In = req.body?.imageBase64 != null ? String(req.body.imageBase64).replace(/\s/g, "") : "";
     const hasCurrentImage =
@@ -1900,6 +1925,53 @@ app.post("/api/weak-topic-recap", requireSession, async (req, res) => {
       }
     );
     return res.json({ output });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.post("/api/flashcards", requireSession, async (req, res) => {
+  try {
+    const uiLanguage = normalizeUiLanguage(req.body?.uiLanguage);
+    const topic = String(req.body?.topic || "").trim().slice(0, 200);
+    const sourceText = String(req.body?.sourceText || "")
+      .replace(/\u0000/g, "")
+      .trim()
+      .slice(0, 8000);
+    if (!topic && !sourceText) {
+      return res.status(400).json({ error: "Provide a topic or sourceText to generate flashcards." });
+    }
+    const uid = req.user?.id || "";
+    const prompt = `Create 6 concise study flashcards as JSON only.
+Return exactly: {"cards":[{"front":"...","back":"..."}]}
+Rules:
+- Front is a short question or prompt.
+- Back is a short answer (1-3 sentences).
+- Cover the most important concepts first.
+- Language: follow ${uiLanguageInstruction(uiLanguage)}
+Topic: ${topic || "(from source)"}
+Source material:
+${sourceText || "(none — invent from the topic only)"}`;
+    const raw = await queryModelSingle("learn", prompt, {
+      cacheUserKey: uid,
+      promptCacheKey: `${uid}:flash:${sha256Hex(`${topic}|${sourceText}`).slice(0, 24)}`,
+      max_tokens: 900,
+      temperature: 0.35,
+    });
+    const parsed = extractJsonObject(raw);
+    const cards = Array.isArray(parsed?.cards)
+      ? parsed.cards
+          .map((c) => ({
+            front: String(c?.front || "").trim().slice(0, 240),
+            back: String(c?.back || "").trim().slice(0, 600),
+          }))
+          .filter((c) => c.front && c.back)
+          .slice(0, 8)
+      : [];
+    if (!cards.length) {
+      return res.status(502).json({ error: "Could not generate flashcards. Try a clearer topic." });
+    }
+    return res.json({ ok: true, topic: topic || "Study deck", cards });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }

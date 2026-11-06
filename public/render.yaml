@@ -30,3 +30,5 @@ services:
         value: "1"
       - key: BETA_MESSAGE
         sync: false
+      - key: ENABLE_LEARN_VISION
+        value: "1"

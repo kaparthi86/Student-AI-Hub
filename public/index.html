@@ -27,8 +27,9 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=coach-home-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=coach-home-1" />
+    <link rel="stylesheet" href="./styles.css?v=p1-labs-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=p1-labs-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=p1-labs-1" />
   </head>
   <body>
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -401,6 +402,11 @@
           <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Ask</button>
           <button class="tab" data-tab="code" type="button" id="tabCode" role="tab" aria-selected="false">Code</button>
           <button class="tab" data-tab="notebook" type="button" id="tabNotebook" role="tab" aria-selected="false">Notebook</button>
+          <button class="tab" data-tab="voice" type="button" id="tabVoice" role="tab" aria-selected="false">Voice</button>
+          <button class="tab" data-tab="flashcards" type="button" id="tabFlashcards" role="tab" aria-selected="false">Cards</button>
+          <button class="tab" data-tab="math" type="button" id="tabMath" role="tab" aria-selected="false">Math</button>
+          <button class="tab" data-tab="focus" type="button" id="tabFocus" role="tab" aria-selected="false">Focus</button>
+          <button class="tab" data-tab="gaps" type="button" id="tabGaps" role="tab" aria-selected="false">Gaps</button>
           <button class="tab tab--soon" data-tab="planner" type="button" id="tabPlanner" role="tab" aria-selected="false">
             <span id="tabPlannerLabel">Planner</span>
             <span class="tab-soon-badge" id="tabPlannerBadge">Soon</span>
@@ -447,6 +453,26 @@
                   <span class="coach-tool-label" id="coachToolAskTitle">AI Tutor</span>
                   <span class="coach-tool-sub muted" id="coachToolAskSub">Step-by-step help in Ask</span>
                 </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="voice">
+                  <span class="coach-tool-label">Voice Tutor</span>
+                  <span class="coach-tool-sub muted">Speak with your coach</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="math">
+                  <span class="coach-tool-label">Math &amp; Science</span>
+                  <span class="coach-tool-sub muted">Step-by-step problem help</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="flashcards">
+                  <span class="coach-tool-label">Flashcards</span>
+                  <span class="coach-tool-sub muted">Remember what you learn</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="focus">
+                  <span class="coach-tool-label">Focus Mode</span>
+                  <span class="coach-tool-sub muted">Timed study sessions</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="gaps">
+                  <span class="coach-tool-label">Knowledge Gaps</span>
+                  <span class="coach-tool-sub muted">Fix weak areas next</span>
+                </button>
                 <button type="button" class="coach-tool-card" data-coach-tab="code">
                   <span class="coach-tool-label" id="coachToolCodeTitle">Code</span>
                   <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and learn with guidance</span>
@@ -461,7 +487,7 @@
             <section class="coach-section" aria-labelledby="coachNextTitle">
               <div class="coach-section-head">
                 <h3 class="coach-section-title" id="coachNextTitle">Coming next</h3>
-                <p class="coach-section-lead muted" id="coachNextLead">Phase 1 roadmap — on the way.</p>
+                <p class="coach-section-lead muted" id="coachNextLead">Still on the roadmap.</p>
               </div>
               <div class="coach-soon-grid">
                 <button type="button" class="coach-soon-card" data-coach-tab="planner">
@@ -495,6 +521,105 @@
               <button type="button" class="primary-btn" id="soonBackHomeBtn">Back to Home</button>
               <button type="button" class="ghost-btn" id="soonGoAskBtn">Ask the tutor</button>
             </div>
+          </div>
+        </section>
+
+        <section id="panelVoice" class="panel coach-lab-panel hidden" data-coach-lab-panel="voice" hidden>
+          <div class="coach-lab">
+            <header class="coach-lab-hero">
+              <p class="coach-kicker">Voice Tutor</p>
+              <h2 class="coach-welcome">Talk through the idea</h2>
+              <p class="coach-sub muted">Speak a question. Your coach answers out loud and shows a transcript.</p>
+            </header>
+            <div class="voice-tutor-stage">
+              <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Hold to talk / tap to stop</button>
+              <p class="muted voice-tutor-hint" id="voiceTutorHint">Uses your browser microphone. Works best in Chrome or Edge.</p>
+              <div class="voice-tutor-transcript" id="voiceTutorTranscript" aria-live="polite"></div>
+              <div class="coach-hero-actions">
+                <button type="button" class="ghost-btn" id="voiceTutorStopSpeechBtn">Stop speaking</button>
+                <button type="button" class="ghost-btn" id="voiceTutorClearBtn">Clear</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelFlashcards" class="panel coach-lab-panel hidden" data-coach-lab-panel="flashcards" hidden>
+          <div class="coach-lab">
+            <header class="coach-lab-hero">
+              <p class="coach-kicker">Smart Flashcards</p>
+              <h2 class="coach-welcome">Remember what matters</h2>
+              <p class="coach-sub muted">Generate cards from a topic or your last Ask thread, then review with spaced practice.</p>
+            </header>
+            <div class="flash-build-row">
+              <input id="flashTopicInput" class="flash-topic-input" type="text" maxlength="200" placeholder="Topic (e.g. photosynthesis)" />
+              <button type="button" class="primary-btn" id="flashGenerateBtn">Generate cards</button>
+              <button type="button" class="ghost-btn" id="flashFromAskBtn">From last Ask</button>
+            </div>
+            <p class="muted" id="flashStatus"></p>
+            <div id="flashReview" class="flash-review hidden">
+              <div class="flash-card" id="flashCardFace">
+                <p class="flash-card-kicker" id="flashCardSide">Front</p>
+                <p class="flash-card-text" id="flashCardText"></p>
+              </div>
+              <div class="coach-hero-actions">
+                <button type="button" class="ghost-btn" id="flashFlipBtn">Flip</button>
+                <button type="button" class="primary-btn" id="flashKnowBtn">Know it</button>
+                <button type="button" class="ghost-btn" id="flashAlmostBtn">Almost</button>
+                <button type="button" class="ghost-btn" id="flashNeedBtn">Need practice</button>
+              </div>
+              <p class="muted" id="flashProgress"></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelMath" class="panel coach-lab-panel hidden" data-coach-lab-panel="math" hidden>
+          <div class="coach-lab">
+            <header class="coach-lab-hero">
+              <p class="coach-kicker">Math &amp; Science</p>
+              <h2 class="coach-welcome">Solve it step by step</h2>
+              <p class="coach-sub muted">Paste a problem. Get numbered steps, units, and a similar practice prompt.</p>
+            </header>
+            <textarea id="mathProblemInput" class="math-problem-input" rows="5" placeholder="e.g. Solve 2x + 5 = 17 and check your answer."></textarea>
+            <div class="coach-hero-actions">
+              <button type="button" class="primary-btn" id="mathSolveBtn">Solve step by step</button>
+              <button type="button" class="ghost-btn" id="mathClearBtn">Clear</button>
+            </div>
+            <p class="muted" id="mathStatus"></p>
+            <div id="mathThread" class="chat-thread perplexity-thread math-thread"></div>
+          </div>
+        </section>
+
+        <section id="panelFocus" class="panel coach-lab-panel hidden" data-coach-lab-panel="focus" hidden>
+          <div class="coach-lab">
+            <header class="coach-lab-hero">
+              <p class="coach-kicker">Focus Mode</p>
+              <h2 class="coach-welcome">One task. One block.</h2>
+              <p class="coach-sub muted">25-minute focus / 5-minute break. Track completed sessions on this device.</p>
+            </header>
+            <div class="focus-timer" id="focusTimerDisplay">25:00</div>
+            <input id="focusTaskInput" class="flash-topic-input" type="text" maxlength="120" placeholder="What are you focusing on?" />
+            <div class="coach-hero-actions">
+              <button type="button" class="primary-btn" id="focusStartBtn">Start focus</button>
+              <button type="button" class="ghost-btn" id="focusPauseBtn">Pause</button>
+              <button type="button" class="ghost-btn" id="focusResetBtn">Reset</button>
+            </div>
+            <p class="muted" id="focusStatus">Sessions completed today: 0</p>
+          </div>
+        </section>
+
+        <section id="panelGaps" class="panel coach-lab-panel hidden" data-coach-lab-panel="gaps" hidden>
+          <div class="coach-lab">
+            <header class="coach-lab-hero">
+              <p class="coach-kicker">Knowledge Gaps</p>
+              <h2 class="coach-welcome">Fix what keeps slipping</h2>
+              <p class="coach-sub muted">Scan recent Ask activity for weak topics and get a short revision plan.</p>
+            </header>
+            <div class="coach-hero-actions">
+              <button type="button" class="primary-btn" id="gapsScanBtn">Find my weak areas</button>
+              <button type="button" class="ghost-btn" id="gapsPracticeBtn">Practice in Ask</button>
+            </div>
+            <p class="muted" id="gapsStatus"></p>
+            <div id="gapsOutput" class="gaps-output"></div>
           </div>
         </section>
 
@@ -973,6 +1098,20 @@
             <input id="prefRestoreSessions" type="checkbox" />
             <span id="prefRestoreSessionsLabel">Restore previous chat sessions on load</span>
           </label>
+          <label for="prefFontScale">Text size</label>
+          <select id="prefFontScale">
+            <option value="sm">Small</option>
+            <option value="md" selected>Medium</option>
+            <option value="lg">Large</option>
+          </select>
+          <label class="settings-checkbox">
+            <input id="prefHighContrast" type="checkbox" />
+            <span>High contrast</span>
+          </label>
+          <label class="settings-checkbox">
+            <input id="prefDyslexiaFont" type="checkbox" />
+            <span>Dyslexia-friendly font</span>
+          </label>
         </div>
         <div class="settings-actions">
           <button id="saveSettingsBtn" class="primary-btn" type="button">Save preferences</button>
@@ -985,6 +1124,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=coach-home-1"></script>
+    <script defer src="./app.js?v=p1-labs-1"></script>
+    <script defer src="./coach-labs.js?v=p1-labs-1"></script>
   </body>
 </html>

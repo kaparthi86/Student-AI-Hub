@@ -1,5 +1,5 @@
-/** Ask-tab image attach (VQA / multimodal). Set `true` to show UI and send images; keep `false` to mute. */
-const LEARN_VISION_ENABLED = false;
+/** Ask-tab image attach (VQA / multimodal). Synced from /api/health when possible. */
+let LEARN_VISION_ENABLED = true;
 
 const authCard = document.getElementById("authCard");
 const hubCard = document.getElementById("hubCard");
@@ -22,8 +22,22 @@ const panelChat = document.getElementById("panelChat");
 const panelCode = document.getElementById("panelCode");
 const panelNotebook = document.getElementById("panelNotebook");
 const practiceDock = document.getElementById("practiceDock");
-const COACH_TABS = new Set(["home", "chat", "code", "notebook", "planner", "exam", "progress"]);
+const COACH_TABS = new Set([
+  "home",
+  "chat",
+  "code",
+  "notebook",
+  "voice",
+  "flashcards",
+  "math",
+  "focus",
+  "gaps",
+  "planner",
+  "exam",
+  "progress",
+]);
 const COACH_SOON_TABS = new Set(["planner", "exam", "progress"]);
+const COACH_LAB_TABS = new Set(["voice", "flashcards", "math", "focus", "gaps"]);
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -1928,20 +1942,34 @@ function defaultPrefs() {
     restoreSessions: true,
     uiLanguage: "en",
     liveWeb: true,
+    fontScale: "md",
+    highContrast: false,
+    dyslexiaFont: false,
   };
 }
 
 function loadPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(USER_PREFS_KEY) || "{}");
+    const fontScale = ["sm", "md", "lg"].includes(parsed.fontScale) ? parsed.fontScale : "md";
     return {
       restoreSessions: parsed.restoreSessions !== false,
       uiLanguage: normalizeUiLanguage(parsed.uiLanguage),
       liveWeb: parsed.liveWeb !== false,
+      fontScale,
+      highContrast: parsed.highContrast === true,
+      dyslexiaFont: parsed.dyslexiaFont === true,
     };
   } catch {
     return defaultPrefs();
   }
+}
+
+function applyAccessibilityPrefs(prefs = loadPrefs()) {
+  const root = document.documentElement;
+  root.dataset.fontScale = prefs.fontScale || "md";
+  root.classList.toggle("a11y-contrast", prefs.highContrast === true);
+  root.classList.toggle("a11y-dyslexia", prefs.dyslexiaFont === true);
 }
 
 function savePrefs(prefs) {
@@ -2530,9 +2558,9 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   mainTab = COACH_TABS.has(next) ? next : "home";
-  if (mainTab !== "chat") stopAllLearnVoice();
-  if (mainTab !== "chat") stopReadAloud();
-  if (LEARN_VISION_ENABLED && mainTab !== "chat") clearLearnChatVisionAttachment();
+  if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
+  if (mainTab !== "chat" && mainTab !== "voice" && mainTab !== "math") stopReadAloud();
+  if (LEARN_VISION_ENABLED && mainTab !== "chat" && mainTab !== "math") clearLearnChatVisionAttachment();
   document.querySelectorAll(".coach-nav .tab, .tabs .tab").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
@@ -2545,8 +2573,16 @@ function setMainTab(next) {
   panelChat?.classList.toggle("hidden", mainTab !== "chat");
   panelCode?.classList.toggle("hidden", mainTab !== "code");
   panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
+  document.querySelectorAll("[data-coach-lab-panel]").forEach((panel) => {
+    const on = panel.getAttribute("data-coach-lab-panel") === mainTab;
+    panel.classList.toggle("hidden", !on);
+    panel.hidden = !on;
+  });
   if (mainTab === "home") renderCoachHome();
   if (isSoon) renderComingSoonPanel(mainTab);
+  if (COACH_LAB_TABS.has(mainTab) && typeof window.onCoachLabTab === "function") {
+    window.onCoachLabTab(mainTab);
+  }
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
     syncNotebookLayout();
@@ -3342,8 +3378,9 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
 
   appendBubble(threadEl, "user", trimmed, { imageDataUrl: attach?.dataUrl });
 
+  const visionModes = mode === "learn" || mode === "math";
   const historyForApi =
-    mode === "learn" && LEARN_VISION_ENABLED
+    visionModes && LEARN_VISION_ENABLED
       ? history.map((m) => {
           if (!m || typeof m !== "object") return { role: "user", content: "" };
           const o = { role: m.role, content: typeof m.content === "string" ? m.content : "" };
@@ -3369,7 +3406,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
   if (mode === "learn" && isLiveWebEnabled()) {
     chatBody.liveWeb = true;
   }
-  if (mode === "learn" && attach) {
+  if (visionModes && attach) {
     chatBody.imageBase64 = attach.base64;
     chatBody.imageMime = attach.mime;
   }
@@ -4987,6 +5024,12 @@ function wireSettingsUi() {
     const prefs = loadPrefs();
     if (prefRestoreSessions) prefRestoreSessions.checked = prefs.restoreSessions !== false;
     if (prefUiLanguage) prefUiLanguage.value = normalizeUiLanguage(prefs.uiLanguage);
+    const fontScale = document.getElementById("prefFontScale");
+    if (fontScale) fontScale.value = prefs.fontScale || "md";
+    const highContrast = document.getElementById("prefHighContrast");
+    if (highContrast) highContrast.checked = prefs.highContrast === true;
+    const dyslexia = document.getElementById("prefDyslexiaFont");
+    if (dyslexia) dyslexia.checked = prefs.dyslexiaFont === true;
   };
   syncForm();
 
@@ -5006,17 +5049,60 @@ function wireSettingsUi() {
       restoreSessions: prefRestoreSessions?.checked !== false,
       uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
       liveWeb: loadPrefs().liveWeb !== false,
+      fontScale: document.getElementById("prefFontScale")?.value || "md",
+      highContrast: document.getElementById("prefHighContrast")?.checked === true,
+      dyslexiaFont: document.getElementById("prefDyslexiaFont")?.checked === true,
     };
+    if (!["sm", "md", "lg"].includes(prefs.fontScale)) prefs.fontScale = "md";
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
+    applyAccessibilityPrefs(prefs);
     saveSessionState();
     settingsModal?.classList.add("hidden");
     showToast(t("settings_saved_toast"));
   });
 }
 
+async function syncLearnVisionFromHealth() {
+  try {
+    const r = await fetch("/api/health");
+    const h = await r.json();
+    if (typeof h.learnVisionEnabled === "boolean") {
+      LEARN_VISION_ENABLED = h.learnVisionEnabled;
+    }
+  } catch {
+    /* keep default */
+  }
+  if (typeof applyLearnVisionMuted === "function") applyLearnVisionMuted();
+}
+
+/** Shared helpers for coach-labs.js feature panels. */
+window.StudentCoach = {
+  t: (...args) => t(...args),
+  showToast: (...args) => showToast(...args),
+  fetchAuthed: (...args) => fetchAuthed(...args),
+  setMainTab: (tab) => setMainTab(tab),
+  getChatHistory: () => chatHistory,
+  getCodeHistory: () => codeHistory,
+  getNotebookHistory: () => notebookHistory,
+  getNotebookContext: () => notebookDocumentContext,
+  getUiLanguage: () => activeUiLanguage,
+  lastAskTopic: () => (typeof lastAskTopicGuess === "function" ? lastAskTopicGuess() : ""),
+  speakText: (text) => {
+    const prepared = prepareTextForSpeech(String(text || ""));
+    if (!prepared) return;
+    const chunks = chunkTextForSpeech(prepared);
+    const voice = pickSpeechVoice(activeUiLanguage);
+    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US");
+  },
+  stopSpeech: () => stopReadAloud(),
+  sendChatMessage: (...args) => sendChatMessage(...args),
+  getLearnStudyMode: () => learnStudyMode,
+};
+
 const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
+applyAccessibilityPrefs(prefsAtBoot);
 setUiLanguage(prefsAtBoot.uiLanguage);
 syncLiveWebToggleUi();
 syncHubResumeButton();
@@ -5186,6 +5272,8 @@ wireCopyThreadButtons();
 maybeOfferLanguageSuggestion();
 hydratePromptFromUrl();
 initBetaBanner();
+void syncLearnVisionFromHealth();
+if (typeof applyLearnVisionMuted === "function") applyLearnVisionMuted();
 
 // Restore threads after first paint so Safari is not parsing Markdown during boot.
 const restoreAfterPaint = () => {
