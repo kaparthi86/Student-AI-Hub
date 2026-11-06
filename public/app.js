@@ -2306,10 +2306,16 @@ function initMarkdown() {
 /**
  * Polish model Markdown for a Perplexity-like reading experience.
  * Keep structural Markdown for marked (headings/lists/code), strip decorative clutter.
+ * Never leave raw ** / * emphasis chrome in the bubble.
  */
 function polishModelMarkdown(text) {
   let s = String(text ?? "").replace(/\r\n/g, "\n");
   if (!s.trim()) return "";
+
+  // Models sometimes emit escaped emphasis: \*\*bold\*\*
+  s = s.replace(/\\([*_`#])/g, "$1");
+  // Fullwidth / lookalike asterisks used as bold markers
+  s = s.replace(/\uFF0A/g, "*");
 
   const fences = [];
   s = s.replace(/```[\s\S]*?```/g, (block) => {
@@ -2326,12 +2332,23 @@ function polishModelMarkdown(text) {
   s = s.replace(/(^|\n)\s*step\s*(\d{1,2})\s*[:.)\-]\s*/gim, "$1$2. ");
   s = s.replace(/(^|\n)(#{1,6})\s*\*\*(.+?)\*\*\s*(?=\n|$)/g, "$1$2 $3");
 
-  s = s.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "$1");
-  s = s.replace(/\*\*([^*\n]+?)\*\*/g, "$1");
-  s = s.replace(/__([^_\n]+?)__/g, "$1");
-  s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?:;]|$)/g, "$1$2");
-  s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,!?:;]|$)/g, "$1$2");
+  // Bold / italic — repeat until stable for nested wraps.
+  for (let i = 0; i < 4; i += 1) {
+    const before = s;
+    s = s.replace(/\*\*\*([\s\S]*?)\*\*\*/g, "$1");
+    s = s.replace(/\*\*([^*\n][^*\n]*?)\*\*/g, "$1");
+    s = s.replace(/__([^_\n][^_\n]*?)__/g, "$1");
+    s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?:;…]|$)/g, "$1$2");
+    s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,!?:;…]|$)/g, "$1$2");
+    if (s === before) break;
+  }
+
+  // Leftover emphasis runs (unpaired / streaming leftovers).
+  // Do not strip a single "*" between spaces (keeps math like 2 * 3).
   s = s.replace(/\*{2,}/g, "");
+  // Orphan ** glued to words: word** or **word
+  s = s.replace(/\*+(?=\w)/g, "");
+  s = s.replace(/(?<=\w)\*+/g, "");
   s = s.replace(/#{4,}/g, "##");
 
   s = s.replace(/(^|\n)\s*[\u2022\u00b7]\s+/g, "$1- ");
@@ -2378,8 +2395,10 @@ function streamingPlainFromMarkdown(text) {
   // Only strip leftover emphasis runs, not math like 2 * 3.
   s = s.replace(/\*{2,}/g, "");
   s = s.replace(/(^|\n)\s*#+\s*/g, "$1");
-  // Lone emphasis markers left by partial tokens.
-  s = s.replace(/(^|[\s(])[*_]{1,2}(?=[\s).,!?:;]|$)/g, "$1");
+  // Lone ** / __ left by partial tokens (not a single * between spaces).
+  s = s.replace(/(^|[\s(])(?:\*{2}|_{1,2})(?=[\s).,!?:;]|$)/g, "$1");
+  s = s.replace(/\*+(?=\w)/g, "");
+  s = s.replace(/(?<=\w)\*+/g, "");
 
   fences.forEach((block, i) => {
     s = s.replace(`@@CODEFENCE${i}@@`, block);
@@ -5109,6 +5128,7 @@ window.StudentCoach = {
   showToast: (...args) => showToast(...args),
   fetchAuthed: (...args) => fetchAuthed(...args),
   setMainTab: (tab) => setMainTab(tab),
+  polishText: (text) => polishModelMarkdown(text),
   getChatHistory: () => chatHistory,
   getCodeHistory: () => codeHistory,
   getNotebookHistory: () => notebookHistory,

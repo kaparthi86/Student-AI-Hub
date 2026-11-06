@@ -798,7 +798,7 @@ Response contract for Notebook analyze (follow strictly):
 6) Practice checks: exactly 5 short learning checks (not graded-exam items) with brief answers under each.
 7) 7-day study plan: Day 1 ... Day 7, one short task per day.
 8) When multiple files are present, synthesize and name the source file when a point is document-specific.
-9) No filler openers. No **bold** or *italic* asterisk decoration. Prefer ## headings and hyphen/number lists only.
+9) No filler openers. Never output ** or * for emphasis. Prefer ## headings and hyphen/number lists only.
 10) End when the sections are complete - do not add extra pep talks.`;
 
 const NOTEBOOK_FOLLOWUP_SYSTEM = `You are My Student Coach Notebook - a document-grounded study coach.
@@ -812,7 +812,7 @@ Response contract for Notebook follow-ups (follow strictly):
 2) Then only useful detail from the sources: numbered steps for procedures, or hyphen bullets for lists.
 3) Prefer one concrete example from the notes when it helps; keep paragraphs short.
 4) No filler openers (avoid Great question, Sure, As an AI, Based on the document you uploaded).
-5) No decorative **bold** or *italic* asterisks. Use ## only when a real section title helps.
+5) Never output ** or * for emphasis. Use ## only when a real section title helps.
 6) End when the student can act. Do not invent citations, page numbers, or facts not in the sources.`;
 
 function notebookUserContent(docName, docText) {
@@ -1201,7 +1201,7 @@ function responseContractInstruction(mode) {
     "2) Then add only useful detail: numbered steps (1. 2. 3.) for processes, or hyphen bullets (-) for lists.",
     "3) Prefer one concrete example over vague advice. Keep paragraphs to 1-3 short sentences.",
     "4) No filler openers (avoid So, Great question, Sure, Absolutely, As an AI, I'd be happy to).",
-    "5) No decorative **bold** or *italic* asterisks. Use ## headings sparingly and only with real titles.",
+    "5) Never output ** or * for emphasis (no bold/italic asterisks at all). Use ## headings sparingly and only with real titles. Prefer plain words and numbered/hyphen lists.",
     "6) Stay within scope: teach and practice help only - do not write work the student should submit as their own.",
     "7) End when the student can act. Do not pad with generic encouragement or recap fluff.",
   ];
