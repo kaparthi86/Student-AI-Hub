@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="My Student Coach" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=strip-bold-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=login-gateway-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>My Student Coach</title>
@@ -27,10 +27,10 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=strip-bold-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=strip-bold-1" />
+    <link rel="stylesheet" href="./styles.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=login-gateway-1" />
   </head>
   <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -71,9 +71,10 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-      <section class="auth auth-shell landing msc-landing" id="authCard" aria-label="My Student Coach">
+            <!-- Marketing landing (sells the vision) -->
+      <section class="auth auth-shell landing msc-landing" id="landingCard" aria-label="My Student Coach">
         <header class="msc-topnav">
-          <a class="msc-logo" href="#authCard" aria-label="My Student Coach home">
+          <a class="msc-logo" href="#landingCard" aria-label="My Student Coach home">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
@@ -95,7 +96,7 @@
           <nav class="msc-topnav-links" aria-label="Landing">
             <a href="#mscFeatures">Features</a>
             <a href="#mscAbout">About</a>
-            <a href="#mscStart">Sign in</a>
+            <a href="#login" id="landingNavSignIn" data-open-login>Sign in</a>
           </nav>
         </header>
 
@@ -107,7 +108,106 @@
               Your personal AI coach for studying, understanding difficult topics, and preparing for exams.
             </p>
             <div class="landing-cta msc-cta">
-              <button id="googleLoginBtn" class="auth-google-btn google-btn landing-google-btn msc-primary-cta" type="button">
+              <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
+                Get Started Free
+              </button>
+              <p class="msc-cta-note muted">Learn at your own pace. Stay in control.</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="msc-section" id="mscHow" aria-label="How it works">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">How it works</h2>
+            <ol class="msc-steps">
+              <li><strong>Ask</strong><span>Bring a question, notes, or a stuck problem.</span></li>
+              <li><strong>Learn</strong><span>Get clear explanations, practice, and study plans.</span></li>
+              <li><strong>Improve</strong><span>Build understanding — not shortcuts.</span></li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="landing-below msc-section" id="mscFeatures" aria-label="Features">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">Everything you need to succeed</h2>
+            <ul class="landing-tools msc-feature-cards">
+              <li>
+                <strong>AI Coach</strong>
+                <span>Understand difficult topics with personalized explanations.</span>
+              </li>
+              <li>
+                <strong>Smart Notebook</strong>
+                <span>Turn your notes into summaries, quizzes, and study plans.</span>
+              </li>
+              <li>
+                <strong>Coding Coach</strong>
+                <span>Learn programming and understand errors.</span>
+              </li>
+              <li>
+                <strong>Study Planner</strong>
+                <span>Organize your studies and prepare for exams. <em class="msc-soon">Coming soon</em></span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="landing-integrity msc-section" id="mscAbout" aria-label="About">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title" id="landingMissionTitle">Why My Student Coach</h2>
+            <p class="landing-section-lead" id="landingMissionLead">
+              Personalized learning with study integrity and privacy at the center.
+            </p>
+            <p class="landing-mission-sub" id="landingMissionSub">
+              Built for learning and practice — not for handing in AI work as your own.
+              <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a>
+            </p>
+          </div>
+        </section>
+
+        <section class="msc-section msc-final-cta" aria-label="Get started">
+          <div class="landing-below-inner">
+            <h2 class="landing-section-title">Your success starts with one step</h2>
+            <p class="landing-section-lead">Join My Student Coach and make learning easier.</p>
+            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn" data-open-login>Get Started Free</button>
+          </div>
+        </section>
+
+        <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo">
+          <nav class="landing-legal" aria-label="Legal">
+            <a href="./privacy.html">Privacy</a>
+            <a href="./terms.html">Terms</a>
+            <a href="mailto:student-ai-hub-support@googlegroups.com">Support</a>
+          </nav>
+        </footer>
+      </section>
+
+      <!-- Login gateway (one screen — Google only; email/password not implemented) -->
+      <section class="auth msc-login-shell hidden" id="authCard" aria-label="Sign in to My Student Coach" hidden>
+        <div class="msc-login-card">
+          <a class="msc-logo msc-login-logo" href="#landingCard" id="loginBrandLink" aria-label="My Student Coach home">
+            <span class="brand-mark landing-brand-mark" aria-hidden="true">
+              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="12" fill="url(#loginBrandGrad)" />
+                <path
+                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
+                  fill="white"
+                  fill-opacity="0.92"
+                />
+                <defs>
+                  <linearGradient id="loginBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#287A89" />
+                    <stop offset="1" stop-color="#142D4C" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="msc-logo-text" id="loginBrandTitle">My Student Coach</span>
+          </a>
+          <h1 class="msc-login-title" id="loginWelcomeTitle">Welcome back!</h1>
+          <p class="msc-login-support muted" id="loginWelcomeSupport">
+            Your personal AI learning companion is ready.
+          </p>
+          <button id="googleLoginBtn" class="auth-google-btn google-btn msc-login-google" type="button">
                 <svg class="google-btn-icon" viewBox="0 0 18 18" aria-hidden="true" width="18" height="18">
                   <path
                     fill="#4285F4"
@@ -126,24 +226,22 @@
                     d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z"
                   />
                 </svg>
-                <span>Get Started Free</span>
-              </button>
-              <p class="msc-cta-note muted">Learn at your own pace. Stay in control.</p>
-              <p id="authStatus" class="muted auth-status landing-auth-status"></p>
-            </div>
-          </div>
+            <span id="googleLoginBtnLabel">Continue with Google</span>
+          </button>
+          <p id="authStatus" class="muted auth-status msc-login-status" role="status" aria-live="polite"></p>
+          <p class="msc-login-privacy" id="loginPrivacyLine">Your learning journey. Your data. Your privacy.</p>
+          <nav class="msc-login-legal" aria-label="Legal">
+            <a href="./terms.html">Terms of Service</a>
+            <span aria-hidden="true">·</span>
+            <a href="./privacy.html">Privacy Policy</a>
+            <span aria-hidden="true">·</span>
+            <a href="mailto:student-ai-hub-support@googlegroups.com">Help</a>
+          </nav>
+          <button type="button" class="ghost-btn tiny-btn msc-login-about" id="loginBackToLandingBtn">
+            About My Student Coach
+          </button>
         </div>
-
-        <section class="msc-section" id="mscHow" aria-label="How it works">
-          <div class="landing-below-inner">
-            <h2 class="landing-section-title">How it works</h2>
-            <ol class="msc-steps">
-              <li><strong>Ask</strong><span>Bring a question, notes, or a stuck problem.</span></li>
-              <li><strong>Learn</strong><span>Get clear explanations, practice, and study plans.</span></li>
-              <li><strong>Improve</strong><span>Build understanding — not shortcuts.</span></li>
-            </ol>
-          </div>
-        </section>
+      </section>
 
         <section class="landing-below msc-section" id="mscFeatures" aria-label="Features">
           <div class="landing-below-inner">
@@ -1047,7 +1145,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=strip-bold-1"></script>
-    <script defer src="./coach-labs.js?v=strip-bold-1"></script>
+    <script defer src="./app.js?v=login-gateway-1"></script>
+    <script defer src="./coach-labs.js?v=login-gateway-1"></script>
   </body>
 </html>
