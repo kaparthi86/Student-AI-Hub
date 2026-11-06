@@ -4,6 +4,11 @@
  */
 (function initCoachLabs() {
   const api = () => window.StudentCoach || {};
+  const cleanCoachText = (text) => {
+    const raw = String(text ?? "");
+    if (typeof api().polishText === "function") return api().polishText(raw);
+    return raw.replace(/\*\*/g, "").trim();
+  };
   const FLASH_KEY = "student_ai_flashcards_v1";
   const FOCUS_KEY = "student_ai_focus_sessions_v1";
   const MASTERY_KEY = "student_ai_topic_mastery_v1";
@@ -109,7 +114,7 @@
     const card = due[flashIndex];
     review?.classList.remove("hidden");
     if (sideEl) sideEl.textContent = flashShowingBack ? "Back" : "Front";
-    if (textEl) textEl.textContent = flashShowingBack ? card.back : card.front;
+    if (textEl) textEl.textContent = cleanCoachText(flashShowingBack ? card.back : card.front);
     if (progress) progress.textContent = `Card ${flashIndex + 1} of ${due.length} due · deck ${flashDeck.cards.length}`;
   }
 
@@ -153,7 +158,7 @@
     row.className = `msg ${role === "assistant" ? "assistant" : "user"}`;
     const body = document.createElement("div");
     body.className = "msg-body";
-    body.textContent = text;
+    body.textContent = role === "assistant" ? cleanCoachText(text) : text;
     row.appendChild(body);
     thread.appendChild(row);
     thread.scrollTop = thread.scrollHeight;
@@ -359,7 +364,7 @@
       statusLine.remove();
       const coach = document.createElement("p");
       coach.className = "voice-line voice-line--coach";
-      coach.textContent = `Coach: ${output}`;
+      coach.textContent = `Coach: ${cleanCoachText(output)}`;
       transcript?.appendChild(coach);
       api().speakText?.(output);
     } catch (err) {
@@ -388,7 +393,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not analyze weak areas.");
       if (status) status.textContent = "Here is a focused revision plan.";
-      if (out) out.textContent = String(data.output || "").trim();
+      if (out) out.textContent = cleanCoachText(String(data.output || "").trim());
     } catch (err) {
       if (status) status.textContent = err.message || "Gap scan failed.";
       api().showToast?.(err.message || "Gap scan failed.");
