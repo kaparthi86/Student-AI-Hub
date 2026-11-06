@@ -3730,7 +3730,7 @@ async function initAuth() {
   const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
   if (!window.supabase || !supabaseUrl || !supabaseAnonKey) {
     showAuth("Set Supabase URL and anon key in public/config.js to enable Google login.");
-    googleLoginBtn.disabled = true;
+    if (googleLoginBtn) googleLoginBtn.disabled = true;
     return;
   }
 
@@ -3738,15 +3738,21 @@ async function initAuth() {
     new URL(String(supabaseUrl).trim());
   } catch {
     showAuth("Invalid supabaseUrl in public/config.js (must look like https://xxxx.supabase.co).");
-    googleLoginBtn.disabled = true;
+    if (googleLoginBtn) googleLoginBtn.disabled = true;
     return;
   }
 
   try {
-    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
   } catch (err) {
     showAuth(`Could not start auth: ${describeAuthFailure(err)}`);
-    googleLoginBtn.disabled = true;
+    if (googleLoginBtn) if (googleLoginBtn) googleLoginBtn.disabled = true;
     return;
   }
 
@@ -3764,23 +3770,31 @@ async function initAuth() {
   });
 }
 
-googleLoginBtn.addEventListener("click", async () => {
-  if (!supabaseClient) return;
-  const redirectTo = getOAuthRedirectTo();
-  if (!redirectTo) {
-    authStatus.textContent =
-      "Sign-in needs http:// or https:// (open the app from your dev server, not a file:// page).";
+googleLoginBtn?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    if (authStatus) {
+      authStatus.textContent =
+        "Google login is not ready yet. Check public/config.js and that the Supabase script loaded, then refresh.";
+    }
     return;
   }
-  authStatus.textContent = t("opening_google_login");
+  const redirectTo = getOAuthRedirectTo();
+  if (!redirectTo) {
+    if (authStatus) {
+      authStatus.textContent =
+        "Sign-in needs http:// or https:// (open the app from your dev server, not a file:// page).";
+    }
+    return;
+  }
+  if (authStatus) authStatus.textContent = t("opening_google_login");
   try {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo },
     });
-    if (error) authStatus.textContent = `Login failed: ${describeAuthFailure(error)}`;
+    if (error && authStatus) authStatus.textContent = `Login failed: ${describeAuthFailure(error)}`;
   } catch (err) {
-    authStatus.textContent = describeAuthFailure(err);
+    if (authStatus) authStatus.textContent = describeAuthFailure(err);
   }
 });
 
@@ -3975,6 +3989,24 @@ document.querySelectorAll(".logout-btn").forEach((btn) => {
 
 document.querySelectorAll("#appCard .tab").forEach((tab) => {
   tab.addEventListener("click", () => setMainTab(tab.dataset.tab));
+});
+
+const chatSearchFlow = wireSearchFlow({
+  searchInput: chatSearchInput,
+  searchSubmit: chatSearchSubmit,
+  followupInput: chatFollowupInput,
+  followupSubmit: chatFollowupSubmit,
+  mode: "learn",
+  history: chatHistory,
+  threadEl: chatThread,
+  statusEl: apiStatus,
+  onFirstSend: () => {
+    chatSessionOpen = true;
+    syncLearnLayout();
+  },
+  getVisionAttachment: LEARN_VISION_ENABLED ? () => learnChatVisionAttachment : undefined,
+  clearVisionAttachment: LEARN_VISION_ENABLED ? clearLearnChatVisionAttachment : undefined,
+  getStudyMode: () => learnStudyMode,
 });
 
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
