@@ -233,3 +233,41 @@ html.is-safari .privacy-analytics {
     width: 100%;
   }
 }
+
+
+.privacy-stat-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(28, 27, 25, 0.08);
+}
+.privacy-stat-kicker {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6f6b63;
+}
+.privacy-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.privacy-stat-pill {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f7f6f3;
+  min-width: 7rem;
+}
+.privacy-stat-pill strong {
+  display: block;
+  font-size: 1.1rem;
+}
+.privacy-stat-pill span {
+  display: block;
+  font-size: 0.8rem;
+  color: #6f6b63;
+}
