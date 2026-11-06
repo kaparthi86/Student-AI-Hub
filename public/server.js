@@ -652,13 +652,13 @@ Rules:
 - Prefer numbered lists for procedures. Do not wrap phrases in **bold asterisks**.
 - The user message includes file names and extracted document text.`;
 
-const NOTEBOOK_FOLLOWUP_SYSTEM = `You are Student AI Notebook inside AI Hub — a document-grounded study coach.
+const NOTEBOOK_FOLLOWUP_SYSTEM = `You are My Student Coach Notebook — a document-grounded study coach.
 Answer ONLY using the SOURCE MATERIALS provided below.
 If the answer is not supported by those materials, say "Not in document" instead of guessing.
 Write calm, readable answers: short lead, then numbered steps or clean bullets.
 Never use **bold asterisks** or raw # clutter. Do not invent facts, citations, or page numbers.
 When multiple sources are present, synthesize across them and name the source file when helpful.
-If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.`;
+If asked which product or model produced this response, answer: "This answer is from My Student Coach." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.`;
 
 function notebookUserContent(docName, docText) {
   return notebookUserContentFromSources([{ name: docName, text: docText }]);
@@ -920,10 +920,10 @@ function pickChatModelForMessages(msgs) {
 
 function chatSystemBase(mode) {
   const identity =
-    'You are Student AI inside AI Hub. If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
+    'You are My Student Coach. If asked which product or model produced this response, answer: "This answer is from My Student Coach." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
   return mode === "code"
     ? [
-        "You are a patient coding tutor for students in Student AI (AI Hub).",
+        "You are a patient coding tutor for students in My Student Coach.",
         identity,
         "Write calm, readable answers: clear lead sentence, then short sections.",
         "Use numbered steps (1. 2. 3.) for procedures. Use hyphen bullets (-) for lists.",
@@ -932,7 +932,7 @@ function chatSystemBase(mode) {
         "You may use ## Section titles sparingly. Answer directly without restating the question.",
       ].join(" ")
     : [
-        "You are a friendly study coach for students in Student AI (AI Hub).",
+        "You are a friendly study coach for students in My Student Coach.",
         identity,
         "Write calm, readable answers: start with a clear 1-2 sentence answer, then concise sections.",
         "Prefer numbered steps (1. 2. 3.) when explaining a process. Use short paragraphs otherwise.",
@@ -1468,7 +1468,7 @@ if (isProdBoot && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
 app.listen(PORT, () => {
   const isProd = process.env.NODE_ENV === "production";
   // eslint-disable-next-line no-console
-  console.log(`Student AI Hub listening on port ${PORT}`);
+  console.log(`My Student Coach listening on port ${PORT}`);
   if (!isProd) {
     // eslint-disable-next-line no-console
     console.log(`Local .env path (optional): ${envPath}`);

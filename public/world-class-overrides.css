@@ -501,7 +501,7 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   flex: 0 0 auto;
 }
 
-/* Student workspace: quiet chrome — mark + AI Hub link + Student AI title */
+/* Student workspace: quiet chrome — mark + brand link + Coach title */
 .workspace-shell .brand-kicker {
   display: none;
 }
@@ -543,7 +543,7 @@ body:has(#authCard:not(.hidden)):not(:has(.workspace-shell:not(.hidden))):not(:h
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.2;
-  color: #1d5bd8;
+  color: #1f6571;
   cursor: pointer;
   text-align: left;
   width: fit-content;
@@ -1256,7 +1256,7 @@ html.is-safari .bubble--streaming {
   animation: none !important;
 }
 
-/* —— AI Hub home —— */
+/* —— Coach home —— */
 body:has(#hubCard:not(.hidden)) .bg-glow {
   opacity: 0.1;
 }
@@ -1435,7 +1435,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   line-height: 1.1rem;
-  color: #1d5bd8;
+  color: #1f6571;
 }
 
 .hub-tile-badge--soon {
@@ -1468,7 +1468,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #1d5bd8;
+  color: #1f6571;
   align-self: end;
 }
 
@@ -1533,7 +1533,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 
 .crumb-hub:hover,
 .crumb-hub:focus-visible {
-  color: #1d5bd8;
+  color: #1f6571;
   outline: none;
 }
 
@@ -1658,7 +1658,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 .live-web-toggle[aria-pressed="true"] {
   border-color: rgba(47, 111, 237, 0.4);
   background: rgba(47, 111, 237, 0.1);
-  color: #1d5bd8;
+  color: #1f6571;
 }
 
 .live-web-dot {
@@ -1669,7 +1669,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 }
 
 .live-web-toggle[aria-pressed="true"] .live-web-dot {
-  background: #2f6fed;
+  background: #287a89;
   box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.16);
 }
 
@@ -1725,7 +1725,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
 .bubble-source-num {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1d5bd8;
+  color: #1f6571;
   line-height: 1.4;
 }
 
@@ -1849,7 +1849,7 @@ body:has(#hubCard:not(.hidden)) .bg-glow {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #1d5bd8;
+  color: #1f6571;
 }
 
 .followup-meta {

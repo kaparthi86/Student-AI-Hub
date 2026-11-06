@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="My Student Coach" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=simplify-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=consistency-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>My Student Coach</title>
@@ -27,10 +27,10 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=simplify-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=simplify-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=simplify-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=simplify-1" />
+    <link rel="stylesheet" href="./styles.css?v=consistency-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=consistency-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=consistency-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=consistency-1" />
   </head>
   <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -150,7 +150,7 @@
             <h2 class="landing-section-title">Everything you need to succeed</h2>
             <ul class="landing-tools msc-feature-cards">
               <li>
-                <strong>AI Tutor</strong>
+                <strong>AI Coach</strong>
                 <span>Understand difficult topics with personalized explanations.</span>
               </li>
               <li>
@@ -202,7 +202,7 @@
         </footer>
       </section>
 
-      <section class="hub hub-shell hidden" id="hubCard" aria-label="My Student Coach home">
+      <section class="hub hub-shell hidden msc-hub-retired" id="hubCard" aria-hidden="true" aria-label="My Student Coach home">
         <header class="hub-top">
           <div class="hub-top-brand" aria-hidden="true"></div>
           <div class="head-actions account-menu">
@@ -233,8 +233,8 @@
               />
               <defs>
                 <linearGradient id="hubBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#2F6FED" />
-                  <stop offset="1" stop-color="#1D5BD8" />
+                  <stop stop-color="#287A89" />
+                  <stop offset="1" stop-color="#1F6571" />
                 </linearGradient>
               </defs>
             </svg>
@@ -268,8 +268,8 @@
                   />
                   <defs>
                     <linearGradient id="tileStudentGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#2F6FED" />
-                      <stop offset="1" stop-color="#1D5BD8" />
+                      <stop stop-color="#287A89" />
+                      <stop offset="1" stop-color="#1F6571" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -281,7 +281,7 @@
           </button>
         </div>
         <p class="hub-privacy-note">
-          <span data-i18n="hub_privacy_note">AI Hub does not sell your data or show ads from your chats.</span>
+          <span data-i18n="hub_privacy_note">My Student Coach does not sell your data or show ads from your chats.</span>
           <a href="./privacy.html">Privacy</a>
         </p>
         <div class="hub-secondary">
@@ -291,7 +291,7 @@
         </div>
         <footer class="app-fine-print hub-fine-print" role="note" id="hubDisclaimerFooter" aria-label="Disclaimer">
           <p class="fine-print-line" data-i18n="disclaimer_nonprofit">
-            AI Hub is mission-driven &mdash; built to help people learn and plan, not to sell your data or push ads.
+            My Student Coach is mission-driven &mdash; built to help people learn and plan, not to sell your data or push ads.
           </p>
           <p class="fine-print-line support-contact-line">
             Feedback:
@@ -365,7 +365,7 @@
           <details class="msc-nav-menu" id="learnMenu">
             <summary class="tab msc-nav-summary">Learn</summary>
             <div class="msc-nav-panel" role="menu">
-              <button type="button" class="msc-nav-item" data-tab="chat" role="menuitem">AI Tutor</button>
+              <button type="button" class="msc-nav-item" data-tab="chat" role="menuitem">AI Coach</button>
               <button type="button" class="msc-nav-item" data-tab="notebook" role="menuitem" id="tabNotebook">Notebook</button>
               <button type="button" class="msc-nav-item" data-tab="code" role="menuitem" id="tabCode">Coding Coach</button>
               <button type="button" class="msc-nav-item" data-tab="math" role="menuitem" id="tabMath">Math &amp; Science</button>
@@ -551,11 +551,24 @@
 
         <section id="panelChat" class="panel perplexity-panel hidden">
           <details class="msc-advanced-options">
-            <summary>Learning mode options</summary>
+            <summary>Learning options</summary>
             <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
               <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
               <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
               <button type="button" class="study-mode-btn" data-study-mode="guide" aria-pressed="false">Don't give the answer</button>
+            </div>
+            <div class="live-web-row live-web-row--nested">
+              <button
+                type="button"
+                id="liveWebToggle"
+                class="live-web-toggle"
+                aria-pressed="true"
+                title="Ground Ask answers in current web sources"
+              >
+                <span class="live-web-dot" aria-hidden="true"></span>
+                <span id="liveWebToggleLabel">Live web</span>
+              </button>
+              <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
             </div>
           </details>
           <div id="chatSearchShell" class="search-hero">
@@ -570,7 +583,7 @@
             <p class="search-title" id="chatSearchTitle">What do you want to learn today?</p>
             <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
             <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
-              <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI">
+              <span class="search-icon search-icon--logo" aria-hidden="true" title="My Student Coach">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="11" fill="url(#searchBrandGrad)" />
                   <path
@@ -580,8 +593,8 @@
                   />
                   <defs>
                     <linearGradient id="searchBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#2F6FED" />
-                      <stop offset="1" stop-color="#1D5BD8" />
+                      <stop stop-color="#287A89" />
+                      <stop offset="1" stop-color="#1F6571" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -625,21 +638,8 @@
               </button>
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
-            <div class="live-web-row">
-              <button
-                type="button"
-                id="liveWebToggle"
-                class="live-web-toggle"
-                aria-pressed="true"
-                title="Ground Ask answers in current web sources"
-              >
-                <span class="live-web-dot" aria-hidden="true"></span>
-                <span id="liveWebToggleLabel">Live web</span>
-              </button>
-              <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
-            </div>
             <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
-            <div id="firstSession" class="first-session" role="group" aria-label="Start here">
+            <div id="firstSession" class="first-session hidden" role="group" aria-label="Start here" hidden>
               <p class="empty-prompts-label">Start here</p>
               <div class="first-session-actions">
                 <button type="button" class="starter-chip" data-first="explain">Explain a topic</button>
@@ -709,7 +709,7 @@
               </div>
               <div id="chatFollowupAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
               <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
-                <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI">
+                <span class="search-icon search-icon--logo" aria-hidden="true" title="My Student Coach">
                   <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="40" height="40" rx="11" fill="url(#searchBrandGradFollowup)" />
                     <path
@@ -726,8 +726,8 @@
                         y2="36"
                         gradientUnits="userSpaceOnUse"
                       >
-                        <stop stop-color="#2F6FED" />
-                        <stop offset="1" stop-color="#1D5BD8" />
+                        <stop stop-color="#287A89" />
+                        <stop offset="1" stop-color="#1F6571" />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -782,7 +782,7 @@
           <div id="codeSearchShell" class="search-hero">
             <p class="search-title" id="codeSearchTitle">Debug or learn code</p>
             <div class="search-bar search-bar--branded search-bar--code">
-              <span class="search-icon search-icon--logo search-icon--code" aria-hidden="true" title="Student AI">
+              <span class="search-icon search-icon--logo search-icon--code" aria-hidden="true" title="My Student Coach">
                 <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="40" height="40" rx="11" fill="url(#searchBrandGradCode)" />
                   <path
@@ -800,7 +800,7 @@
                       gradientUnits="userSpaceOnUse"
                     >
                       <stop stop-color="#5a9fff" />
-                      <stop offset="1" stop-color="#2F6FED" />
+                      <stop offset="1" stop-color="#287A89" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -891,7 +891,7 @@
                 <!-- Filled by smart follow-up renderer -->
               </div>
               <div class="search-bar search-bar--branded search-bar--learn-hero">
-                <span class="search-icon search-icon--logo" aria-hidden="true" title="Student AI">
+                <span class="search-icon search-icon--logo" aria-hidden="true" title="My Student Coach">
                   <svg class="search-logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="40" height="40" rx="11" fill="url(#searchBrandGradNotebook)" />
                     <path
@@ -908,8 +908,8 @@
                         y2="36"
                         gradientUnits="userSpaceOnUse"
                       >
-                        <stop stop-color="#2F6FED" />
-                        <stop offset="1" stop-color="#1D5BD8" />
+                        <stop stop-color="#287A89" />
+                        <stop offset="1" stop-color="#1F6571" />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -927,19 +927,13 @@
           </div>
         </section>
 
-        <footer class="app-fine-print" role="note" id="appDisclaimerFooter" aria-label="Disclaimer">
+                <footer class="app-fine-print" role="note" id="appDisclaimerFooter" aria-label="Disclaimer">
           <p class="fine-print-line" data-i18n="disclaimer_base">
-            AI Hub can make mistakes. Check important facts.
-          </p>
-          <p class="fine-print-line" data-i18n="disclaimer_student">
-            For study help and practice only &mdash; follow your honor code; don&rsquo;t submit AI output when your course
-            forbids it.
-          </p>
-          <p class="fine-print-line" data-i18n="disclaimer_nonprofit">
-            AI Hub is mission-driven &mdash; built to help people learn and plan, not to sell your data or push ads.
+            My Student Coach can make mistakes. Check important facts.
+            <a href="./terms.html">Study integrity</a> · <a href="./privacy.html">Privacy</a>
           </p>
           <p class="fine-print-line support-contact-line">
-            Feedback:
+            Support:
             <a href="mailto:student-ai-hub-support@googlegroups.com">student-ai-hub-support@googlegroups.com</a>
           </p>
         </footer>
@@ -960,7 +954,7 @@
           <h3 id="honorCodeTitle">Study with integrity</h3>
         </div>
         <p id="honorCodeLead" class="honor-code-lead">
-          Student AI is for learning and practice &mdash; not for handing in AI work as your own.
+          My Student Coach is for learning and practice &mdash; not for handing in AI work as your own.
         </p>
         <p id="honorCodeBody" class="honor-code-body muted">
           Follow your school&rsquo;s honor code. Don&rsquo;t submit AI output when your course forbids it. Check
@@ -968,7 +962,7 @@
         </p>
         <div class="honor-code-actions">
           <button id="honorCodeAckBtn" class="primary-btn" type="button">I understand</button>
-          <button id="honorCodeBackBtn" class="ghost-btn" type="button">Back to Hub</button>
+          <button id="honorCodeBackBtn" class="ghost-btn" type="button">Back to Home</button>
         </div>
       </div>
     </div>    </div>
@@ -989,7 +983,7 @@
         </div>
         <p id="defaultPageHintLead" class="default-page-hint-lead muted">
           Browsers don&rsquo;t let websites change your home or startup page for you (by design). If you&rsquo;d like
-          AI Hub to open when you start the browser, you can set it yourself in a few seconds.
+          My Student Coach to open when you start the browser, you can set it yourself in a few seconds.
         </p>
         <div id="defaultPageHintSteps" class="default-page-hint-steps hidden">
           <p id="defaultPageHintUrlLabel" class="default-page-hint-url-label muted">Copy this address:</p>
@@ -1053,7 +1047,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=simplify-1"></script>
-    <script defer src="./coach-labs.js?v=simplify-1"></script>
+    <script defer src="./app.js?v=consistency-1"></script>
+    <script defer src="./coach-labs.js?v=consistency-1"></script>
   </body>
 </html>

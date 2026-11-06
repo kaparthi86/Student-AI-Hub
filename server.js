@@ -586,7 +586,7 @@ app.post("/api/privacy-dns/start", async (req, res) => {
       needsAdmin,
       error: err.message || "Could not start the house filter.",
       hint: needsAdmin
-        ? "Close AI Hub, start it with administrator rights (sudo npm run dev on Mac/Linux), then tap Protect this house again."
+        ? "Close My Student Coach, start it with administrator rights (sudo npm run dev on Mac/Linux), then tap Protect this house again."
         : "Another app may already be using DNS on this computer.",
     });
   }
@@ -782,7 +782,7 @@ function truncateForPrompt(text, maxChars) {
 /** Static system first (prefix-cache friendly); variable document only in the user message. */
 const NOTEBOOK_SYSTEM_STATIC = `You create accurate student study materials. Never invent facts not present in the source materials.
 
-You are Student AI Notebook inside AI Hub.
+You are My Student Coach Notebook.
 
 Response contract for Notebook analyze (follow strictly):
 1) Use ONLY the source materials in the user message. If something is missing, write "Not in document" - never invent facts.
@@ -801,11 +801,11 @@ Response contract for Notebook analyze (follow strictly):
 9) No filler openers. No **bold** or *italic* asterisk decoration. Prefer ## headings and hyphen/number lists only.
 10) End when the sections are complete - do not add extra pep talks.`;
 
-const NOTEBOOK_FOLLOWUP_SYSTEM = `You are Student AI Notebook inside AI Hub - a document-grounded study coach.
+const NOTEBOOK_FOLLOWUP_SYSTEM = `You are My Student Coach Notebook - a document-grounded study coach.
 Answer ONLY using the SOURCE MATERIALS provided below.
 If the answer is not supported by those materials, say "Not in document" instead of guessing.
 When multiple sources are present, synthesize across them and name the source file when helpful.
-If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.
+If asked which product or model produced this response, answer: "This answer is from My Student Coach." You may add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.
 
 Response contract for Notebook follow-ups (follow strictly):
 1) Start with a direct answer in 1-2 sentences. Do not restate the question.
@@ -1246,10 +1246,10 @@ function responseContractInstruction(mode) {
 
 function chatSystemBase(mode) {
   const identity =
-    'You are Student AI inside AI Hub. If asked which product or model produced this response, answer: "This answer is from AI Hub (Student AI)." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
+    'You are My Student Coach. If asked which product or model produced this response, answer: "This answer is from My Student Coach." You may briefly add that AI can be wrong and important facts should be checked. Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.';
   if (mode === "code") {
     return [
-      "You are a patient coding tutor for students in Student AI (AI Hub).",
+      "You are a patient coding tutor for students in My Student Coach.",
       identity,
       responseContractInstruction("code"),
       "Use Markdown code fences for code only. Use numbered steps for procedures. Use hyphen bullets (-) for lists.",
@@ -1257,14 +1257,14 @@ function chatSystemBase(mode) {
   }
   if (mode === "math") {
     return [
-      "You are a patient mathematics and science tutor for students in My Student Coach (Student AI).",
+      "You are a patient mathematics and science tutor for students in My Student Coach.",
       identity,
       responseContractInstruction("math"),
       "Prefer clear step-by-step solutions. Use plain text for equations when LaTeX is unnecessary.",
     ].join(" ");
   }
   return [
-    "You are a calm study coach for students in Student AI (AI Hub).",
+    "You are a calm study coach for students in My Student Coach.",
     identity,
     responseContractInstruction("learn"),
     "Default posture: answer first, then the smallest useful explanation.",
@@ -2357,7 +2357,7 @@ if (isProdBoot && (!SUPABASE_URL || !SUPABASE_ANON_KEY)) {
 app.listen(PORT, () => {
   const isProd = process.env.NODE_ENV === "production";
   // eslint-disable-next-line no-console
-  console.log(`Student AI Hub listening on port ${PORT}`);
+  console.log(`My Student Coach listening on port ${PORT}`);
   if (!isProd) {
     // eslint-disable-next-line no-console
     console.log(`Local .env path (optional): ${envPath}`);

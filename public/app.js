@@ -206,7 +206,7 @@ const I18N = {
     status_searching_web: "Searching the web...",
     tile_student_badge: "Available now",
     hub_hint: "Choose a workspace to get started",
-    resume_student: "Resume Student AI",
+    resume_student: "Continue learning",
     live_web_unavailable: "Live web needs a search key on the server",
     visual_kicker: "Visual",
     auth_brand_kicker: "Your personal AI study companion",
@@ -218,14 +218,14 @@ const I18N = {
     tile_student_cta: "Open ->",
     hub_privacy_note: "My Student Coach does not sell your data or show ads from your chats.",
     disclaimer_privacy:
-      "AI Hub does not sell your personal data or show advertising based on your chats.",
+      "My Student Coach does not sell your personal data or show advertising based on your chats.",
     nav_hub: "Overview",
     nav_back_hub: "Overview",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach can make mistakes. Check important facts.",
     disclaimer_hub: "For learning and study help - not a substitute for professional advice.",
     disclaimer_nonprofit: "Mission-driven - built to help students learn, not to sell your data or push ads.",
-    disclaimer_student: "In Student AI: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
+    disclaimer_student: "In My Student Coach: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
           mission_title: "Why My Student Coach",
     mission_lead: "Personalized learning with study integrity and privacy at the center.",
     mission_sub: "Built for learning and practice - not for handing in AI work as your own.",
@@ -233,7 +233,7 @@ const I18N = {
     honor_lead: "My Student Coach is for learning and practice - not for handing in AI work as your own.",
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
     honor_ack: "I understand",
-    honor_back: "Back",
+    honor_back: "Back to Home",
     continue_google: "Get Started Free",
     settings: "Settings",
     logout: "Logout",
@@ -276,7 +276,7 @@ const I18N = {
     coach_priority_continue_ask: "Continue your last Ask thread",
     coach_priority_continue_code: "Pick up your Code session",
     coach_priority_continue_notebook: "Return to Notebook",
-    coach_priority_ask: "Ask one clear question in AI Tutor",
+    coach_priority_ask: "Ask one clear question in AI Coach",
     coach_priority_practice: "Practice a topic after Ask",
     coach_priority_notes: "Upload notes in Notebook",
     soon_kicker: "Coming soon",
@@ -368,7 +368,7 @@ const I18N = {
     pwa_not_now: "Not now",
     default_title: "Make this your start page?",
     default_lead:
-      "Browsers do not let websites change your startup page automatically. You can still set Student AI Hub as your start page in a few steps.",
+      "Browsers do not let websites change your startup page automatically. You can still set My Student Coach as your start page in a few steps.",
     default_copy_address: "Copy this address:",
     default_step_chrome:
       "Chrome / Edge: Settings > On startup > Open a specific page > Add a new page, then paste this address.",
@@ -408,7 +408,7 @@ const I18N = {
     stream_empty_fallback:
       "No assistant text arrived in the stream. This usually means empty model output or an SSE shape we could not parse. Check HF_API_TOKEN, HF_MODEL, and HF_CHAT_URL in your env.",
     pwa_sub_install:
-      "Tap Install to add Student AI Hub with our icon. It opens fullscreen like an app from your home screen or taskbar.",
+      "Tap Install to add My Student Coach with our icon. It opens fullscreen like an app from your home screen or taskbar.",
     pwa_sub_ios: "Use Add to Home Screen for our branded icon. Safari does not show an Install button on websites.",
     pwa_sub_desktop:
       "On Chrome or Edge, use the install icon in the address bar (or browser menu) when it appears to add our icon on desktop or home screen.",
@@ -416,7 +416,7 @@ const I18N = {
       "Safari on iPhone or iPad: tap Share, then Add to Home Screen, then Add to place the branded icon on your home screen.",
     pwa_help_btn: "How to install",
     pwa_help_steps:
-      "Desktop Chrome / Edge: use the install icon in the address bar, or the menu (three dots) and choose Install Student AI Hub or Install app.\n\nAndroid Chrome: open the menu and tap Add to Home screen or Install app.\n\nFirefox or Safari on Mac usually do not offer a website Install button; bookmark this page or use Add to Home Screen on iPhone / iPad.\n\nIf no install icon appears, the page may need HTTPS (not http://) or the browser may show it after you use the site a little longer.",
+      "Desktop Chrome / Edge: use the install icon in the address bar, or the menu (three dots) and choose Install My Student Coach or Install app.\n\nAndroid Chrome: open the menu and tap Add to Home screen or Install app.\n\nFirefox or Safari on Mac usually do not offer a website Install button; bookmark this page or use Add to Home Screen on iPhone / iPad.\n\nIf no install icon appears, the page may need HTTPS (not http://) or the browser may show it after you use the site a little longer.",
     empty_try_ask: "Try asking:",
     empty_try_code: "Try pasting or asking:",
     empty_try_notebook: "Works well with:",
@@ -473,9 +473,9 @@ const I18N = {
     voice_input_aria: "Voice input",
     voice_input_title: "Tap to speak; pauses end listening, or tap again to Ask",
     disclaimer_mistakes:
-      "Student AI Hub can make mistakes. Check important facts and follow your instructor's policies on using AI.",
+      "My Student Coach can make mistakes. Check important facts and follow your instructor's policies on using AI.",
     disclaimer_honor:
-      "For study help and practice only  follow your honor code; don't submit AI output when your course forbids it.",
+      "For study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Selected: {name} ({kb} KB)",
     docs_selected: "Selected: {count} files ({kb} KB)",
@@ -485,7 +485,7 @@ const I18N = {
       "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
   },
   es: {
-    signin_title: "Student AI para aprender y practicar",
+    signin_title: "Estudia mejor. Aprende mas. Logra mas.",
     signin_tagline: "Ask, Code y Notebook gratis - ayuda de estudio con integridad academica.",
     free_for_students: "Gratis para estudiantes",
     brand_kicker: "Ask, learn, code y notebook en un solo lugar",
@@ -496,49 +496,49 @@ const I18N = {
     status_searching_web: "Buscando en la web...",
     tile_student_badge: "Disponible ahora",
     hub_hint: "Elige un espacio para empezar",
-    resume_student: "Reanudar Student AI",
+    resume_student: "Seguir aprendiendo",
     live_web_unavailable: "Web en vivo necesita una clave de busqueda en el servidor",
-    auth_brand_kicker: "Student AI para aprender y practicar",
-    hub_brand: "AI Hub",
+    auth_brand_kicker: "Tu companero de estudio con IA",
+    hub_brand: "My Student Coach",
     hub_tagline: "Pregunta, programa y estudia en un solo lugar",
     hub_welcome: "Bienvenido de nuevo, {name}",
-    tile_student_title: "Student AI",
+    tile_student_title: "My Student Coach",
     tile_student_sub: "Pregunta, programa y estudia en un solo lugar",
     tile_student_cta: "Abrir ->",
-    hub_privacy_note: "AI Hub no vende tus datos ni muestra anuncios a partir de tus chats.",
+    hub_privacy_note: "My Student Coach no vende tus datos ni muestra anuncios a partir de tus chats.",
     disclaimer_privacy:
-      "AI Hub no vende tus datos personales ni muestra publicidad basada en tus chats.",
-    nav_hub: "AI Hub",
-    nav_back_hub: "Volver al Hub",
-    nav_student: "Student AI",
-    disclaimer_base: "AI Hub puede equivocarse. Verifica datos importantes.",
+      "My Student Coach no vende tus datos personales ni muestra publicidad basada en tus chats.",
+    nav_hub: "Overview",
+    nav_back_hub: "Volver al inicio",
+    nav_student: "My Student Coach",
+    disclaimer_base: "My Student Coach puede equivocarse. Verifica datos importantes.",
     disclaimer_hub: "Ayuda para aprendizaje y estudio - no sustituye consejo profesional. Verifica datos importantes.",
-    disclaimer_nonprofit: "AI Hub es un proyecto con mision: ayudar a aprender y planificar, no vender tus datos ni mostrar anuncios.",
-    disclaimer_student: "En Student AI: solo para estudio y practica; sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
+    disclaimer_nonprofit: "My Student Coach es un proyecto con mision: ayudar a aprender y planificar, no vender tus datos ni mostrar anuncios.",
+    disclaimer_student: "En My Student Coach: solo para estudio y practica; sigue tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     honor_title: "Estudia con integridad",
-    honor_lead: "Student AI es para aprender y practicar - no para entregar trabajo de IA como propio.",
+    honor_lead: "My Student Coach es para aprender y practicar - no para entregar trabajo de IA como propio.",
     honor_body: "Sigue el codigo de honor de tu escuela. No entregues salida de IA si tu curso lo prohibe. Verifica datos importantes - la IA puede equivocarse.",
     honor_ack: "Entiendo",
-    honor_back: "Volver al Hub",
-    continue_google: "Unirse con Google",
-    settings: "Configuracin",
-    logout: "Cerrar sesin",
+    honor_back: "Volver al inicio",
+    continue_google: "Empezar gratis",
+    settings: "ConfiguraciÃ³n",
+    logout: "Cerrar sesiÃ³n",
     welcome: "Bienvenido",
-    app_tagline: "Haz una pregunta, obtn una respuesta y sigue la conversacin.",
+    app_tagline: "Haz una pregunta, obtÃ©n una respuesta y sigue la conversaciÃ³n.",
     tab_ask: "Preguntar",
     send: "Enviar",
-    tab_code: "Cdigo",
+    tab_code: "CÃ³digo",
     tab_notebook: "Cuaderno",
-    chat_title: "Qu quieres aprender hoy?",
+    chat_title: "Â¿QuÃ© quieres aprender hoy?",
     chat_placeholder: "Pregunta lo que sea... (p. ej., explica descenso de gradiente como si tuviera 15)",
-    chat_hint: "Pulsa Enter para buscar. Shift+Enter para nueva lnea.",
+    chat_hint: "Pulsa Enter para buscar. Shift+Enter para nueva lÃ­nea.",
     chat_followup: "Haz una pregunta de seguimiento...",
-    code_title: "Depura o aprende cdigo",
-    code_placeholder: "Pega cdigo o describe el error...",
+    code_title: "Depura o aprende cÃ³digo",
+    code_placeholder: "Pega cÃ³digo o describe el error...",
     code_hint: "Consejo: incluye mensajes de error y lo que esperabas.",
     code_followup: "Seguimiento...",
     notebook_hint:
-      "Sube apuntes (.txt, .md, .csv, .json, .pdf). Obtendrs resumen, conceptos clave, preguntas tipo quiz y un plan de estudio.",
+      "Sube apuntes (.txt, .md, .csv, .json, .pdf). ObtendrÃ¡s resumen, conceptos clave, preguntas tipo quiz y un plan de estudio.",
     analyze_doc: "Analizar apuntes",
     notebook_drop_title: "Suelta apuntes o elige archivos",
     notebook_drop_hint: "Hasta 5 archivos - .txt, .md, .csv, .json, .pdf",
@@ -554,7 +554,7 @@ const I18N = {
     starter_prompt_study_plan:
       "Usando solo mis apuntes, dame un plan de repaso de 3 dias con tareas concretas.\n\n",
     starter_prompt_notebook_summarize:
-      "Usando solo mis apuntes, resume las ideas mas importantes en viñetas.\n\n",
+      "Usando solo mis apuntes, resume las ideas mas importantes en viÃ±etas.\n\n",
     starter_prompt_notebook_quiz:
       "Usando solo mis apuntes, hazme un quiz breve con respuestas. Si no esta en los apuntes, di Not in document.\n\n",
     starter_prompt_notebook_steps:
@@ -569,17 +569,17 @@ const I18N = {
     settings_restore_sessions: "Restaurar sesiones anteriores al cargar",
     settings_save: "Guardar preferencias",
     settings_saved_toast: "Preferencias guardadas",
-    language_hint: "Cambiar el idioma de la interfaz a {lang}?",
-    language_hint_desc: "Siempre puedes cambiarlo despus en Configuracin.",
-    keep_english: "Seguir en ingls",
+    language_hint: "Â¿Cambiar el idioma de la interfaz a {lang}?",
+    language_hint_desc: "Siempre puedes cambiarlo despuÃ©s en ConfiguraciÃ³n.",
+    keep_english: "Seguir en inglÃ©s",
     switch_lang: "Cambiar",
-    you: "T",
+    you: "TÃº",
     assistant: "Asistente",
     copy: "Copiar",
     attached_image: "Imagen adjunta",
     show_steps: "Si, mostrar pasos",
     hide_steps: "Ocultar pasos",
-    pwa_install_title: "Instalar Student AI Hub",
+    pwa_install_title: "Instalar My Student Coach",
     pwa_install_btn: "Instalar",
     pwa_ios_help_btn: "iPhone / iPad",
     pwa_not_now: "Ahora no",
@@ -625,7 +625,7 @@ const I18N = {
     stream_empty_fallback:
       "No llego texto del asistente durante el stream. Suele ser salida vacia del modelo o un formato SSE no reconocido.",
     pwa_sub_install:
-      "Pulsa Instalar para agregar Student AI Hub con nuestro icono. Se abrira en pantalla completa como una app.",
+      "Pulsa Instalar para agregar My Student Coach con nuestro icono. Se abrira en pantalla completa como una app.",
     pwa_sub_ios: "Usa Agregar a pantalla de inicio para obtener nuestro icono. Safari no muestra boton Instalar en sitios web.",
     pwa_sub_desktop:
       "En Chrome o Edge, usa el icono de instalar en la barra de direcciones (o menu) para agregar el acceso.",
@@ -633,7 +633,7 @@ const I18N = {
       "Safari en iPhone o iPad: pulsa Compartir, luego Agregar a pantalla de inicio y despues Agregar para tener el icono.",
     pwa_help_btn: "Como instalar",
     pwa_help_steps:
-      "Chrome / Edge (escritorio): busca el icono de instalar en la barra de direcciones, o el menu (tres puntos) > Instalar aplicacion / Instalar Student AI Hub.\n\nAndroid Chrome: menu > Agregar a pantalla de inicio o Instalar aplicacion.\n\nFirefox o Safari en Mac a menudo no muestran Instalar en sitios web; guarda un marcador o usa Agregar a pantalla de inicio en iPhone / iPad.\n\nSi no ves el icono, puede hacer falta HTTPS o mas uso del sitio.",
+      "Chrome / Edge (escritorio): busca el icono de instalar en la barra de direcciones, o el menu (tres puntos) > Instalar aplicacion / Instalar My Student Coach.\n\nAndroid Chrome: menu > Agregar a pantalla de inicio o Instalar aplicacion.\n\nFirefox o Safari en Mac a menudo no muestran Instalar en sitios web; guarda un marcador o usa Agregar a pantalla de inicio en iPhone / iPad.\n\nSi no ves el icono, puede hacer falta HTTPS o mas uso del sitio.",
     empty_try_ask: "Prueba preguntando:",
     empty_try_code: "Prueba pegando o preguntando:",
     empty_try_notebook: "Funciona bien con:",
@@ -666,10 +666,10 @@ const I18N = {
     chip_study_next: "Que sigue?",
     chips_followup_aria: "Seguimientos rapidos y lectura en voz alta",
     starter_prompt_summarize:
-      "Resume tu ultima respuesta en vietas cortas. Destaca los terminos clave que debo recordar.\n\n",
+      "Resume tu ultima respuesta en viÃ±etas cortas. Destaca los terminos clave que debo recordar.\n\n",
     starter_prompt_quiz:
       "Segun nuestra conversacion, dame un quiz corto: preguntas, opciones y respuestas correctas con explicacion breve.\n\n",
-    starter_prompt_steps: "Explica de nuevo paso a paso, con pasos mas pequeos y un ejemplo simple si ayuda.\n\n",
+    starter_prompt_steps: "Explica de nuevo paso a paso, con pasos mas pequeÃ±os y un ejemplo simple si ayuda.\n\n",
     starter_prompt_simpler:
       "Explica la misma idea de forma mas simple, como si tuviera 15 anos. Empieza con la respuesta directa.\n\n",
     starter_prompt_example:
@@ -689,9 +689,9 @@ const I18N = {
     voice_input_aria: "Entrada por voz",
     voice_input_title: "Toca para hablar; pausas terminan la escucha, o toca de nuevo para Preguntar",
     disclaimer_mistakes:
-      "Student AI Hub puede equivocarse. Verifica datos importantes y sigue las politicas de tu instructor sobre IA.",
+      "My Student Coach puede equivocarse. Verifica datos importantes y sigue las politicas de tu instructor sobre IA.",
     disclaimer_honor:
-      "Solo para estudiar y practicar  respeta tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
+      "Solo para estudiar y practicar - respeta tu codigo de honor; no entregues salida de IA si tu curso lo prohibe.",
     disclaimer_aria: "Aviso legal",
     doc_selected: "Seleccionado: {name} ({kb} KB)",
     docs_selected: "Seleccionados: {count} archivos ({kb} KB)",
@@ -701,7 +701,7 @@ const I18N = {
       "Agrega nuestro icono a la pantalla de inicio o escritorio para acceso rapido hasta la app movil.",
   },
   hi: {
-    signin_title: "Student AI - seekhne aur practice ke liye",
+    signin_title: "Padhai behtar. Seekho zyada. Achieve more.",
     signin_tagline: "Free Ask, Code, aur Notebook - honor code ke saath study help.",
     free_for_students: "Students ke liye free",
     brand_kicker: "Ask, learn, code aur notebook ek jagah",
@@ -712,30 +712,30 @@ const I18N = {
     status_searching_web: "Web search ho rahi hai...",
     tile_student_badge: "Ab available",
     hub_hint: "Shuru karne ke liye workspace chunen",
-    resume_student: "Student AI resume karein",
+    resume_student: "Seekhna continue karein",
     live_web_unavailable: "Live web ke liye server par search key chahiye",
-    auth_brand_kicker: "Student AI seekhne aur practice ke liye",
-    hub_brand: "AI Hub",
+    auth_brand_kicker: "Aapka personal AI study companion",
+    hub_brand: "My Student Coach",
     hub_tagline: "Ask, code aur study ek jagah",
     hub_welcome: "Welcome back, {name}",
-    tile_student_title: "Student AI",
+    tile_student_title: "My Student Coach",
     tile_student_sub: "Ask, code aur study ek jagah",
     tile_student_cta: "Open ->",
-    hub_privacy_note: "AI Hub aapka data nahi bechta aur chats se ads nahi dikhata.",
+    hub_privacy_note: "My Student Coach aapka data nahi bechta aur chats se ads nahi dikhata.",
     disclaimer_privacy:
-      "AI Hub personal data nahi bechta aur chats par ads nahi dikhata.",
-    nav_hub: "AI Hub",
-    nav_back_hub: "Hub par wapas",
-    nav_student: "Student AI",
-    disclaimer_base: "AI Hub galti kar sakta hai. Important facts check karein.",
+      "My Student Coach personal data nahi bechta aur chats par ads nahi dikhata.",
+    nav_hub: "Overview",
+    nav_back_hub: "Home par wapas",
+    nav_student: "My Student Coach",
+    disclaimer_base: "My Student Coach galti kar sakta hai. Important facts check karein.",
     disclaimer_hub: "Learning aur study help ke liye - ye professional advice nahi hai. Important facts check karein.",
-    disclaimer_nonprofit: "AI Hub mission-driven hai - seekhne aur plan karne mein madad ke liye, data bechne ya ads dikhane ke liye nahi.",
-    disclaimer_student: "Student AI mein: sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
+    disclaimer_nonprofit: "My Student Coach mission-driven hai - seekhne aur plan karne mein madad ke liye, data bechne ya ads dikhane ke liye nahi.",
+    disclaimer_student: "My Student Coach mein: sirf study help ke liye - honor code follow karein; course forbid kare to AI output submit na karein.",
     honor_title: "Imaandari se padhein",
-    honor_lead: "Student AI seekhne aur practice ke liye hai - AI ka kaam apna dikha kar submit karne ke liye nahi.",
+    honor_lead: "My Student Coach seekhne aur practice ke liye hai - AI ka kaam apna dikha kar submit karne ke liye nahi.",
     honor_body: "Apne school ka honor code follow karein. Course mana kare to AI output submit na karein. Important facts check karein - AI galat ho sakta hai.",
     honor_ack: "Samajh gaya",
-    honor_back: "Hub par wapas",
+    honor_back: "Home par wapas",
     continue_google: "Google se join karein",
     settings: "Settings",
     logout: "Logout",
@@ -798,7 +798,7 @@ const I18N = {
     attached_image: "Attached image",
     show_steps: "Haan, steps dikhaiye",
     hide_steps: "Steps chhupaye",
-    pwa_install_title: "Student AI Hub install karein",
+    pwa_install_title: "My Student Coach install karein",
     pwa_install_btn: "Install",
     pwa_ios_help_btn: "iPhone / iPad",
     pwa_not_now: "Abhi nahi",
@@ -844,14 +844,14 @@ const I18N = {
     stream_empty_fallback:
       "Stream mein assistant text nahi aaya. Aksar iska matlab empty model output ya unknown SSE format hota hai.",
     pwa_sub_install:
-      "Install dabakar Student AI Hub icon add karein. Ye app jaisa fullscreen open hoga.",
+      "Install dabakar My Student Coach icon add karein. Ye app jaisa fullscreen open hoga.",
     pwa_sub_ios: "Add to Home Screen use karein. Safari websites par Install button nahi dikhata.",
     pwa_sub_desktop: "Chrome ya Edge mein address bar ka install icon use karke shortcut add karein.",
     pwa_ios_steps:
       "iPhone/iPad Safari: Share dabayein, phir Add to Home Screen, phir Add dabayein taki icon home screen par aaye.",
     pwa_help_btn: "Install kaise karein",
     pwa_help_steps:
-      "Desktop Chrome / Edge: address bar mein install icon dekhein, ya menu (teen dot) se Install app / Student AI Hub install chunen.\n\nAndroid Chrome: menu se Add to Home screen ya Install app.\n\nMac par Firefox / Safari aksar website Install button nahi dete; bookmark karein ya iPhone / iPad par Add to Home Screen.\n\nAgar icon nahi dikhe, HTTPS zaroori ho sakta hai ya thodi der site use karke phir dekhein.",
+      "Desktop Chrome / Edge: address bar mein install icon dekhein, ya menu (teen dot) se Install app / My Student Coach install chunen.\n\nAndroid Chrome: menu se Add to Home screen ya Install app.\n\nMac par Firefox / Safari aksar website Install button nahi dete; bookmark karein ya iPhone / iPad par Add to Home Screen.\n\nAgar icon nahi dikhe, HTTPS zaroori ho sakta hai ya thodi der site use karke phir dekhein.",
     empty_try_ask: "Aise poochiye:",
     empty_try_code: "Paste karein ya poochiye:",
     empty_try_notebook: "Inke saath achha kaam karta hai:",
@@ -870,7 +870,7 @@ const I18N = {
     empty_code_3: "Binary search Big-O",
     empty_code_3_send: "Binary search ki time complexity kya hai aur kyun? Beginner-friendly.",
     empty_nb_1: "PDF lecture notes",
-    empty_nb_1_hint: "Lecture notes PDF upload karein  summary, key concepts aur quiz milega.",
+    empty_nb_1_hint: "Lecture notes PDF upload karein - summary, key concepts aur quiz milega.",
     empty_nb_2: "Markdown guide",
     empty_nb_2_hint: ".md ya .txt study guide upload karein structured recap ke liye.",
     empty_nb_3: "CSV table",
@@ -907,9 +907,9 @@ const I18N = {
     voice_input_aria: "Voice input",
     voice_input_title: "Bolne ke liye tap karein; pause par band, ya dubara Ask",
     disclaimer_mistakes:
-      "Student AI Hub galti kar sakta hai. Important facts check karein aur instructor ki AI policy follow karein.",
+      "My Student Coach galti kar sakta hai. Important facts check karein aur instructor ki AI policy follow karein.",
     disclaimer_honor:
-      "Sirf study aur practice ke liye  honor code follow karein; course mana kare to AI output submit na karein.",
+      "Sirf study aur practice ke liye - honor code follow karein; course mana kare to AI output submit na karein.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Chuna gaya: {name} ({kb} KB)",
     docs_selected: "Chuni gayi: {count} files ({kb} KB)",
@@ -918,7 +918,7 @@ const I18N = {
     pwa_install_sub_default: "Mobile app aane tak home screen ya desktop par quick access ke liye icon add karein.",
   },
   te: {
-    signin_title: "Student AI - learning mariyu practice kosam",
+    signin_title: "Chadivandi better. Learn more. Achieve more.",
     signin_tagline: "Free Ask, Code, Notebook - honor code tho study help.",
     free_for_students: "Students ki free",
     brand_kicker: "Ask, learn, code mariyu notebook oka chota",
@@ -929,30 +929,30 @@ const I18N = {
     status_searching_web: "Web search avuthundi...",
     tile_student_badge: "Ippudu available",
     hub_hint: "Start cheyadaniki workspace select cheyyandi",
-    resume_student: "Student AI resume cheyyandi",
+    resume_student: "Learning continue cheyyandi",
     live_web_unavailable: "Live web kosam server lo search key kavali",
-    auth_brand_kicker: "Student AI learn mariyu practice kosam",
-    hub_brand: "AI Hub",
+    auth_brand_kicker: "Mee personal AI study companion",
+    hub_brand: "My Student Coach",
     hub_tagline: "Ask, code, study oka chota",
     hub_welcome: "Welcome back, {name}",
-    tile_student_title: "Student AI",
+    tile_student_title: "My Student Coach",
     tile_student_sub: "Ask, code, study oka chota",
     tile_student_cta: "Open ->",
-    hub_privacy_note: "AI Hub mee data ammukodu, chats nundi ads chupinchadu.",
+    hub_privacy_note: "My Student Coach mee data ammukodu, chats nundi ads chupinchadu.",
     disclaimer_privacy:
-      "AI Hub personal data ammukodu, chats meeda ads chupinchadu.",
-    nav_hub: "AI Hub",
-    nav_back_hub: "Hub ki back",
-    nav_student: "Student AI",
-    disclaimer_base: "AI Hub tappu cheyagaladu. Important facts verify cheyyandi.",
+      "My Student Coach personal data ammukodu, chats meeda ads chupinchadu.",
+    nav_hub: "Overview",
+    nav_back_hub: "Home ki back",
+    nav_student: "My Student Coach",
+    disclaimer_base: "My Student Coach tappu cheyagaladu. Important facts verify cheyyandi.",
     disclaimer_hub: "Learning mariyu study help kosam - idi professional advice kadu. Important facts verify cheyyandi.",
-    disclaimer_nonprofit: "AI Hub mission-driven - learn cheyadaniki mariyu plan cheyadaniki, data ammakundaniki leda ads kosam kadu.",
-    disclaimer_student: "Student AI lo: study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
+    disclaimer_nonprofit: "My Student Coach mission-driven - learn cheyadaniki mariyu plan cheyadaniki, data ammakundaniki leda ads kosam kadu.",
+    disclaimer_student: "My Student Coach lo: study help only - honor code follow avvandi; course forbid chesthe AI output submit cheyyakandi.",
     honor_title: "Niti tho chadavandi",
-    honor_lead: "Student AI learn cheyadaniki mariyu practice kosame - AI output ni meekadi laaga submit cheyadaniki kadu.",
+    honor_lead: "My Student Coach learn cheyadaniki mariyu practice kosame - AI output ni meekadi laaga submit cheyadaniki kadu.",
     honor_body: "Me school honor code follow avvandi. Course mana chesthe AI output submit cheyyakandi. Important facts check cheyyandi - AI tappu cheyavachu.",
     honor_ack: "Artham ayindi",
-    honor_back: "Hub ki back",
+    honor_back: "Home ki back",
     continue_google: "Google tho join avandi",
     settings: "Settings",
     logout: "Logout",
@@ -1015,7 +1015,7 @@ const I18N = {
     attached_image: "Attached image",
     show_steps: "Avunu, steps chupinchandi",
     hide_steps: "Steps dachandi",
-    pwa_install_title: "Student AI Hub install cheyyandi",
+    pwa_install_title: "My Student Coach install cheyyandi",
     pwa_install_btn: "Install",
     pwa_ios_help_btn: "iPhone / iPad",
     pwa_not_now: "Ippudu vaddu",
@@ -1060,14 +1060,14 @@ const I18N = {
     error_prefix: "Error",
     stream_empty_fallback:
       "Stream lo assistant text raledu. Idi mostly empty model output leka unknown SSE format valla jarugutundi.",
-    pwa_sub_install: "Install nokki Student AI Hub icon add cheyyandi. Idi app la fullscreen lo open avutundi.",
+    pwa_sub_install: "Install nokki My Student Coach icon add cheyyandi. Idi app la fullscreen lo open avutundi.",
     pwa_sub_ios: "Add to Home Screen vadandi. Safari websites ki Install button chupinchadu.",
     pwa_sub_desktop: "Chrome/Edge address bar lo install icon tho shortcut add cheyyandi.",
     pwa_ios_steps:
       "iPhone/iPad Safari lo Share nokki, Add to Home Screen > Add nokkandi. App icon home screen lo vastundi.",
     pwa_help_btn: "Ela install cheyyali",
     pwa_help_steps:
-      "Desktop Chrome / Edge: address bar lo install icon vadandi, leka menu (three dots) nunchi Install app / Student AI Hub install.\n\nAndroid Chrome: menu nunchi Add to Home screen leka Install app.\n\nMac Firefox / Safari lo website Install button chala sarlu undadu; bookmark cheyyandi leka iPhone / iPad lo Add to Home Screen.\n\nInstall icon kanipinchakapothe HTTPS avasaram leka konchem site use chesaka malli chudandi.",
+      "Desktop Chrome / Edge: address bar lo install icon vadandi, leka menu (three dots) nunchi Install app / My Student Coach install.\n\nAndroid Chrome: menu nunchi Add to Home screen leka Install app.\n\nMac Firefox / Safari lo website Install button chala sarlu undadu; bookmark cheyyandi leka iPhone / iPad lo Add to Home Screen.\n\nInstall icon kanipinchakapothe HTTPS avasaram leka konchem site use chesaka malli chudandi.",
     empty_try_ask: "Ila adagandi:",
     empty_try_code: "Paste cheyyandi leda adagandi:",
     empty_try_notebook: "Ivi manchiga pani chestayi:",
@@ -1123,9 +1123,9 @@ const I18N = {
     voice_input_aria: "Voice input",
     voice_input_title: "Matladadaniki tap; pause aite aaputundi, leda malli Ask",
     disclaimer_mistakes:
-      "Student AI Hub tappu cheyagaladu. Important facts verify cheyyandi mariyu instructor AI policy follow avvandi.",
+      "My Student Coach tappu cheyagaladu. Important facts verify cheyyandi mariyu instructor AI policy follow avvandi.",
     disclaimer_honor:
-      "Study mariyu practice kosame  honor code follow avvandi; course mana cheste AI output submit cheyyakandi.",
+      "Study mariyu practice kosame - honor code follow avvandi; course mana cheste AI output submit cheyyakandi.",
     disclaimer_aria: "Disclaimer",
     doc_selected: "Select chesaru: {name} ({kb} KB)",
     docs_selected: "Select chesina files: {count} ({kb} KB)",
@@ -3011,7 +3011,7 @@ function startStreamingAssistantBubble(container) {
   return {
     /**
      * @param {string} text
-     * @param {{ plain?: boolean }} opts  use plain: true for non-markdown system messages only
+     * @param {{ plain?: boolean }} opts - use plain: true for non-markdown system messages only
      */
     setStreamingText(text, { plain = false } = {}) {
       const raw = String(text ?? "");
@@ -3145,9 +3145,9 @@ function syncHubResumeButton() {
     return;
   }
   const studentLine = lastUserLine(chatHistory) || lastUserLine(codeHistory) || "Pick up your last study thread.";
-  title.textContent = "Student AI";
+  title.textContent = "My Student Coach";
   if (sub) sub.textContent = studentLine;
-  btn.textContent = "Continue Student AI";
+  btn.textContent = "Continue learning";
   btn.dataset.workspace = "student";
   alt?.classList.add("hidden");
   card.classList.remove("hidden");
@@ -3974,14 +3974,9 @@ function desiredVerticalFromUrl() {
 }
 
 function showHubHome() {
-  closeAccountMenu();
-  authCard?.classList.add("hidden");
-  appCard?.classList.add("hidden");
-  hubCard?.classList.remove("hidden");
-  activeSurface = "hub";
-  syncHubWelcome();
-  syncHubResumeButton();
-  document.title = "My Student Coach";
+  // Hub surface retired for consistency -- Overview returns to Coach Home.
+  showStudentWorkspace();
+  setMainTab("home");
 }
 
 function showStudentWorkspace() {
@@ -4014,13 +4009,7 @@ function showApp(session) {
   syncAccountAvatars(display);
   syncHubWelcome(session);
   void pullWorkspace();
-  // Default after login/landing: Student AI. Hub stays available via Back to AI Hub
-  // or an explicit ?vertical=hub / #hub deep link.
-  const desired = desiredVerticalFromUrl();
-  if (desired === "hub") {
-    showHubHome();
-    return;
-  }
+  // Single product surface: always open Coach Home (Hub deep links included).
   showStudentWorkspace();
 }
 
@@ -4228,7 +4217,7 @@ function renderNotebookSourceChips() {
     removeBtn.type = "button";
     removeBtn.className = "notebook-source-remove";
     removeBtn.setAttribute("aria-label", t("notebook_remove_source", { name: file.name }));
-    removeBtn.textContent = "×";
+    removeBtn.textContent = "Ã—";
     removeBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();

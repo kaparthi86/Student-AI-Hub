@@ -323,3 +323,33 @@ body.brand-msc .primary-btn {
     text-align: left;
   }
 }
+
+/* Consistency: Hub retired */
+.msc-hub-retired {
+  display: none !important;
+}
+
+.live-web-row--nested {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(20, 45, 76, 0.08);
+}
+
+#profileMenu .msc-nav-panel {
+  left: auto;
+  right: 0;
+}
+
+@media (max-width: 720px) {
+  .msc-nav-panel {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    min-width: 0;
+    width: auto;
+    max-height: 50vh;
+    overflow: auto;
+  }
+}
