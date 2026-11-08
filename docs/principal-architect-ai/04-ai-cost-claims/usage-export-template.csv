@@ -1,0 +1,4 @@
+date,provider,model,request_kind,prompt_tokens,completion_tokens,cached,voice_mode,live_web,study_mode,notes
+2026-11-01,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,650,420,false,false,false,explain,SAMPLE row — replace
+2026-11-01,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,650,0,true,false,false,explain,SAMPLE cache hit — completion billed 0 if fully cached
+2026-11-08,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,480,160,false,true,false,explain,SAMPLE voiceMode
