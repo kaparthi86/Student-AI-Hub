@@ -1,5 +1,8 @@
 # Principal Architect / Advanced Engineering (AI) — Evidence Pack
 
+**One-file packet (recommended for interviews):**  
+[`My-Student-Coach-Principal-Architect-Evidence-Packet.pdf`](./My-Student-Coach-Principal-Architect-Evidence-Packet.pdf) · rebuild with `./build-pdf-packet.sh`
+
 **Product:** My Student Coach (Student AI Hub)  
 **Role package:** Advanced Engineering · Principal Architect · AI Product Ownership  
 **Repository:** `kaparthi86/Student-AI-Hub`  

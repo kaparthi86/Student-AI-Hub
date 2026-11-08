@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>My Student Coach — Principal Architect AI Evidence Packet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+  window.__mermaidReady = mermaid.run().then(() => { window.__packetReady = true; }).catch(() => { window.__packetReady = true; });
+</script>
+<style>
+@page { size: Letter; margin: 0.7in 0.65in 0.75in; }
+:root {
+  --ink: #1c1b19;
+  --muted: #5b6b7c;
+  --line: #d9dde3;
+  --accent: #142d4c;
+  --band: #eef3f7;
+}
+* { box-sizing: border-box; }
+html { font-size: 10.5pt; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  line-height: 1.45;
+}
+.cover {
+  page-break-after: always;
+  min-height: 9.2in;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.4in 0.2in;
+  background:
+    linear-gradient(165deg, #f4f7fa 0%, #ffffff 45%, #e8eef4 100%);
+}
+.cover .kicker {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  color: #287a89;
+  font-weight: 700;
+  margin: 0 0 18px;
+}
+.cover h1 {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 2.1rem;
+  line-height: 1.15;
+  color: var(--accent);
+  margin: 0 0 14px;
+  max-width: 16ch;
+}
+.cover .sub {
+  font-size: 1.05rem;
+  color: var(--muted);
+  max-width: 42ch;
+  margin: 0 0 28px;
+}
+.cover .meta {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  max-width: 36rem;
+}
+.cover .meta div { margin: 4px 0; }
+.toc-page { page-break-after: always; }
+.toc-page h1 {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  color: var(--accent);
+  font-size: 1.4rem;
+}
+.toc { padding-left: 1.2rem; }
+.toc li { margin: 0.35rem 0; }
+.toc a { color: var(--accent); text-decoration: none; font-weight: 600;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; font-size: 0.92rem; }
+.toc-path { color: var(--muted); font-size: 0.75rem; font-family: ui-monospace, Menlo, monospace; }
+.doc { page-break-before: always; }
+.doc:first-of-type { page-break-before: auto; }
+.path {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: var(--band);
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin: 0 0 10px;
+}
+h1, h2, h3, h4 {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  color: var(--accent);
+  line-height: 1.25;
+  page-break-after: avoid;
+}
+h1 { font-size: 1.45rem; margin-top: 0; }
+h2 { font-size: 1.15rem; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+h3 { font-size: 1.02rem; }
+p, li { orphans: 3; widows: 3; }
+a { color: #1d5bd8; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 0.6rem 0 1rem;
+  page-break-inside: auto;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 5px 7px;
+  vertical-align: top;
+  text-align: left;
+}
+th {
+  background: var(--band);
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.8rem;
+}
+tr { page-break-inside: avoid; }
+code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.82em;
+  background: #f3f5f7;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+pre {
+  background: #f3f5f7;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-size: 0.78rem;
+  page-break-inside: avoid;
+}
+pre.csv { font-size: 0.72rem; }
+blockquote {
+  margin: 0.6rem 0;
+  padding: 0.2rem 0 0.2rem 0.8rem;
+  border-left: 3px solid #287a89;
+  color: #333;
+}
+.mermaid {
+  background: #fafbfc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0.8rem 0;
+  page-break-inside: avoid;
+  text-align: center;
+}
+.footer-note {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+}
+</style>
+</head>
+<body>
+<header class="cover">
+  <p class="kicker">Advanced Engineering · Principal Architect · AI</p>
+  <h1>My Student Coach Evidence Packet</h1>
+  <p class="sub">Product ownership, technical originality, product history, AI cost claims, adoption &amp; impact, and independent validation — assembled from the Student AI Hub repository.</p>
+  <div class="meta">
+    <div><strong>Product:</strong> My Student Coach (Student AI Hub)</div>
+    <div><strong>Repository:</strong> kaparthi86/Student-AI-Hub</div>
+    <div><strong>Packet date:</strong> November 8, 2026 (America/Los_Angeles)</div>
+    <div><strong>Source folder:</strong> docs/principal-architect-ai/</div>
+  </div>
+</header>
+
+<section class="toc-page">
+  <h1>Table of contents</h1>
+  <ol class="toc"><li><a href="#doc-0">Principal Architect / Advanced Engineering (AI) — Evidence Pack</a> <span class="toc-path">README.md</span></li><li><a href="#doc-1">Evidence Manifest — checklist against role rubric</a> <span class="toc-path">MANIFEST.md</span></li><li><a href="#doc-2">PRD — My Student Coach (Student AI)</a> <span class="toc-path">01-product-ownership/PRD-my-student-coach.md</span></li><li><a href="#doc-3">Product Roadmap — My Student Coach</a> <span class="toc-path">01-product-ownership/product-roadmap.md</span></li><li><a href="#doc-4">Tickets / Backlog — Principal Architect evidence</a> <span class="toc-path">01-product-ownership/tickets-backlog.md</span></li><li><a href="#doc-5">Launch Plan — My Student Coach</a> <span class="toc-path">01-product-ownership/launch-plan.md</span></li><li><a href="#doc-6">ADR-001 — Hugging Face Inference Providers (Router) as primary LLM path</a> <span class="toc-path">01-product-ownership/decision-records/ADR-001-hf-inference-router.md</span></li><li><a href="#doc-7">ADR-002 — Student AI only product wedge</a> <span class="toc-path">01-product-ownership/decision-records/ADR-002-student-ai-only-wedge.md</span></li><li><a href="#doc-8">ADR-003 — Server response cache + optional prompt-cache params</a> <span class="toc-path">01-product-ownership/decision-records/ADR-003-response-and-prompt-cache.md</span></li><li><a href="#doc-9">ADR-004 — PWA / Android-simple shell before native Kotlin</a> <span class="toc-path">01-product-ownership/decision-records/ADR-004-pwa-before-native.md</span></li><li><a href="#doc-10">ADR-005 — Almost-conversational Voice Tutor (stream + speak-early)</a> <span class="toc-path">01-product-ownership/decision-records/ADR-005-voice-conversational-loop.md</span></li><li><a href="#doc-11">Architecture Overview — My Student Coach</a> <span class="toc-path">02-technical-originality/architecture-overview.md</span></li><li><a href="#doc-12">AI Workflow Designs</a> <span class="toc-path">02-technical-originality/ai-workflow-designs.md</span></li><li><a href="#doc-13">Prompt Library Export (from `server.js`)</a> <span class="toc-path">02-technical-originality/prompt-library-export.md</span></li><li><a href="#doc-14">Model &amp; Provider Choices</a> <span class="toc-path">02-technical-originality/model-provider-choices.md</span></li><li><a href="#doc-15">Repository Map / Export Index</a> <span class="toc-path">02-technical-originality/repository-map.md</span></li><li><a href="#doc-16">Version History</a> <span class="toc-path">03-product-history/version-history.md</span></li><li><a href="#doc-17">Release Notes</a> <span class="toc-path">03-product-history/release-notes.md</span></li><li><a href="#doc-18">Demo Script — My Student Coach (8–10 minutes)</a> <span class="toc-path">03-product-history/demo-script.md</span></li><li><a href="#doc-19">Dated screenshots &amp; demos</a> <span class="toc-path">03-product-history/screenshots/README.md</span></li><li><a href="#doc-20">AI Cost Claims — Methodology</a> <span class="toc-path">04-ai-cost-claims/cost-methodology.md</span></li><li><a href="#doc-21">Cache &amp; Voice Savings Model</a> <span class="toc-path">04-ai-cost-claims/cache-savings-model.md</span></li><li><a href="#doc-22">Before-and-After Cost Comparison</a> <span class="toc-path">04-ai-cost-claims/before-after-comparison.md</span></li><li><a href="#doc-23">Provider Invoice &amp; Usage Checklist</a> <span class="toc-path">04-ai-cost-claims/invoice-checklist.md</span></li><li><a href="#doc-24">Adoption &amp; Impact — Metrics Framework</a> <span class="toc-path">05-adoption-and-impact/metrics-framework.md</span></li><li><a href="#doc-25">Analytics Queries</a> <span class="toc-path">05-adoption-and-impact/analytics-queries.md</span></li><li><a href="#doc-26">Customer Feedback Loop</a> <span class="toc-path">05-adoption-and-impact/feedback-loop.md</span></li><li><a href="#doc-27">Testimonials &amp; Customer Feedback Templates</a> <span class="toc-path">05-adoption-and-impact/testimonials-template.md</span></li><li><a href="#doc-28">Independent Validation Plan</a> <span class="toc-path">06-independent-validation/validation-plan.md</span></li><li><a href="#doc-29">Letter Templates (Customer / Expert)</a> <span class="toc-path">06-independent-validation/letter-templates.md</span></li><li><a href="#doc-30">Conference / Meetup Talk Outline</a> <span class="toc-path">06-independent-validation/conference-talk-outline.md</span></li><li><a href="#doc-31">usage-export-template.csv</a> <span class="toc-path">04-ai-cost-claims/usage-export-template.csv</span></li><li><a href="#doc-32">cost-model.csv</a> <span class="toc-path">04-ai-cost-claims/cost-model.csv</span></li></ol>
+  <p class="footer-note">Placeholders marked [[LIKE_THIS]] require production exports (invoices, user counts, letters) before external quantified claims.</p>
+</section>
+
+<section class="doc" id="doc-0">
+<p class="path">README.md</p>
+<h1 id="principal-architect-advanced-engineering-ai-evidence-pack">Principal Architect / Advanced Engineering (AI) — Evidence Pack</h1>
+<p><strong>Product:</strong> My Student Coach (Student AI Hub)<br />
+<strong>Role package:</strong> Advanced Engineering · Principal Architect · AI Product Ownership<br />
+<strong>Repository:</strong> <code>kaparthi86/Student-AI-Hub</code><br />
+<strong>Pack date:</strong> 2026-11-08 (America/Los_Angeles)<br />
+<strong>Repo created:</strong> 2026-05-02 · Active through 2026-11-08</p>
+<p>This folder is an interview / promotion / portfolio evidence kit. Each category maps to a common hiring bar for senior AI product-and-platform leaders.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Folder</th>
+<th>What you will find</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Product ownership</td>
+<td><a href="01-product-ownership/"><code>01-product-ownership/</code></a></td>
+<td>PRD, roadmap, tickets, launch plan, ADRs</td>
+</tr>
+<tr>
+<td>Technical originality</td>
+<td><a href="02-technical-originality/"><code>02-technical-originality/</code></a></td>
+<td>Architecture, AI workflows, prompts, model choices, repo map</td>
+</tr>
+<tr>
+<td>Product history</td>
+<td><a href="03-product-history/"><code>03-product-history/</code></a></td>
+<td>Version history, release notes, demo script, screenshot placeholders</td>
+</tr>
+<tr>
+<td>AI cost claims</td>
+<td><a href="04-ai-cost-claims/"><code>04-ai-cost-claims/</code></a></td>
+<td>Cost methodology, cache savings model, CSV templates, before/after</td>
+</tr>
+<tr>
+<td>Adoption and impact</td>
+<td><a href="05-adoption-and-impact/"><code>05-adoption-and-impact/</code></a></td>
+<td>Metrics framework, SQL/analytics, feedback loop, testimonials</td>
+</tr>
+<tr>
+<td>Independent validation</td>
+<td><a href="06-independent-validation/"><code>06-independent-validation/</code></a></td>
+<td>Validation plan, letter templates, talk outline</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-to-use-this-pack">How to use this pack</h2>
+<ol>
+<li><strong>Technical originality + product ownership</strong> are ready to present as written; they are grounded in the live codebase and merged PRs.</li>
+<li><strong>Cost / adoption / validation</strong> include executable frameworks plus <strong>clearly marked placeholders</strong> for production exports (HF invoices, Supabase auth counts, letters). Replace <code>[[PLACEHOLDER]]</code> fields before external sharing.</li>
+<li>Keep secrets out of this folder. Never paste API tokens, invoices with account numbers, or PII into git.</li>
+</ol>
+<h2 id="one-line-thesis">One-line thesis</h2>
+<p>Built and shipped a student-first AI coach end-to-end: product wedge, response contracts, Hugging Face Inference routing with response/prompt caching, honor-code study modes, PWA/Android-simple shell, and a conversational Voice Tutor — with measurable cost and quality loops.</p>
+<h2 id="suggested-interview-narrative-10-minutes">Suggested interview narrative (10 minutes)</h2>
+<ol>
+<li>Problem → students need focused study AI, not another general chatbot (PRD + roadmap).  </li>
+<li>Architecture → Express + Supabase Auth + HF Router + SSE + cache (architecture diagram).  </li>
+<li>Originality → response contracts, honor code modes, notebook grounding, voice loop (workflows + prompts).  </li>
+<li>Ownership → ADR trail, launch plan, weekly feedback tickets.  </li>
+<li>Economics → cache + voiceMode token caps + before/after model (cost claims).  </li>
+<li>Proof → release history, demos, then live metrics/letters once filled.</li>
+</ol>
+</section><section class="doc" id="doc-1">
+<p class="path">MANIFEST.md</p>
+<h1 id="evidence-manifest-checklist-against-role-rubric">Evidence Manifest — checklist against role rubric</h1>
+<table>
+<thead>
+<tr>
+<th>Rubric item</th>
+<th>Covered by</th>
+<th>Ready to present?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRDs</td>
+<td><code>01-product-ownership/PRD-my-student-coach.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Product roadmap</td>
+<td><code>01-product-ownership/product-roadmap.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Tickets</td>
+<td><code>01-product-ownership/tickets-backlog.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Launch plans</td>
+<td><code>01-product-ownership/launch-plan.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Decision records</td>
+<td><code>01-product-ownership/decision-records/*</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Architecture diagrams</td>
+<td><code>02-technical-originality/architecture-overview.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>AI workflow designs</td>
+<td><code>02-technical-originality/ai-workflow-designs.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Prompts</td>
+<td><code>02-technical-originality/prompt-library-export.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Code / repo exports</td>
+<td><code>02-technical-originality/repository-map.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Model/provider choices</td>
+<td><code>02-technical-originality/model-provider-choices.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Dated screenshots</td>
+<td><code>03-product-history/screenshots/README.md</code></td>
+<td>Needs captures</td>
+</tr>
+<tr>
+<td>Demos</td>
+<td><code>03-product-history/demo-script.md</code></td>
+<td>Needs recording link</td>
+</tr>
+<tr>
+<td>Release notes</td>
+<td><code>03-product-history/release-notes.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Version history</td>
+<td><code>03-product-history/version-history.md</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Provider invoices</td>
+<td><code>04-ai-cost-claims/invoice-checklist.md</code></td>
+<td>Needs private PDFs</td>
+</tr>
+<tr>
+<td>Usage exports</td>
+<td><code>04-ai-cost-claims/usage-export-template.csv</code></td>
+<td>Needs real rows</td>
+</tr>
+<tr>
+<td>Cache logs / calcs</td>
+<td><code>04-ai-cost-claims/cache-savings-model.md</code></td>
+<td>Needs measurement</td>
+</tr>
+<tr>
+<td>Before/after</td>
+<td><code>04-ai-cost-claims/before-after-comparison.md</code></td>
+<td>Needs experiment</td>
+</tr>
+<tr>
+<td>User counts / analytics</td>
+<td><code>05-adoption-and-impact/*</code></td>
+<td>Needs Supabase export</td>
+</tr>
+<tr>
+<td>Retention / feedback</td>
+<td><code>05-adoption-and-impact/feedback-loop.md</code></td>
+<td>Partial (process yes)</td>
+</tr>
+<tr>
+<td>Testimonials</td>
+<td><code>05-adoption-and-impact/testimonials-template.md</code></td>
+<td>Needs quotes</td>
+</tr>
+<tr>
+<td>Articles / awards / letters</td>
+<td><code>06-independent-validation/*</code></td>
+<td>Needs outreach</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Score guidance:</strong> Technical originality + product ownership are interview-ready from repo truth. Cost, adoption counts, and third-party letters require attaching production exports before claiming quantified impact.</p>
+</section><section class="doc" id="doc-2">
+<p class="path">01-product-ownership/PRD-my-student-coach.md</p>
+<h1 id="prd-my-student-coach-student-ai">PRD — My Student Coach (Student AI)</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document ID</td>
+<td>PRD-MSC-2026-01</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>Product / Principal Architect (AI)</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Living — aligned to shipped main as of 2026-11-08</td>
+</tr>
+<tr>
+<td>Primary users</td>
+<td>Middle school → college / exam prep students</td>
+</tr>
+<tr>
+<td>Success definition</td>
+<td>Students complete a study turn (ask → understand → practice) without leaving the product</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-problem">1. Problem</h2>
+<p>General-purpose AI chat is abundant and often harmful for schoolwork: long unfocused answers, brand confusion, submission-ready solutions, and weak grounding in the student’s own notes. Students need a <strong>study coach</strong> that answers first, teaches the smallest useful next step, respects honor code, and works on phone and laptop.</p>
+<h2 id="2-goals">2. Goals</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Goal</th>
+<th>Measurable signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>Fast authenticated access to Ask / Code / Notebook</td>
+<td>Time-to-first-answer after Google login</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>Clear, non-markdown-noisy answers with brand identity</td>
+<td>Thumbs-up rate; “**” strip failures = 0</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>Mobile-simple shell (Home / Tutor / Learning / Profile)</td>
+<td>Mobile session completion</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Learning labs (Voice, Flashcards, Math, Focus, Gaps)</td>
+<td>Lab weekly active use</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Conversational Voice Tutor</td>
+<td>Turns per voice session ≥ 3</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Play-ready Android (TWA/PWA path)</td>
+<td>Install / add-to-home rate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-non-goals">3. Non-goals</h2>
+<ul>
+<li>Replacing a school LMS or gradebook  </li>
+<li>Native Kotlin app before PWA/TWA product-market fit  </li>
+<li>General consumer search engine  </li>
+<li>Finance / Budget AI (removed — Student AI wedge only)  </li>
+<li>Claiming to be ChatGPT / Claude / Perplexity / Google</li>
+</ul>
+<h2 id="4-personas">4. Personas</h2>
+<ol>
+<li><strong>Exam-focused high schooler</strong> — needs short explanations, quiz mode, flashcards.  </li>
+<li><strong>College CS student</strong> — needs Code tutor + Practice loop without full homework dumps.  </li>
+<li><strong>Note-heavy learner</strong> — uploads PDFs/notes; needs Notebook grounded answers.  </li>
+<li><strong>Voice learner</strong> — wants talk-back study while commuting (Chrome/Edge).</li>
+</ol>
+<h2 id="5-product-surface-shipped">5. Product surface (shipped)</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Job to be done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home</td>
+<td>Orient, resume last study path</td>
+</tr>
+<tr>
+<td>Ask (Tutor)</td>
+<td>Explain / Guide / Quiz with live-web optional grounding</td>
+</tr>
+<tr>
+<td>Code</td>
+<td>Patient coding tutor + practice</td>
+</tr>
+<tr>
+<td>Notebook</td>
+<td>Multi-file analyze + grounded follow-ups</td>
+</tr>
+<tr>
+<td>Voice Tutor</td>
+<td>Stream → speak-early → auto-listen → barge-in</td>
+</tr>
+<tr>
+<td>Flashcards / Math / Focus / Gaps</td>
+<td>P1 labs under Learning</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>Learner personalization (grade, subjects, explain style)</td>
+</tr>
+<tr>
+<td>Login gateway</td>
+<td>One-screen Google join + honor / nonprofit disclaimer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-constraints">6. Constraints</h2>
+<ul>
+<li>Open-source / cost-aware inference via Hugging Face Inference Providers  </li>
+<li>Supabase Google OAuth; no custom password store  </li>
+<li>Honor code: Guide/Quiz must not hand over submittable work  </li>
+<li>Privacy: feedback may go to Supabase or local <code>feedback.ndjson</code>  </li>
+<li>Browser voice APIs only for v1 conversational voice (no realtime native yet)</li>
+</ul>
+<h2 id="7-risks-and-mitigations">7. Risks and mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model hallucination on homework</td>
+<td>Notebook “Not in document”; live-web source chips; honor modes</td>
+</tr>
+<tr>
+<td>Inference cost</td>
+<td>Response cache TTL, prompt-cache params, voiceMode max tokens</td>
+</tr>
+<tr>
+<td>Auth fragility (Safari)</td>
+<td>Redirect URL checklist; declared abort controllers; hard-refresh cache bust</td>
+</tr>
+<tr>
+<td>Scope creep (hub of hubs)</td>
+<td>Wedge: Student AI only; kill Finance / Neo Clouds / Privacy from primary path</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-launch-criteria-public">8. Launch criteria (public)</h2>
+<ul>
+<li>[x] Google login on production URL  </li>
+<li>[x] Ask / Code / Notebook streaming paths  </li>
+<li>[x] Privacy + Terms pages  </li>
+<li>[x] Feedback path (<code>/api/feedback</code> + weekly review SQL)  </li>
+<li>[x] Mobile bottom nav + Voice conversational loop  </li>
+<li>[ ] Production HF usage dashboard linked in cost pack  </li>
+<li>[ ] Android Play listing (TWA) after install metrics</li>
+</ul>
+<h2 id="9-open-questions">9. Open questions</h2>
+<ol>
+<li>Default study mode for new users: Explain vs Guide?  </li>
+<li>Should live web be on by default for Ask?  </li>
+<li>When to move Voice Tutor to a realtime STT/TTS provider?</li>
+</ol>
+</section><section class="doc" id="doc-3">
+<p class="path">01-product-ownership/product-roadmap.md</p>
+<h1 id="product-roadmap-my-student-coach">Product Roadmap — My Student Coach</h1>
+<p>Horizon dates are product phases, not calendar estimates. Sequencing reflects merged work May–Nov 2026 and the next engineering slices.</p>
+<h2 id="now-shipped-on-main">Now (shipped on <code>main</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Outcome</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Student AI wedge</td>
+<td>Hub focused on Ask / Code / Notebook</td>
+<td>PR #64 remove Finance AI</td>
+</tr>
+<tr>
+<td>Coach Home</td>
+<td>Phase-1 home dashboard</td>
+<td>PR #68</td>
+</tr>
+<tr>
+<td>P1 labs</td>
+<td>Voice, Vision, Flashcards, Math, Focus, Gaps</td>
+<td>PR #69</td>
+</tr>
+<tr>
+<td>UX simplification</td>
+<td>Login gateway, teal coach brand, menus</td>
+<td>PR #70–#73</td>
+</tr>
+<tr>
+<td>Android-simple P0</td>
+<td>Bottom nav, personalization, chat controls</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>Conversational voice</td>
+<td>Stream + speak-early + barge-in + voiceMode</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>Hardening</td>
+<td>Safari <code>activeChatAbort</code> declaration</td>
+<td>PR #75</td>
+</tr>
+</tbody>
+</table>
+<h2 id="next">Next</h2>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Outcome</th>
+<th>Dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quality loop ops</td>
+<td>Weekly thumbs review → one shipped contract fix</td>
+<td>Supabase service role + review SQL</td>
+</tr>
+<tr>
+<td>Cost dashboard</td>
+<td>Export HF usage + cache hit rate into <code>04-ai-cost-claims</code></td>
+<td>HF billing API / CSV</td>
+</tr>
+<tr>
+<td>Notebook multi-file polish</td>
+<td>Stronger source attribution in UI</td>
+<td>Existing corpus builder</td>
+</tr>
+<tr>
+<td>Practice under topic</td>
+<td>Topic-scoped practice from Ask</td>
+<td>Practice loop already in Code/Ask</td>
+</tr>
+<tr>
+<td>TWA / Play packaging</td>
+<td>Trusted Web Activity shell</td>
+<td>Stable HTTPS domain + DigiCert</td>
+</tr>
+</tbody>
+</table>
+<h2 id="later">Later</h2>
+<table>
+<thead>
+<tr>
+<th>Theme</th>
+<th>Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native realtime voice</td>
+<td>Provider STT/TTS or WebRTC tutor</td>
+</tr>
+<tr>
+<td>Teacher / classroom mode</td>
+<td>Shared decks, anonymized class gaps</td>
+</tr>
+<tr>
+<td>Memory vault (opt-in)</td>
+<td>Cross-session learner memory with explicit consent</td>
+</tr>
+<tr>
+<td>Workspace connectors</td>
+<td>Google Drive notes → Notebook</td>
+</tr>
+</tbody>
+</table>
+<h2 id="explicitly-not-on-roadmap">Explicitly not on roadmap</h2>
+<p>Finance AI, Neo Clouds marketplace inside Student Hub, Privacy Agent as primary Hub tile.</p>
+<h2 id="roadmap-diagram">Roadmap diagram</h2>
+<div class="mermaid">
+flowchart LR
+  A[Foundation Auth + Ask/Code/Notebook] --> B[Coach Home + Labs]
+  B --> C[Mobile shell + Voice loop]
+  C --> D[Quality + Cost ops]
+  D --> E[TWA / Play]
+  E --> F[Realtime voice + Memory]
+</div>
+</section><section class="doc" id="doc-4">
+<p class="path">01-product-ownership/tickets-backlog.md</p>
+<h1 id="tickets-backlog-principal-architect-evidence">Tickets / Backlog — Principal Architect evidence</h1>
+<p>Ticket IDs are portfolio-stable references. Link each to a GitHub PR or issue when filing in production trackers.</p>
+<h2 id="epic-a-product-ownership-launch">Epic A — Product ownership &amp; launch</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Type</th>
+<th>Status</th>
+<th>Linked work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSC-101</td>
+<td>PRD for My Student Coach public wedge</td>
+<td>Spec</td>
+<td>Done</td>
+<td><code>PRD-my-student-coach.md</code></td>
+</tr>
+<tr>
+<td>MSC-102</td>
+<td>Kill Finance AI from Hub</td>
+<td>Scope</td>
+<td>Done</td>
+<td>PR #64</td>
+</tr>
+<tr>
+<td>MSC-103</td>
+<td>One-screen Google login gateway</td>
+<td>UX</td>
+<td>Done</td>
+<td>PR #73</td>
+</tr>
+<tr>
+<td>MSC-104</td>
+<td>Privacy / Terms / nonprofit disclaimer parity</td>
+<td>Legal UX</td>
+<td>Done</td>
+<td>legal pages + login copy</td>
+</tr>
+<tr>
+<td>MSC-105</td>
+<td>Public launch checklist on Render + custom domain</td>
+<td>Launch</td>
+<td>Done</td>
+<td>README deploy section</td>
+</tr>
+<tr>
+<td>MSC-106</td>
+<td>Weekly feedback review ritual</td>
+<td>Ops</td>
+<td>Open</td>
+<td><code>supabase/feedback_weekly_review.sql</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="epic-b-learning-quality">Epic B — Learning quality</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Type</th>
+<th>Status</th>
+<th>Linked work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSC-201</td>
+<td>Response contracts for Ask / Code / Notebook</td>
+<td>Prompt eng</td>
+<td>Done</td>
+<td><code>server.js</code> contracts</td>
+</tr>
+<tr>
+<td>MSC-202</td>
+<td>Strip leftover <code>**</code> from model replies</td>
+<td>Quality</td>
+<td>Done</td>
+<td>PR #72</td>
+</tr>
+<tr>
+<td>MSC-203</td>
+<td>Explain / Guide / Quiz study modes + honor code</td>
+<td>Feature</td>
+<td>Done</td>
+<td>chat studyMode</td>
+</tr>
+<tr>
+<td>MSC-204</td>
+<td>Assistant controls: simpler / steps / example / quiz / regen</td>
+<td>Feature</td>
+<td>Done</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>MSC-205</td>
+<td>Learner profile injected into system prompt</td>
+<td>Personalization</td>
+<td>Done</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>MSC-206</td>
+<td>Live web grounding with source chips</td>
+<td>Feature</td>
+<td>Done</td>
+<td>Tavily/Brave/Serper</td>
+</tr>
+</tbody>
+</table>
+<h2 id="epic-c-platform-mobile">Epic C — Platform &amp; mobile</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Type</th>
+<th>Status</th>
+<th>Linked work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSC-301</td>
+<td>Coach Home Phase 1</td>
+<td>Feature</td>
+<td>Done</td>
+<td>PR #68</td>
+</tr>
+<tr>
+<td>MSC-302</td>
+<td>P1 labs (Voice, Vision, Cards, Math, Focus, Gaps)</td>
+<td>Feature</td>
+<td>Done</td>
+<td>PR #69</td>
+</tr>
+<tr>
+<td>MSC-303</td>
+<td>Android-simple bottom nav</td>
+<td>Feature</td>
+<td>Done</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>MSC-304</td>
+<td>Conversational Voice Tutor loop</td>
+<td>Feature</td>
+<td>Done</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>MSC-305</td>
+<td>Fix Safari undeclared <code>activeChatAbort</code></td>
+<td>Bug</td>
+<td>Done</td>
+<td>PR #75</td>
+</tr>
+<tr>
+<td>MSC-306</td>
+<td>TWA Play packaging</td>
+<td>Infra</td>
+<td>Open</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="epic-d-cost-reliability">Epic D — Cost &amp; reliability</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Type</th>
+<th>Status</th>
+<th>Linked work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSC-401</td>
+<td>Response completion cache (TTL + max entries)</td>
+<td>Cost</td>
+<td>Done</td>
+<td><code>HF_RESPONSE_CACHE_*</code></td>
+</tr>
+<tr>
+<td>MSC-402</td>
+<td>Prompt-cache parameter forwarding</td>
+<td>Cost</td>
+<td>Done</td>
+<td><code>HF_FORWARD_PROMPT_CACHE_PARAMS</code></td>
+</tr>
+<tr>
+<td>MSC-403</td>
+<td>voiceMode short replies + 280 max tokens</td>
+<td>Cost/UX</td>
+<td>Done</td>
+<td>PR #74</td>
+</tr>
+<tr>
+<td>MSC-404</td>
+<td>Export monthly HF invoice + usage CSV into evidence pack</td>
+<td>Ops</td>
+<td>Open</td>
+<td><code>04-ai-cost-claims/</code></td>
+</tr>
+<tr>
+<td>MSC-405</td>
+<td>Cache hit-rate log dashboard</td>
+<td>Observability</td>
+<td>Open</td>
+<td><code>HF_LOG_PROMPT_CACHE_USAGE</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="weekly-operating-ticket-template">Weekly operating ticket template</h2>
+<pre><code>Title: Feedback week of YYYY-MM-DD
+1. Pull GET /api/feedback-summary?days=7
+2. Top 2 (reason, mode) pairs
+3. One contract or UX change
+4. Ship PR; note before/after thumbs in adoption pack
+</code></pre>
+</section><section class="doc" id="doc-5">
+<p class="path">01-product-ownership/launch-plan.md</p>
+<h1 id="launch-plan-my-student-coach">Launch Plan — My Student Coach</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Document ID</td>
+<td>LAUNCH-MSC-2026-PUBLIC</td>
+</tr>
+<tr>
+<td>Environments</td>
+<td>Local → Render → Custom domain</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Supabase Google OAuth</td>
+</tr>
+<tr>
+<td>Inference</td>
+<td>Hugging Face Inference Providers (Router)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="1-pre-launch-gate">1. Pre-launch gate</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Owner check</th>
+<th>Pass criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Secrets</td>
+<td>Host env only</td>
+<td><code>HF_API_TOKEN</code>, Supabase keys not in git</td>
+</tr>
+<tr>
+<td>Auth URLs</td>
+<td>Supabase + Google Cloud</td>
+<td>Site URL + Redirect URLs + JS origins match HTTPS host</td>
+</tr>
+<tr>
+<td>Health</td>
+<td><code>/api/health</code></td>
+<td><code>hfConfigured: true</code>, expected <code>hfModel</code></td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>Privacy + Terms live</td>
+<td>Linked from login and footer</td>
+</tr>
+<tr>
+<td>Beta banner</td>
+<td>Env</td>
+<td><code>BETA_TESTING=0</code> for public; <code>=1</code> for invite cohort</td>
+</tr>
+<tr>
+<td>Feedback</td>
+<td>Optional</td>
+<td>Service role + <code>assistant_feedback</code> table <strong>or</strong> accept ndjson</td>
+</tr>
+<tr>
+<td>Cold start</td>
+<td>Hosting plan</td>
+<td>Accept free-tier ~30s or upgrade before campaign</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-launch-sequence">2. Launch sequence</h2>
+<ol>
+<li>Merge to <code>main</code>; confirm Render auto-deploy.  </li>
+<li>Verify custom domain TLS.  </li>
+<li>Smoke: Google login → Ask stream → Code → Notebook upload → Voice one turn.  </li>
+<li>Share <strong>one</strong> canonical HTTPS URL.  </li>
+<li>Day-0: watch auth failures and HF 401/model_not_supported.  </li>
+<li>Day-7: feedback summary + cost export into evidence pack.</li>
+</ol>
+<h2 id="3-comms-kit">3. Comms kit</h2>
+<ul>
+<li>One-liner: “My Student Coach — focused AI for studying, not another chatbot.”  </li>
+<li>Demo script: see <code>../03-product-history/demo-script.md</code>  </li>
+<li>Investor leave-behind: <code>pitch/index.html</code> (print to PDF)</li>
+</ul>
+<h2 id="4-rollback">4. Rollback</h2>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HF auth outage</td>
+<td>Demo mode message; status toast; keep login/static UX</td>
+</tr>
+<tr>
+<td>OAuth break</td>
+<td>Re-check Redirect URLs; temporary <code>BETA_TESTING=1</code></td>
+</tr>
+<tr>
+<td>Bad model routing</td>
+<td>Change <code>HF_MODEL</code> to known-good <code>:fastest</code> / <code>:groq</code> suffix without code deploy if env-only</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-post-launch-30-day-plan">5. Post-launch 30-day plan</h2>
+<table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Stability: auth, abort/stop, Safari</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Quality: thumbs reasons → one contract fix</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Cost: cache hit rate + voiceMode savings snapshot</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Mobile: TWA spike or install prompt A/B</td>
+</tr>
+</tbody>
+</table>
+</section><section class="doc" id="doc-6">
+<p class="path">01-product-ownership/decision-records/ADR-001-hf-inference-router.md</p>
+<h1 id="adr-001-hugging-face-inference-providers-router-as-primary-llm-path">ADR-001 — Hugging Face Inference Providers (Router) as primary LLM path</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Status</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-05 (established) · reaffirmed 2026-11</td>
+</tr>
+<tr>
+<td>Deciders</td>
+<td>Principal Architect / Founding engineer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context</h2>
+<p>The product needs chat completions (streaming + JSON), optional vision, and cost control without operating GPUs.</p>
+<h2 id="decision">Decision</h2>
+<p>Use Hugging Face Router <code>https://router.huggingface.co/v1/chat/completions</code> with env-selected Hub model IDs that include a routing suffix (e.g. <code>deepseek-ai/DeepSeek-V4-Pro:fastest</code>). Optional <code>HF_MODEL_VISION</code> for image turns.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>+</strong> OpenAI-compatible payload shape; easy SSE streaming  </li>
+<li><strong>+</strong> Provider flexibility via Hub routing suffixes (<code>:fastest</code>, <code>:groq</code>, …)  </li>
+<li><strong>+</strong> Aligns with student/nonprofit cost posture  </li>
+<li><strong>−</strong> Model availability depends on enabled Inference Providers  </li>
+<li><strong>−</strong> Operational debugging for 401 / model_not_supported must be first-class (implemented in <code>server.js</code>)</li>
+</ul>
+</section><section class="doc" id="doc-7">
+<p class="path">01-product-ownership/decision-records/ADR-002-student-ai-only-wedge.md</p>
+<h1 id="adr-002-student-ai-only-product-wedge">ADR-002 — Student AI only product wedge</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Status</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-11-06</td>
+</tr>
+<tr>
+<td>Deciders</td>
+<td>Product + engineering</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>PR #64 (Finance AI removed); earlier Hub experiments (Privacy Agent, Neo Clouds) demoted</td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context</h2>
+<p>The Hub accumulated adjacent experiments (Finance AI, Privacy Agent, Neo Clouds). This diluted the student-study promise and increased UX/auth surface.</p>
+<h2 id="decision">Decision</h2>
+<p>Primary product is <strong>My Student Coach / Student AI</strong> (Ask, Code, Notebook + learning labs). Other experiments may live as separate repos or archived folders, not Hub tiles.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>+</strong> Clear story for users, investors, and Play listing  </li>
+<li><strong>+</strong> Faster UX consistency (teal coach brand, single home)  </li>
+<li><strong>−</strong> Abandoned short-term Finance AI usage  </li>
+<li><strong>−</strong> Requires discipline against new hub-of-hubs ideas</li>
+</ul>
+</section><section class="doc" id="doc-8">
+<p class="path">01-product-ownership/decision-records/ADR-003-response-and-prompt-cache.md</p>
+<h1 id="adr-003-server-response-cache-optional-prompt-cache-params">ADR-003 — Server response cache + optional prompt-cache params</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Status</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026</td>
+</tr>
+<tr>
+<td>Code</td>
+<td><code>completionCacheGet/Set</code>, <code>HF_RESPONSE_CACHE_TTL_SEC</code>, <code>HF_FORWARD_PROMPT_CACHE_PARAMS</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context</h2>
+<p>Repeated student questions (same mode + similar history) and notebook follow-ups burn tokens. Providers may also support prompt-prefix caching.</p>
+<h2 id="decision">Decision</h2>
+<ol>
+<li>Hash <code>(model, kind, userKey, messages)</code> and cache completed JSON/SSE payloads in-process with TTL + max entries.  </li>
+<li>Skip cache for live-web turns (freshness).  </li>
+<li>Optionally forward provider prompt-cache knobs when enabled.  </li>
+<li>Prefer static system prefixes (Notebook static system) for prefix-cache friendliness.</li>
+</ol>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>+</strong> Lower HF bill and latency on repeats  </li>
+<li><strong>+</strong> Auditable via usage + hit logs for cost claims pack  </li>
+<li><strong>−</strong> In-process cache does not share across multi-instance hosts (acceptable for MVP; Redis later)  </li>
+<li><strong>−</strong> Stale answers if TTL too high — tune with <code>HF_RESPONSE_CACHE_TTL_SEC</code></li>
+</ul>
+</section><section class="doc" id="doc-9">
+<p class="path">01-product-ownership/decision-records/ADR-004-pwa-before-native.md</p>
+<h1 id="adr-004-pwa-android-simple-shell-before-native-kotlin">ADR-004 — PWA / Android-simple shell before native Kotlin</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Status</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-11</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td><code>android-shell.css</code>, bottom nav, webmanifest, PR #74</td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context</h2>
+<p>Play-ready presence is desirable, but a full Kotlin rewrite would freeze product learning velocity.</p>
+<h2 id="decision">Decision</h2>
+<p>Ship an <strong>Android-simple web shell</strong> (bottom nav Home / Tutor / Learning / Profile, large tap targets, conversational Voice Tutor on Web Speech APIs) and treat <strong>TWA</strong> as the Play packaging path. Defer native realtime voice and Kotlin UI until install/retention justify it.</p>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>+</strong> One codebase; fast iteration  </li>
+<li><strong>−</strong> Voice quality limited by browser STT/TTS  </li>
+<li><strong>−</strong> Some Safari Web Speech gaps — document Chrome/Edge as best voice path</li>
+</ul>
+</section><section class="doc" id="doc-10">
+<p class="path">01-product-ownership/decision-records/ADR-005-voice-conversational-loop.md</p>
+<h1 id="adr-005-almost-conversational-voice-tutor-stream-speak-early">ADR-005 — Almost-conversational Voice Tutor (stream + speak-early)</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Status</td>
+<td>Accepted</td>
+</tr>
+<tr>
+<td>Date</td>
+<td>2026-11-08</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>PR #74; <code>public/coach-labs.js</code>; <code>voiceMode</code> in <code>server.js</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="context">Context</h2>
+<p>Turn-based “listen → wait for full answer → speak all” feels like a walkie-talkie, not a tutor.</p>
+<h2 id="decision">Decision</h2>
+<ol>
+<li>Stream <code>/api/chat</code> with <code>voiceMode: true</code>.  </li>
+<li>Speak sentence boundaries as tokens arrive.  </li>
+<li>Auto-relisten after TTS when enabled.  </li>
+<li>Barge-in: mic tap aborts fetch + cancels speech.  </li>
+<li>Cap spoken length and server <code>max_tokens</code> (~280) for short replies.</li>
+</ol>
+<h2 id="consequences">Consequences</h2>
+<ul>
+<li><strong>+</strong> Perceived latency drops dramatically  </li>
+<li><strong>+</strong> Lower token spend vs long essay answers  </li>
+<li><strong>−</strong> Sentence segmentation heuristics can mis-chunk abbreviations  </li>
+<li><strong>−</strong> Not true full-duplex realtime; native path remains Later roadmap</li>
+</ul>
+</section><section class="doc" id="doc-11">
+<p class="path">02-technical-originality/architecture-overview.md</p>
+<h1 id="architecture-overview-my-student-coach">Architecture Overview — My Student Coach</h1>
+<h2 id="system-context">System context</h2>
+<div class="mermaid">
+flowchart TB
+  subgraph Client["Browser / PWA / future TWA"]
+    UI["public/index.html + app.js"]
+    Labs["coach-labs.js Voice/Flash/Math/Focus/Gaps"]
+    SW["sw.js + webmanifest"]
+  end
+
+  subgraph Auth["Supabase"]
+    Google["Google OAuth"]
+    FB["assistant_feedback table optional"]
+  end
+
+  subgraph API["Express server.js"]
+    Chat["POST /api/chat SSE|JSON"]
+    NB["Notebook upload + analyze"]
+    Health["GET /api/health"]
+    Cache["In-process completion cache"]
+  end
+
+  subgraph Providers["External AI / data"]
+    HF["Hugging Face Router chat/completions"]
+    Web["Tavily | Brave | Serper live web"]
+  end
+
+  UI --> Chat
+  Labs --> Chat
+  UI --> Google
+  Chat --> Cache
+  Cache -->|miss| HF
+  Chat -->|liveWeb| Web
+  Chat --> FB
+  NB --> HF
+  Health --> Client
+</div>
+
+<h2 id="runtime-building-blocks">Runtime building blocks</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UI</td>
+<td>Vanilla SPA (no React runtime in production coach)</td>
+<td>Fast load, simple deploy, full control of streaming UX</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Supabase Google</td>
+<td>Student-friendly SSO; no password DB</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Node 18+ Express</td>
+<td>Single process; easy Render blueprint</td>
+</tr>
+<tr>
+<td>LLM</td>
+<td>HF Inference Providers</td>
+<td>Cost-flexible open models; OpenAI-compatible API</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td>multer + pdf-parse</td>
+<td>Notebook multi-file corpus</td>
+</tr>
+<tr>
+<td>Voice</td>
+<td>Web Speech STT/TTS + SSE speak-early</td>
+<td>Ship conversational feel without native stack</td>
+</tr>
+<tr>
+<td>Mobile</td>
+<td>CSS Android shell + PWA</td>
+<td>Play path via TWA later</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-request-path-ask-stream">Key request path (Ask stream)</h2>
+<ol>
+<li>Client <code>fetchAuthed('/api/chat', { stream: true, studyMode, learnerProfile, liveWeb? })</code>  </li>
+<li>Server builds system = identity + response contract + mode style + UI language + learner profile (+ voiceMode / live web appendix).  </li>
+<li>Cache lookup by hash; on miss, HF SSE proxied to client.  </li>
+<li>Client renders tokens; optional Stop via <code>AbortController</code> (<code>activeChatAbort</code>).  </li>
+<li>Optional thumbs → <code>/api/feedback</code>.</li>
+</ol>
+<h2 id="security-tenancy-notes">Security / tenancy notes</h2>
+<ul>
+<li>HF and Supabase <strong>service</strong> secrets stay on server / host env.  </li>
+<li>Frontend only holds Supabase anon key in <code>public/config.js</code>.  </li>
+<li>OAuth redirect allowlist is a launch gate (Safari pattern errors).  </li>
+<li>Honor-code modes constrain assistant behavior in prompt space (not a sandbox).</li>
+</ul>
+</section><section class="doc" id="doc-12">
+<p class="path">02-technical-originality/ai-workflow-designs.md</p>
+<h1 id="ai-workflow-designs">AI Workflow Designs</h1>
+<h2 id="1-ask-learn-teach-the-smallest-useful-next-step">1. Ask / Learn — teach the smallest useful next step</h2>
+<div class="mermaid">
+sequenceDiagram
+  participant S as Student
+  participant UI as Coach UI
+  participant API as server.js
+  participant HF as HF Router
+  participant W as Live Web optional
+
+  S->>UI: Question + studyMode
+  UI->>API: POST /api/chat stream
+  alt liveWeb on
+    API->>W: search snippets
+    W-->>API: sources
+  end
+  API->>HF: messages + max_tokens
+  HF-->>API: SSE deltas
+  API-->>UI: SSE deltas
+  UI-->>S: Answer-first + steps
+  S->>UI: Thumbs / follow-up controls
+</div>
+
+<p><strong>Design choices:</strong> Answer-first contract; Explain/Guide/Quiz styles; optional live web; regenerate and “explain simply” controls without new page.</p>
+<h2 id="2-notebook-grounded-multi-file-study">2. Notebook — grounded multi-file study</h2>
+<div class="mermaid">
+flowchart LR
+  Upload[Upload txt/md/csv/json/pdf] --> Corpus[buildNotebookCorpus]
+  Corpus --> Analyze[Static NOTEBOOK_SYSTEM_STATIC]
+  Analyze --> Sections[Exec summary → concepts → formulas → checks → 7-day plan]
+  Sections --> Follow[NOTEBOOK_FOLLOWUP_SYSTEM + SOURCE MATERIALS]
+  Follow --> Guard{Supported?}
+  Guard -->|no| NID[Not in document]
+  Guard -->|yes| Ans[Cited synthesis]
+</div>
+
+<p><strong>Design choices:</strong> Static system prefix for cache friendliness; document-only truth; structured analyze sections; follow-ups cannot invent facts.</p>
+<h2 id="3-code-tutor-practice">3. Code tutor + practice</h2>
+<ul>
+<li>System: patient coding tutor + code fences only for code.  </li>
+<li>Practice loop: check / skip under replies (shipped under Code; Ask parity).  </li>
+<li>Guide mode blocks full submittable solutions.</li>
+</ul>
+<h2 id="4-voice-tutor-almost-conversational">4. Voice Tutor — almost conversational</h2>
+<div class="mermaid">
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Listening: tap mic
+  Listening --> Thinking: utterance final
+  Thinking --> Speaking: first sentence boundary
+  Speaking --> Speaking: more sentences
+  Speaking --> Listening: auto-continue on
+  Speaking --> Idle: auto-continue off
+  Thinking --> Listening: barge-in
+  Speaking --> Listening: barge-in
+  Listening --> Idle: stop/pause
+</div>
+
+<p><strong>Design choices:</strong> <code>voiceMode</code> short replies; speak-early; barge-in aborts fetch + TTS session id; Chrome/Edge preferred.</p>
+<h2 id="5-quality-cost-control-loop">5. Quality / cost control loop</h2>
+<div class="mermaid">
+flowchart TB
+  Use[Student usage] --> FB[Thumbs + reasons]
+  FB --> Weekly[Weekly review SQL / API]
+  Weekly --> Contract[Tighten response contract]
+  Use --> Cache[Completion cache hits]
+  Cache --> Cost[Lower HF spend]
+  Contract --> Use
+</div>
+</section><section class="doc" id="doc-13">
+<p class="path">02-technical-originality/prompt-library-export.md</p>
+<h1 id="prompt-library-export-from-serverjs">Prompt Library Export (from <code>server.js</code>)</h1>
+<p>Exported for originality / IP evidence. Source of truth remains the repository. Do not treat this file as the runtime config.</p>
+<h2 id="brand-identity-all-chat-modes">Brand identity (all chat modes)</h2>
+<blockquote>
+<p>You are My Student Coach. If asked which product or model produced this response, answer: "This answer is from My Student Coach." … Never claim to be Perplexity, ChatGPT, Claude, Google, or any other brand.</p>
+</blockquote>
+<h2 id="ask-contract-summary">Ask contract (summary)</h2>
+<ol>
+<li>Direct answer first (1–2 sentences).  </li>
+<li>Smallest useful explanation (~180 words default unless depth requested).  </li>
+<li>Numbered steps for sequences; hyphen bullets for lists.  </li>
+<li>Call out one misconception when relevant.  </li>
+<li>No filler openers; no <code>**</code> emphasis.</li>
+</ol>
+<h2 id="code-contract-summary">Code contract (summary)</h2>
+<p>Patient coding tutor; Markdown fences for code only; numbered procedures; honor Guide/Quiz constraints.</p>
+<h2 id="math-science-contract-summary">Math &amp; Science contract (summary)</h2>
+<p>Numbered reasoning; formulas/units; common mistakes line; one similar practice prompt.</p>
+<h2 id="study-mode-styles">Study mode styles</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Instruction intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Explain</td>
+<td>Full response contract</td>
+</tr>
+<tr>
+<td>Quiz</td>
+<td>One check question; don’t reveal answer early; honor code</td>
+</tr>
+<tr>
+<td>Guide</td>
+<td>Hints/questions only; no final answer / submittable code</td>
+</tr>
+</tbody>
+</table>
+<h2 id="voice-mode">Voice mode</h2>
+<p>Keep entire answer under ~80 words; 2–4 short spoken sentences; no markdown/lists; end with one short follow-up question; server caps ~280 <code>max_tokens</code>.</p>
+<h2 id="notebook-analyze-structured">Notebook analyze (structured)</h2>
+<p>Exact <code>##</code> sections in order:</p>
+<ol>
+<li>Executive summary  </li>
+<li>Key concepts  </li>
+<li>Formulas and procedures  </li>
+<li>Practice checks (exactly 5)  </li>
+<li>7-day study plan  </li>
+</ol>
+<p>Rule: use only source materials; else “Not in document”.</p>
+<h2 id="notebook-follow-up">Notebook follow-up</h2>
+<p>Document-grounded; start with direct answer; no invented citations; identity line as My Student Coach.</p>
+<h2 id="learner-profile-injection">Learner profile injection</h2>
+<p>When present, include grade level, subjects, and explain style (<code>balanced</code> | <code>simple</code> | <code>steps</code> | <code>examples</code>) so the model personalizes without storing long memory server-side by default.</p>
+<h2 id="live-web-appendix">Live web appendix</h2>
+<p>When live web is requested and configured, append retrieved snippets and require grounding + source-aware answering (client shows source chips).</p>
+</section><section class="doc" id="doc-14">
+<p class="path">02-technical-originality/model-provider-choices.md</p>
+<h1 id="model-provider-choices">Model &amp; Provider Choices</h1>
+<h2 id="primary-path">Primary path</h2>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Default / pattern</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HF_CHAT_URL</code></td>
+<td><code>https://router.huggingface.co/v1/chat/completions</code></td>
+<td>OpenAI-compatible router</td>
+</tr>
+<tr>
+<td><code>HF_MODEL</code></td>
+<td><code>deepseek-ai/DeepSeek-V4-Pro:fastest</code> (env-overridable)</td>
+<td>Text + chat</td>
+</tr>
+<tr>
+<td><code>HF_MODEL_VISION</code></td>
+<td>optional Hub id with routing suffix</td>
+<td>Image turns</td>
+</tr>
+<tr>
+<td>Routing suffix</td>
+<td><code>:fastest</code>, <code>:groq</code>, etc.</td>
+<td>Required by Inference Providers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="why-hugging-face-inference-providers">Why Hugging Face Inference Providers</h2>
+<ol>
+<li><strong>Cost leverage</strong> — open models; switch providers via suffix without rewriting the app.  </li>
+<li><strong>Operational fit</strong> — single token (<code>HF_API_TOKEN</code>) with Inference permissions.  </li>
+<li><strong>Streaming</strong> — SSE compatible with the coach UI stop/abort UX.  </li>
+<li><strong>Student mission</strong> — avoids locking the product identity to a closed consumer brand.</li>
+</ol>
+<h2 id="ancillary-providers">Ancillary providers</h2>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Providers</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Live web</td>
+<td>Tavily, Brave Search, Serper</td>
+<td>First configured key wins path in code</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Supabase + Google</td>
+<td>Not an LLM vendor</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Render (<code>render.yaml</code>)</td>
+<td>Cold start consideration on free tier</td>
+</tr>
+</tbody>
+</table>
+<h2 id="selection-rubric-principal-architect">Selection rubric (Principal Architect)</h2>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Weight</th>
+<th>DeepSeek-via-HF</th>
+<th>Closed consumer API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$/1M tokens flexibility</td>
+<td>High</td>
+<td>Strong</td>
+<td>Weak–medium</td>
+</tr>
+<tr>
+<td>Brand independence</td>
+<td>High</td>
+<td>Strong</td>
+<td>Conflict with “My Student Coach”</td>
+</tr>
+<tr>
+<td>Latency control</td>
+<td>Medium</td>
+<td>Good with cache + stream</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Vision option</td>
+<td>Medium</td>
+<td>Via <code>HF_MODEL_VISION</code></td>
+<td>Usually built-in</td>
+</tr>
+<tr>
+<td>Compliance storytelling</td>
+<td>Medium</td>
+<td>Open-weight narrative</td>
+<td>Vendor DPA dependent</td>
+</tr>
+</tbody>
+</table>
+<h2 id="change-control">Change control</h2>
+<p>Model changes are <strong>env-first</strong> when possible. Document any default ID change in release notes and re-run cost before/after spreadsheet.</p>
+</section><section class="doc" id="doc-15">
+<p class="path">02-technical-originality/repository-map.md</p>
+<h1 id="repository-map-export-index">Repository Map / Export Index</h1>
+<p>Repo: <code>kaparthi86/Student-AI-Hub</code> · Language: JavaScript · Created 2026-05-02</p>
+<h2 id="core-runtime">Core runtime</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server.js</code></td>
+<td>Express API, prompts, cache, HF proxy, notebook, feedback</td>
+</tr>
+<tr>
+<td><code>public/app.js</code></td>
+<td>Coach SPA: auth, Ask/Code/Notebook, speech, tabs, personalization</td>
+</tr>
+<tr>
+<td><code>public/index.html</code></td>
+<td>Shell markup, panels, login gateway</td>
+</tr>
+<tr>
+<td><code>public/coach-labs.js</code></td>
+<td>Voice / Flashcards / Math / Focus / Gaps</td>
+</tr>
+<tr>
+<td><code>public/coach-labs.css</code></td>
+<td>Lab styles + voice states</td>
+</tr>
+<tr>
+<td><code>public/android-shell.css</code></td>
+<td>Bottom nav / mobile shell</td>
+</tr>
+<tr>
+<td><code>public/simplify-coach.css</code></td>
+<td>Coach brand simplification</td>
+</tr>
+<tr>
+<td><code>public/sw.js</code> + <code>manifest.webmanifest</code></td>
+<td>PWA</td>
+</tr>
+<tr>
+<td><code>public/config.js</code></td>
+<td>Supabase anon config (no secrets)</td>
+</tr>
+<tr>
+<td><code>.env.example</code></td>
+<td>Server secret template</td>
+</tr>
+<tr>
+<td><code>render.yaml</code></td>
+<td>Deploy blueprint</td>
+</tr>
+<tr>
+<td><code>supabase/*.sql</code></td>
+<td>Feedback schema + weekly review</td>
+</tr>
+<tr>
+<td><code>pitch/</code></td>
+<td>Investor deck</td>
+</tr>
+</tbody>
+</table>
+<h2 id="evidence-pack-this-tree">Evidence pack (this tree)</h2>
+<p><code>docs/principal-architect-ai/**</code></p>
+<h2 id="how-to-export-a-code-snapshot-for-reviewers">How to export a code snapshot for reviewers</h2>
+<pre><code class="language-bash">git archive --format=zip --output=student-ai-hub-src-$(date +%Y%m%d).zip HEAD \
+  server.js public supabase pitch README.md package.json render.yaml \
+  docs/principal-architect-ai
+</code></pre>
+<p>Exclude <code>.env</code>, <code>node_modules</code>, and any invoice PDFs with account numbers.</p>
+</section><section class="doc" id="doc-16">
+<p class="path">03-product-history/version-history.md</p>
+<h1 id="version-history">Version History</h1>
+<p>Dates from git / GitHub (UTC in forge; shown as calendar dates). Product naming evolved from Student AI Hub → My Student Coach.</p>
+<table>
+<thead>
+<tr>
+<th>Version tag (logical)</th>
+<th>Date</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1 Hub MVP</td>
+<td>2026-05-02</td>
+<td>Repository created — auth + student AI prototype</td>
+</tr>
+<tr>
+<td>0.4 Feedback loop</td>
+<td>2026-08-26</td>
+<td>Mission feedback loop (PR #44 era)</td>
+</tr>
+<tr>
+<td>0.5 Practice</td>
+<td>2026-08-28</td>
+<td>Practice under Code (PR #45)</td>
+</tr>
+<tr>
+<td>0.6 Adjacent bets</td>
+<td>2026-08-30 → 09-05</td>
+<td>Finance, Privacy Agent, Neo Clouds experiments</td>
+</tr>
+<tr>
+<td>0.7 Hub cleanup</td>
+<td>2026-09-05 → 09-24</td>
+<td>Remove Neo Clouds / return-home Hub</td>
+</tr>
+<tr>
+<td>1.0 Student wedge</td>
+<td>2026-11-06</td>
+<td>Remove Finance AI (PR #64) — Student AI only</td>
+</tr>
+<tr>
+<td>1.1 Coach Home</td>
+<td>2026-11-06</td>
+<td>Phase 1 Home (PR #68)</td>
+</tr>
+<tr>
+<td>1.2 Learning labs</td>
+<td>2026-11-06</td>
+<td>Voice, Vision, Cards, Math, Focus, Gaps (PR #69)</td>
+</tr>
+<tr>
+<td>1.3 UX simplify</td>
+<td>2026-11-06</td>
+<td>Landing, menus, <code>**</code> strip, login gateway (PR #70–#73)</td>
+</tr>
+<tr>
+<td>1.4 Android-simple + Voice converse</td>
+<td>2026-11-08</td>
+<td>Bottom nav, personalization, conversational voice (PR #74)</td>
+</tr>
+<tr>
+<td>1.4.1 Safari abort fix</td>
+<td>2026-11-08</td>
+<td><code>activeChatAbort</code> declaration (PR #75)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="semantic-versioning-note">Semantic versioning note</h2>
+<p><code>package.json</code> still reports <code>1.0.0</code>. Logical product versions above are for portfolio / release communication until npm version is bumped intentionally.</p>
+</section><section class="doc" id="doc-17">
+<p class="path">03-product-history/release-notes.md</p>
+<h1 id="release-notes">Release Notes</h1>
+<h2 id="141-2026-11-08-safari-askstop-fix">1.4.1 — 2026-11-08 — Safari Ask/Stop fix</h2>
+<ul>
+<li>Declared <code>activeChatAbort</code> and <code>activeChatStopBtn</code> to fix Safari <code>Can't find variable: activeChatAbort</code>.</li>
+<li>Cache-bust <code>app.js</code>.</li>
+</ul>
+<h2 id="140-2026-11-08-android-simple-conversational-voice-tutor">1.4.0 — 2026-11-08 — Android-simple + conversational Voice Tutor</h2>
+<ul>
+<li>Bottom navigation: Home / Tutor / Learning / Profile.</li>
+<li>Learner profile prefs fed into chat prompts.</li>
+<li>Assistant response controls (explain simply, steps, example, quiz, regenerate).</li>
+<li>Stop generation on Ask streams.</li>
+<li>Voice Tutor: SSE stream, speak-early sentence TTS, auto-relisten, barge-in, <code>voiceMode</code> short answers.</li>
+</ul>
+<h2 id="13x-2026-11-06-simplify-coach-ux">1.3.x — 2026-11-06 — Simplify Coach UX</h2>
+<ul>
+<li>Single Home surface, teal brand, Coach naming.</li>
+<li>Learn / Profile menus restored.</li>
+<li>Strip leftover <code>**</code> from model replies.</li>
+<li>One-screen Google login gateway (+ orphan markup fix).</li>
+</ul>
+<h2 id="120-2026-11-06-p1-learning-labs">1.2.0 — 2026-11-06 — P1 learning labs</h2>
+<ul>
+<li>Voice, Vision, Flashcards, Math &amp; Science, Focus Mode, Knowledge Gaps.</li>
+</ul>
+<h2 id="110-2026-11-06-coach-home">1.1.0 — 2026-11-06 — Coach Home</h2>
+<ul>
+<li>Phase 1 dashboard as primary post-login orientation.</li>
+</ul>
+<h2 id="100-2026-11-06-student-ai-only">1.0.0 — 2026-11-06 — Student AI only</h2>
+<ul>
+<li>Removed Finance/Budget AI from the Hub product path.</li>
+<li>Positioning: focused learning AI.</li>
+</ul>
+<h2 id="earlier-2026">Earlier 2026</h2>
+<ul>
+<li>Auth hardening (Google login / <code>wireSearchFlow</code>).</li>
+<li>Hub return-home behavior.</li>
+<li>Experimental Privacy Agent and Neo Clouds (later removed from primary Hub).</li>
+<li>Practice loops and feedback mission work (Aug 2026).</li>
+</ul>
+</section><section class="doc" id="doc-18">
+<p class="path">03-product-history/demo-script.md</p>
+<h1 id="demo-script-my-student-coach-810-minutes">Demo Script — My Student Coach (8–10 minutes)</h1>
+<p><strong>Audience:</strong> hiring panel / investors / design partners<br />
+<strong>Environment:</strong> Chrome or Edge recommended for Voice; production HTTPS URL<br />
+<strong>Prep:</strong> Signed-in test account; one PDF for Notebook; mic permission</p>
+<h2 id="act-1-problem-45s">Act 1 — Problem (45s)</h2>
+<p>“Students don’t need another generic chatbot. They need a coach that answers first, respects honor code, and works on a phone.”</p>
+<h2 id="act-2-login-home-60s">Act 2 — Login &amp; Home (60s)</h2>
+<ol>
+<li>Show one-screen Google gateway + disclaimer.  </li>
+<li>Land on Coach Home.  </li>
+<li>Point at Android-style bottom nav.</li>
+</ol>
+<h2 id="act-3-ask-quality-2-min">Act 3 — Ask quality (2 min)</h2>
+<ol>
+<li>Ask a multi-step concept question in <strong>Explain</strong>.  </li>
+<li>Show answer-first, clean steps (no <code>**</code> noise).  </li>
+<li>Switch to <strong>Guide</strong> — show hint-only behavior.  </li>
+<li>Use <strong>Explain simply</strong> control on last answer.  </li>
+<li>Optional: Live web on → show source chips.</li>
+</ol>
+<h2 id="act-4-notebook-grounding-2-min">Act 4 — Notebook grounding (2 min)</h2>
+<ol>
+<li>Upload class notes / PDF.  </li>
+<li>Show structured analyze sections.  </li>
+<li>Ask a follow-up not in the doc → “Not in document”.</li>
+</ol>
+<h2 id="act-5-voice-loop-2-min">Act 5 — Voice loop (2 min)</h2>
+<ol>
+<li>Open Voice Tutor.  </li>
+<li>Ask a short question; note speak-early before full text finishes.  </li>
+<li>Barge in mid-answer; ask a follow-up.  </li>
+<li>Show auto-continue toggle.</li>
+</ol>
+<h2 id="act-6-architecture-cost-90s">Act 6 — Architecture &amp; cost (90s)</h2>
+<ol>
+<li>HF Router + cache + voiceMode token cap.  </li>
+<li>Weekly thumbs → contract fix loop.  </li>
+<li>Close with roadmap: TWA Play, then realtime voice.</li>
+</ol>
+<h2 id="recording-checklist">Recording checklist</h2>
+<ul>
+<li>[ ] Date stamp in filename: <code>demo-YYYY-MM-DD-msc.mp4</code>  </li>
+<li>[ ] Store under <code>03-product-history/screenshots/</code> or private drive (large binaries not required in git)  </li>
+<li>[ ] Link path in this file after capture: <code>[[DEMO_VIDEO_URL]]</code></li>
+</ul>
+</section><section class="doc" id="doc-19">
+<p class="path">03-product-history/screenshots/README.md</p>
+<h1 id="dated-screenshots-demos">Dated screenshots &amp; demos</h1>
+<p>Git is a poor place for large binaries. Drop files here <strong>or</strong> link to a private drive and keep this index updated.</p>
+<table>
+<thead>
+<tr>
+<th>Date (America/Los_Angeles)</th>
+<th>Asset</th>
+<th>What it proves</th>
+<th>Path / URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-11-08</td>
+<td>Login gateway</td>
+<td>One-screen Google join</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+<tr>
+<td>2026-11-08</td>
+<td>Home + bottom nav</td>
+<td>Android-simple shell</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+<tr>
+<td>2026-11-08</td>
+<td>Ask streaming answer</td>
+<td>Response contract</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+<tr>
+<td>2026-11-08</td>
+<td>Notebook analyze</td>
+<td>Grounded sections</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+<tr>
+<td>2026-11-08</td>
+<td>Voice Tutor speaking state</td>
+<td>Conversational loop</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+<tr>
+<td>2026-11-06</td>
+<td>Pre-simplify Hub (optional)</td>
+<td>Before/after UX</td>
+<td><code>[[PLACEHOLDER]]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="capture-tips">Capture tips</h3>
+<ul>
+<li>Include OS clock or a dated sticky note in-frame for authenticity.  </li>
+<li>Prefer 1× device frames (iPhone + desktop).  </li>
+<li>Redact emails / faces of real students.</li>
+</ul>
+</section><section class="doc" id="doc-20">
+<p class="path">04-ai-cost-claims/cost-methodology.md</p>
+<h1 id="ai-cost-claims-methodology">AI Cost Claims — Methodology</h1>
+<h2 id="principle">Principle</h2>
+<p>Cost claims for interviews or boards must be <strong>reproducible</strong>: invoice → usage export → calculation sheet → architecture lever (cache, max_tokens, model).</p>
+<h2 id="sources-of-truth">Sources of truth</h2>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Where it comes from</th>
+<th>Stored in git?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Provider invoices</td>
+<td>Hugging Face billing PDF/CSV</td>
+<td><strong>No</strong> (sensitive) — store path in checklist</td>
+</tr>
+<tr>
+<td>Usage export</td>
+<td>HF usage dashboard / API</td>
+<td>Template CSV only</td>
+</tr>
+<tr>
+<td>Cache logs</td>
+<td>Server logs when <code>HF_LOG_PROMPT_CACHE_USAGE</code> enabled; completion cache hit counters</td>
+<td>Aggregate stats OK</td>
+</tr>
+<tr>
+<td>Calculation spreadsheet</td>
+<td><code>cost-model.csv</code> + your filled copy</td>
+<td>Template yes; filled copy optional/private</td>
+</tr>
+<tr>
+<td>Before/after</td>
+<td>Same workload scripted against two configs</td>
+<td>Yes (methodology + sample)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="unit-economics-model">Unit economics model</h2>
+<pre><code>Monthly_AI_cost ≈ Σ ( prompt_tokens_i + completion_tokens_i ) × price_tier_i
+Effective_cost_per_study_turn = Monthly_AI_cost / study_turns
+Cache_savings = tokens_avoided_by_hits × price
+Voice_savings ≈ (baseline_completion_tokens − voiceMode_completion_tokens) × voice_turns × price
+</code></pre>
+<h2 id="architectural-levers-already-shipped">Architectural levers already shipped</h2>
+<ol>
+<li><strong>Completion response cache</strong> — <code>HF_RESPONSE_CACHE_TTL_SEC</code>, <code>HF_RESPONSE_CACHE_MAX_ENTRIES</code>  </li>
+<li><strong>Prompt-cache param forwarding</strong> — <code>HF_FORWARD_PROMPT_CACHE_PARAMS</code>  </li>
+<li><strong>Static Notebook system prefix</strong> — prefix-cache friendly  </li>
+<li><strong>voiceMode max_tokens ≈ 280</strong> + short-reply instruction  </li>
+<li><strong>Mode-specific max_tokens</strong> — vision/notebook/live-web caps in <code>server.js</code>  </li>
+<li><strong>Skip cache on live web</strong> — correctness over thrift when freshness matters</li>
+</ol>
+<h2 id="claim-language-safe">Claim language (safe)</h2>
+<ul>
+<li>Prefer: “We designed X to reduce completion tokens / avoid repeat HF calls; measured on [date] with [export].”  </li>
+<li>Avoid: absolute savings percentages without the CSV attached.</li>
+</ul>
+</section><section class="doc" id="doc-21">
+<p class="path">04-ai-cost-claims/cache-savings-model.md</p>
+<h1 id="cache-voice-savings-model">Cache &amp; Voice Savings Model</h1>
+<h2 id="completion-cache-illustrative-math">Completion cache (illustrative math)</h2>
+<p>Replace bracketed numbers with your export.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Symbol</th>
+<th>Example (SAMPLE — replace)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ask turns / month</td>
+<td>T</td>
+<td>[[T=12000]]</td>
+</tr>
+<tr>
+<td>Repeat hash hit rate</td>
+<td>H</td>
+<td>[[H=0.18]]</td>
+</tr>
+<tr>
+<td>Avg tokens / turn (prompt+completion)</td>
+<td>K</td>
+<td>[[K=900]]</td>
+</tr>
+<tr>
+<td>Price / 1M tokens</td>
+<td>P</td>
+<td>[[P=USD_x]]</td>
+</tr>
+<tr>
+<td>Avoided tokens</td>
+<td>T×H×K</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Monthly cache savings</td>
+<td>avoided × P / 1e6</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="voice-mode-illustrative">Voice mode (illustrative)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Baseline Ask</th>
+<th>Voice mode</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target answer length</td>
+<td>~180 words</td>
+<td>~80 words</td>
+<td>Prompt contract</td>
+</tr>
+<tr>
+<td>max_tokens cap</td>
+<td>up to ~720</td>
+<td>~280</td>
+<td><code>server.js</code></td>
+</tr>
+<tr>
+<td>Expected completion token ratio</td>
+<td>1.0</td>
+<td>~0.35–0.55</td>
+<td>Measure; don’t invent</td>
+</tr>
+</tbody>
+</table>
+<h2 id="before-after-experiment-protocol">Before / after experiment protocol</h2>
+<ol>
+<li>Freeze model ID.  </li>
+<li>Run 30 scripted prompts in Ask (no live web) with cache cold, then warm.  </li>
+<li>Run 30 Voice Tutor prompts with <code>voiceMode</code>.  </li>
+<li>Export token usage; fill <code>usage-export-template.csv</code>.  </li>
+<li>Record results in <code>before-after-comparison.md</code>.</li>
+</ol>
+<h2 id="sample-narrative-label-clearly-when-presenting">SAMPLE narrative (label clearly when presenting)</h2>
+<blockquote>
+<p>SAMPLE ONLY: If hit rate is 18% on 12k turns at 900 tokens and $0.50 / 1M tokens, avoided cost ≈ 12k × 0.18 × 900 / 1e6 × 0.50 ≈ $0.97 — small absolute dollars at prototype scale, but the <strong>mechanism</strong> is what scales with users. Replace with real invoice math.</p>
+</blockquote>
+</section><section class="doc" id="doc-22">
+<p class="path">04-ai-cost-claims/before-after-comparison.md</p>
+<h1 id="before-and-after-cost-comparison">Before-and-After Cost Comparison</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Experiment window</td>
+<td>[[START]] → [[END]]</td>
+</tr>
+<tr>
+<td>Model held constant</td>
+<td>[[HF_MODEL]]</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>[[NAME]]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="config-a-before">Config A — Before</h2>
+<ul>
+<li>Response cache TTL: [[0 or low]]  </li>
+<li>voiceMode: off for voice path  </li>
+<li>avg max_tokens Ask: [[ ]]  </li>
+</ul>
+<h2 id="config-b-after">Config B — After</h2>
+<ul>
+<li>Response cache TTL: [[sec]]  </li>
+<li>voiceMode: on for Voice Tutor  </li>
+<li>voice max_tokens: 280  </li>
+</ul>
+<h2 id="results">Results</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>A</th>
+<th>B</th>
+<th>Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total prompt tokens</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Total completion tokens</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Cache hit rate</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Est. $ (from invoice rate)</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>p50 time-to-first-token</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Voice mean spoken chars</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+<td>[[ ]]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="attached-evidence">Attached evidence</h2>
+<ul>
+<li>Invoice file (private): <code>[[PATH]]</code>  </li>
+<li>Usage CSV: <code>[[PATH]]</code>  </li>
+<li>Notes: <code>[[ ]]</code></li>
+</ul>
+</section><section class="doc" id="doc-23">
+<p class="path">04-ai-cost-claims/invoice-checklist.md</p>
+<h1 id="provider-invoice-usage-checklist">Provider Invoice &amp; Usage Checklist</h1>
+<p>Do <strong>not</strong> commit real invoices with account numbers to a public repo.</p>
+<ul>
+<li>[ ] Download Hugging Face invoice PDF for [[MONTH]]  </li>
+<li>[ ] Export usage CSV → fill <code>usage-export-template.csv</code>  </li>
+<li>[ ] Confirm <code>HF_MODEL</code> / router URL matches production <code>/api/health</code>  </li>
+<li>[ ] Capture cache env: <code>HF_RESPONSE_CACHE_TTL_SEC</code>, max entries, prompt-cache flags  </li>
+<li>[ ] Screenshot billing portal header with date (redact account id)  </li>
+<li>[ ] Store private pack path: <code>[[SECURE_DRIVE_PATH]]</code>  </li>
+<li>[ ] Cross-link totals into <code>before-after-comparison.md</code>  </li>
+<li>[ ] Optional: Render host invoice (compute ≠ model tokens — keep separate)</li>
+</ul>
+</section><section class="doc" id="doc-24">
+<p class="path">05-adoption-and-impact/metrics-framework.md</p>
+<h1 id="adoption-impact-metrics-framework">Adoption &amp; Impact — Metrics Framework</h1>
+<h2 id="north-star">North-star</h2>
+<p><strong>Study turns completed per week</strong> — a user sends a learning request and receives a usable coach reply (Ask / Code / Notebook / Voice).</p>
+<h2 id="metric-tree">Metric tree</h2>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Metric</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Acquisition</td>
+<td>Sign-ups / week</td>
+<td>Supabase Auth users</td>
+</tr>
+<tr>
+<td>Activation</td>
+<td>First successful Ask within 24h of signup</td>
+<td>App analytics or server logs</td>
+</tr>
+<tr>
+<td>Engagement</td>
+<td>WAU, study turns / WAU</td>
+<td>Auth + <code>/api/chat</code> logs</td>
+</tr>
+<tr>
+<td>Quality</td>
+<td>Thumbs-up rate; top negative reasons</td>
+<td><code>assistant_feedback</code></td>
+</tr>
+<tr>
+<td>Retention</td>
+<td>D1 / D7 / D30 return</td>
+<td>Auth last_sign_in / events</td>
+</tr>
+<tr>
+<td>Mobile</td>
+<td>Bottom-nav sessions; Voice sessions ≥3 turns</td>
+<td>Client events (to instrument)</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td>$ / study turn</td>
+<td>HF export ÷ turns</td>
+</tr>
+</tbody>
+</table>
+<h2 id="current-instrumentation-in-product">Current instrumentation in product</h2>
+<table>
+<thead>
+<tr>
+<th>Already available</th>
+<th>Gap to close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Supabase Auth user list</td>
+<td>Funnel dashboard</td>
+</tr>
+<tr>
+<td><code>/api/feedback</code> + weekly SQL</td>
+<td>Automated weekly email</td>
+</tr>
+<tr>
+<td><code>/api/health</code> model config</td>
+<td>Public status page</td>
+</tr>
+<tr>
+<td>Client local histories</td>
+<td>Server-side anonymized event table</td>
+</tr>
+</tbody>
+</table>
+<h2 id="portfolio-numbers">Portfolio numbers</h2>
+<p>Until production exports are attached, present <strong>methodology + qualitative impact</strong> (PRs shipped, demo, feedback loop design). Fill:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>As-of date</th>
+<th>Export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registered users</td>
+<td>[[N]]</td>
+<td>[[DATE]]</td>
+<td>Supabase</td>
+</tr>
+<tr>
+<td>WAU</td>
+<td>[[N]]</td>
+<td>[[DATE]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Study turns / week</td>
+<td>[[N]]</td>
+<td>[[DATE]]</td>
+<td>[[ ]]</td>
+</tr>
+<tr>
+<td>Thumbs-up %</td>
+<td>[[N]]</td>
+<td>[[DATE]]</td>
+<td>feedback summary</td>
+</tr>
+<tr>
+<td>D7 retention</td>
+<td>[[N]]</td>
+<td>[[DATE]]</td>
+<td>[[ ]]</td>
+</tr>
+</tbody>
+</table>
+</section><section class="doc" id="doc-25">
+<p class="path">05-adoption-and-impact/analytics-queries.md</p>
+<h1 id="analytics-queries">Analytics Queries</h1>
+<h2 id="supabase-feedback-shipped-sql-companions">Supabase — feedback (shipped SQL companions)</h2>
+<p>Use repo files:</p>
+<ul>
+<li><code>supabase/assistant_feedback.sql</code> — schema  </li>
+<li><code>supabase/feedback_weekly_review.sql</code> — weekly negatives  </li>
+</ul>
+<p>API equivalents while signed in:</p>
+<ul>
+<li><code>GET /api/feedback-summary?days=7</code>  </li>
+<li><code>GET /api/feedback-review?days=7</code> (founder emails via <code>FEEDBACK_REVIEW_EMAILS</code>)</li>
+</ul>
+<h2 id="supabase-user-counts-run-in-sql-editor">Supabase — user counts (run in SQL editor)</h2>
+<pre><code class="language-sql">-- Registered users (Auth schema; permissions vary by project)
+select count(*) as users
+from auth.users;
+
+select date_trunc('week', created_at) as week, count(*) as signups
+from auth.users
+group by 1
+order by 1 desc
+limit 12;
+</code></pre>
+<h2 id="suggested-event-table-not-yet-required-in-app">Suggested event table (not yet required in app)</h2>
+<pre><code class="language-sql">create table if not exists public.product_events (
+  id bigserial primary key,
+  user_id uuid,
+  event_name text not null,
+  mode text,
+  created_at timestamptz default now(),
+  meta jsonb default '{}'::jsonb
+);
+
+-- Example: study_turn_completed, voice_barge_in, notebook_analyze
+</code></pre>
+<p>Instrument later from <code>sendChatMessage</code> success path and Voice Tutor completion.</p>
+</section><section class="doc" id="doc-26">
+<p class="path">05-adoption-and-impact/feedback-loop.md</p>
+<h1 id="customer-feedback-loop">Customer Feedback Loop</h1>
+<h2 id="system">System</h2>
+<ol>
+<li>User taps Helpful / Not helpful on assistant replies.  </li>
+<li>Server writes Supabase <code>assistant_feedback</code> <strong>or</strong> <code>feedback.ndjson</code>.  </li>
+<li>Weekly: review top <code>(reason, mode)</code> pairs.  </li>
+<li>Ship <strong>one</strong> contract or UX fix.  </li>
+<li>Record impact in adoption pack.</li>
+</ol>
+<h2 id="operating-cadence">Operating cadence</h2>
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mon</td>
+<td>Pull 7-day summary</td>
+</tr>
+<tr>
+<td>Tue</td>
+<td>Reproduce top failure in Ask/Code/Notebook</td>
+</tr>
+<tr>
+<td>Wed–Thu</td>
+<td>Prompt/UX PR</td>
+</tr>
+<tr>
+<td>Fri</td>
+<td>Note thumbs delta; update release notes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-closed-loops-evidence">Example closed loops (evidence)</h2>
+<table>
+<thead>
+<tr>
+<th>Period</th>
+<th>Signal</th>
+<th>Change</th>
+<th>PR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-11</td>
+<td>Markdown <code>**</code> noise</td>
+<td>Strip / polish replies</td>
+<td>#72</td>
+</tr>
+<tr>
+<td>2026-11</td>
+<td>Learn/Profile dead</td>
+<td>Menu panel wiring</td>
+<td>#71</td>
+</tr>
+<tr>
+<td>2026-11</td>
+<td>Safari abort crash</td>
+<td>Declare abort vars</td>
+<td>#75</td>
+</tr>
+<tr>
+<td>2026-11</td>
+<td>Voice felt turn-based</td>
+<td>Conversational loop</td>
+<td>#74</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testimonial-capture">Testimonial capture</h2>
+<p>See <code>testimonials-template.md</code>. Prefer written permission + role (student / parent / teacher) without grades PII.</p>
+</section><section class="doc" id="doc-27">
+<p class="path">05-adoption-and-impact/testimonials-template.md</p>
+<h1 id="testimonials-customer-feedback-templates">Testimonials &amp; Customer Feedback Templates</h1>
+<h2 id="permissioned-quote-template">Permissioned quote template</h2>
+<pre><code>Name / handle: [[ ]]
+Role: Student | Parent | Teacher | Advisor
+School / org (optional): [[ ]]
+Date: [[YYYY-MM-DD]]
+Permission to share publicly: Yes / No
+Quote:
+“[[ ]]”
+Context (which feature): Ask | Code | Notebook | Voice | Other
+</code></pre>
+<h2 id="in-product-feedback-export-fields">In-product feedback export fields</h2>
+<p><code>rating</code>, <code>reason</code>, <code>mode</code>, <code>study_mode</code>, <code>created_at</code> — from <code>assistant_feedback</code>.</p>
+<h2 id="synthesis-slide-for-interviews">Synthesis slide (for interviews)</h2>
+<ul>
+<li>N quotes curated  </li>
+<li>Top 3 pain themes before fixes  </li>
+<li>Top 3 delights after Coach simplify + Voice  </li>
+</ul>
+<p>Fill with real voices before external use: <code>[[TESTIMONIAL_PACK_LINK]]</code></p>
+</section><section class="doc" id="doc-28">
+<p class="path">06-independent-validation/validation-plan.md</p>
+<h1 id="independent-validation-plan">Independent Validation Plan</h1>
+<p>Hiring panels and promotion committees overweight <strong>third-party</strong> proof. This plan lists channels and readiness.</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Status</th>
+<th>Artifact to attach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Design-partner schools / clubs</td>
+<td>[[STATUS]]</td>
+<td>LOI or email thread PDF</td>
+</tr>
+<tr>
+<td>Nonprofit / education advisor letter</td>
+<td>[[STATUS]]</td>
+<td>Signed PDF</td>
+</tr>
+<tr>
+<td>Conference talk / meetup</td>
+<td>Outline ready</td>
+<td><code>conference-talk-outline.md</code></td>
+</tr>
+<tr>
+<td>Written articles / blogs</td>
+<td>[[STATUS]]</td>
+<td>URL + PDF mirror</td>
+</tr>
+<tr>
+<td>Awards / accelerators</td>
+<td>[[STATUS]]</td>
+<td>Certificate</td>
+</tr>
+<tr>
+<td>Expert technical review</td>
+<td>[[STATUS]]</td>
+<td>Architecture review note</td>
+</tr>
+<tr>
+<td>Press</td>
+<td>[[STATUS]]</td>
+<td>Link</td>
+</tr>
+</tbody>
+</table>
+<h2 id="near-term-validation-actions">Near-term validation actions</h2>
+<ol>
+<li>Run 5 moderated student sessions; capture quotes with permission.  </li>
+<li>Ask one educator for a one-page letter (template below).  </li>
+<li>Submit a local meetup talk using the outline.  </li>
+<li>Publish a technical blog: “Response contracts + honor-code modes for student AI.”  </li>
+<li>Keep pitch deck (<code>pitch/</code>) current for investor/advisor meetings.</li>
+</ol>
+</section><section class="doc" id="doc-29">
+<p class="path">06-independent-validation/letter-templates.md</p>
+<h1 id="letter-templates-customer-expert">Letter Templates (Customer / Expert)</h1>
+<h2 id="a-educator-advisor-letter">A. Educator / advisor letter</h2>
+<pre><code>[Date]
+
+To whom it may concern,
+
+I am [Name], [Title] at [Institution]. I reviewed My Student Coach / Student AI Hub
+on [date]. The product’s focus on answer-first tutoring, honor-code Guide/Quiz modes,
+and document-grounded Notebook study is relevant to [students / classroom use-case].
+
+In our trial, [1–2 factual observations]. I support continued development of this
+approach for [reason].
+
+Sincerely,
+[Name]
+[Contact]
+</code></pre>
+<h2 id="b-technical-expert-letter">B. Technical expert letter</h2>
+<pre><code>[Date]
+
+I reviewed the architecture of My Student Coach (Express + Supabase Auth + Hugging Face
+Inference Router, SSE streaming, completion caching, and conversational Voice Tutor).
+Notable engineering choices include [cache strategy / response contracts / voiceMode].
+
+Based on the repository and demo on [date], the system demonstrates principal-level
+ownership of AI product architecture and cost-aware inference design.
+
+[Name], [Role]
+</code></pre>
+<h2 id="c-student-permissioned-testimonial-short">C. Student permissioned testimonial (short)</h2>
+<pre><code>I used My Student Coach for [task]. It helped me [outcome] without [pain of generic chatbot].
+— [First name], [Grade/Year], [Date]
+</code></pre>
+<p>Store signed PDFs privately; link here: <code>[[LETTERS_FOLDER]]</code></p>
+</section><section class="doc" id="doc-30">
+<p class="path">06-independent-validation/conference-talk-outline.md</p>
+<h1 id="conference-meetup-talk-outline">Conference / Meetup Talk Outline</h1>
+<p><strong>Title:</strong> Building a Student AI Coach: Response Contracts, Honor Codes, and Cost-Aware Inference<br />
+<strong>Length:</strong> 25 minutes + 5 Q&amp;A<br />
+<strong>Audience:</strong> AI engineers, edtech builders, principal architects</p>
+<h2 id="outline">Outline</h2>
+<ol>
+<li><strong>Hook (2m)</strong> — Generic chat fails schoolwork; brand confusion; submission-ready answers.  </li>
+<li><strong>Product wedge (3m)</strong> — My Student Coach: Ask / Code / Notebook only.  </li>
+<li><strong>Response contracts (5m)</strong> — Answer-first; strip markdown noise; Guide/Quiz honor modes.  </li>
+<li><strong>Grounding (4m)</strong> — Notebook “Not in document”; optional live web sources.  </li>
+<li><strong>Architecture (5m)</strong> — HF Router, SSE, abort/stop, completion cache, voice speak-early.  </li>
+<li><strong>Economics (3m)</strong> — Cache + voiceMode token caps; measure $/study turn.  </li>
+<li><strong>Close (3m)</strong> — PWA→TWA path; what we’d do with realtime voice next.</li>
+</ol>
+<h2 id="materials-to-bring">Materials to bring</h2>
+<ul>
+<li>Architecture mermaid from this pack  </li>
+<li>90-second Voice demo video  </li>
+<li>One before/after answer screenshot  </li>
+<li>Cost methodology one-pager (no secrets)</li>
+</ul>
+<h2 id="abstract-150-words">Abstract (150 words)</h2>
+<pre><code>[[DRAFT]] Students increasingly use general-purpose AI for homework, but generic chat
+optimizes for fluency—not learning. My Student Coach is a focused study product that
+combines answer-first response contracts, honor-code tutoring modes, document-grounded
+notebook workflows, and a cost-aware Hugging Face inference path with caching and a
+conversational voice loop. This talk shares the architecture and product decisions
+behind shipping that system as a principal-level AI engineer/owner.
+</code></pre>
+</section><section class="doc" id="doc-31">
+<p class="path">04-ai-cost-claims/usage-export-template.csv</p>
+<h1>usage-export-template.csv</h1>
+<pre class="csv">date,provider,model,request_kind,prompt_tokens,completion_tokens,cached,voice_mode,live_web,study_mode,notes
+2026-11-01,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,650,420,false,false,false,explain,SAMPLE row — replace
+2026-11-01,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,650,0,true,false,false,explain,SAMPLE cache hit — completion billed 0 if fully cached
+2026-11-08,huggingface,deepseek-ai/DeepSeek-V4-Pro:fastest,chat_sse,480,160,false,true,false,explain,SAMPLE voiceMode
+</pre>
+</section><section class="doc" id="doc-32">
+<p class="path">04-ai-cost-claims/cost-model.csv</p>
+<h1>cost-model.csv</h1>
+<pre class="csv">metric,unit,before_value,after_value,notes
+ask_turns_per_month,count,[[ ]],[[ ]],From logs
+cache_hit_rate,ratio,[[ ]],[[ ]],Completion cache
+avg_prompt_tokens,tokens,[[ ]],[[ ]],Usage export
+avg_completion_tokens,tokens,[[ ]],[[ ]],Usage export
+voice_avg_completion_tokens,tokens,[[ ]],[[ ]],voiceMode on
+price_per_million_tokens,usd,[[ ]],[[ ]],From HF invoice
+est_monthly_ai_usd,usd,[[ ]],[[ ]],= turns * tokens * price
+est_usd_per_study_turn,usd,[[ ]],[[ ]],
+</pre>
+</section>
+</body>
+</html>
