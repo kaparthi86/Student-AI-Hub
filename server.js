@@ -1393,6 +1393,25 @@ function normalizeUiLanguage(raw) {
   return "en";
 }
 
+function learnerProfileInstruction(profile) {
+  if (!profile || typeof profile !== "object") return "";
+  const grade = String(profile.gradeLevel || "").trim();
+  const subjects = String(profile.subjects || "").trim().slice(0, 160);
+  const style = String(profile.explainStyle || "balanced").trim().toLowerCase();
+  const bits = [];
+  if (grade === "middle") bits.push("Student level: middle school. Prefer plain language and short steps.");
+  else if (grade === "high") bits.push("Student level: high school. Keep rigor with clear scaffolding.");
+  else if (grade === "college") bits.push("Student level: college/university. Be precise; still teach.");
+  else if (grade === "exam") bits.push("Student level: exam preparation. Emphasize exam-useful structure and common traps.");
+  if (subjects) bits.push("Subjects of focus: " + subjects + ". Prefer examples in these areas when relevant.");
+  if (style === "simple") bits.push("Preferred style: explain simply, short sentences, everyday analogies.");
+  else if (style === "steps") bits.push("Preferred style: numbered step-by-step by default.");
+  else if (style === "examples") bits.push("Preferred style: lead with a concrete example, then the rule.");
+  else bits.push("Preferred style: balanced - direct answer, then brief useful detail.");
+  if (!bits.length) return "";
+  return "Learner profile:\n- " + bits.join("\n- ");
+}
+
 function uiLanguageInstruction(rawLang) {
   const lang = normalizeUiLanguage(rawLang);
   if (lang === "en") return "Respond in English unless the student explicitly asks for another language.";
@@ -1711,12 +1730,16 @@ app.post("/api/chat", requireSession, async (req, res) => {
       webSources = await fetchLiveWebSources(lastMessage);
     }
 
+    const learnerProfile = req.body?.learnerProfile && typeof req.body.learnerProfile === "object"
+      ? req.body.learnerProfile
+      : null;
+    const profileInstruction = learnerProfileInstruction(learnerProfile);
     let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
-          )}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
-        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}`;
+          )}${profileInstruction ? `\n${profileInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
+        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}`;
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
