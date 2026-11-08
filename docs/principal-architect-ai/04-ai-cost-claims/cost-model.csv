@@ -1,0 +1,9 @@
+metric,unit,before_value,after_value,notes
+ask_turns_per_month,count,[[ ]],[[ ]],From logs
+cache_hit_rate,ratio,[[ ]],[[ ]],Completion cache
+avg_prompt_tokens,tokens,[[ ]],[[ ]],Usage export
+avg_completion_tokens,tokens,[[ ]],[[ ]],Usage export
+voice_avg_completion_tokens,tokens,[[ ]],[[ ]],voiceMode on
+price_per_million_tokens,usd,[[ ]],[[ ]],From HF invoice
+est_monthly_ai_usd,usd,[[ ]],[[ ]],= turns * tokens * price
+est_usd_per_study_turn,usd,[[ ]],[[ ]],
