@@ -3613,6 +3613,9 @@ async function consumeChatSseStream(response, onDelta) {
 
 /** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
 
+let activeChatAbort = null;
+let activeChatStopBtn = null;
+
 function clearActiveChatStreamUi() {
   if (activeChatStopBtn) {
     activeChatStopBtn.classList.add("hidden");
