@@ -1742,7 +1742,10 @@ function wireSearchFlow({
   };
 }
 
+let speechSpeakSession = 0;
+
 function stopReadAloud() {
+  speechSpeakSession += 1;
   try {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
   } catch {
@@ -1899,26 +1902,45 @@ function chunkTextForSpeech(text, maxLen = 320) {
   return parts.length ? parts : [src.slice(0, maxLen)];
 }
 
-function speakTextChunks(chunks, voice, langTag) {
+function speakTextChunks(chunks, voice, langTag, onDone) {
   const list = Array.isArray(chunks) ? chunks.filter(Boolean) : [];
-  if (!list.length) return;
+  if (!list.length) {
+    if (typeof onDone === "function") onDone();
+    return;
+  }
+  const session = ++speechSpeakSession;
   let i = 0;
+  let finished = false;
+  const stillCurrent = () => session === speechSpeakSession;
+  const finish = () => {
+    if (finished || !stillCurrent()) return;
+    finished = true;
+    if (typeof onDone === "function") onDone();
+  };
   const speakNext = () => {
-    if (i >= list.length) return;
+    if (!stillCurrent()) return;
+    if (i >= list.length) {
+      finish();
+      return;
+    }
     const u = new SpeechSynthesisUtterance(list[i]);
     i += 1;
     if (voice) u.voice = voice;
     u.lang = langTag || voice?.lang || "en-US";
     // Soft + sober study-coach delivery: slower, slightly lower pitch, gentler volume.
-    u.rate = 0.84;
-    u.pitch = 0.92;
-    u.volume = 0.88;
+    u.rate = 0.9;
+    u.pitch = 0.95;
+    u.volume = 0.9;
     u.onend = () => {
+      if (!stillCurrent()) return;
       // Brief pause between chunks keeps pacing calm rather than rushed.
-      setTimeout(speakNext, 160);
+      setTimeout(speakNext, 120);
     };
     u.onerror = () => {
+      if (!stillCurrent()) return;
       if (i === 1) showToast(t("toast_speech_playback_failed"));
+      // Keep going so conversational loops do not stall forever.
+      setTimeout(speakNext, 40);
     };
     window.speechSynthesis.speak(u);
   };
@@ -5428,14 +5450,20 @@ window.StudentCoach = {
   getNotebookContext: () => notebookDocumentContext,
   getUiLanguage: () => activeUiLanguage,
   lastAskTopic: () => (typeof lastAskTopicGuess === "function" ? lastAskTopicGuess() : ""),
-  speakText: (text) => {
+  speakText: (text, opts = {}) => {
     const prepared = prepareTextForSpeech(String(text || ""));
-    if (!prepared) return;
-    const chunks = chunkTextForSpeech(prepared);
+    if (!prepared) {
+      if (typeof opts?.onDone === "function") opts.onDone();
+      return;
+    }
+    const maxChars = Math.max(80, Number(opts.maxChars) || 900);
+    const clipped = prepared.length > maxChars ? `${prepared.slice(0, maxChars).trim()}…` : prepared;
+    const chunks = chunkTextForSpeech(clipped, Math.min(280, maxChars));
     const voice = pickSpeechVoice(activeUiLanguage);
-    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US");
+    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US", opts.onDone);
   },
   stopSpeech: () => stopReadAloud(),
+  getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
   sendChatMessage: (...args) => sendChatMessage(...args),
   getLearnStudyMode: () => learnStudyMode,
 };

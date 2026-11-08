@@ -184,3 +184,27 @@ html.a11y-dyslexia body {
     width: 100%;
   }
 }
+
+.voice-converse-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font-size: 0.92rem;
+  color: var(--muted, #5b6b7c);
+  font-weight: 600;
+}
+
+.voice-tutor-mic.is-speaking {
+  background: rgba(40, 122, 137, 0.14);
+  border-color: rgba(40, 122, 137, 0.45);
+  color: var(--navy, #142d4c);
+}
+
+.voice-tutor-mic.is-thinking {
+  opacity: 0.75;
+}
+
+.voice-line--coach {
+  white-space: pre-wrap;
+}

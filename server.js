@@ -1271,6 +1271,18 @@ function chatSystemBase(mode) {
   ].join(" ");
 }
 
+function voiceModeInstruction(enabled) {
+  if (!enabled) return "";
+  return [
+    "Voice conversation mode:",
+    "Keep the entire answer under ~80 words unless the student asks for depth.",
+    "Lead with the direct answer in the first sentence.",
+    "Prefer 2-4 short spoken sentences over lists or code.",
+    "Avoid markdown, headings, and long step dumps.",
+    "End with one short follow-up question when helpful.",
+  ].join(" ");
+}
+
 function modeStyleInstruction(studyMode) {
   const mode = String(studyMode || "explain").trim().toLowerCase();
   if (mode === "quiz") {
@@ -1734,12 +1746,14 @@ app.post("/api/chat", requireSession, async (req, res) => {
       ? req.body.learnerProfile
       : null;
     const profileInstruction = learnerProfileInstruction(learnerProfile);
+    const voiceMode = isTruthyFlag(req.body?.voiceMode);
+    const voiceInstruction = voiceModeInstruction(voiceMode);
     let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
-          )}${profileInstruction ? `\n${profileInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
-        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}`;
+          )}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
+        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}`;
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
@@ -1756,7 +1770,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
         : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
-    const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
+    const maxOutTokens = visionTurn ? 1100 : voiceMode ? 280 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
     const skipResponseCache = liveWebRequested;
 
     const wantsStream = req.body?.stream === true;
