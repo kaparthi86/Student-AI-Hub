@@ -295,6 +295,13 @@ const I18N = {
     soon_progress_body: "Streaks, subject strengths, and weekly reviews are planned for Phase 1. Keep studying ? history already syncs on this device.",
     soon_back_home: "Back to Home",
     chip_practice: "Practice",
+    ctrl_explain_simply: "Explain simply",
+    ctrl_step_by_step: "Step by step",
+    ctrl_example: "Give an example",
+    ctrl_quiz_me: "Quiz me",
+    ctrl_regenerate: "Regenerate",
+    tab_learning: "My Learning",
+    tab_profile_hub: "Profile",
     practice_this_topic: "Practice this topic",
     practice_check: "Check",
     practice_skip: "Skip",
@@ -1735,7 +1742,10 @@ function wireSearchFlow({
   };
 }
 
+let speechSpeakSession = 0;
+
 function stopReadAloud() {
+  speechSpeakSession += 1;
   try {
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
   } catch {
@@ -1892,26 +1902,45 @@ function chunkTextForSpeech(text, maxLen = 320) {
   return parts.length ? parts : [src.slice(0, maxLen)];
 }
 
-function speakTextChunks(chunks, voice, langTag) {
+function speakTextChunks(chunks, voice, langTag, onDone) {
   const list = Array.isArray(chunks) ? chunks.filter(Boolean) : [];
-  if (!list.length) return;
+  if (!list.length) {
+    if (typeof onDone === "function") onDone();
+    return;
+  }
+  const session = ++speechSpeakSession;
   let i = 0;
+  let finished = false;
+  const stillCurrent = () => session === speechSpeakSession;
+  const finish = () => {
+    if (finished || !stillCurrent()) return;
+    finished = true;
+    if (typeof onDone === "function") onDone();
+  };
   const speakNext = () => {
-    if (i >= list.length) return;
+    if (!stillCurrent()) return;
+    if (i >= list.length) {
+      finish();
+      return;
+    }
     const u = new SpeechSynthesisUtterance(list[i]);
     i += 1;
     if (voice) u.voice = voice;
     u.lang = langTag || voice?.lang || "en-US";
     // Soft + sober study-coach delivery: slower, slightly lower pitch, gentler volume.
-    u.rate = 0.84;
-    u.pitch = 0.92;
-    u.volume = 0.88;
+    u.rate = 0.9;
+    u.pitch = 0.95;
+    u.volume = 0.9;
     u.onend = () => {
+      if (!stillCurrent()) return;
       // Brief pause between chunks keeps pacing calm rather than rushed.
-      setTimeout(speakNext, 160);
+      setTimeout(speakNext, 120);
     };
     u.onerror = () => {
+      if (!stillCurrent()) return;
       if (i === 1) showToast(t("toast_speech_playback_failed"));
+      // Keep going so conversational loops do not stall forever.
+      setTimeout(speakNext, 40);
     };
     window.speechSynthesis.speak(u);
   };
@@ -1980,6 +2009,36 @@ function defaultPrefs() {
   };
 }
 
+
+function getLearnerProfile() {
+  const prefs = loadPrefs();
+  return {
+    gradeLevel: prefs.gradeLevel || "",
+    subjects: prefs.subjects || "",
+    explainStyle: prefs.explainStyle || "balanced",
+  };
+}
+
+function syncLearnerProfileForm() {
+  const prefs = loadPrefs();
+  const grade = document.getElementById("prefGradeLevel");
+  const subjects = document.getElementById("prefSubjects");
+  const style = document.getElementById("prefExplainStyle");
+  if (grade) grade.value = prefs.gradeLevel || "";
+  if (subjects) subjects.value = prefs.subjects || "";
+  if (style) style.value = prefs.explainStyle || "balanced";
+}
+
+function saveLearnerProfileFromForm() {
+  const prefs = loadPrefs();
+  prefs.gradeLevel = document.getElementById("prefGradeLevel")?.value || "";
+  prefs.subjects = String(document.getElementById("prefSubjects")?.value || "").slice(0, 160);
+  const style = document.getElementById("prefExplainStyle")?.value || "balanced";
+  prefs.explainStyle = ["balanced", "simple", "steps", "examples"].includes(style) ? style : "balanced";
+  savePrefs(prefs);
+  showToast(t("settings_saved_toast"));
+}
+
 function loadPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(USER_PREFS_KEY) || "{}");
@@ -1991,6 +2050,13 @@ function loadPrefs() {
       fontScale,
       highContrast: parsed.highContrast === true,
       dyslexiaFont: parsed.dyslexiaFont === true,
+      gradeLevel: ["middle", "high", "college", "exam", ""].includes(String(parsed.gradeLevel || ""))
+        ? String(parsed.gradeLevel || "")
+        : "",
+      subjects: String(parsed.subjects || "").slice(0, 160),
+      explainStyle: ["balanced", "simple", "steps", "examples"].includes(String(parsed.explainStyle || ""))
+        ? String(parsed.explainStyle)
+        : "balanced",
     };
   } catch {
     return defaultPrefs();
@@ -2612,8 +2678,8 @@ function setMainTab(next) {
   if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
   if (mainTab !== "chat" && mainTab !== "voice" && mainTab !== "math") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat" && mainTab !== "math") clearLearnChatVisionAttachment();
-  const learnTabs = new Set(["chat", "code", "notebook", "math", "flashcards", "voice", "exam"]);
-  const profileTabs = new Set(["progress", "gaps", "focus"]);
+  const learnTabs = new Set(["learning", "chat", "code", "notebook", "math", "flashcards", "voice", "exam"]);
+  const profileTabs = new Set(["profile", "progress", "gaps", "focus"]);
   document.querySelectorAll(".coach-nav .tab[data-tab], .tabs .tab[data-tab]").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
@@ -2631,11 +2697,40 @@ function setMainTab(next) {
   document.getElementById("tabChat")?.classList.toggle("active", mainTab === "chat");
   const isSoon = COACH_SOON_TABS.has(mainTab);
   panelHome?.classList.toggle("hidden", mainTab !== "home");
+  const panelLearning = document.getElementById("panelLearning");
+  const panelProfile = document.getElementById("panelProfile");
+  if (panelLearning) {
+    const onLearn = mainTab === "learning";
+    panelLearning.classList.toggle("hidden", !onLearn);
+    panelLearning.hidden = !onLearn;
+  }
+  if (panelProfile) {
+    const onProfile = mainTab === "profile";
+    panelProfile.classList.toggle("hidden", !onProfile);
+    panelProfile.hidden = !onProfile;
+    if (onProfile) syncLearnerProfileForm();
+  }
   panelComingSoon?.classList.toggle("hidden", !isSoon);
   if (panelComingSoon) panelComingSoon.hidden = !isSoon;
   panelChat?.classList.toggle("hidden", mainTab !== "chat");
   panelCode?.classList.toggle("hidden", mainTab !== "code");
   panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
+  // Android bottom nav active state
+  const bottomMap = {
+    home: "home",
+    chat: "chat",
+    learning: "learning",
+    profile: "profile",
+  };
+  let bottomKey = "learning";
+  if (mainTab === "home") bottomKey = "home";
+  else if (mainTab === "chat") bottomKey = "chat";
+  else if (mainTab === "profile" || mainTab === "progress") bottomKey = "profile";
+  else if (mainTab === "learning") bottomKey = "learning";
+  else bottomKey = "learning";
+  document.querySelectorAll("#mscBottomNav .msc-bottom-item").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.getAttribute("data-bottom") === bottomKey);
+  });
   document.querySelectorAll("[data-coach-lab-panel]").forEach((panel) => {
     const on = panel.getAttribute("data-coach-lab-panel") === mainTab;
     panel.classList.toggle("hidden", !on);
@@ -2982,6 +3077,67 @@ function mountAssistantFeedback(bubble, rawText) {
   });
 }
 
+
+function mountAssistantResponseControls(bubble, markdownRaw) {
+  if (!bubble || bubble.querySelector(".bubble-actions")) return;
+  const actions = document.createElement("div");
+  actions.className = "bubble-actions";
+  const controls = [
+    { id: "simple", label: t("ctrl_explain_simply") || "Explain simply", prompt: "Explain that more simply for my level. Keep answer-first.\n\n" },
+    { id: "steps", label: t("ctrl_step_by_step") || "Step by step", prompt: "Explain that again as clear numbered steps (1. 2. 3.). Keep each step short.\n\n" },
+    { id: "example", label: t("ctrl_example") || "Give an example", prompt: "Give one clear worked example for your last answer.\n\n" },
+    { id: "quiz", label: t("ctrl_quiz_me") || "Quiz me", prompt: "Quiz me on what you just explained. One question at a time; wait for my answer.\n\n" },
+    { id: "regen", label: t("ctrl_regenerate") || "Regenerate", prompt: null },
+  ];
+  controls.forEach((c) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "bubble-action";
+    btn.textContent = c.label;
+    btn.addEventListener("click", () => {
+      if (c.id === "regen") {
+        // Drop trailing assistant, then replay last user turn cleanly.
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "assistant") {
+          chatHistory.pop();
+        }
+        const lastUser = chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user"
+          ? chatHistory.pop()
+          : null;
+        if (!lastUser) return;
+        const msgs = chatThread ? [...chatThread.querySelectorAll(".msg")] : [];
+        for (let i = msgs.length - 1; i >= 0; i -= 1) {
+          const el = msgs[i];
+          if (el.classList.contains("assistant") || el.classList.contains("user")) {
+            el.remove();
+            if (el.classList.contains("user")) break;
+          }
+        }
+        void sendChatMessage(
+          "learn",
+          String(lastUser.content || ""),
+          chatHistory,
+          chatThread,
+          apiStatus,
+          chatFollowupSubmit || chatSearchSubmit,
+          learnStudyMode,
+          lastUser.imageMime && lastUser.imageBase64
+            ? { mime: lastUser.imageMime, base64: lastUser.imageBase64, dataUrl: `data:${lastUser.imageMime};base64,${lastUser.imageBase64}` }
+            : null,
+        );
+        return;
+      }
+      if (typeof chatSearchFlow?.sendFromFollowup === "function") {
+        chatSearchFlow.sendFromFollowup(c.prompt);
+      } else if (chatFollowupInput && chatFollowupSubmit) {
+        chatFollowupInput.value = c.prompt;
+        chatFollowupSubmit.click();
+      }
+    });
+    actions.appendChild(btn);
+  });
+  bubble.appendChild(actions);
+}
+
 function fillAssistantBubbleBody(bubble, text) {
   bubble.querySelectorAll(".bubble-text").forEach((el) => el.remove());
   const rendered = renderAssistantHtml(text);
@@ -3000,6 +3156,9 @@ function fillAssistantBubbleBody(bubble, text) {
   wireAssistantCopy(bubble, text);
   mountAssistantFeedback(bubble, text);
   mountAssistantPractice(bubble, text);
+  if (bubble.dataset.mode === "learn" || !bubble.dataset.mode) {
+    mountAssistantResponseControls(bubble, text);
+  }
 }
 
 /** @returns {{ wrap: HTMLDivElement, bubble: HTMLDivElement }} */
@@ -3453,6 +3612,26 @@ async function consumeChatSseStream(response, onDelta) {
 
 
 /** @returns {Promise<boolean>} true if the exchange completed without a client-side failure. */
+
+function clearActiveChatStreamUi() {
+  if (activeChatStopBtn) {
+    activeChatStopBtn.classList.add("hidden");
+    activeChatStopBtn.hidden = true;
+  }
+  activeChatStopBtn = null;
+  activeChatAbort = null;
+}
+
+function stopActiveChatGeneration() {
+  try {
+    activeChatAbort?.abort();
+  } catch {
+    /* ignore */
+  }
+  clearActiveChatStreamUi();
+  showToast(t("toast_stopped"));
+}
+
 async function sendChatMessage(mode, message, history, threadEl, statusEl, sendBtn, studyMode = "explain", visionAttachment = null) {
   stopReadAloud();
   const attach = LEARN_VISION_ENABLED ? visionAttachment : null;
@@ -3488,6 +3667,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     history: historyForApi,
     studyMode: normalizeStudyMode(studyMode),
     uiLanguage: activeUiLanguage,
+    learnerProfile: getLearnerProfile(),
     stream: true,
   };
   if (mode === "learn" && isLiveWebEnabled()) {
@@ -3574,10 +3754,20 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       setLiveWebSearching(true);
       setStatus(statusEl, "status_searching_web");
     }
+    activeChatAbort?.abort();
+    activeChatAbort = new AbortController();
+    const stopBtn = mode === "learn" ? document.getElementById("chatStopBtn") : null;
+    activeChatStopBtn = stopBtn;
+    if (stopBtn) {
+      stopBtn.classList.remove("hidden");
+      stopBtn.hidden = false;
+      stopBtn.disabled = false;
+    }
     const response = await fetchAuthed("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(chatBody),
+      signal: activeChatAbort.signal,
     });
 
     const ct = (response.headers.get("content-type") || "").toLowerCase();
@@ -3684,9 +3874,22 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       void sendChatMessage(mode, trimmed, history, threadEl, statusEl, sendBtn, studyMode, visionAttachment);
     });
     bubble.appendChild(retry);
+    if (error && (error.name === "AbortError" || /aborted/i.test(String(error.message || "")))) {
+      try {
+        if (typeof cancelStreamPaintTimers === "function") cancelStreamPaintTimers();
+        if (streamUi?.finalize) streamUi.finalize(pendingFull || t("toast_stopped"));
+        else if (streamUi?.bubble?.isConnected) streamUi.showError(t("toast_stopped"));
+      } catch {
+        /* ignore */
+      }
+      setStatus(statusEl, "status_ready");
+      return false;
+    }
     setStatus(statusEl, "status_failed");
     return false;
   } finally {
+    clearActiveChatStreamUi();
+    setLiveWebSearching(false);
     sendBtn.disabled = false;
   }
 }
@@ -5247,14 +5450,20 @@ window.StudentCoach = {
   getNotebookContext: () => notebookDocumentContext,
   getUiLanguage: () => activeUiLanguage,
   lastAskTopic: () => (typeof lastAskTopicGuess === "function" ? lastAskTopicGuess() : ""),
-  speakText: (text) => {
+  speakText: (text, opts = {}) => {
     const prepared = prepareTextForSpeech(String(text || ""));
-    if (!prepared) return;
-    const chunks = chunkTextForSpeech(prepared);
+    if (!prepared) {
+      if (typeof opts?.onDone === "function") opts.onDone();
+      return;
+    }
+    const maxChars = Math.max(80, Number(opts.maxChars) || 900);
+    const clipped = prepared.length > maxChars ? `${prepared.slice(0, maxChars).trim()}…` : prepared;
+    const chunks = chunkTextForSpeech(clipped, Math.min(280, maxChars));
     const voice = pickSpeechVoice(activeUiLanguage);
-    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US");
+    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US", opts.onDone);
   },
   stopSpeech: () => stopReadAloud(),
+  getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
   sendChatMessage: (...args) => sendChatMessage(...args),
   getLearnStudyMode: () => learnStudyMode,
 };
@@ -5269,6 +5478,9 @@ syncFirstSession();
 void refreshLiveWebCapability();
 document.getElementById("liveWebToggle")?.addEventListener("click", () => {
   setLiveWebEnabled(!isLiveWebEnabled());
+});
+document.getElementById("chatStopBtn")?.addEventListener("click", () => {
+  stopActiveChatGeneration();
 });
 document.getElementById("hubResumeStudent")?.addEventListener("click", () => {
   showStudentWorkspace();

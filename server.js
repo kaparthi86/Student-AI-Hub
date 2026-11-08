@@ -1271,6 +1271,18 @@ function chatSystemBase(mode) {
   ].join(" ");
 }
 
+function voiceModeInstruction(enabled) {
+  if (!enabled) return "";
+  return [
+    "Voice conversation mode:",
+    "Keep the entire answer under ~80 words unless the student asks for depth.",
+    "Lead with the direct answer in the first sentence.",
+    "Prefer 2-4 short spoken sentences over lists or code.",
+    "Avoid markdown, headings, and long step dumps.",
+    "End with one short follow-up question when helpful.",
+  ].join(" ");
+}
+
 function modeStyleInstruction(studyMode) {
   const mode = String(studyMode || "explain").trim().toLowerCase();
   if (mode === "quiz") {
@@ -1391,6 +1403,25 @@ function normalizeUiLanguage(raw) {
   const v = String(raw || "").trim().toLowerCase();
   if (["en", "es", "hi", "te"].includes(v)) return v;
   return "en";
+}
+
+function learnerProfileInstruction(profile) {
+  if (!profile || typeof profile !== "object") return "";
+  const grade = String(profile.gradeLevel || "").trim();
+  const subjects = String(profile.subjects || "").trim().slice(0, 160);
+  const style = String(profile.explainStyle || "balanced").trim().toLowerCase();
+  const bits = [];
+  if (grade === "middle") bits.push("Student level: middle school. Prefer plain language and short steps.");
+  else if (grade === "high") bits.push("Student level: high school. Keep rigor with clear scaffolding.");
+  else if (grade === "college") bits.push("Student level: college/university. Be precise; still teach.");
+  else if (grade === "exam") bits.push("Student level: exam preparation. Emphasize exam-useful structure and common traps.");
+  if (subjects) bits.push("Subjects of focus: " + subjects + ". Prefer examples in these areas when relevant.");
+  if (style === "simple") bits.push("Preferred style: explain simply, short sentences, everyday analogies.");
+  else if (style === "steps") bits.push("Preferred style: numbered step-by-step by default.");
+  else if (style === "examples") bits.push("Preferred style: lead with a concrete example, then the rule.");
+  else bits.push("Preferred style: balanced - direct answer, then brief useful detail.");
+  if (!bits.length) return "";
+  return "Learner profile:\n- " + bits.join("\n- ");
 }
 
 function uiLanguageInstruction(rawLang) {
@@ -1711,12 +1742,18 @@ app.post("/api/chat", requireSession, async (req, res) => {
       webSources = await fetchLiveWebSources(lastMessage);
     }
 
+    const learnerProfile = req.body?.learnerProfile && typeof req.body.learnerProfile === "object"
+      ? req.body.learnerProfile
+      : null;
+    const profileInstruction = learnerProfileInstruction(learnerProfile);
+    const voiceMode = isTruthyFlag(req.body?.voiceMode);
+    const voiceInstruction = voiceModeInstruction(voiceMode);
     let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
-          )}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
-        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}`;
+          )}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
+        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}`;
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
@@ -1733,7 +1770,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
         : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
-    const maxOutTokens = visionTurn ? 1100 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
+    const maxOutTokens = visionTurn ? 1100 : voiceMode ? 280 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
     const skipResponseCache = liveWebRequested;
 
     const wantsStream = req.body?.stream === true;

@@ -16,6 +16,14 @@
   const mathHistory = [];
   let voiceRec = null;
   let voiceListening = false;
+  let voiceSpeaking = false;
+  let voiceThinking = false;
+  let voicePaused = false;
+  let voiceAbort = null;
+  let voiceHistory = [];
+  let voiceSpeakQueue = [];
+  let voiceSpeakActive = false;
+  let voiceSpeakOnIdle = null;
   let flashDeck = loadFlashDeck();
   let flashIndex = 0;
   let flashShowingBack = false;
@@ -269,13 +277,155 @@
     updateFocusDisplay();
   }
 
+  function setVoiceHint(text) {
+    if ($("voiceTutorHint")) $("voiceTutorHint").textContent = text;
+  }
+
+  function setVoiceMicState(state) {
+    const mic = $("voiceTutorMicBtn");
+    if (!mic) return;
+    mic.classList.remove("is-listening", "is-speaking", "is-thinking");
+    mic.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
+    if (state === "listening") {
+      mic.classList.add("is-listening");
+      mic.textContent = "Listening… tap to send";
+    } else if (state === "thinking") {
+      mic.classList.add("is-thinking");
+      mic.textContent = "Thinking…";
+    } else if (state === "speaking") {
+      mic.classList.add("is-speaking");
+      mic.textContent = "Tap to interrupt";
+    } else {
+      mic.textContent = "Tap to talk";
+    }
+  }
+
+  function autoContinueEnabled() {
+    return $("voiceAutoContinue")?.checked !== false;
+  }
+
+  function appendVoiceLine(role, text, { replaceEl } = {}) {
+    const transcript = $("voiceTutorTranscript");
+    if (!transcript) return null;
+    if (replaceEl && replaceEl.isConnected) {
+      replaceEl.textContent = `${role === "user" ? "You" : "Coach"}: ${text}`;
+      return replaceEl;
+    }
+    const line = document.createElement("p");
+    line.className = `voice-line voice-line--${role === "user" ? "user" : "coach"}`;
+    line.textContent = `${role === "user" ? "You" : "Coach"}: ${text}`;
+    transcript.appendChild(line);
+    transcript.scrollTop = transcript.scrollHeight;
+    return line;
+  }
+
+  function stopVoiceRecognition({ silent } = {}) {
+    voiceListening = false;
+    try {
+      voiceRec?.stop();
+    } catch {
+      /* ignore */
+    }
+    voiceRec = null;
+    if (!silent && !voiceThinking && !voiceSpeaking) setVoiceMicState("idle");
+  }
+
+  function stopVoiceSpeech() {
+    voiceSpeakQueue = [];
+    voiceSpeakActive = false;
+    voiceSpeaking = false;
+    voiceSpeakOnIdle = null;
+    api().stopSpeech?.();
+  }
+
+  function pauseVoiceConversation() {
+    voicePaused = true;
+    voiceAbort?.abort();
+    voiceAbort = null;
+    stopVoiceRecognition({ silent: true });
+    stopVoiceSpeech();
+    voiceThinking = false;
+    setVoiceMicState("idle");
+    setVoiceHint("Paused. Tap the mic when you want to continue.");
+  }
+
+  function speakVoiceChunks(chunks, onDone) {
+    const list = (Array.isArray(chunks) ? chunks : [chunks]).map((c) => String(c || "").trim()).filter(Boolean);
+    if (typeof onDone === "function") voiceSpeakOnIdle = onDone;
+    if (list.length) voiceSpeakQueue.push(...list);
+    const pump = () => {
+      if (voicePaused) {
+        voiceSpeakActive = false;
+        voiceSpeaking = false;
+        voiceSpeakOnIdle = null;
+        return;
+      }
+      if (!voiceSpeakQueue.length) {
+        voiceSpeakActive = false;
+        voiceSpeaking = false;
+        setVoiceMicState("idle");
+        const done = voiceSpeakOnIdle;
+        voiceSpeakOnIdle = null;
+        if (typeof done === "function") done();
+        return;
+      }
+      voiceSpeakActive = true;
+      voiceSpeaking = true;
+      setVoiceMicState("speaking");
+      const next = voiceSpeakQueue.shift();
+      const speak = api().speakText;
+      if (typeof speak !== "function") {
+        voiceSpeakQueue = [];
+        voiceSpeakActive = false;
+        voiceSpeaking = false;
+        const done = voiceSpeakOnIdle;
+        voiceSpeakOnIdle = null;
+        if (typeof done === "function") done();
+        return;
+      }
+      speak(next, {
+        maxChars: 420,
+        onDone: () => setTimeout(pump, 100),
+      });
+    };
+    if (!voiceSpeakActive) pump();
+  }
+
+  function extractSpeakableSentences(buffer, fromIdx) {
+    const src = String(buffer || "");
+    const slice = src.slice(fromIdx);
+    const sentences = [];
+    let consumed = 0;
+    const re = /[.!?…](\s+|$)/g;
+    let m;
+    while ((m = re.exec(slice))) {
+      const end = m.index + 1;
+      const piece = slice.slice(consumed, end).trim();
+      if (piece) sentences.push(piece);
+      consumed = end;
+      // Keep going; spoken cadence prefers short chunks.
+      if (sentences.join(" ").length > 220) break;
+    }
+    return { sentences, nextIdx: fromIdx + consumed };
+  }
+
   function startVoiceRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       api().showToast?.("Voice input is not supported in this browser.");
       return;
     }
-    if (voiceListening) {
+
+    // Barge-in while coach is speaking / thinking.
+    if (voiceSpeaking || voiceThinking) {
+      voicePaused = false;
+      voiceAbort?.abort();
+      voiceAbort = null;
+      stopVoiceSpeech();
+      voiceThinking = false;
+      // Fall through into a fresh listen turn.
+    } else if (voiceListening) {
+      // Tap while listening = finish this utterance and send.
       try {
         voiceRec?.stop();
       } catch {
@@ -283,17 +433,18 @@
       }
       return;
     }
+
+    voicePaused = false;
+    stopVoiceSpeech();
     voiceRec = new SpeechRecognition();
     voiceRec.continuous = true;
     voiceRec.interimResults = true;
     voiceRec.lang = document.documentElement.lang || "en-US";
     let finalText = "";
-    const transcript = $("voiceTutorTranscript");
-    const mic = $("voiceTutorMicBtn");
+    let liveLine = null;
     voiceListening = true;
-    mic?.setAttribute("aria-pressed", "true");
-    mic?.classList.add("is-listening");
-    if ($("voiceTutorHint")) $("voiceTutorHint").textContent = "Listening… tap again when you finish.";
+    setVoiceMicState("listening");
+    setVoiceHint("Listening… tap again when you finish speaking.");
 
     voiceRec.onresult = (event) => {
       let interim = "";
@@ -302,74 +453,193 @@
         if (event.results[i].isFinal) finalText += `${piece} `;
         else interim += piece;
       }
-      if (transcript) {
-        transcript.innerHTML = "";
-        const you = document.createElement("p");
-        you.className = "voice-line voice-line--user";
-        you.textContent = `You: ${(finalText + interim).trim() || "…"}`;
-        transcript.appendChild(you);
-      }
+      const shown = `${finalText}${interim}`.trim() || "…";
+      liveLine = appendVoiceLine("user", shown, { replaceEl: liveLine });
     };
 
     voiceRec.onerror = () => {
       voiceListening = false;
-      mic?.setAttribute("aria-pressed", "false");
-      mic?.classList.remove("is-listening");
+      if (!voiceThinking && !voiceSpeaking) setVoiceMicState("idle");
     };
 
-    voiceRec.onend = async () => {
+    voiceRec.onend = () => {
       voiceListening = false;
-      mic?.setAttribute("aria-pressed", "false");
-      mic?.classList.remove("is-listening");
-      if ($("voiceTutorHint")) $("voiceTutorHint").textContent = "Uses your browser microphone. Works best in Chrome or Edge.";
       const asked = finalText.trim();
-      if (!asked) return;
-      await askVoiceTutor(asked);
+      if (!asked) {
+        if (!voiceThinking && !voiceSpeaking) {
+          setVoiceMicState("idle");
+          setVoiceHint("Tap the mic and ask anything about what you’re studying.");
+        }
+        return;
+      }
+      if (liveLine) liveLine.textContent = `You: ${asked}`;
+      else appendVoiceLine("user", asked);
+      void askVoiceTutor(asked);
     };
 
     try {
       voiceRec.start();
     } catch {
       voiceListening = false;
+      setVoiceMicState("idle");
       api().showToast?.("Could not start the microphone.");
     }
   }
 
+  async function consumeVoiceSse(response, onDelta) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8", { fatal: false });
+    let lineBuf = "";
+    let full = "";
+    const handlePayload = (json) => {
+      if (!json || typeof json !== "object") return;
+      if (json.studentAiMeta) return;
+      const choice = Array.isArray(json.choices) ? json.choices[0] : null;
+      const delta = choice?.delta?.content ?? choice?.message?.content ?? json.content ?? "";
+      if (typeof delta === "string" && delta) {
+        full += delta;
+        onDelta(full);
+      } else if (typeof choice?.text === "string" && choice.text) {
+        full = choice.text;
+        onDelta(full);
+      }
+    };
+    const consumeLines = () => {
+      let nl;
+      while ((nl = lineBuf.indexOf("\n")) >= 0) {
+        const rawLine = lineBuf.slice(0, nl);
+        lineBuf = lineBuf.slice(nl + 1);
+        const line = rawLine.replace(/\r$/, "");
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).replace(/^\s*/, "");
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          handlePayload(JSON.parse(payload));
+        } catch {
+          /* ignore partial json */
+        }
+      }
+    };
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      lineBuf += decoder.decode(value, { stream: true });
+      consumeLines();
+    }
+    lineBuf += decoder.decode();
+    consumeLines();
+    return full;
+  }
+
   async function askVoiceTutor(question) {
-    const transcript = $("voiceTutorTranscript");
-    const statusLine = document.createElement("p");
-    statusLine.className = "voice-line muted";
-    statusLine.textContent = "Coach is thinking…";
-    transcript?.appendChild(statusLine);
+    const asked = String(question || "").trim();
+    if (!asked) return;
+
+    voiceHistory.push({ role: "user", content: asked });
+    voiceThinking = true;
+    voicePaused = false;
+    setVoiceMicState("thinking");
+    setVoiceHint("Coach is answering… you can tap to interrupt.");
+
+    const coachLine = appendVoiceLine("coach", "…");
+    let spokenIdx = 0;
+    let startedSpeech = false;
+    const maybeSpeakNewSentences = (fullText) => {
+      const cleaned = cleanCoachText(fullText);
+      if (coachLine) coachLine.textContent = `Coach: ${cleaned || "…"}`;
+      const { sentences, nextIdx } = extractSpeakableSentences(cleaned, spokenIdx);
+      if (!sentences.length) return;
+      spokenIdx = nextIdx;
+      startedSpeech = true;
+      speakVoiceChunks(sentences);
+    };
+
+    voiceAbort?.abort();
+    voiceAbort = new AbortController();
     try {
-      const history = (api().getChatHistory?.() || []).slice(-6).map((m) => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: String(m.content || ""),
-      }));
+      const prior = voiceHistory.slice(0, -1).slice(-8);
+      const seedHistory = prior.length
+        ? prior
+        : (api().getChatHistory?.() || []).slice(-4).map((m) => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: String(m.content || ""),
+          }));
       const res = await api().fetchAuthed("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "learn",
-          message: question,
-          history,
+          message: asked,
+          history: seedHistory,
           studyMode: "explain",
           uiLanguage: api().getUiLanguage?.() || "en",
-          stream: false,
+          learnerProfile: api().getLearnerProfile?.() || undefined,
+          voiceMode: true,
+          stream: true,
         }),
+        signal: voiceAbort.signal,
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Voice tutor failed.");
-      const output = String(data.output || "").trim();
-      statusLine.remove();
-      const coach = document.createElement("p");
-      coach.className = "voice-line voice-line--coach";
-      coach.textContent = `Coach: ${cleanCoachText(output)}`;
-      transcript?.appendChild(coach);
-      api().speakText?.(output);
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Voice tutor failed.");
+      }
+
+      let output = "";
+      if (res.body && ct.includes("text/event-stream")) {
+        output = await consumeVoiceSse(res, (full) => maybeSpeakNewSentences(full));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        output = String(data.output || "").trim();
+        maybeSpeakNewSentences(output);
+      }
+
+      const cleaned = cleanCoachText(output) || "I couldn’t form an answer. Try asking again.";
+      if (coachLine) coachLine.textContent = `Coach: ${cleaned}`;
+      voiceHistory.push({ role: "assistant", content: cleaned });
+      voiceThinking = false;
+
+      // Speak any leftover tail that never hit a sentence boundary (capped).
+      const remainder = cleaned.slice(spokenIdx).trim();
+      const finishAndMaybeContinue = () => {
+        voiceSpeaking = false;
+        setVoiceMicState("idle");
+        if (voicePaused) return;
+        if (autoContinueEnabled()) {
+          setVoiceHint("Your turn — listening again…");
+          setTimeout(() => {
+            if (!voicePaused && !voiceListening && !voiceThinking) startVoiceRecognition();
+          }, 350);
+        } else {
+          setVoiceHint("Tap the mic to continue the conversation.");
+        }
+      };
+
+      if (remainder) {
+        const clipped = remainder.length > 280 ? `${remainder.slice(0, 280).trim()}…` : remainder;
+        speakVoiceChunks([clipped], finishAndMaybeContinue);
+      } else if (startedSpeech || voiceSpeakActive || voiceSpeakQueue.length) {
+        // Wait for queued speech to drain.
+        speakVoiceChunks([], finishAndMaybeContinue);
+      } else if (cleaned) {
+        speakVoiceChunks([cleaned.slice(0, 320)], finishAndMaybeContinue);
+      } else {
+        finishAndMaybeContinue();
+      }
     } catch (err) {
-      statusLine.textContent = err.message || "Voice tutor failed.";
+      voiceThinking = false;
+      if (err && (err.name === "AbortError" || /aborted/i.test(String(err.message || "")))) {
+        if (coachLine) coachLine.textContent = "Coach: (interrupted)";
+        setVoiceMicState("idle");
+        setVoiceHint("Interrupted. Tap the mic to ask a follow-up.");
+        return;
+      }
+      if (coachLine) coachLine.textContent = `Coach: ${err.message || "Voice tutor failed."}`;
+      setVoiceMicState("idle");
+      setVoiceHint("Something went wrong. Tap the mic to try again.");
       api().showToast?.(err.message || "Voice tutor failed.");
+    } finally {
+      voiceAbort = null;
     }
   }
 
@@ -401,6 +671,10 @@
   }
 
   function onCoachLabTab(tab) {
+    if (tab !== "voice") {
+      // Leaving voice should not keep the mic hot in the background.
+      if (voiceListening || voiceSpeaking || voiceThinking) pauseVoiceConversation();
+    }
     if (tab === "flashcards") renderFlashCard();
     if (tab === "focus") {
       updateFocusDisplay();
@@ -410,10 +684,13 @@
 
   function wire() {
     $("voiceTutorMicBtn")?.addEventListener("click", startVoiceRecognition);
-    $("voiceTutorStopSpeechBtn")?.addEventListener("click", () => api().stopSpeech?.());
+    $("voiceTutorStopSpeechBtn")?.addEventListener("click", () => pauseVoiceConversation());
     $("voiceTutorClearBtn")?.addEventListener("click", () => {
+      pauseVoiceConversation();
+      voiceHistory = [];
       const transcript = $("voiceTutorTranscript");
       if (transcript) transcript.replaceChildren();
+      setVoiceHint("Conversation cleared. Tap the mic to start again.");
     });
 
     $("flashGenerateBtn")?.addEventListener("click", () => {

@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="My Student Coach" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="manifest" href="./manifest.webmanifest?v=login-gateway-1" />
+    <link rel="manifest" href="./manifest.webmanifest?v=voice-converse-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=launch-landing-1" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=launch-landing-1" />
     <title>My Student Coach</title>
@@ -27,10 +27,11 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=login-gateway-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=login-gateway-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=login-gateway-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=login-gateway-1" />
+    <link rel="stylesheet" href="./styles.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./android-shell.css?v=voice-converse-1" />
   </head>
   <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -432,6 +433,25 @@
           </details>
         </nav>
 
+        <nav class="msc-bottom-nav" id="mscBottomNav" aria-label="Primary">
+          <button type="button" class="msc-bottom-item is-active" data-bottom="home" id="bottomHome">
+            <span class="msc-bottom-ico msc-ico-home" aria-hidden="true"></span>
+            <span>Home</span>
+          </button>
+          <button type="button" class="msc-bottom-item" data-bottom="chat" id="bottomTutor">
+            <span class="msc-bottom-ico msc-ico-tutor" aria-hidden="true"></span>
+            <span>AI Tutor</span>
+          </button>
+          <button type="button" class="msc-bottom-item" data-bottom="learning" id="bottomLearning">
+            <span class="msc-bottom-ico msc-ico-learn" aria-hidden="true"></span>
+            <span>My Learning</span>
+          </button>
+          <button type="button" class="msc-bottom-item" data-bottom="profile" id="bottomProfile">
+            <span class="msc-bottom-ico msc-ico-profile" aria-hidden="true"></span>
+            <span>Profile</span>
+          </button>
+        </nav>
+
         <section id="panelHome" class="panel coach-home-panel">
           <div class="coach-home msc-home">
             <header class="coach-home-hero msc-home-hero">
@@ -477,6 +497,97 @@
           </div>
         </section>
 
+        <section id="panelLearning" class="panel msc-hub-panel hidden" hidden>
+          <div class="msc-hub-page">
+            <header class="msc-hub-hero">
+              <h2 class="msc-hub-title" id="learningHubTitle">My Learning</h2>
+              <p class="muted msc-hub-lead" id="learningHubLead">Notebooks, practice tools, and study utilities in one place.</p>
+            </header>
+            <div class="msc-hub-grid">
+              <button type="button" class="msc-hub-tile" data-coach-tab="notebook">
+                <strong>Notebook</strong>
+                <span>Summarize notes and ask grounded questions</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="code">
+                <strong>Coding Coach</strong>
+                <span>Debug and learn programming</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="math">
+                <strong>Math &amp; Science</strong>
+                <span>Step-by-step problem solving</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="flashcards">
+                <strong>Flashcards</strong>
+                <span>Review key ideas with spaced practice</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="voice">
+                <strong>Voice Tutor</strong>
+                <span>Speak and learn out loud</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
+                <strong>Knowledge Gaps</strong>
+                <span>Find weak topics from recent Ask work</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="focus">
+                <strong>Focus Mode</strong>
+                <span>Timed study sessions</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="planner">
+                <strong>Study Planner</strong>
+                <span>Coming soon — exam schedules</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panelProfile" class="panel msc-hub-panel hidden" hidden>
+          <div class="msc-hub-page">
+            <header class="msc-hub-hero">
+              <h2 class="msc-hub-title" id="profileHubTitle">Profile</h2>
+              <p class="muted msc-hub-lead" id="profileHubLead">Personalize how your coach teaches you.</p>
+            </header>
+            <div class="msc-profile-card">
+              <label for="prefGradeLevel" id="prefGradeLevelLabel">Grade / level</label>
+              <select id="prefGradeLevel">
+                <option value="">Prefer not to say</option>
+                <option value="middle">Middle school</option>
+                <option value="high">High school</option>
+                <option value="college">College / university</option>
+                <option value="exam">Exam prep</option>
+              </select>
+              <label for="prefSubjects" id="prefSubjectsLabel">Subjects (comma-separated)</label>
+              <input id="prefSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
+              <label for="prefExplainStyle" id="prefExplainStyleLabel">Explanation style</label>
+              <select id="prefExplainStyle">
+                <option value="balanced">Balanced</option>
+                <option value="simple">Explain simply</option>
+                <option value="steps">Step by step</option>
+                <option value="examples">Examples first</option>
+              </select>
+              <div class="msc-profile-actions">
+                <button type="button" class="primary-btn" id="saveLearnerPrefsBtn">Save learning profile</button>
+                <button type="button" class="ghost-btn open-settings-btn">More settings</button>
+                <button type="button" class="ghost-btn" id="profileHubInstallBtn">Install app</button>
+              </div>
+              <p class="muted msc-profile-note" id="profileHubNote">Your profile stays on this device and shapes how Ask answers you.</p>
+            </div>
+            <div class="msc-hub-grid msc-hub-grid--compact">
+              <button type="button" class="msc-hub-tile" data-coach-tab="progress">
+                <strong>My Progress</strong>
+                <span>Coming soon</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
+                <strong>Knowledge Gaps</strong>
+                <span>Weak topics scan</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="focus">
+                <strong>Focus Mode</strong>
+                <span>Pomodoro timer</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section id="panelComingSoon" class="panel coach-soon-panel hidden" hidden>
           <div class="coach-soon-empty">
             <p class="coach-kicker" id="soonPanelKicker">Coming soon</p>
@@ -495,15 +606,19 @@
           <div class="coach-lab">
             <header class="coach-lab-hero">
               <p class="coach-kicker">Voice Tutor</p>
-              <h2 class="coach-welcome">Talk through the idea</h2>
-              <p class="coach-sub muted">Speak a question. Your coach answers out loud and shows a transcript.</p>
+              <h2 class="coach-welcome">Talk with your coach</h2>
+              <p class="coach-sub muted">A back-and-forth study conversation. Tap the mic to talk, tap again to send, or interrupt anytime.</p>
             </header>
             <div class="voice-tutor-stage">
-              <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Hold to talk / tap to stop</button>
-              <p class="muted voice-tutor-hint" id="voiceTutorHint">Uses your browser microphone. Works best in Chrome or Edge.</p>
+              <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Tap to talk</button>
+              <p class="muted voice-tutor-hint" id="voiceTutorHint">Works best in Chrome or Edge. Keep replies short for a natural loop.</p>
+              <label class="voice-converse-toggle">
+                <input type="checkbox" id="voiceAutoContinue" checked />
+                <span>Keep conversation going after each answer</span>
+              </label>
               <div class="voice-tutor-transcript" id="voiceTutorTranscript" aria-live="polite"></div>
               <div class="coach-hero-actions">
-                <button type="button" class="ghost-btn" id="voiceTutorStopSpeechBtn">Stop speaking</button>
+                <button type="button" class="ghost-btn" id="voiceTutorStopSpeechBtn">Stop / pause</button>
                 <button type="button" class="ghost-btn" id="voiceTutorClearBtn">Clear</button>
               </div>
             </div>
@@ -807,6 +922,7 @@
                   </svg>
                 </button>
                 <button id="chatFollowupSubmit" class="search-submit primary-btn" type="button">Ask</button>
+              <button type="button" id="chatStopBtn" class="ghost-btn chat-stop-btn hidden" hidden>Stop</button>
               </div>
               <div class="followup-meta">
                 <button type="button" id="chatCopyThreadBtn" class="ghost-btn tiny-btn copy-thread-btn hidden">
@@ -1088,7 +1204,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=login-gateway-1"></script>
-    <script defer src="./coach-labs.js?v=login-gateway-1"></script>
+    <script defer src="./app.js?v=voice-converse-1"></script>
+    <script defer src="./coach-labs.js?v=voice-converse-1"></script>
   </body>
 </html>
