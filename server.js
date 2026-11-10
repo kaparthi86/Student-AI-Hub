@@ -529,6 +529,11 @@ app.use(
       if (filePath.endsWith(".webmanifest")) {
         res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
       }
+      // Digital Asset Links for Android TWA / Play verification
+      if (filePath.endsWith(`${path.sep}.well-known${path.sep}assetlinks.json`) || /[/\\]assetlinks\.json$/i.test(filePath)) {
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.setHeader("Cache-Control", "public, max-age=300");
+      }
       if (filePath.endsWith("sw.js")) {
         res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         return;
@@ -542,6 +547,12 @@ app.use(
 );
 
 /** Render + express.static: always wire `/` to the SPA shell (static may 404 before fallthrough in some cases). */
+app.get("/.well-known/assetlinks.json", (_req, res) => {
+  res.type("application/json");
+  res.set("Cache-Control", "public, max-age=300");
+  res.sendFile(".well-known/assetlinks.json", { root: publicDir });
+});
+
 app.get("/", (_req, res) => {
   res.sendFile("index.html", { root: publicDir });
 });
