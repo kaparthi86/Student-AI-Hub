@@ -3154,7 +3154,10 @@ function setMainTab(next) {
   else if (mainTab === "chat") bottomKey = "chat";
   else if (mainTab === "profile" || mainTab === "progress") bottomKey = "profile";
   else if (mainTab === "learning") bottomKey = "learning";
-  else bottomKey = "learning";
+  else if (["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "gaps", "focus"].includes(mainTab)) {
+    // Tools opened from My Learning keep Learning selected in the bottom bar.
+    bottomKey = "learning";
+  } else bottomKey = "home";
   document.querySelectorAll("#mscBottomNav .msc-bottom-item").forEach((btn) => {
     btn.classList.toggle("is-active", btn.getAttribute("data-bottom") === bottomKey);
   });
@@ -3483,6 +3486,34 @@ function wireCoachHome() {
     closeCoachNavMenus();
     maybeOfferPwaInstallBar(true);
   });
+  // Android / iOS bottom nav (Home · AI Tutor · My Learning · Profile)
+  document.querySelectorAll("#mscBottomNav .msc-bottom-item[data-bottom]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const tab = btn.getAttribute("data-bottom");
+      if (tab) go(tab);
+    });
+  });
+
+  // Learning + Profile hub tiles
+  document.getElementById("panelLearning")?.addEventListener("click", (e) => {
+    const target = e.target.closest?.("[data-coach-tab]");
+    if (!target || !document.getElementById("panelLearning")?.contains(target)) return;
+    go(target.getAttribute("data-coach-tab"));
+  });
+  document.getElementById("panelProfile")?.addEventListener("click", (e) => {
+    const target = e.target.closest?.("[data-coach-tab]");
+    if (!target || !document.getElementById("panelProfile")?.contains(target)) return;
+    go(target.getAttribute("data-coach-tab"));
+  });
+  document.getElementById("saveLearnerPrefsBtn")?.addEventListener("click", () => {
+    if (typeof saveLearnerProfileFromForm === "function") saveLearnerProfileFromForm();
+  });
+  document.getElementById("profileHubInstallBtn")?.addEventListener("click", () => {
+    maybeOfferPwaInstallBar(true);
+  });
+
   // Learn / Profile menu items
   document.querySelectorAll(".msc-nav-item[data-tab]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
