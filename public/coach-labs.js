@@ -385,6 +385,7 @@
       }
       speak(next, {
         maxChars: 420,
+        lang: api().getVoiceLocale?.() || undefined,
         onDone: () => setTimeout(pump, 100),
       });
     };
@@ -439,7 +440,8 @@
     voiceRec = new SpeechRecognition();
     voiceRec.continuous = true;
     voiceRec.interimResults = true;
-    voiceRec.lang = document.documentElement.lang || "en-US";
+    const voiceLocale = api().getVoiceLocale?.() || document.documentElement.lang || "en-US";
+    voiceRec.lang = voiceLocale;
     let finalText = "";
     let liveLine = null;
     voiceListening = true;
@@ -572,9 +574,10 @@
           message: asked,
           history: seedHistory,
           studyMode: "explain",
-          uiLanguage: api().getUiLanguage?.() || "en",
+          uiLanguage: api().getReplyLanguage?.() || api().getUiLanguage?.() || "en",
           learnerProfile: api().getLearnerProfile?.() || undefined,
           voiceMode: true,
+          voiceLocale: api().getVoiceLocale?.() || undefined,
           stream: true,
         }),
         signal: voiceAbort.signal,
@@ -606,10 +609,10 @@
         setVoiceMicState("idle");
         if (voicePaused) return;
         if (autoContinueEnabled()) {
-          setVoiceHint("Your turn — listening again…");
+          setVoiceHint("Your turn — ask a follow-up. Listening again…");
           setTimeout(() => {
             if (!voicePaused && !voiceListening && !voiceThinking) startVoiceRecognition();
-          }, 350);
+          }, 280);
         } else {
           setVoiceHint("Tap the mic to continue the conversation.");
         }
@@ -671,6 +674,22 @@
   }
 
   function onCoachLabTab(tab) {
+    if (tab === "voice") {
+      const sub = $("voiceTutorSub");
+      // Keep conversational framing visible.
+      if (sub && !sub.dataset.locked) {
+        sub.textContent = "Two-way study talk. Ask, hear the answer, then keep going — interrupt anytime.";
+      }
+      // Ask host app to refresh region-specific voice hint.
+      try {
+        window.StudentCoach && document.getElementById("voiceRegionHint");
+        const hint = $("voiceRegionHint");
+        const locale = api().getVoiceLocale?.();
+        if (hint && locale) hint.textContent = `Voice uses your reply language and region (${locale}).`;
+      } catch {
+        /* ignore */
+      }
+    }
     if (tab !== "voice") {
       // Leaving voice should not keep the mic hot in the background.
       if (voiceListening || voiceSpeaking || voiceThinking) pauseVoiceConversation();
