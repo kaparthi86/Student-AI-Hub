@@ -25,6 +25,8 @@ const panelNotebook = document.getElementById("panelNotebook");
 const practiceDock = document.getElementById("practiceDock");
 const COACH_TABS = new Set([
   "home",
+  "learning",
+  "profile",
   "chat",
   "code",
   "notebook",
@@ -162,6 +164,7 @@ const CHAT_SESSION_KEY = "student_ai_sessions_v1";
 const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_v1";
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
+const INDIA_LOCALE_HINT_KEY = "student_ai_india_locale_hint_v1";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
@@ -186,12 +189,13 @@ let notebookSourceMeta = [];
 let defaultPageHintOfferedThisLoad = false;
 let activeUiLanguage = "en";
 
-const SUPPORTED_UI_LANGS = ["en", "es", "hi", "te"];
+const SUPPORTED_UI_LANGS = ["en", "es", "hi", "te", "ta"];
 const UI_LANG_LABELS = {
   en: "English",
   es: "Espanol",
   hi: "Hindi",
   te: "Telugu",
+  ta: "Tamil",
 };
 
 const I18N = {
@@ -497,6 +501,30 @@ const I18N = {
     toast_doc_analysis_failed: "Document analysis failed",
     pwa_install_sub_default:
       "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
+    locale_banner_title: "Personalize for India",
+    locale_banner_body: "Set your board, exam track, and language for local study recommendations. No GPS needed.",
+    locale_banner_cta: "Set up for India",
+    locale_banner_skip: "Not now",
+    locale_recs_title: "Recommended for you",
+    locale_recs_lead: "Based on your board, region, and exam focus",
+    profile_country: "Country",
+    profile_region: "State / region",
+    profile_board: "Education board",
+    profile_exam: "Exam focus",
+    profile_reply_lang: "Reply language",
+    profile_locale_note: "These stay on this device and shape Ask answers, Home tips, and Voice Tutor language.",
+    rec_cbse_revise: "CBSE revision",
+    rec_jee_practice: "JEE practice",
+    rec_neet_bio: "NEET biology",
+    rec_board_quiz: "Board exam quiz",
+    rec_tamil_medium: "Explain in Tamil",
+    rec_telugu_medium: "Explain in Telugu",
+    rec_hindi_medium: "Explain in Hindi",
+    rec_state_board: "State board help",
+    rec_cuet: "CUET prep",
+    rec_hinglish: "Simple mixed language",
+    voice_region_hint: "Voice uses your reply language and region ({locale}).",
+    voice_tutor_sub: "Two-way study talk. Ask, hear the answer, then keep going — interrupt anytime.",
   },
   es: {
     signin_title: "Estudia mejor. Aprende mas. Logra mas.",
@@ -1165,6 +1193,333 @@ const I18N = {
     toast_doc_analysis_failed: "Document analysis fail ayyindi",
     pwa_install_sub_default: "Mobile app varaku home screen leda desktop lo quick access kosam icon add cheyyandi.",
   },
+  ta: {
+    signin_title: "சிறப்பாகப் படியுங்கள். நன்றாகக் கற்றுக்கொள்ளுங்கள்.",
+    signin_tagline: "பாடம், புரிதல், தேர்வு தயாரிப்புக்கான உங்கள் தனிப்பட்ட AI பயிற்சியாளர்.",
+    free_for_students: "மாணவர்களுக்கு இலவசம்",
+    brand_kicker: "உங்கள் தனிப்பட்ட AI படிப்புத் துணை",
+    live_web_label: "நேரடி வலை",
+    live_web_hint: "தேவைப்படும்போது தற்போதைய வலை ஆதாரங்களைப் பயன்படுத்துக",
+    live_web_hint_off: "பதில்கள் மாதிரியை மட்டும் பயன்படுத்தும்",
+    sources_label: "ஆதாரங்கள்",
+    status_searching_web: "வலையில் தேடுகிறது...",
+    tile_student_badge: "இப்போது கிடைக்கும்",
+    hub_hint: "Choose a workspace to get started",
+    resume_student: "கற்றலைத் தொடரவும்",
+    live_web_unavailable: "Live web needs a search key on the server",
+    visual_kicker: "Visual",
+    auth_brand_kicker: "உங்கள் தனிப்பட்ட AI படிப்புத் துணை",
+    hub_brand: "My Student Coach",
+    hub_tagline: "சிறப்பாகப் படியுங்கள். நன்றாகக் கற்றுக்கொள்ளுங்கள்.",
+    hub_welcome: "மீண்டும் வரவேற்கிறோம், {name}",
+    tile_student_title: "My Student Coach",
+    tile_student_sub: "கேளுங்கள், கற்றுக்கொள்ளுங்கள், பயிற்சி செய்யுங்கள்",
+    tile_student_cta: "திற ->",
+    hub_privacy_note: "My Student Coach does not sell your data or show ads from your chats.",
+    disclaimer_privacy: 
+      "My Student Coach does not sell your personal data or show advertising based on your chats.",
+    nav_hub: "Overview",
+    nav_back_hub: "முகப்புக்குத் திரும்பு",
+    nav_student: "My Student Coach",
+    disclaimer_base: "My Student Coach தவறு செய்யலாம். முக்கிய தகவல்களைச் சரிபார்க்கவும்.",
+    disclaimer_hub: "கற்றல் உதவிக்கு மட்டும் — தொழில்முறை ஆலோசனை அல்ல.",
+    disclaimer_nonprofit: "Mission-driven - built to help students learn, not to sell your data or push ads.",
+    disclaimer_student: "In My Student Coach: for study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
+          mission_title: "Why My Student Coach",
+    mission_lead: "Personalized learning with study integrity and privacy at the center.",
+    mission_sub: "Built for learning and practice - not for handing in AI work as your own.",
+    honor_title: "Study with integrity",
+    honor_lead: "My Student Coach is for learning and practice - not for handing in AI work as your own.",
+    honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
+    honor_ack: "I understand",
+    honor_back: "Back to Home",
+    continue_google: "Continue with Google",
+    sign_in: "Sign in",
+    login_welcome: "வரவேற்கிறோம்",
+    login_support: "உங்கள் தனிப்பட்ட AI கற்றல் துணை தயார்.",
+    login_privacy: "உங்கள் கற்றல். உங்கள் தரவு. உங்கள் தனியுரிமை.",
+    login_about: "தயாரிப்பைப் பற்றி",
+    landing_get_started: "தொடங்குங்கள்",
+    settings: "Settings",
+    logout: "Logout",
+    welcome: "Welcome",
+    app_tagline: "Ask a question, get an answer, keep the conversation going.",
+    tab_home: "Home",
+    tab_ask: "AI Coach",
+    send: "Send",
+    tab_code: "Code",
+    tab_notebook: "Notebook",
+    tab_planner: "Planner",
+    tab_exam: "Exam Prep",
+    tab_progress: "Progress",
+    tab_soon: "Soon",
+    coach_kicker: "மீண்டும் வரவேற்கிறோம்",
+    coach_welcome: "என்ன கற்க விரும்புகிறீர்கள், {name}?",
+    coach_welcome_new: "இன்று என்ன கற்கலாம், {name}?",
+    coach_sub: "உங்கள் AI பயிற்சியாளர் தயார்.",
+    coach_continue: "கற்றலைத் தொடரவும்",
+    coach_start: "கற்றலைத் தொடங்குங்கள்",
+    coach_ask_cta: "AI பயிற்சியாளரிடம் கேளுங்கள்",
+    coach_priorities_title: "Today's priorities",
+    coach_priorities_lead: "Start with one clear next step.",
+    coach_tools_title: "What can I help you with?",
+    coach_tools_lead: "Pick one path. More tools stay under Learn.",
+    coach_next_title: "Coming next",
+    coach_next_lead: "Still on the roadmap.",
+    coach_tool_ask_title: "Explain a topic",
+    coach_tool_ask_sub: "Understand anything",
+    coach_tool_code_title: "Learn coding",
+    coach_tool_code_sub: "Debug and understand",
+    coach_tool_notebook_title: "Study my notes",
+    coach_tool_notebook_sub: "Upload your documents",
+    coach_soon_planner_title: "Study Planner",
+    coach_soon_planner_sub: "AI schedules and deadlines",
+    coach_soon_exam_title: "Exam Prep",
+    coach_soon_exam_sub: "Practice tests from your notes",
+    coach_soon_progress_title: "My Progress",
+    coach_soon_progress_sub: "Streaks, strengths, and reviews",
+    coach_priority_continue_ask: "Continue your last Ask thread",
+    coach_priority_continue_code: "Pick up your Code session",
+    coach_priority_continue_notebook: "Return to Notebook",
+    coach_priority_ask: "Ask one clear question in AI Coach",
+    coach_priority_practice: "Practice a topic after Ask",
+    coach_priority_notes: "Upload notes in Notebook",
+    soon_kicker: "Coming soon",
+    soon_planner_title: "Study Planner",
+    soon_planner_body: "AI-generated schedules, deadlines, and weekly targets are on the roadmap. Use Ask and Notebook today while we build it.",
+    soon_exam_title: "Exam Prep",
+    soon_exam_body: "Mock exams, adaptive practice, and topic analysis are coming next. Practice from Ask or Notebook in the meantime.",
+    soon_progress_title: "My Progress",
+    soon_progress_body: "Streaks, subject strengths, and weekly reviews are planned for Phase 1. Keep studying ? history already syncs on this device.",
+    soon_back_home: "Back to Home",
+    chip_practice: "Practice",
+    ctrl_explain_simply: "எளிதாக விளக்கு",
+    ctrl_step_by_step: "படிப்படியாக",
+    ctrl_example: "எடுத்துக்காட்டு",
+    ctrl_quiz_me: "வினாடி வினா",
+    ctrl_regenerate: "மீண்டும் உருவாக்கு",
+    tab_learning: "என் கற்றல்",
+    tab_profile_hub: "சுயவிவரம்",
+    practice_this_topic: "Practice this topic",
+    practice_check: "Check",
+    practice_skip: "Skip",
+    practice_again: "Practice again",
+    practice_done: "Done",
+    practice_summary_title: "Practice complete",
+    practice_next_label: "Next best step",
+    practice_answer_placeholder: "Answer in your own words...",
+    practice_progress: "Question {n} of {total}",
+    practice_score: "You got {correct} of {total} right.",
+    practice_need_notes: "Analyze notes in Notebook first.",
+    practice_need_ask: "Ask a question first, then practice that topic.",
+    practice_need_code: "Get Code help first, then practice that topic.",
+    practice_building: "Building your practice set...",
+    practice_checking: "Checking your answer...",
+    practice_wrapping: "Building your next step...",
+    practice_correct: "Nice - you got the idea.",
+    practice_miss: "Not quite - here is the key point.",
+    practice_key_point: "Key point: {point}",
+    practice_no_mistakes: "No major misses - solid practice.",
+    practice_mistake_relearn: "Relearn: {tip}",
+    chat_title: "What do you want to learn today?",
+    chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
+    chat_hint: "Press Enter to search. Shift+Enter for a new line.",
+    chat_followup: "Ask a follow-up...",
+    code_title: "Debug or learn code",
+    code_placeholder: "Paste code or describe the bug...",
+    code_hint: "Tip: include error messages and what you expected.",
+    code_followup: "Follow-up...",
+    notebook_hint: 
+      "Upload notes (.txt, .md, .csv, .json, .pdf). You will get summary, key concepts, practice checks, and a study plan - similar to a lightweight notebook assistant.",
+    analyze_doc: "Analyze notes",
+    notebook_drop_title: "Drop notes or choose files",
+    notebook_drop_hint: "Up to 5 files - .txt, .md, .csv, .json, .pdf - summary, key ideas, practice checks, and a study plan",
+    notebook_followup: "Ask a follow-up about your notes...",
+    notebook_sources_aria: "Selected notebook sources",
+    notebook_remove_source: "Remove {name}",
+    notebook_active_sources: "Studying: {names}",
+    notebook_files_selected: "{count} files selected ({kb} KB)",
+    choose_files_first: "Choose at least one notes file first",
+    notebook_max_files: "You can analyze up to {max} files at a time.",
+    toast_analyze_first: "Analyze your notes before asking follow-ups.",
+    chip_study_plan: "Study plan",
+    starter_prompt_study_plan: 
+      "Using only my uploaded notes, give a focused revision plan for the next 3 days with concrete tasks.\n\n",
+    starter_prompt_notebook_summarize: 
+      "Using only my uploaded notes, summarize the most important ideas in short bullet points I should remember.\n\n",
+    starter_prompt_notebook_quiz: 
+      "Using only my uploaded notes, quiz me with short questions and answer keys. If something is not in the notes, say Not in document.\n\n",
+    starter_prompt_notebook_steps: 
+      "Using only my uploaded notes, explain the hardest idea step-by-step with a simple example.\n\n",
+    status_ready: "Ready",
+    status_generating: "Generating...",
+    status_streaming: "Streaming...",
+    status_failed: "Failed",
+    settings_title: "Preferences",
+    settings_close: "Close",
+    settings_language: "காட்சி மொழி",
+    settings_restore_sessions: "Restore previous chat sessions on load",
+    settings_save: "Save preferences",
+    settings_saved_toast: "விருப்பங்கள் சேமிக்கப்பட்டன",
+    opening_google_login: "Opening Google login...",
+    choose_file_first: "Choose a file first",
+    reading_summarizing: "Reading and summarizing your notes...",
+    language_hint: "இடைமுக மொழியை {lang} ஆக மாற்றவா?",
+    language_hint_desc: "பின்னர் அமைப்புகளில் எப்போதும் மாற்றலாம்.",
+    keep_english: "Keep English",
+    switch_lang: "Switch",
+    you: "You",
+    assistant: "Assistant",
+    copy: "Copy",
+    attached_image: "Attached image",
+    show_steps: "Yes, show me how",
+    hide_steps: "Hide steps",
+    pwa_install_title: "Install My Student Coach",
+    pwa_install_btn: "Install",
+    pwa_ios_help_btn: "iPhone / iPad",
+    pwa_not_now: "Not now",
+    default_title: "Make this your start page?",
+    default_lead: 
+      "Browsers do not let websites change your startup page automatically. You can still set My Student Coach as your start page in a few steps.",
+    default_copy_address: "Copy this address:",
+    default_step_chrome: 
+      "Chrome / Edge: Settings > On startup > Open a specific page > Add a new page, then paste this address.",
+    default_step_safari: "Safari (Mac): Safari > Settings > General > Homepage, then paste this address.",
+    default_step_ios: "iPhone / iPad: Share > Add to Home Screen for a quick icon.",
+    default_extension_note: 
+      "Using our Chrome extension? After install, new tabs can open this site automatically.",
+    copied: "Copied!",
+    toast_no_assistant_reply: "No assistant reply to read yet.",
+    toast_nothing_to_read: "Nothing to read.",
+    toast_mic_permission_denied: "Microphone permission denied.",
+    toast_no_speech: "No speech heard.",
+    toast_voice_failed: "Voice input failed.",
+    toast_voice_start_failed: "Could not start voice input.",
+    voice_not_supported: "Voice input is not supported in this browser",
+    remove_image: "Remove image",
+    copy_assistant_aria: "Copy assistant response",
+    toast_read_aloud_not_supported: "Read aloud is not supported in this browser.",
+    toast_stopped: "நிறுத்தப்பட்டது",
+    toast_speech_playback_failed: "Speech playback failed.",
+    toast_image_attached: "Image attached. Add your question, then Ask.",
+    toast_address_copied: "Address copied",
+    toast_select_copy: "Select the field and copy (Cmd/Ctrl+C)",
+    feedback_prompt: "Was this helpful?",
+    feedback_helpful: "Helpful",
+    feedback_not_helpful: "Not helpful",
+    feedback_select_reason: "Select a reason",
+    feedback_thanks: "Thanks!",
+    feedback_thanks_reason: "Thanks for the feedback",
+    reason_too_vague: "Too vague",
+    reason_incorrect: "Incorrect",
+    reason_too_long: "Too long",
+    reason_not_my_level: "Not my level",
+    reason_other: "Other",
+    no_response: "No response.",
+    error_prefix: "Error",
+    stream_empty_fallback: 
+      "No assistant text arrived in the stream. This usually means empty model output or an SSE shape we could not parse. Check HF_API_TOKEN, HF_MODEL, and HF_CHAT_URL in your env.",
+    pwa_sub_install: 
+      "Tap Install to add My Student Coach with our icon. It opens fullscreen like an app from your home screen or taskbar.",
+    pwa_sub_ios: "Use Add to Home Screen for our branded icon. Safari does not show an Install button on websites.",
+    pwa_sub_desktop: 
+      "On Chrome or Edge, use the install icon in the address bar (or browser menu) when it appears to add our icon on desktop or home screen.",
+    pwa_ios_steps: 
+      "Safari on iPhone or iPad: tap Share, then Add to Home Screen, then Add to place the branded icon on your home screen.",
+    pwa_help_btn: "How to install",
+    pwa_help_steps: 
+      "Desktop Chrome / Edge: use the install icon in the address bar, or the menu (three dots) and choose Install My Student Coach or Install app.\n\nAndroid Chrome: open the menu and tap Add to Home screen or Install app.\n\nFirefox or Safari on Mac usually do not offer a website Install button; bookmark this page or use Add to Home Screen on iPhone / iPad.\n\nIf no install icon appears, the page may need HTTPS (not http://) or the browser may show it after you use the site a little longer.",
+    empty_try_ask: "Try asking:",
+    empty_try_code: "Try pasting or asking:",
+    empty_try_notebook: "Works well with:",
+    empty_chat_1: "Photosynthesis, simply",
+    empty_chat_1_send: "Explain photosynthesis in simple terms, as if I am in high school.",
+    empty_chat_2: "Gradient descent",
+    empty_chat_2_send: "Explain gradient descent like I am 15, with a simple example.",
+    empty_chat_3: "Study plan for an exam",
+    empty_chat_3_send: "Help me make a one-week study plan for a biology midterm.",
+    empty_code_1: "Fix my Python loop",
+    empty_code_1_send: 
+      "My Python for loop runs forever. Here is the code:\n\nwhile True:\n    print('hi')\n\nWhy does it not stop and how do I fix it?",
+    empty_code_2: "Explain this error",
+    empty_code_2_send: 
+      "I get TypeError: cannot read property 'map' of undefined in JavaScript. What does it mean and how do I debug it?",
+    empty_code_3: "Big-O of binary search",
+    empty_code_3_send: "What is the time complexity of binary search and why? Keep it beginner-friendly.",
+    empty_nb_1: "PDF lecture notes",
+    empty_nb_1_hint: "Upload a PDF of lecture notes to get a summary, key concepts, and practice checks.",
+    empty_nb_2: "Markdown study guide",
+    empty_nb_2_hint: "Upload a .md or .txt study guide for a structured recap and study plan.",
+    empty_nb_3: "CSV data table",
+    empty_nb_3_hint: "Upload a .csv file to summarize columns, patterns, and practice questions.",
+    chip_summarize: "Shorter",
+    chip_quiz: "Quiz me",
+    chip_steps: "Step-by-step",
+    chip_listen: "Listen",
+    chip_simpler: "Simpler",
+    chip_example: "Example",
+    chip_study_next: "What next?",
+    chips_followup_aria: "Quick follow-ups and read aloud",
+    starter_prompt_summarize: 
+      "Make your last answer shorter: keep only the key points in tight bullets I can remember.\n\n",
+    starter_prompt_quiz: 
+      "Based on our conversation so far, give me a short quiz: questions, answer choices, and correct answers with brief explanations.\n\n",
+    starter_prompt_steps: 
+      "Explain that again as a clear numbered step-by-step list (1. 2. 3.). Keep each step short. Do not use ** bold asterisks. Add a simple example if it helps.\n\n",
+    starter_prompt_simpler: 
+      "Explain the same idea more simply, like I am 15. Keep the answer-first style. Use a short everyday analogy.\n\n",
+    starter_prompt_example: 
+      "Give one clear worked example for your last answer. Show the steps briefly, then state what to notice.\n\n",
+    starter_prompt_study_next: 
+      "Based on what we just covered, tell me what I should practice next in 3 short steps. Keep it concrete.\n\n",
+    copy_thread: "Copy conversation",
+    copy_thread_aria: "Copy entire conversation",
+    toast_thread_copied: "Conversation copied",
+    toast_thread_empty: "Nothing to copy yet",
+    copy_code: "Copy code",
+    copy_code_aria: "Copy code block",
+    attach_image_aria: "Attach image",
+    attach_image_title: "Attach image",
+    voice_search_aria: "Voice search",
+    voice_search_title: "Tap to speak; pauses end listening, or tap again to search",
+    voice_input_aria: "Voice input",
+    voice_input_title: "Tap to speak; pauses end listening, or tap again to Ask",
+    disclaimer_mistakes: 
+      "My Student Coach can make mistakes. Check important facts and follow your instructor's policies on using AI.",
+    disclaimer_honor: 
+      "For study help and practice only - follow your honor code; don't submit AI output when your course forbids it.",
+    disclaimer_aria: "Disclaimer",
+    doc_selected: "Selected: {name} ({kb} KB)",
+    docs_selected: "Selected: {count} files ({kb} KB)",
+    toast_image_read_fail: "Could not read image",
+    toast_doc_analysis_failed: "Document analysis failed",
+    pwa_install_sub_default: 
+      "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
+    locale_banner_title: "இந்தியாவுக்காகத் தனிப்பயனாக்கு",
+    locale_banner_body: "பார்டு, தேர்வு பாதை, மொழி ஆகியவற்றை அமைத்து உள்ளூர் பரிந்துரைகளைப் பெறுங்கள். GPS தேவையில்லை.",
+    locale_banner_cta: "இந்தியாவுக்காக அமை",
+    locale_banner_skip: "இப்போது வேண்டாம்",
+    locale_recs_title: "உங்களுக்கான பரிந்துரைகள்",
+    locale_recs_lead: "உங்கள் பலகை, பகுதி, தேர்வு இலக்கின் அடிப்படையில்",
+    profile_country: "நாடு",
+    profile_region: "மாநிலம் / பகுதி",
+    profile_board: "கல்வி வாரியம்",
+    profile_exam: "தேர்வு இலக்கு",
+    profile_reply_lang: "பதில் மொழி",
+    profile_locale_note: "இவை இந்த சாதனத்தில் இருக்கும்; Ask, முகப்புப் பரிந்துரைகள், Voice Tutor மொழியை வடிவமைக்கும்.",
+    rec_cbse_revise: "CBSE திருப்புதல்",
+    rec_jee_practice: "JEE பயிற்சி",
+    rec_neet_bio: "NEET உயிரியல்",
+    rec_board_quiz: "வாரியத் தேர்வு வினா",
+    rec_tamil_medium: "தமிழில் விளக்கு",
+    rec_telugu_medium: "தெலுங்கில் விளக்கு",
+    rec_hindi_medium: "இந்தியில் விளக்கு",
+    rec_state_board: "மாநில வாரிய உதவி",
+    rec_cuet: "CUET தயாரிப்பு",
+    rec_hinglish: "எளிய கலப்பு மொழி",
+    voice_region_hint: "குரல் உங்கள் பதில் மொழி மற்றும் பகுதியைப் பயன்படுத்துகிறது ({locale}).",
+    voice_tutor_sub: "இருவழிப் படிப்பு உரையாடல். கேளுங்கள், பதிலைக் கேளுங்கள், தொடருங்கள் — எப்போதும் இடையூறு செய்யலாம்.",
+  },
 };
 
 function normalizeUiLanguage(raw) {
@@ -1275,6 +1630,14 @@ function applyTranslations() {
     settingsTitle: "settings_title",
     closeSettingsBtn: "settings_close",
     prefUiLanguageLabel: "settings_language",
+    prefCountryLabel: "profile_country",
+    prefRegionLabel: "profile_region",
+    prefBoardLabel: "profile_board",
+    prefExamFocusLabel: "profile_exam",
+    prefReplyLanguageLabel: "profile_reply_lang",
+    profileHubNote: "profile_locale_note",
+    voiceTutorSub: "voice_tutor_sub",
+
     prefRestoreSessionsLabel: "settings_restore_sessions",
     saveSettingsBtn: "settings_save",
     pwaInstallTitle: "pwa_install_title",
@@ -1785,10 +2148,13 @@ if (typeof window !== "undefined" && window.speechSynthesis) {
 }
 
 function speechLangForUi() {
-  const ui = typeof activeUiLanguage === "string" ? activeUiLanguage : "en";
+  const prefs = typeof loadPrefs === "function" ? loadPrefs() : null;
+  const reply = prefs && prefs.replyLanguage ? String(prefs.replyLanguage) : "";
+  const ui = reply || (typeof activeUiLanguage === "string" ? activeUiLanguage : "en");
   if (ui === "es") return "es";
   if (ui === "hi") return "hi";
   if (ui === "te") return "te";
+  if (ui === "ta") return "ta";
   return "en";
 }
 
@@ -1988,7 +2354,9 @@ function readLastAssistantAloud(history = chatHistory) {
         ? "hi-IN"
         : langPrefix === "te"
           ? "te-IN"
-          : "en-US");
+          : langPrefix === "ta"
+            ? "ta-IN"
+            : "en-US");
   speakTextChunks(chunkTextForSpeech(clipped), voice, langTag);
 }
 
@@ -2006,9 +2374,45 @@ function defaultPrefs() {
     fontScale: "md",
     highContrast: false,
     dyslexiaFont: false,
+    gradeLevel: "",
+    subjects: "",
+    explainStyle: "balanced",
+    country: "",
+    region: "",
+    board: "",
+    examFocus: "",
+    replyLanguage: "",
   };
 }
 
+
+function normalizeReplyLanguage(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return "";
+  return SUPPORTED_UI_LANGS.includes(v) ? v : "";
+}
+
+function normalizeCountryCode(raw) {
+  const v = String(raw || "").trim().toUpperCase();
+  if (v === "IN" || v === "INDIA") return "IN";
+  if (v === "US" || v === "USA") return "US";
+  if (v === "OTHER" || v === "ROW") return "OTHER";
+  return "";
+}
+
+function normalizeBoard(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return ["cbse", "icse", "state", "ib", "other", ""].includes(v) ? v : "";
+}
+
+function normalizeExamFocus(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return ["boards", "jee", "neet", "cuet", "none", ""].includes(v) ? v : "";
+}
+
+function normalizeRegion(raw) {
+  return String(raw || "").trim().slice(0, 40);
+}
 
 function getLearnerProfile() {
   const prefs = loadPrefs();
@@ -2016,17 +2420,28 @@ function getLearnerProfile() {
     gradeLevel: prefs.gradeLevel || "",
     subjects: prefs.subjects || "",
     explainStyle: prefs.explainStyle || "balanced",
+    country: prefs.country || "",
+    region: prefs.region || "",
+    board: prefs.board || "",
+    examFocus: prefs.examFocus || "",
+    replyLanguage: prefs.replyLanguage || prefs.uiLanguage || "en",
   };
 }
 
 function syncLearnerProfileForm() {
   const prefs = loadPrefs();
-  const grade = document.getElementById("prefGradeLevel");
-  const subjects = document.getElementById("prefSubjects");
-  const style = document.getElementById("prefExplainStyle");
-  if (grade) grade.value = prefs.gradeLevel || "";
-  if (subjects) subjects.value = prefs.subjects || "";
-  if (style) style.value = prefs.explainStyle || "balanced";
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  set("prefGradeLevel", prefs.gradeLevel || "");
+  set("prefSubjects", prefs.subjects || "");
+  set("prefExplainStyle", prefs.explainStyle || "balanced");
+  set("prefCountry", prefs.country || "");
+  set("prefRegion", prefs.region || "");
+  set("prefBoard", prefs.board || "");
+  set("prefExamFocus", prefs.examFocus || "");
+  set("prefReplyLanguage", prefs.replyLanguage || "");
 }
 
 function saveLearnerProfileFromForm() {
@@ -2035,8 +2450,15 @@ function saveLearnerProfileFromForm() {
   prefs.subjects = String(document.getElementById("prefSubjects")?.value || "").slice(0, 160);
   const style = document.getElementById("prefExplainStyle")?.value || "balanced";
   prefs.explainStyle = ["balanced", "simple", "steps", "examples"].includes(style) ? style : "balanced";
+  prefs.country = normalizeCountryCode(document.getElementById("prefCountry")?.value || "");
+  prefs.region = normalizeRegion(document.getElementById("prefRegion")?.value || "");
+  prefs.board = normalizeBoard(document.getElementById("prefBoard")?.value || "");
+  prefs.examFocus = normalizeExamFocus(document.getElementById("prefExamFocus")?.value || "");
+  prefs.replyLanguage = normalizeReplyLanguage(document.getElementById("prefReplyLanguage")?.value || "");
   savePrefs(prefs);
   showToast(t("settings_saved_toast"));
+  if (mainTab === "home") renderCoachHome();
+  syncVoiceRegionHint();
 }
 
 function loadPrefs() {
@@ -2057,6 +2479,11 @@ function loadPrefs() {
       explainStyle: ["balanced", "simple", "steps", "examples"].includes(String(parsed.explainStyle || ""))
         ? String(parsed.explainStyle)
         : "balanced",
+      country: normalizeCountryCode(parsed.country || ""),
+      region: normalizeRegion(parsed.region || ""),
+      board: normalizeBoard(parsed.board || ""),
+      examFocus: normalizeExamFocus(parsed.examFocus || ""),
+      replyLanguage: normalizeReplyLanguage(parsed.replyLanguage || ""),
     };
   } catch {
     return defaultPrefs();
@@ -2780,6 +3207,193 @@ function renderComingSoonPanel(tab) {
   if (bodyEl) bodyEl.textContent = t(`soon_${key}_body`);
 }
 
+
+function guessIndiaSoftSignal() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (/Asia\/(Kolkata|Calcutta)/i.test(tz)) return true;
+  } catch {
+    /* ignore */
+  }
+  const langs = Array.isArray(navigator.languages) ? navigator.languages : [navigator.language || ""];
+  return langs.some((l) => {
+    const s = String(l || "").toLowerCase();
+    return s.endsWith("-in") || ["hi", "te", "ta", "ml", "kn", "mr", "gu", "bn", "pa"].includes(s.split("-")[0]);
+  });
+}
+
+function applyIndiaLocaleDefaults() {
+  const prefs = loadPrefs();
+  prefs.country = "IN";
+  if (!prefs.board) prefs.board = "cbse";
+  if (!prefs.examFocus) prefs.examFocus = "boards";
+  const guess = guessUiLanguageFromBrowser();
+  if (!prefs.replyLanguage && ["hi", "te", "ta"].includes(guess)) prefs.replyLanguage = guess;
+  if (prefs.uiLanguage === "en" && ["hi", "te", "ta"].includes(guess)) {
+    prefs.uiLanguage = guess;
+    setUiLanguage(guess);
+    if (prefUiLanguage) prefUiLanguage.value = guess;
+  }
+  // Soft region from language
+  if (!prefs.region) {
+    if (prefs.replyLanguage === "ta" || guess === "ta") prefs.region = "Tamil Nadu";
+    else if (prefs.replyLanguage === "te" || guess === "te") prefs.region = "Andhra Pradesh / Telangana";
+    else if (prefs.replyLanguage === "hi" || guess === "hi") prefs.region = "Hindi belt";
+  }
+  savePrefs(prefs);
+  syncLearnerProfileForm();
+  localStorage.setItem(INDIA_LOCALE_HINT_KEY, "1");
+  showToast(t("settings_saved_toast"));
+  if (mainTab === "home") renderCoachHome();
+  syncVoiceRegionHint();
+}
+
+function dismissIndiaLocaleHint() {
+  localStorage.setItem(INDIA_LOCALE_HINT_KEY, "1");
+  const banner = document.getElementById("indiaLocaleBanner");
+  if (banner) {
+    banner.hidden = true;
+    banner.classList.add("hidden");
+  }
+}
+
+function maybeShowIndiaLocaleBanner() {
+  const banner = document.getElementById("indiaLocaleBanner");
+  if (!banner) return;
+  const prefs = loadPrefs();
+  const dismissed = localStorage.getItem(INDIA_LOCALE_HINT_KEY) === "1";
+  const show = !dismissed && !prefs.country && guessIndiaSoftSignal();
+  banner.hidden = !show;
+  banner.classList.toggle("hidden", !show);
+  if (show) {
+    const title = document.getElementById("indiaLocaleTitle");
+    const body = document.getElementById("indiaLocaleBody");
+    const cta = document.getElementById("indiaLocaleCta");
+    const skip = document.getElementById("indiaLocaleSkip");
+    if (title) title.textContent = t("locale_banner_title");
+    if (body) body.textContent = t("locale_banner_body");
+    if (cta) cta.textContent = t("locale_banner_cta");
+    if (skip) skip.textContent = t("locale_banner_skip");
+  }
+}
+
+function voiceBcp47ForProfile(profile = getLearnerProfile()) {
+  const lang = normalizeReplyLanguage(profile.replyLanguage) || activeUiLanguage || "en";
+  const country = normalizeCountryCode(profile.country) || (guessIndiaSoftSignal() ? "IN" : "");
+  if (lang === "hi") return "hi-IN";
+  if (lang === "te") return "te-IN";
+  if (lang === "ta") return "ta-IN";
+  if (lang === "es") return "es-ES";
+  if (lang === "en" && country === "IN") return "en-IN";
+  return "en-US";
+}
+
+function syncVoiceRegionHint() {
+  const el = document.getElementById("voiceRegionHint");
+  if (!el) return;
+  const locale = voiceBcp47ForProfile();
+  el.textContent = t("voice_region_hint", { locale });
+}
+
+function buildLocaleRecommendations(profile = getLearnerProfile()) {
+  const country = normalizeCountryCode(profile.country);
+  if (country === "US" || country === "OTHER") return [];
+
+  const isIndia =
+    country === "IN" ||
+    Boolean(profile.board) ||
+    ["boards", "jee", "neet", "cuet"].includes(normalizeExamFocus(profile.examFocus)) ||
+    ["hi", "te", "ta"].includes(normalizeReplyLanguage(profile.replyLanguage));
+  if (!isIndia) return [];
+
+  const board = normalizeBoard(profile.board);
+  const exam = normalizeExamFocus(profile.examFocus);
+  const reply = normalizeReplyLanguage(profile.replyLanguage) || activeUiLanguage;
+  const region = String(profile.region || "").toLowerCase();
+  const recs = [];
+  const push = (id, prompt, tab = "chat", mode = "explain") => {
+    recs.push({ id, label: t(id), prompt, tab, mode });
+  };
+
+  if (exam === "jee") {
+    push("rec_jee_practice", "Give me a short JEE-style practice question with solution steps. Keep it exam-useful.", "chat", "quiz");
+  }
+  if (exam === "neet") {
+    push("rec_neet_bio", "Quiz me on one NEET biology topic. One question first, wait for my answer.", "chat", "quiz");
+  }
+  if (exam === "cuet") {
+    push("rec_cuet", "Help me prepare for CUET: one short practice item and how to approach it.", "chat", "explain");
+  }
+  if (board === "cbse" || exam === "boards" || exam === "" || board === "") {
+    push("rec_cbse_revise", "Create a quick CBSE-style revision sheet for a topic I choose. Start by asking which chapter.", "chat", "explain");
+    push("rec_board_quiz", "Ask me one board-exam style question. Do not reveal the answer until I try.", "chat", "quiz");
+  }
+  if (board === "state" || /tamil|chennai|madurai|coimbatore|\btn\b/.test(region)) {
+    push("rec_state_board", "Explain using Indian state-board classroom style with a simple local example.", "chat", "explain");
+  }
+  if (reply === "ta" || /tamil/.test(region)) {
+    push("rec_tamil_medium", "Explain the next topic in clear Tamil, with key terms also in English.", "chat", "explain");
+  }
+  if (reply === "te" || /andhra|telangana|hyderabad|vijayawada/.test(region)) {
+    push("rec_telugu_medium", "Explain the next topic in clear Telugu, with key English terms kept.", "chat", "explain");
+  }
+  if (reply === "hi") {
+    push("rec_hindi_medium", "Explain the next topic in clear Hindi, with important English terms.", "chat", "explain");
+  }
+  if (reply === "en" || !reply) {
+    push("rec_hinglish", "Explain simply for an Indian student — short sentences, familiar school examples.", "chat", "explain");
+  }
+
+  const seen = new Set();
+  return recs.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true))).slice(0, 6);
+}
+
+function renderLocaleRecommendations() {
+  const host = document.getElementById("localeRecs");
+  if (!host) return;
+  const title = document.getElementById("localeRecsTitle");
+  const lead = document.getElementById("localeRecsLead");
+  const grid = document.getElementById("localeRecsGrid");
+  if (!grid) return;
+  const recs = buildLocaleRecommendations();
+  const show = recs.length > 0;
+  host.hidden = !show;
+  host.classList.toggle("hidden", !show);
+  if (title) title.textContent = t("locale_recs_title");
+  if (lead) lead.textContent = t("locale_recs_lead");
+  grid.replaceChildren();
+  recs.forEach((rec) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "locale-rec-chip";
+    btn.textContent = rec.label;
+    btn.dataset.localePrompt = rec.prompt;
+    btn.dataset.coachTab = rec.tab;
+    btn.dataset.coachMode = rec.mode;
+    grid.appendChild(btn);
+  });
+}
+
+async function runLocaleRecommendation(prompt, tab = "chat", mode = "explain") {
+  if (mode && typeof setLearnStudyMode === "function") setLearnStudyMode(mode);
+  setMainTab(tab || "chat");
+  if (typeof sendChatMessage === "function") {
+    const input = document.getElementById("chatSearchInput") || document.getElementById("chatFollowupInput");
+    if (input && !chatSessionOpen && chatHistory.length === 0) {
+      input.value = prompt;
+      document.getElementById("chatSearchSubmit")?.click();
+      return;
+    }
+    if (document.getElementById("chatFollowupInput")) {
+      document.getElementById("chatFollowupInput").value = prompt;
+      document.getElementById("chatFollowupSubmit")?.click();
+      return;
+    }
+  }
+  showToast(prompt.slice(0, 80));
+}
+
+
 function renderCoachHome() {
   const name = coachDisplayName();
   const welcomeEl = document.getElementById("coachWelcome");
@@ -2804,6 +3418,9 @@ function renderCoachHome() {
     list.hidden = true;
     list.replaceChildren();
   }
+  maybeShowIndiaLocaleBanner();
+  renderLocaleRecommendations();
+  syncVoiceRegionHint();
 }
 
 function closeCoachNavMenus() {
@@ -3664,13 +4281,14 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
           content: typeof m.content === "string" ? m.content : "",
         }));
 
+  const profileForTurn = getLearnerProfile();
   const chatBody = {
     mode,
     message: trimmed,
     history: historyForApi,
     studyMode: normalizeStudyMode(studyMode),
-    uiLanguage: activeUiLanguage,
-    learnerProfile: getLearnerProfile(),
+    uiLanguage: profileForTurn.replyLanguage || activeUiLanguage,
+    learnerProfile: profileForTurn,
     stream: true,
   };
   if (mode === "learn" && isLiveWebEnabled()) {
@@ -5462,11 +6080,20 @@ window.StudentCoach = {
     const maxChars = Math.max(80, Number(opts.maxChars) || 900);
     const clipped = prepared.length > maxChars ? `${prepared.slice(0, maxChars).trim()}…` : prepared;
     const chunks = chunkTextForSpeech(clipped, Math.min(280, maxChars));
-    const voice = pickSpeechVoice(activeUiLanguage);
-    speakTextChunks(chunks, voice, document.documentElement.lang || "en-US", opts.onDone);
+    const langPrefix = speechLangForUi();
+    const langTag = opts.lang || (typeof voiceBcp47ForProfile === "function" ? voiceBcp47ForProfile() : document.documentElement.lang || "en-US");
+    const voice = typeof pickPreferredSpeechVoice === "function"
+      ? pickPreferredSpeechVoice(langPrefix)
+      : null;
+    speakTextChunks(chunks, voice, langTag, opts.onDone);
   },
   stopSpeech: () => stopReadAloud(),
   getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
+  getVoiceLocale: () => (typeof voiceBcp47ForProfile === "function" ? voiceBcp47ForProfile() : "en-US"),
+  getReplyLanguage: () => {
+    const p = typeof getLearnerProfile === "function" ? getLearnerProfile() : null;
+    return p?.replyLanguage || activeUiLanguage || "en";
+  },
   sendChatMessage: (...args) => sendChatMessage(...args),
   getLearnStudyMode: () => learnStudyMode,
 };

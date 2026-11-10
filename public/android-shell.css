@@ -289,3 +289,62 @@
     display: none !important;
   }
 }
+
+/* India locale personalization */
+.india-locale-banner {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(40, 122, 137, 0.22);
+  background: linear-gradient(135deg, rgba(40, 122, 137, 0.08), rgba(20, 45, 76, 0.04)), #fff;
+}
+
+.india-locale-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--navy, #142d4c);
+}
+
+.india-locale-body {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+}
+
+.india-locale-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.locale-recs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.locale-rec-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(20, 45, 76, 0.12);
+  background: #fff;
+  color: var(--navy, #142d4c);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.locale-rec-chip:hover,
+.locale-rec-chip:focus-visible {
+  border-color: rgba(40, 122, 137, 0.45);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 122, 137, 0.16);
+}
+
+.voice-region-hint {
+  margin: 0;
+  font-size: 0.88rem;
+}

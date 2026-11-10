@@ -1271,16 +1271,22 @@ function chatSystemBase(mode) {
   ].join(" ");
 }
 
-function voiceModeInstruction(enabled) {
+function voiceModeInstruction(enabled, voiceLocale) {
   if (!enabled) return "";
-  return [
-    "Voice conversation mode:",
+  const locale = String(voiceLocale || "").trim();
+  const bits = [
+    "Voice conversation mode (two-way spoken Q&A):",
     "Keep the entire answer under ~80 words unless the student asks for depth.",
     "Lead with the direct answer in the first sentence.",
     "Prefer 2-4 short spoken sentences over lists or code.",
     "Avoid markdown, headings, and long step dumps.",
-    "End with one short follow-up question when helpful.",
-  ].join(" ");
+    "Sound like a tutor in a live conversation, not an essay.",
+    "End with one short follow-up question so the student can reply by voice.",
+  ];
+  if (locale) {
+    bits.push("Spoken locale hint: " + locale + ". Prefer phrasing that sounds natural when read aloud in that locale.");
+  }
+  return bits.join(" ");
 }
 
 function modeStyleInstruction(studyMode) {
@@ -1401,7 +1407,7 @@ function demoPracticeStart(topic) {
 
 function normalizeUiLanguage(raw) {
   const v = String(raw || "").trim().toLowerCase();
-  if (["en", "es", "hi", "te"].includes(v)) return v;
+  if (["en", "es", "hi", "te", "ta"].includes(v)) return v;
   return "en";
 }
 
@@ -1410,6 +1416,11 @@ function learnerProfileInstruction(profile) {
   const grade = String(profile.gradeLevel || "").trim();
   const subjects = String(profile.subjects || "").trim().slice(0, 160);
   const style = String(profile.explainStyle || "balanced").trim().toLowerCase();
+  const country = String(profile.country || "").trim().toUpperCase();
+  const region = String(profile.region || "").trim().slice(0, 40);
+  const board = String(profile.board || "").trim().toLowerCase();
+  const examFocus = String(profile.examFocus || "").trim().toLowerCase();
+  const replyLanguage = String(profile.replyLanguage || "").trim().toLowerCase();
   const bits = [];
   if (grade === "middle") bits.push("Student level: middle school. Prefer plain language and short steps.");
   else if (grade === "high") bits.push("Student level: high school. Keep rigor with clear scaffolding.");
@@ -1420,6 +1431,26 @@ function learnerProfileInstruction(profile) {
   else if (style === "steps") bits.push("Preferred style: numbered step-by-step by default.");
   else if (style === "examples") bits.push("Preferred style: lead with a concrete example, then the rule.");
   else bits.push("Preferred style: balanced - direct answer, then brief useful detail.");
+
+  if (country === "IN") {
+    bits.push("Locale: India. Prefer Indian school context, metric units, INR when money appears, and Indian English spelling when writing English.");
+    if (region) bits.push("Region/state context: " + region + ". Use familiar local examples when helpful.");
+    if (board === "cbse") bits.push("Curriculum framing: CBSE. Align explanations with typical CBSE chapter style.");
+    else if (board === "icse") bits.push("Curriculum framing: ICSE.");
+    else if (board === "state") bits.push("Curriculum framing: Indian state board. Keep explanations classroom-practical.");
+    else if (board === "ib") bits.push("Curriculum framing: IB.");
+    if (examFocus === "jee") bits.push("Exam focus: JEE. Prefer concise problem-solving and exam traps.");
+    else if (examFocus === "neet") bits.push("Exam focus: NEET. Prefer biology/chem/physics exam-useful structure.");
+    else if (examFocus === "cuet") bits.push("Exam focus: CUET. Prefer short practice-style checks.");
+    else if (examFocus === "boards") bits.push("Exam focus: board exams. Prefer revision-friendly structure and marking-scheme clarity.");
+  } else if (region) {
+    bits.push("Region context: " + region + ".");
+  }
+
+  if (replyLanguage === "ta") bits.push("Reply language preference: Tamil. Write clear Tamil; keep key technical terms in English in parentheses when useful.");
+  else if (replyLanguage === "te") bits.push("Reply language preference: Telugu. Write clear Telugu; keep key technical terms in English when useful.");
+  else if (replyLanguage === "hi") bits.push("Reply language preference: Hindi. Write clear Hindi; keep key technical terms in English when useful.");
+
   if (!bits.length) return "";
   return "Learner profile:\n- " + bits.join("\n- ");
 }
@@ -1430,6 +1461,7 @@ function uiLanguageInstruction(rawLang) {
   if (lang === "es") return "Responde en espanol claro y sencillo, salvo que el estudiante pida otro idioma.";
   if (lang === "hi") return "Jawab Hindi mein dein, jab tak vidyarthi kisi aur bhasha ki maang na kare.";
   if (lang === "te") return "Vidyarthi vere bhaasha adigithe tappaa, samadhanalu Telugu lo ivvandi.";
+  if (lang === "ta") return "மாணவர் வேறு மொழி கேட்டால் தவிர, பதில்களைத் தெளிவான தமிழில் அளிக்கவும். தேவையான தொழில்நுட்பச் சொற்களை ஆங்கிலத்திலும் குறிப்பிடலாம்.";
   return "Respond in English unless the student explicitly asks for another language.";
 }
 
@@ -1747,7 +1779,7 @@ app.post("/api/chat", requireSession, async (req, res) => {
       : null;
     const profileInstruction = learnerProfileInstruction(learnerProfile);
     const voiceMode = isTruthyFlag(req.body?.voiceMode);
-    const voiceInstruction = voiceModeInstruction(voiceMode);
+    const voiceInstruction = voiceModeInstruction(voiceMode, req.body?.voiceLocale);
     let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
