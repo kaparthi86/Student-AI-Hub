@@ -10,6 +10,8 @@
   "theme_color": "#142D4C",
   "orientation": "any",
   "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -28,6 +30,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.mystudentcoach.app",
+      "url": "https://play.google.com/store/apps/details?id=com.mystudentcoach.app"
     }
   ]
 }

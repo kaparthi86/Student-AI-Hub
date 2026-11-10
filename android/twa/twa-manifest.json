@@ -1,0 +1,58 @@
+{
+  "packageId": "com.mystudentcoach.app",
+  "host": "www.my-student-coach.com",
+  "name": "My Student Coach",
+  "launcherName": "Student Coach",
+  "display": "standalone",
+  "themeColor": "#142D4C",
+  "themeColorDark": "#0B1A2C",
+  "navigationColor": "#142D4C",
+  "navigationColorDark": "#0B1A2C",
+  "navigationDividerColor": "#142D4C",
+  "navigationDividerColorDark": "#0B1A2C",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://www.my-student-coach.com/icons/icon-512.png",
+  "maskableIconUrl": "https://www.my-student-coach.com/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "../signing/android.keystore",
+    "alias": "mystudentcoach"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Ask AI Tutor",
+      "shortName": "Ask",
+      "url": "/?tab=chat",
+      "chosenIconUrl": "https://www.my-student-coach.com/icons/icon-192.png"
+    },
+    {
+      "name": "Voice Tutor",
+      "shortName": "Voice",
+      "url": "/?tab=voice",
+      "chosenIconUrl": "https://www.my-student-coach.com/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap",
+  "webManifestUrl": "https://www.my-student-coach.com/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://www.my-student-coach.com/",
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": ""
+}

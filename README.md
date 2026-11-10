@@ -151,6 +151,22 @@ For a **very short** test you can use `npx localtunnel --port 3001` or [ngrok](h
 - `POST /api/doc-insights` multipart form field `document` (file)
 - `POST /api/ai` still works for one-shot prompts (optional)
 
+## Android / Play Store (lightweight TWA)
+
+Package the live site as a thin Trusted Web Activity — no Kotlin rewrite:
+
+- Guide: [`android/README.md`](android/README.md)
+- Launch plan (Play vs AI Studio): [`docs/android-play-launch.md`](docs/android-play-launch.md)
+- Bubblewrap config: `android/twa/twa-manifest.json`
+- Digital Asset Links template: `public/.well-known/assetlinks.json` (replace SHA-256 placeholders after you create the signing key)
+
+```bash
+chmod +x android/scripts/init-twa.sh
+./android/scripts/init-twa.sh
+```
+
+**Google AI Studio** is for Gemini prototypes — it does not publish to the Play Store. Use Play Console + Bubblewrap for the Android listing.
+
 ## Notes
 
 - If `HF_API_TOKEN` is missing, API returns a demo message so UI still works.
