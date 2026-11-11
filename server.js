@@ -2057,6 +2057,61 @@ ${sourceText || "(none — invent from the topic only)"}`;
   }
 });
 
+async function persistFeedbackEntry(entry, { userId, rating, reason, mode, studyMode, assistantMessage, clientCreatedAt }) {
+  const line = `${JSON.stringify(entry)}\n`;
+  const dbResult = await persistFeedbackRow({
+    userId,
+    rating,
+    reason,
+    mode,
+    studyMode,
+    assistantMessage,
+    clientCreatedAt,
+  });
+
+  if (dbResult.stored === "supabase") {
+    return { ok: true, stored: "supabase" };
+  }
+
+  if (dbResult.error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[feedback] Supabase insert failed, using file fallback:",
+      dbResult.error.message || dbResult.error,
+    );
+  }
+
+  try {
+    await fs.promises.appendFile(feedbackLogPath, line, "utf8");
+    return {
+      ok: true,
+      stored: "project",
+      warning:
+        dbResult.error?.message ||
+        "Saved to server file only. Set SUPABASE_SERVICE_ROLE_KEY and create public.assistant_feedback to see rows in Supabase.",
+    };
+  } catch (e1) {
+    try {
+      await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
+      return {
+        ok: true,
+        stored: "tmp",
+        warning:
+          dbResult.error?.message ||
+          "Saved to /tmp only (ephemeral on Render). Configure Supabase feedback table + service role key.",
+      };
+    } catch (e2) {
+      // eslint-disable-next-line no-console
+      console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
+      return {
+        ok: true,
+        stored: "none",
+        warning: dbResult.error?.message || "Feedback was not persisted.",
+      };
+    }
+  }
+}
+
 app.post("/api/feedback", requireSession, async (req, res) => {
   try {
     const ratingRaw = Number(req.body?.rating);
@@ -2084,11 +2139,9 @@ app.post("/api/feedback", requireSession, async (req, res) => {
       createdAt,
       receivedAt: new Date().toISOString(),
     };
-    const line = `${JSON.stringify(entry)}\n`;
 
-    const userId = req.user?.id || "";
-    const dbResult = await persistFeedbackRow({
-      userId,
+    const result = await persistFeedbackEntry(entry, {
+      userId: req.user?.id || "",
       rating: ratingRaw,
       reason,
       mode,
@@ -2096,48 +2149,44 @@ app.post("/api/feedback", requireSession, async (req, res) => {
       assistantMessage,
       clientCreatedAt: createdAt,
     });
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
 
-    if (dbResult.stored === "supabase") {
-      return res.json({ ok: true, stored: "supabase" });
-    }
+const SUPPORT_CATEGORIES = new Set(["question", "bug", "account", "idea", "other"]);
 
-    if (dbResult.error) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        "[feedback] Supabase insert failed, using file fallback:",
-        dbResult.error.message || dbResult.error,
-      );
+app.post("/api/support", requireSession, async (req, res) => {
+  try {
+    const categoryRaw = String(req.body?.category || "other").trim().toLowerCase().slice(0, 32);
+    const category = SUPPORT_CATEGORIES.has(categoryRaw) ? categoryRaw : "other";
+    const message = String(req.body?.message || "").trim().slice(0, 2000);
+    if (message.length < 8) {
+      return res.status(400).json({ error: "Please write a short message (at least a few words)." });
     }
+    const createdAt = String(req.body?.createdAt || new Date().toISOString());
+    const entry = {
+      type: "support_request",
+      rating: 1,
+      reason: category,
+      mode: "support",
+      studyMode: "support",
+      assistantMessage: message,
+      createdAt,
+      receivedAt: new Date().toISOString(),
+    };
 
-    try {
-      await fs.promises.appendFile(feedbackLogPath, line, "utf8");
-      return res.json({
-        ok: true,
-        stored: "project",
-        warning:
-          dbResult.error?.message ||
-          "Saved to server file only. Set SUPABASE_SERVICE_ROLE_KEY and create public.assistant_feedback to see rows in Supabase.",
-      });
-    } catch (e1) {
-      try {
-        await fs.promises.appendFile(feedbackTmpLogPath, line, "utf8");
-        return res.json({
-          ok: true,
-          stored: "tmp",
-          warning:
-            dbResult.error?.message ||
-            "Saved to /tmp only (ephemeral on Render). Configure Supabase feedback table + service role key.",
-        });
-      } catch (e2) {
-        // eslint-disable-next-line no-console
-        console.warn("[feedback] could not persist feedback:", e1?.message || e1, e2?.message || e2);
-        return res.json({
-          ok: true,
-          stored: "none",
-          warning: dbResult.error?.message || "Feedback was not persisted.",
-        });
-      }
-    }
+    const result = await persistFeedbackEntry(entry, {
+      userId: req.user?.id || "",
+      rating: 1,
+      reason: category,
+      mode: "support",
+      studyMode: "support",
+      assistantMessage: message,
+      clientCreatedAt: createdAt,
+    });
+    return res.json(result);
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
