@@ -1,4 +1,6 @@
--- Run this in Supabase → SQL Editor so thumbs-up/down feedback lands in the database.
+-- Run this in Supabase → SQL Editor so thumbs-up/down feedback and Help & Support
+-- form messages land in the database.
+-- Support form rows use mode = 'support' with the message in assistant_message.
 -- Without this table (or without SUPABASE_SERVICE_ROLE_KEY on the server),
 -- feedback falls back to a local feedback.ndjson file and will NOT appear in Table Editor.
 

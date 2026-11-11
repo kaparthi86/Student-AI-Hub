@@ -503,7 +503,22 @@ const I18N = {
     pwa_install_sub_default:
       "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
     support_title: "Help & Support",
-    support_body: "Questions, bugs, or account help — email the My Student Coach team. We read every message.",
+    support_body: "Questions, bugs, or ideas — send a short note below. We read every message.",
+    support_category: "Topic",
+    support_cat_question: "Question",
+    support_cat_bug: "Bug report",
+    support_cat_account: "Account help",
+    support_cat_idea: "Idea / feedback",
+    support_cat_other: "Other",
+    support_message: "Your message",
+    support_message_ph: "What can we help with?",
+    support_submit: "Send message",
+    support_sending: "Sending…",
+    support_sent: "Thanks — we got your message.",
+    support_need_signin: "Sign in to send a message, or email us below.",
+    support_need_message: "Please write a short message first.",
+    support_send_failed: "Could not send. Try again or email us below.",
+    support_email_summary: "Prefer email instead?",
     support_copy: "Copy email",
     support_open_mail: "Open email app",
     support_fallback: "If “Open email app” does nothing, paste the address into Gmail or your mail app.",
@@ -6041,6 +6056,54 @@ function hydratePromptFromUrl() {
 }
 
 
+function setSupportFormStatus(msg, kind) {
+  const status = document.getElementById("supportFormStatus");
+  if (!status) return;
+  status.textContent = msg || "";
+  status.classList.remove("is-error", "is-ok");
+  if (kind === "error") status.classList.add("is-error");
+  if (kind === "ok") status.classList.add("is-ok");
+}
+
+function localizeSupportForm() {
+  const title = document.getElementById("supportModalTitle");
+  const body = document.getElementById("supportModalBody");
+  const catLabel = document.getElementById("supportCategoryLabel");
+  const msgLabel = document.getElementById("supportMessageLabel");
+  const msg = document.getElementById("supportMessage");
+  const submit = document.getElementById("supportSubmitBtn");
+  const summary = document.getElementById("supportEmailSummary");
+  const copyBtn = document.getElementById("copySupportEmailBtn");
+  const openBtn = document.getElementById("openSupportMailBtn");
+  const note = document.getElementById("supportFallbackNote");
+  const emailEl = document.getElementById("supportEmailValue");
+  const category = document.getElementById("supportCategory");
+  if (title) title.textContent = t("support_title") || "Help & Support";
+  if (body) body.textContent = t("support_body") || body.textContent;
+  if (catLabel) catLabel.textContent = t("support_category") || "Topic";
+  if (msgLabel) msgLabel.textContent = t("support_message") || "Your message";
+  if (msg) msg.placeholder = t("support_message_ph") || "What can we help with?";
+  if (submit && !submit.dataset.busy) submit.textContent = t("support_submit") || "Send message";
+  if (summary) summary.textContent = t("support_email_summary") || "Prefer email instead?";
+  if (copyBtn) copyBtn.textContent = t("support_copy") || "Copy email";
+  if (openBtn) openBtn.textContent = t("support_open_mail") || "Open email app";
+  if (note) note.textContent = t("support_fallback") || note.textContent;
+  if (emailEl) emailEl.textContent = SUPPORT_EMAIL;
+  if (openBtn) openBtn.setAttribute("href", `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`);
+  if (category) {
+    const labels = {
+      question: t("support_cat_question") || "Question",
+      bug: t("support_cat_bug") || "Bug report",
+      account: t("support_cat_account") || "Account help",
+      idea: t("support_cat_idea") || "Idea / feedback",
+      other: t("support_cat_other") || "Other",
+    };
+    Array.from(category.options).forEach((opt) => {
+      if (labels[opt.value]) opt.textContent = labels[opt.value];
+    });
+  }
+}
+
 function openSupportModal() {
   const modal = document.getElementById("supportModal");
   if (!modal) {
@@ -6055,21 +6118,67 @@ function openSupportModal() {
     return;
   }
   closeCoachNavMenus?.();
-  const title = document.getElementById("supportModalTitle");
-  const body = document.getElementById("supportModalBody");
-  const copyBtn = document.getElementById("copySupportEmailBtn");
-  const openBtn = document.getElementById("openSupportMailBtn");
-  const note = document.getElementById("supportFallbackNote");
-  const emailEl = document.getElementById("supportEmailValue");
-  if (title) title.textContent = t("support_title") || "Help & Support";
-  if (body) body.textContent = t("support_body") || body.textContent;
-  if (copyBtn) copyBtn.textContent = t("support_copy") || "Copy email";
-  if (openBtn) openBtn.textContent = t("support_open_mail") || "Open email app";
-  if (note) note.textContent = t("support_fallback") || note.textContent;
-  if (emailEl) emailEl.textContent = SUPPORT_EMAIL;
-  if (openBtn) openBtn.setAttribute("href", `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`);
+  localizeSupportForm();
+  setSupportFormStatus("");
   modal.hidden = false;
   modal.classList.remove("hidden");
+  document.getElementById("supportMessage")?.focus();
+}
+
+async function submitSupportForm(e) {
+  e?.preventDefault?.();
+  const form = document.getElementById("supportForm");
+  const submit = document.getElementById("supportSubmitBtn");
+  const category = String(document.getElementById("supportCategory")?.value || "other");
+  const message = String(document.getElementById("supportMessage")?.value || "").trim();
+  if (message.length < 8) {
+    setSupportFormStatus(t("support_need_message") || "Please write a short message first.", "error");
+    return;
+  }
+  if (submit) {
+    submit.disabled = true;
+    submit.dataset.busy = "1";
+    submit.textContent = t("support_sending") || "Sending…";
+  }
+  setSupportFormStatus("");
+  try {
+    const res = await fetchAuthed("/api/support", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category,
+        message,
+        createdAt: new Date().toISOString(),
+      }),
+    });
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+    if (res.status === 401) {
+      setSupportFormStatus(t("support_need_signin") || "Sign in to send a message, or email us below.", "error");
+      return;
+    }
+    if (!res.ok) {
+      throw new Error(data?.error || "Could not send.");
+    }
+    if (form) form.reset();
+    setSupportFormStatus(t("support_sent") || "Thanks — we got your message.", "ok");
+    showToast(t("support_sent") || "Thanks — we got your message.");
+  } catch (err) {
+    setSupportFormStatus(
+      (err && err.message) || t("support_send_failed") || "Could not send. Try again or email us below.",
+      "error",
+    );
+  } finally {
+    if (submit) {
+      submit.disabled = false;
+      delete submit.dataset.busy;
+      submit.textContent = t("support_submit") || "Send message";
+    }
+  }
 }
 
 function closeSupportModal() {

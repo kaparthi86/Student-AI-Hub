@@ -526,8 +526,73 @@ body.brand-msc .primary-btn {
   max-width: 440px;
 }
 
+.support-form {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.support-form label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy, #142d4c);
+}
+
+.support-form select,
+.support-form textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 45, 76, 0.14);
+  background: #fff;
+  color: var(--ink, #1c1b19);
+  padding: 10px 12px;
+  font: inherit;
+  min-height: 44px;
+}
+
+.support-form textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.support-form-status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.88rem;
+}
+
+.support-form-status.is-error {
+  color: #9b2c2c;
+}
+
+.support-form-status.is-ok {
+  color: #1f6b4a;
+}
+
+.support-email-details {
+  margin-top: 4px;
+  border-top: 1px solid rgba(20, 45, 76, 0.1);
+  padding-top: 12px;
+}
+
+.support-email-details > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy, #142d4c);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.support-email-details > summary::-webkit-details-marker {
+  display: none;
+}
+
 .support-email-row {
-  margin: 14px 0 16px;
+  margin: 10px 0 12px;
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(20, 45, 76, 0.12);
