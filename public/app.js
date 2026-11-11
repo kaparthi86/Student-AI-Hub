@@ -165,6 +165,7 @@ const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const INDIA_LOCALE_HINT_KEY = "student_ai_india_locale_hint_v1";
+const SUPPORT_EMAIL = "student-ai-hub-support@googlegroups.com";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
@@ -501,6 +502,13 @@ const I18N = {
     toast_doc_analysis_failed: "Document analysis failed",
     pwa_install_sub_default:
       "Add our icon to your home screen or desktop for quick access until the mobile app ships.",
+    support_title: "Help & Support",
+    support_body: "Questions, bugs, or account help — email the My Student Coach team. We read every message.",
+    support_copy: "Copy email",
+    support_open_mail: "Open email app",
+    support_fallback: "If “Open email app” does nothing, paste the address into Gmail or your mail app.",
+    support_copied: "Support email copied",
+    support_tile_sub: "Email us — we read every message",
     locale_banner_title: "Personalize for India",
     locale_banner_body: "Set your board, exam track, and language for local study recommendations. No GPS needed.",
     locale_banner_cta: "Set up for India",
@@ -6032,6 +6040,86 @@ function hydratePromptFromUrl() {
   }
 }
 
+
+function openSupportModal() {
+  const modal = document.getElementById("supportModal");
+  if (!modal) {
+    // Fallback if modal missing: copy email + try mailto
+    void (async () => {
+      try {
+        if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      } catch { /* ignore */ }
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`;
+      showToast(t("support_copied") || "Support email copied");
+    })();
+    return;
+  }
+  closeCoachNavMenus?.();
+  const title = document.getElementById("supportModalTitle");
+  const body = document.getElementById("supportModalBody");
+  const copyBtn = document.getElementById("copySupportEmailBtn");
+  const openBtn = document.getElementById("openSupportMailBtn");
+  const note = document.getElementById("supportFallbackNote");
+  const emailEl = document.getElementById("supportEmailValue");
+  if (title) title.textContent = t("support_title") || "Help & Support";
+  if (body) body.textContent = t("support_body") || body.textContent;
+  if (copyBtn) copyBtn.textContent = t("support_copy") || "Copy email";
+  if (openBtn) openBtn.textContent = t("support_open_mail") || "Open email app";
+  if (note) note.textContent = t("support_fallback") || note.textContent;
+  if (emailEl) emailEl.textContent = SUPPORT_EMAIL;
+  if (openBtn) openBtn.setAttribute("href", `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`);
+  modal.hidden = false;
+  modal.classList.remove("hidden");
+}
+
+function closeSupportModal() {
+  const modal = document.getElementById("supportModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.hidden = true;
+}
+
+function wireSupportUi() {
+  document.querySelectorAll(".open-support-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openSupportModal();
+    });
+  });
+  // Footer / legal mailto links: intercept so users without a mail handler still get the panel
+  document.querySelectorAll("a.open-support-mailto").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      openSupportModal();
+    });
+  });
+  document.getElementById("closeSupportBtn")?.addEventListener("click", () => closeSupportModal());
+  document.getElementById("supportModal")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeSupportModal();
+  });
+  document.getElementById("copySupportEmailBtn")?.addEventListener("click", async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = SUPPORT_EMAIL;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      showToast(t("support_copied") || "Support email copied");
+    } catch {
+      showToast(SUPPORT_EMAIL);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSupportModal();
+  });
+}
+
 function wireSettingsUi() {
   const syncForm = () => {
     const prefs = loadPrefs();
@@ -6297,6 +6385,7 @@ initPwaInstallSupport();
 wireCoachHome();
 setMainTab("home");
 wireSettingsUi();
+wireSupportUi();
 wireHonorCodeModal();
 wireDefaultPageHintModal();
 wireEmptyStatePrompts();
