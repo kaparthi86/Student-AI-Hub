@@ -34,7 +34,7 @@ Sign in with Google. We do not sell your personal data or show ads from your cha
 
 - Privacy: https://www.my-student-coach.com/privacy.html  
 - Terms: https://www.my-student-coach.com/terms.html  
-- Support: student-ai-hub-support@googlegroups.com  
+- Support: in-app Help & Support form (signed-in users) 
 
 ## Screenshots to capture
 

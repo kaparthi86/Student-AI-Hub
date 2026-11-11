@@ -165,7 +165,6 @@ const DEFAULT_PAGE_HINT_DISMISSED_KEY = "student_ai_default_page_hint_dismissed_
 const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const INDIA_LOCALE_HINT_KEY = "student_ai_india_locale_hint_v1";
-const SUPPORT_EMAIL = "student-ai-hub-support@googlegroups.com";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
@@ -515,15 +514,10 @@ const I18N = {
     support_submit: "Send message",
     support_sending: "Sending…",
     support_sent: "Thanks — we got your message.",
-    support_need_signin: "Sign in to send a message, or email us below.",
+    support_need_signin: "Sign in to send a message.",
     support_need_message: "Please write a short message first.",
-    support_send_failed: "Could not send. Try again or email us below.",
-    support_email_summary: "Prefer email instead?",
-    support_copy: "Copy email",
-    support_open_mail: "Open email app",
-    support_fallback: "If “Open email app” does nothing, paste the address into Gmail or your mail app.",
-    support_copied: "Support email copied",
-    support_tile_sub: "Email us — we read every message",
+    support_send_failed: "Could not send. Please try again.",
+    support_tile_sub: "Send a message — we read every one",
     locale_banner_title: "Personalize for India",
     locale_banner_body: "Set your board, exam track, and language for local study recommendations. No GPS needed.",
     locale_banner_cta: "Set up for India",
@@ -6072,11 +6066,6 @@ function localizeSupportForm() {
   const msgLabel = document.getElementById("supportMessageLabel");
   const msg = document.getElementById("supportMessage");
   const submit = document.getElementById("supportSubmitBtn");
-  const summary = document.getElementById("supportEmailSummary");
-  const copyBtn = document.getElementById("copySupportEmailBtn");
-  const openBtn = document.getElementById("openSupportMailBtn");
-  const note = document.getElementById("supportFallbackNote");
-  const emailEl = document.getElementById("supportEmailValue");
   const category = document.getElementById("supportCategory");
   if (title) title.textContent = t("support_title") || "Help & Support";
   if (body) body.textContent = t("support_body") || body.textContent;
@@ -6084,12 +6073,6 @@ function localizeSupportForm() {
   if (msgLabel) msgLabel.textContent = t("support_message") || "Your message";
   if (msg) msg.placeholder = t("support_message_ph") || "What can we help with?";
   if (submit && !submit.dataset.busy) submit.textContent = t("support_submit") || "Send message";
-  if (summary) summary.textContent = t("support_email_summary") || "Prefer email instead?";
-  if (copyBtn) copyBtn.textContent = t("support_copy") || "Copy email";
-  if (openBtn) openBtn.textContent = t("support_open_mail") || "Open email app";
-  if (note) note.textContent = t("support_fallback") || note.textContent;
-  if (emailEl) emailEl.textContent = SUPPORT_EMAIL;
-  if (openBtn) openBtn.setAttribute("href", `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`);
   if (category) {
     const labels = {
       question: t("support_cat_question") || "Question",
@@ -6106,17 +6089,7 @@ function localizeSupportForm() {
 
 function openSupportModal() {
   const modal = document.getElementById("supportModal");
-  if (!modal) {
-    // Fallback if modal missing: copy email + try mailto
-    void (async () => {
-      try {
-        if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(SUPPORT_EMAIL);
-      } catch { /* ignore */ }
-      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("My Student Coach help")}`;
-      showToast(t("support_copied") || "Support email copied");
-    })();
-    return;
-  }
+  if (!modal) return;
   closeCoachNavMenus?.();
   localizeSupportForm();
   setSupportFormStatus("");
@@ -6158,7 +6131,7 @@ async function submitSupportForm(e) {
       data = null;
     }
     if (res.status === 401) {
-      setSupportFormStatus(t("support_need_signin") || "Sign in to send a message, or email us below.", "error");
+      setSupportFormStatus(t("support_need_signin") || "Sign in to send a message.", "error");
       return;
     }
     if (!res.ok) {
@@ -6169,7 +6142,7 @@ async function submitSupportForm(e) {
     showToast(t("support_sent") || "Thanks — we got your message.");
   } catch (err) {
     setSupportFormStatus(
-      (err && err.message) || t("support_send_failed") || "Could not send. Try again or email us below.",
+      (err && err.message) || t("support_send_failed") || "Could not send. Please try again.",
       "error",
     );
   } finally {
@@ -6188,6 +6161,20 @@ function closeSupportModal() {
   modal.hidden = true;
 }
 
+function maybeOpenSupportFromQuery() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const flag = String(params.get("support") || "").trim().toLowerCase();
+    if (!["1", "true", "yes", "open"].includes(flag)) return;
+    openSupportModal();
+    params.delete("support");
+    const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash || ""}`;
+    window.history.replaceState({}, "", next);
+  } catch {
+    /* ignore */
+  }
+}
+
 function wireSupportUi() {
   document.querySelectorAll(".open-support-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -6196,37 +6183,17 @@ function wireSupportUi() {
       openSupportModal();
     });
   });
-  // Footer / legal mailto links: intercept so users without a mail handler still get the panel
-  document.querySelectorAll("a.open-support-mailto").forEach((a) => {
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      openSupportModal();
-    });
+  document.getElementById("supportForm")?.addEventListener("submit", (e) => {
+    void submitSupportForm(e);
   });
   document.getElementById("closeSupportBtn")?.addEventListener("click", () => closeSupportModal());
   document.getElementById("supportModal")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeSupportModal();
   });
-  document.getElementById("copySupportEmailBtn")?.addEventListener("click", async () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(SUPPORT_EMAIL);
-      } else {
-        const ta = document.createElement("textarea");
-        ta.value = SUPPORT_EMAIL;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-      }
-      showToast(t("support_copied") || "Support email copied");
-    } catch {
-      showToast(SUPPORT_EMAIL);
-    }
-  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeSupportModal();
   });
+  maybeOpenSupportFromQuery();
 }
 
 function wireSettingsUi() {

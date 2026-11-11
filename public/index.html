@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=voice-converse-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=help-support-2" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=help-support-3" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -177,7 +177,7 @@
           <nav class="landing-legal" aria-label="Legal">
             <a href="./privacy.html">Privacy</a>
             <a href="./terms.html">Terms</a>
-            <a href="mailto:student-ai-hub-support@googlegroups.com" class="open-support-mailto">Support</a>
+            <button type="button" class="linkish open-support-btn" id="landingSupportBtn">Support</button>
           </nav>
         </footer>
       </section>
@@ -236,7 +236,7 @@
             <span aria-hidden="true">·</span>
             <a href="./privacy.html">Privacy Policy</a>
             <span aria-hidden="true">·</span>
-            <a href="mailto:student-ai-hub-support@googlegroups.com" class="open-support-mailto">Help</a>
+            <button type="button" class="linkish open-support-btn" id="loginHelpBtn">Help</button>
           </nav>
           <button type="button" class="ghost-btn tiny-btn msc-login-about" id="loginBackToLandingBtn">
             About My Student Coach
@@ -337,7 +337,7 @@
           </p>
           <p class="fine-print-line support-contact-line">
             Feedback:
-            <a href="mailto:student-ai-hub-support@googlegroups.com" class="open-support-mailto">student-ai-hub-support@googlegroups.com</a>
+            <button type="button" class="linkish open-support-btn" id="hubSupportBtn">Send a message</button>
           </p>
         </footer>
       </section>
@@ -620,7 +620,7 @@
               </button>
               <button type="button" class="msc-hub-tile open-support-btn" id="profileHubSupportBtn">
                 <strong>Help &amp; Support</strong>
-                <span>Email us — we read every message</span>
+                <span>Send a message — we read every one</span>
               </button>
             </div>
           </div>
@@ -1149,7 +1149,7 @@
           </p>
           <p class="fine-print-line support-contact-line">
             Support:
-            <a href="mailto:student-ai-hub-support@googlegroups.com" class="open-support-mailto">student-ai-hub-support@googlegroups.com</a>
+            <button type="button" class="linkish open-support-btn" id="appSupportBtn">Send a message</button>
           </p>
         </footer>
       </section>
@@ -1290,19 +1290,6 @@
             <button type="submit" class="primary-btn" id="supportSubmitBtn">Send message</button>
           </div>
         </form>
-        <details class="support-email-details">
-          <summary id="supportEmailSummary">Prefer email instead?</summary>
-          <div class="support-email-row">
-            <code id="supportEmailValue" class="support-email-value">student-ai-hub-support@googlegroups.com</code>
-          </div>
-          <div class="settings-actions support-actions">
-            <button type="button" class="ghost-btn" id="copySupportEmailBtn">Copy email</button>
-            <a class="ghost-btn support-mail-direct" id="openSupportMailBtn" href="mailto:student-ai-hub-support@googlegroups.com?subject=My%20Student%20Coach%20help">Open email app</a>
-          </div>
-          <p class="muted support-fallback-note" id="supportFallbackNote">
-            If “Open email app” does nothing, paste the address into Gmail or your mail app.
-          </p>
-        </details>
       </div>
     </div>
 
@@ -1312,7 +1299,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=help-support-2"></script>
+    <script defer src="./app.js?v=help-support-3"></script>
     <script defer src="./coach-labs.js?v=locale-voice-1"></script>
   </body>
 </html>
