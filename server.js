@@ -1297,6 +1297,7 @@ function voiceModeInstruction(enabled, voiceLocale) {
     "Avoid markdown, headings, bullet dumps, and code fences.",
     "Do not use filler closers like \"Is there anything else I can help you with?\"",
     "End with one natural follow-up question that continues the dialogue.",
+    "Speak entirely in the student's study language for this session; do not switch to English unless they ask.",
   ];
   if (locale) {
     bits.push("Spoken locale hint: " + locale + ". Prefer phrasing that sounds natural when read aloud in that locale.");
@@ -1462,9 +1463,25 @@ function learnerProfileInstruction(profile) {
     bits.push("Region context: " + region + ".");
   }
 
-  if (replyLanguage === "ta") bits.push("Reply language preference: Tamil. Write clear Tamil; keep key technical terms in English in parentheses when useful.");
-  else if (replyLanguage === "te") bits.push("Reply language preference: Telugu. Write clear Telugu; keep key technical terms in English when useful.");
-  else if (replyLanguage === "hi") bits.push("Reply language preference: Hindi. Write clear Hindi; keep key technical terms in English when useful.");
+  if (replyLanguage === "ta") {
+    bits.push(
+      "Required reply language: Tamil (தமிழ்). Write the full answer in clear Tamil. Keep rare technical terms in English in parentheses only when needed. Do not answer in English.",
+    );
+  } else if (replyLanguage === "te") {
+    bits.push(
+      "Required reply language: Telugu (తెలుగు). Write the full answer in clear Telugu. Keep rare technical terms in English only when needed. Do not answer in English.",
+    );
+  } else if (replyLanguage === "hi") {
+    bits.push(
+      "Required reply language: Hindi (हिन्दी). Write the full answer in clear Hindi. Keep rare technical terms in English only when needed. Do not answer in English.",
+    );
+  } else if (replyLanguage === "es") {
+    bits.push(
+      "Required reply language: Spanish. Write the full answer in clear Spanish. Do not switch to English unless the student asks.",
+    );
+  } else if (replyLanguage === "en") {
+    bits.push("Required reply language: English. Write the full answer in clear English.");
+  }
 
   if (!bits.length) return "";
   return "Learner profile:\n- " + bits.join("\n- ");
@@ -1472,12 +1489,39 @@ function learnerProfileInstruction(profile) {
 
 function uiLanguageInstruction(rawLang) {
   const lang = normalizeUiLanguage(rawLang);
-  if (lang === "en") return "Respond in English unless the student explicitly asks for another language.";
-  if (lang === "es") return "Responde en espanol claro y sencillo, salvo que el estudiante pida otro idioma.";
-  if (lang === "hi") return "Jawab Hindi mein dein, jab tak vidyarthi kisi aur bhasha ki maang na kare.";
-  if (lang === "te") return "Vidyarthi vere bhaasha adigithe tappaa, samadhanalu Telugu lo ivvandi.";
-  if (lang === "ta") return "மாணவர் வேறு மொழி கேட்டால் தவிர, பதில்களைத் தெளிவான தமிழில் அளிக்கவும். தேவையான தொழில்நுட்பச் சொற்களை ஆங்கிலத்திலும் குறிப்பிடலாம்.";
-  return "Respond in English unless the student explicitly asks for another language.";
+  const shared =
+    " Match the student's language: if their latest message is clearly in another supported language, reply in that language. Otherwise stay in the required language for the whole answer (headings, steps, and follow-up questions). Do not mix languages sentence-by-sentence.";
+  if (lang === "en") {
+    return (
+      "Required language: English. Write the complete response in English unless the student explicitly asks for another language." +
+      shared
+    );
+  }
+  if (lang === "es") {
+    return (
+      "Idioma obligatorio: español. Escribe la respuesta completa en español claro y sencillo, salvo que el estudiante pida otro idioma." +
+      shared
+    );
+  }
+  if (lang === "hi") {
+    return (
+      "आवश्यक भाषा: हिन्दी। पूरी उत्तर हिन्दी में दें — शीर्षक, चरण और प्रश्न भी हिन्दी में। जब तक विद्यार्थी दूसरी भाषा न मांगे, अंग्रेज़ी में पूरा उत्तर न दें।" +
+      shared
+    );
+  }
+  if (lang === "te") {
+    return (
+      "తప్పనిసరి భాష: తెలుగు. పూర్తి సమాధానం తెలుగులోనే ఇవ్వండి — శీర్షికలు, అడుగులు, ప్రశ్నలు కూడా. విద్యార్థి వేరే భాష అడిగితే తప్ప ఆంగ్లంలో పూర్తి సమాధానం ఇవ్వవద్దు." +
+      shared
+    );
+  }
+  if (lang === "ta") {
+    return (
+      "கட்டாய மொழி: தமிழ். முழு பதிலையும் தெளிவான தமிழில் எழுதவும் — தலைப்புகள், படிகள், கேள்விகள் உட்பட. மாணவர் வேறு மொழி கேட்டால் தவிர ஆங்கிலத்தில் முழு பதில் அளிக்காதீர்கள். தேவையான தொழில்நுட்பச் சொற்களை மட்டும் ஆங்கிலத்தில் அடைப்புக்குறிக்குள் சேர்க்கலாம்." +
+      shared
+    );
+  }
+  return "Required language: English. Write the complete response in English unless the student explicitly asks for another language." + shared;
 }
 
 const WEAK_TOPIC_SYSTEM_STATIC = `You are a student coach. Build a "weak-topic recap" from the activity data in the user message.
