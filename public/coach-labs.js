@@ -380,6 +380,11 @@
     setVoiceSessionBadge(false);
     setVoiceMicState("idle");
     setVoiceHint(hint || "Session ended. Tap Start conversation whenever you're ready.");
+    try {
+      window.StudentCoachRealtime?.stop?.();
+    } catch {
+      /* ignore */
+    }
   }
 
   function pauseVoiceConversation() {
@@ -774,6 +779,15 @@
     }
   }
 
+  function syncVoiceEngineUi() {
+    const live = window.StudentCoachRealtime?.isLiveModeSelected?.() === true;
+    const autoWrap = $("voiceAutoContinueWrap");
+    if (autoWrap) autoWrap.hidden = live;
+    if (live) {
+      setVoiceHint("Live OpenAI mini uses true two-way audio. Minutes are capped daily to control cost.");
+    }
+  }
+
   function onCoachLabTab(tab) {
     if (tab === "voice") {
       const sub = $("voiceTutorSub");
@@ -790,10 +804,16 @@
       } catch {
         /* ignore */
       }
+      void window.StudentCoachRealtime?.refreshUi?.().then(() => syncVoiceEngineUi());
+      syncVoiceEngineUi();
     }
     if (tab !== "voice") {
       // Leaving voice should not keep the mic hot in the background.
-      if (voiceListening || voiceSpeaking || voiceThinking) pauseVoiceConversation();
+      if (window.StudentCoachRealtime?.isActive?.()) {
+        void window.StudentCoachRealtime.stop();
+      } else if (voiceListening || voiceSpeaking || voiceThinking || voiceSessionActive) {
+        pauseVoiceConversation();
+      }
     }
     if (tab === "flashcards") renderFlashCard();
     if (tab === "focus") {
@@ -803,14 +823,52 @@
   }
 
   function wire() {
-    $("voiceTutorMicBtn")?.addEventListener("click", startVoiceRecognition);
-    $("voiceTutorStopSpeechBtn")?.addEventListener("click", () => pauseVoiceConversation());
+    $("voiceTutorMicBtn")?.addEventListener("click", () => {
+      const rt = window.StudentCoachRealtime;
+      if (rt?.isLiveModeSelected?.()) {
+        if (rt.isActive?.()) {
+          void rt.stop();
+          return;
+        }
+        void (async () => {
+          try {
+            // Stop browser session if any before live connect.
+            if (voiceListening || voiceSpeaking || voiceThinking || voiceSessionActive) {
+              endVoiceSession({ hint: "Switching to Live OpenAI coach…" });
+            }
+            await rt.start();
+          } catch (err) {
+            setVoiceHint(err.message || "Live OpenAI coach unavailable. Try Browser coach.");
+            api().showToast?.(err.message || "Live voice failed.");
+            const browser = $("voiceEngineBrowser");
+            if (browser) browser.checked = true;
+            syncVoiceEngineUi();
+          }
+        })();
+        return;
+      }
+      startVoiceRecognition();
+    });
+    $("voiceTutorStopSpeechBtn")?.addEventListener("click", () => {
+      if (window.StudentCoachRealtime?.isActive?.()) {
+        void window.StudentCoachRealtime.stop();
+        return;
+      }
+      pauseVoiceConversation();
+    });
     $("voiceTutorClearBtn")?.addEventListener("click", () => {
       pauseVoiceConversation();
       voiceHistory = [];
       const transcript = $("voiceTutorTranscript");
       if (transcript) transcript.replaceChildren();
       setVoiceHint("Conversation cleared. Tap Start conversation when you're ready.");
+    });
+    document.querySelectorAll('input[name="voiceEngine"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        if (window.StudentCoachRealtime?.isActive?.()) void window.StudentCoachRealtime.stop();
+        else if (voiceSessionActive || voiceListening || voiceSpeaking || voiceThinking) pauseVoiceConversation();
+        syncVoiceEngineUi();
+      });
     });
 
     $("flashGenerateBtn")?.addEventListener("click", () => {

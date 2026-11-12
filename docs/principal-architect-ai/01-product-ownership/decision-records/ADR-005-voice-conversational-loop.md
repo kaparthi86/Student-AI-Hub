@@ -18,11 +18,13 @@ Turn-based “ask → wait → speak → tap again” feels like a walkie-talkie
 4. **Stream + speak-early:** `/api/chat` with `voiceMode: true`; speak sentence chunks as tokens arrive.  
 5. **Barge-in:** mic tap aborts fetch + cancels speech, then listens.  
 6. **Warm coach personality:** server voice instructions require supportive, non-authoritative spoken turns; soft TTS rate/pitch.  
-7. **Stay on Web Speech + existing chat stack** for now (no OpenAI Realtime dependency). True speech-to-speech remains a later option.
+7. **Optional OpenAI Realtime mini** (`gpt-realtime-2.1-mini`) behind daily/session caps for true live voice; Browser coach remains the free default/fallback.
 
 ## Consequences
 
 - **+** Hands-free dialogue; fewer mic taps  
 - **+** Coaching tone matches product identity  
+- **+** Cost-gated path to true WebRTC live voice when `OPENAI_API_KEY` is set  
 - **−** Browser SpeechRecognition silence windows still vary by device  
-- **−** Not full-duplex realtime audio; latency still includes LLM + TTS  
+- **−** Without OpenAI Realtime, latency still includes LLM + browser TTS  
+
