@@ -24,6 +24,13 @@
   let voiceSpeakQueue = [];
   let voiceSpeakActive = false;
   let voiceSpeakOnIdle = null;
+  let voiceSessionActive = false;
+  let voiceDraft = "";
+  let voiceLiveLine = null;
+  let voiceSubmitTimer = null;
+  let voiceRelistenTimer = null;
+  const VOICE_SILENCE_SUBMIT_MS = 1700;
+  const VOICE_EMPTY_RELISTEN_MS = 350;
   let flashDeck = loadFlashDeck();
   let flashIndex = 0;
   let flashShowingBack = false;
@@ -281,27 +288,48 @@
     if ($("voiceTutorHint")) $("voiceTutorHint").textContent = text;
   }
 
+  function setVoiceSessionBadge(on) {
+    const badge = $("voiceSessionBadge");
+    if (!badge) return;
+    badge.hidden = !on;
+    badge.textContent = on ? "Live session" : "";
+  }
+
   function setVoiceMicState(state) {
     const mic = $("voiceTutorMicBtn");
     if (!mic) return;
     mic.classList.remove("is-listening", "is-speaking", "is-thinking");
-    mic.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
+    mic.setAttribute("aria-pressed", state === "listening" || state === "speaking" ? "true" : "false");
     if (state === "listening") {
       mic.classList.add("is-listening");
-      mic.textContent = "Listening… tap to send";
+      mic.textContent = "I'm listening…";
     } else if (state === "thinking") {
       mic.classList.add("is-thinking");
-      mic.textContent = "Thinking…";
+      mic.textContent = "Thinking with you…";
     } else if (state === "speaking") {
       mic.classList.add("is-speaking");
       mic.textContent = "Tap to interrupt";
+    } else if (voiceSessionActive) {
+      mic.textContent = "Continue talking";
     } else {
-      mic.textContent = "Tap to talk";
+      mic.textContent = "Start conversation";
     }
   }
 
   function autoContinueEnabled() {
+    // Fully conversational by default; checkbox is an opt-out for button-driven turns.
     return $("voiceAutoContinue")?.checked !== false;
+  }
+
+  function clearVoiceTimers() {
+    if (voiceSubmitTimer) {
+      clearTimeout(voiceSubmitTimer);
+      voiceSubmitTimer = null;
+    }
+    if (voiceRelistenTimer) {
+      clearTimeout(voiceRelistenTimer);
+      voiceRelistenTimer = null;
+    }
   }
 
   function appendVoiceLine(role, text, { replaceEl } = {}) {
@@ -338,15 +366,58 @@
     api().stopSpeech?.();
   }
 
-  function pauseVoiceConversation() {
+  function endVoiceSession({ hint } = {}) {
+    voiceSessionActive = false;
     voicePaused = true;
+    voiceDraft = "";
+    voiceLiveLine = null;
+    clearVoiceTimers();
     voiceAbort?.abort();
     voiceAbort = null;
     stopVoiceRecognition({ silent: true });
     stopVoiceSpeech();
     voiceThinking = false;
+    setVoiceSessionBadge(false);
     setVoiceMicState("idle");
-    setVoiceHint("Paused. Tap the mic when you want to continue.");
+    setVoiceHint(hint || "Session ended. Tap Start conversation whenever you're ready.");
+  }
+
+  function pauseVoiceConversation() {
+    endVoiceSession({ hint: "Paused. Tap Start conversation when you want to continue." });
+  }
+
+  function scheduleVoiceRelisten(delayMs) {
+    clearTimeout(voiceRelistenTimer);
+    voiceRelistenTimer = setTimeout(() => {
+      voiceRelistenTimer = null;
+      if (!voiceSessionActive || voicePaused || voiceListening || voiceThinking || voiceSpeaking) return;
+      if (!autoContinueEnabled()) {
+        setVoiceHint("Tap Continue talking when you're ready for the next turn.");
+        setVoiceMicState("idle");
+        return;
+      }
+      startVoiceRecognition({ soft: true });
+    }, delayMs);
+  }
+
+  function scheduleVoiceSubmit() {
+    clearTimeout(voiceSubmitTimer);
+    const draft = voiceDraft.trim();
+    if (!draft) {
+      setVoiceHint("I'm listening… Take your time.");
+      scheduleVoiceRelisten(VOICE_EMPTY_RELISTEN_MS);
+      return;
+    }
+    setVoiceHint("Take your time… I'll reply when you pause.");
+    voiceSubmitTimer = setTimeout(() => {
+      voiceSubmitTimer = null;
+      const asked = voiceDraft.trim();
+      if (!asked || !voiceSessionActive || voicePaused || voiceThinking) return;
+      voiceDraft = "";
+      voiceLiveLine = null;
+      stopVoiceRecognition({ silent: true });
+      void askVoiceTutor(asked);
+    }, VOICE_SILENCE_SUBMIT_MS);
   }
 
   function speakVoiceChunks(chunks, onDone) {
@@ -385,8 +456,11 @@
       }
       speak(next, {
         maxChars: 420,
+        rate: 0.92,
+        pitch: 0.98,
+        volume: 0.92,
         lang: api().getVoiceLocale?.() || undefined,
-        onDone: () => setTimeout(pump, 100),
+        onDone: () => setTimeout(pump, 90),
       });
     };
     if (!voiceSpeakActive) pump();
@@ -404,13 +478,13 @@
       const piece = slice.slice(consumed, end).trim();
       if (piece) sentences.push(piece);
       consumed = end;
-      // Keep going; spoken cadence prefers short chunks.
-      if (sentences.join(" ").length > 220) break;
+      if (sentences.join(" ").length > 200) break;
     }
     return { sentences, nextIdx: fromIdx + consumed };
   }
 
-  function startVoiceRecognition() {
+  function startVoiceRecognition(opts = {}) {
+    const soft = Boolean(opts.soft);
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       api().showToast?.("Voice input is not supported in this browser.");
@@ -418,65 +492,85 @@
     }
 
     // Barge-in while coach is speaking / thinking.
-    if (voiceSpeaking || voiceThinking) {
+    if (!soft && (voiceSpeaking || voiceThinking)) {
       voicePaused = false;
+      voiceSessionActive = true;
+      setVoiceSessionBadge(true);
       voiceAbort?.abort();
       voiceAbort = null;
       stopVoiceSpeech();
       voiceThinking = false;
+      clearVoiceTimers();
       // Fall through into a fresh listen turn.
-    } else if (voiceListening) {
-      // Tap while listening = finish this utterance and send.
+    } else if (!soft && voiceListening) {
+      // Tap while listening = send the current thought now.
+      clearVoiceTimers();
+      const asked = voiceDraft.trim();
       try {
         voiceRec?.stop();
       } catch {
         /* ignore */
       }
+      if (asked) {
+        voiceDraft = "";
+        voiceLiveLine = null;
+        stopVoiceRecognition({ silent: true });
+        void askVoiceTutor(asked);
+      }
       return;
     }
 
+    if (voiceListening) return;
+
     voicePaused = false;
-    stopVoiceSpeech();
+    voiceSessionActive = true;
+    setVoiceSessionBadge(true);
+    if (!soft) stopVoiceSpeech();
+
     voiceRec = new SpeechRecognition();
     voiceRec.continuous = true;
     voiceRec.interimResults = true;
     const voiceLocale = api().getVoiceLocale?.() || document.documentElement.lang || "en-US";
     voiceRec.lang = voiceLocale;
-    let finalText = "";
-    let liveLine = null;
     voiceListening = true;
     setVoiceMicState("listening");
-    setVoiceHint("Listening… tap again when you finish speaking.");
+    setVoiceHint(voiceDraft.trim() ? "Keep going whenever you're ready…" : "I'm listening… Take your time.");
 
     voiceRec.onresult = (event) => {
       let interim = "";
+      let gotFinal = false;
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
         const piece = event.results[i][0].transcript;
-        if (event.results[i].isFinal) finalText += `${piece} `;
-        else interim += piece;
+        if (event.results[i].isFinal) {
+          voiceDraft = `${voiceDraft} ${piece}`.replace(/\s+/g, " ").trim();
+          gotFinal = true;
+        } else interim += piece;
       }
-      const shown = `${finalText}${interim}`.trim() || "…";
-      liveLine = appendVoiceLine("user", shown, { replaceEl: liveLine });
+      if (gotFinal || interim) clearTimeout(voiceSubmitTimer);
+      const shown = `${voiceDraft}${interim ? ` ${interim}` : ""}`.trim() || "…";
+      voiceLiveLine = appendVoiceLine("user", shown, { replaceEl: voiceLiveLine });
     };
 
-    voiceRec.onerror = () => {
+    voiceRec.onerror = (event) => {
       voiceListening = false;
+      const err = String(event?.error || "");
+      if (err === "aborted" || err === "no-speech") {
+        if (voiceSessionActive && !voiceThinking && !voiceSpeaking && !voicePaused) {
+          scheduleVoiceSubmit();
+        }
+        return;
+      }
       if (!voiceThinking && !voiceSpeaking) setVoiceMicState("idle");
+      if (voiceSessionActive && err !== "not-allowed") {
+        setVoiceHint("I lost the mic for a moment — tap Continue talking.");
+      }
     };
 
     voiceRec.onend = () => {
       voiceListening = false;
-      const asked = finalText.trim();
-      if (!asked) {
-        if (!voiceThinking && !voiceSpeaking) {
-          setVoiceMicState("idle");
-          setVoiceHint("Tap the mic and ask anything about what you’re studying.");
-        }
-        return;
-      }
-      if (liveLine) liveLine.textContent = `You: ${asked}`;
-      else appendVoiceLine("user", asked);
-      void askVoiceTutor(asked);
+      if (!voiceSessionActive || voicePaused || voiceThinking || voiceSpeaking) return;
+      // Browser ended this recognition slice; keep the session alive with silence-aware submit + relisten.
+      scheduleVoiceSubmit();
     };
 
     try {
@@ -484,7 +578,8 @@
     } catch {
       voiceListening = false;
       setVoiceMicState("idle");
-      api().showToast?.("Could not start the microphone.");
+      if (!soft) api().showToast?.("Could not start the microphone.");
+      else scheduleVoiceRelisten(700);
     }
   }
 
@@ -535,13 +630,18 @@
 
   async function askVoiceTutor(question) {
     const asked = String(question || "").trim();
-    if (!asked) return;
+    if (!asked) {
+      if (voiceSessionActive) scheduleVoiceRelisten(VOICE_EMPTY_RELISTEN_MS);
+      return;
+    }
 
     voiceHistory.push({ role: "user", content: asked });
     voiceThinking = true;
     voicePaused = false;
+    voiceSessionActive = true;
+    setVoiceSessionBadge(true);
     setVoiceMicState("thinking");
-    setVoiceHint("Coach is answering… you can tap to interrupt.");
+    setVoiceHint("I'm with you — composing a short reply…");
 
     const coachLine = appendVoiceLine("coach", "…");
     let spokenIdx = 0;
@@ -559,10 +659,10 @@
     voiceAbort?.abort();
     voiceAbort = new AbortController();
     try {
-      const prior = voiceHistory.slice(0, -1).slice(-8);
+      const prior = voiceHistory.slice(0, -1).slice(-12);
       const seedHistory = prior.length
         ? prior
-        : (api().getChatHistory?.() || []).slice(-4).map((m) => ({
+        : (api().getChatHistory?.() || []).slice(-6).map((m) => ({
             role: m.role === "assistant" ? "assistant" : "user",
             content: String(m.content || ""),
           }));
@@ -597,24 +697,21 @@
         maybeSpeakNewSentences(output);
       }
 
-      const cleaned = cleanCoachText(output) || "I couldn’t form an answer. Try asking again.";
+      const cleaned = cleanCoachText(output) || "Hmm, I lost that thought. Want to try saying it another way?";
       if (coachLine) coachLine.textContent = `Coach: ${cleaned}`;
       voiceHistory.push({ role: "assistant", content: cleaned });
       voiceThinking = false;
 
-      // Speak any leftover tail that never hit a sentence boundary (capped).
       const remainder = cleaned.slice(spokenIdx).trim();
       const finishAndMaybeContinue = () => {
         voiceSpeaking = false;
         setVoiceMicState("idle");
-        if (voicePaused) return;
+        if (voicePaused || !voiceSessionActive) return;
         if (autoContinueEnabled()) {
-          setVoiceHint("Your turn — ask a follow-up. Listening again…");
-          setTimeout(() => {
-            if (!voicePaused && !voiceListening && !voiceThinking) startVoiceRecognition();
-          }, 280);
+          setVoiceHint("Your turn — I'm listening again.");
+          scheduleVoiceRelisten(240);
         } else {
-          setVoiceHint("Tap the mic to continue the conversation.");
+          setVoiceHint("Tap Continue talking when you're ready.");
         }
       };
 
@@ -622,7 +719,6 @@
         const clipped = remainder.length > 280 ? `${remainder.slice(0, 280).trim()}…` : remainder;
         speakVoiceChunks([clipped], finishAndMaybeContinue);
       } else if (startedSpeech || voiceSpeakActive || voiceSpeakQueue.length) {
-        // Wait for queued speech to drain.
         speakVoiceChunks([], finishAndMaybeContinue);
       } else if (cleaned) {
         speakVoiceChunks([cleaned.slice(0, 320)], finishAndMaybeContinue);
@@ -634,12 +730,17 @@
       if (err && (err.name === "AbortError" || /aborted/i.test(String(err.message || "")))) {
         if (coachLine) coachLine.textContent = "Coach: (interrupted)";
         setVoiceMicState("idle");
-        setVoiceHint("Interrupted. Tap the mic to ask a follow-up.");
+        if (voiceSessionActive && !voicePaused) {
+          setVoiceHint("Interrupted — I'm listening.");
+          scheduleVoiceRelisten(180);
+        } else {
+          setVoiceHint("Interrupted. Tap Start conversation to continue.");
+        }
         return;
       }
       if (coachLine) coachLine.textContent = `Coach: ${err.message || "Voice tutor failed."}`;
       setVoiceMicState("idle");
-      setVoiceHint("Something went wrong. Tap the mic to try again.");
+      setVoiceHint("Something went wrong. Tap Continue talking to try again.");
       api().showToast?.(err.message || "Voice tutor failed.");
     } finally {
       voiceAbort = null;
@@ -676,9 +777,9 @@
   function onCoachLabTab(tab) {
     if (tab === "voice") {
       const sub = $("voiceTutorSub");
-      // Keep conversational framing visible.
+      // Keep continuous conversational framing visible.
       if (sub && !sub.dataset.locked) {
-        sub.textContent = "Two-way study talk. Ask, hear the answer, then keep going — interrupt anytime.";
+        sub.textContent = "One tap starts a live session. Speak naturally — I listen, reply, and keep listening until you stop.";
       }
       // Ask host app to refresh region-specific voice hint.
       try {
@@ -709,7 +810,7 @@
       voiceHistory = [];
       const transcript = $("voiceTutorTranscript");
       if (transcript) transcript.replaceChildren();
-      setVoiceHint("Conversation cleared. Tap the mic to start again.");
+      setVoiceHint("Conversation cleared. Tap Start conversation when you're ready.");
     });
 
     $("flashGenerateBtn")?.addEventListener("click", () => {

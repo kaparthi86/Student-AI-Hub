@@ -25,6 +25,20 @@
   gap: 12px;
 }
 
+.voice-session-badge {
+  align-self: flex-start;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1f6b4a;
+  background: rgba(31, 107, 74, 0.1);
+  border: 1px solid rgba(31, 107, 74, 0.22);
+}
+
 .voice-tutor-mic {
   min-height: 88px;
   border-radius: 999px;
@@ -34,11 +48,29 @@
   font-weight: 700;
   font-size: 1.05rem;
   cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
 .voice-tutor-mic.is-listening {
-  background: rgba(47, 111, 237, 0.12);
-  border-color: rgba(47, 111, 237, 0.45);
+  background: rgba(40, 122, 137, 0.14);
+  border-color: rgba(40, 122, 137, 0.5);
+  animation: voice-listen-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes voice-listen-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-tutor-mic.is-listening {
+    animation: none;
+  }
 }
 
 .voice-tutor-transcript {

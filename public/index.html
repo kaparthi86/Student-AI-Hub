@@ -29,7 +29,7 @@
     />
     <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
     <link rel="stylesheet" href="./simplify-coach.css?v=skm-operator-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
@@ -533,7 +533,7 @@
               </button>
               <button type="button" class="msc-hub-tile" data-coach-tab="voice">
                 <strong>Voice Tutor</strong>
-                <span>Speak and learn out loud</span>
+                <span>Continuous conversation with your coach</span>
               </button>
               <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
                 <strong>Knowledge Gaps</strong>
@@ -658,19 +658,24 @@
             <header class="coach-lab-hero">
               <p class="coach-kicker">Voice Tutor</p>
               <h2 class="coach-welcome">Talk with your coach</h2>
-              <p class="coach-sub muted" id="voiceTutorSub">Two-way study talk. Ask, hear the answer, then keep going — interrupt anytime.</p>
+              <p class="coach-sub muted" id="voiceTutorSub">
+                One tap starts a live session. Speak naturally — I listen, reply, and keep listening until you stop.
+              </p>
             </header>
             <div class="voice-tutor-stage">
-              <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Tap to talk</button>
-              <p class="muted voice-tutor-hint" id="voiceTutorHint">Works best in Chrome or Edge. Auto-continue keeps the Q&amp;A loop going.</p>
+              <p class="voice-session-badge" id="voiceSessionBadge" hidden>Live session</p>
+              <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Start conversation</button>
+              <p class="muted voice-tutor-hint" id="voiceTutorHint">
+                I'm here with you. Take your time thinking — pause when you want a reply. Tap the mic anytime to interrupt.
+              </p>
               <p class="muted voice-region-hint" id="voiceRegionHint">Voice uses your reply language and region.</p>
               <label class="voice-converse-toggle">
                 <input type="checkbox" id="voiceAutoContinue" checked />
-                <span>Keep conversation going after each answer</span>
+                <span>Hands-free conversation (listen again after each reply)</span>
               </label>
               <div class="voice-tutor-transcript" id="voiceTutorTranscript" aria-live="polite"></div>
               <div class="coach-hero-actions">
-                <button type="button" class="ghost-btn" id="voiceTutorStopSpeechBtn">Stop / pause</button>
+                <button type="button" class="ghost-btn" id="voiceTutorStopSpeechBtn">End session</button>
                 <button type="button" class="ghost-btn" id="voiceTutorClearBtn">Clear</button>
               </div>
             </div>
@@ -1314,7 +1319,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=help-support-3"></script>
-    <script defer src="./coach-labs.js?v=locale-voice-1"></script>
+    <script defer src="./app.js?v=voice-coach-2"></script>
+    <script defer src="./coach-labs.js?v=voice-coach-2"></script>
   </body>
 </html>

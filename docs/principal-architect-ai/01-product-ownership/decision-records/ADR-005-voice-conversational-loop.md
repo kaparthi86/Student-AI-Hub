@@ -1,26 +1,28 @@
-# ADR-005 — Almost-conversational Voice Tutor (stream + speak-early)
+# ADR-005 — Continuous conversational Voice Tutor (warm coach)
 
 | Field | Value |
 |-------|-------|
 | Status | Accepted |
-| Date | 2026-11-08 |
-| Evidence | PR #74; `public/coach-labs.js`; `voiceMode` in `server.js` |
+| Date | 2026-11-12 |
+| Evidence | `public/coach-labs.js`; `voiceMode` in `server.js`; prior PR #74 speak-early loop |
 
 ## Context
 
-Turn-based “listen → wait for full answer → speak all” feels like a walkie-talkie, not a tutor.
+Turn-based “ask → wait → speak → tap again” feels like a walkie-talkie. Students need a patient personal coach: one tap starts a live session, natural pauses are allowed, the coach replies briefly, then listens again until the student ends the session.
 
 ## Decision
 
-1. Stream `/api/chat` with `voiceMode: true`.  
-2. Speak sentence boundaries as tokens arrive.  
-3. Auto-relisten after TTS when enabled.  
-4. Barge-in: mic tap aborts fetch + cancels speech.  
-5. Cap spoken length and server `max_tokens` (~280) for short replies.
+1. **Session model:** mic starts a live session; End session stops listening/speech.  
+2. **Silence-aware turns:** accumulate speech; submit after a thinking pause (~1.7s), or sooner if the student taps while listening.  
+3. **Auto-reliten:** after each spoken reply (and after barge-in), resume listening while the session is active.  
+4. **Stream + speak-early:** `/api/chat` with `voiceMode: true`; speak sentence chunks as tokens arrive.  
+5. **Barge-in:** mic tap aborts fetch + cancels speech, then listens.  
+6. **Warm coach personality:** server voice instructions require supportive, non-authoritative spoken turns; soft TTS rate/pitch.  
+7. **Stay on Web Speech + existing chat stack** for now (no OpenAI Realtime dependency). True speech-to-speech remains a later option.
 
 ## Consequences
 
-- **+** Perceived latency drops dramatically  
-- **+** Lower token spend vs long essay answers  
-- **−** Sentence segmentation heuristics can mis-chunk abbreviations  
-- **−** Not true full-duplex realtime; native path remains Later roadmap
+- **+** Hands-free dialogue; fewer mic taps  
+- **+** Coaching tone matches product identity  
+- **−** Browser SpeechRecognition silence windows still vary by device  
+- **−** Not full-duplex realtime audio; latency still includes LLM + TTS  
