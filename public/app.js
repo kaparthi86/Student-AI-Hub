@@ -541,7 +541,8 @@ const I18N = {
     rec_cuet: "CUET prep",
     rec_hinglish: "Simple mixed language",
     voice_region_hint: "Voice uses your reply language and region ({locale}).",
-    voice_tutor_sub: "Two-way study talk. Ask, hear the answer, then keep going — interrupt anytime.",
+    voice_tutor_sub:
+      "One tap starts a live session. Speak naturally — I listen, reply, and keep listening until you stop.",
   },
   es: {
     signin_title: "Estudia mejor. Aprende mas. Logra mas.",
@@ -2285,12 +2286,15 @@ function chunkTextForSpeech(text, maxLen = 320) {
   return parts.length ? parts : [src.slice(0, maxLen)];
 }
 
-function speakTextChunks(chunks, voice, langTag, onDone) {
+function speakTextChunks(chunks, voice, langTag, onDone, voiceOpts = {}) {
   const list = Array.isArray(chunks) ? chunks.filter(Boolean) : [];
   if (!list.length) {
     if (typeof onDone === "function") onDone();
     return;
   }
+  speakTextChunks._rate = voiceOpts.rate;
+  speakTextChunks._pitch = voiceOpts.pitch;
+  speakTextChunks._volume = voiceOpts.volume;
   const session = ++speechSpeakSession;
   let i = 0;
   let finished = false;
@@ -2310,10 +2314,13 @@ function speakTextChunks(chunks, voice, langTag, onDone) {
     i += 1;
     if (voice) u.voice = voice;
     u.lang = langTag || voice?.lang || "en-US";
-    // Soft + sober study-coach delivery: slower, slightly lower pitch, gentler volume.
-    u.rate = 0.9;
-    u.pitch = 0.95;
-    u.volume = 0.9;
+    // Soft + warm study-coach delivery: slower, gentle pitch/volume (overridable per call).
+    const rate = Number(speakTextChunks._rate);
+    const pitch = Number(speakTextChunks._pitch);
+    const volume = Number(speakTextChunks._volume);
+    u.rate = Number.isFinite(rate) && rate > 0 ? rate : 0.9;
+    u.pitch = Number.isFinite(pitch) && pitch > 0 ? pitch : 0.96;
+    u.volume = Number.isFinite(volume) && volume > 0 ? volume : 0.9;
     u.onend = () => {
       if (!stillCurrent()) return;
       // Brief pause between chunks keeps pacing calm rather than rushed.
@@ -6280,7 +6287,11 @@ window.StudentCoach = {
     const voice = typeof pickPreferredSpeechVoice === "function"
       ? pickPreferredSpeechVoice(langPrefix)
       : null;
-    speakTextChunks(chunks, voice, langTag, opts.onDone);
+    speakTextChunks(chunks, voice, langTag, opts.onDone, {
+      rate: opts.rate,
+      pitch: opts.pitch,
+      volume: opts.volume,
+    });
   },
   stopSpeech: () => stopReadAloud(),
   getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
