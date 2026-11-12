@@ -1,0 +1,32 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Easy Billing Suite",
+    "version": "0.1.0",
+    "description": "Meter (facts), Rate (frozen runs), Ledger (invoices). See docs/PRODUCT.md."
+  },
+  "servers": [{ "url": "http://127.0.0.1:8787" }],
+  "paths": {
+    "/health": {
+      "get": { "responses": { "200": { "description": "OK" } } }
+    },
+    "/v1/tenants": {
+      "post": { "summary": "Create tenant and bootstrap core dimensions" }
+    },
+    "/v1/tenants/{tenant_id}/events": {
+      "post": { "summary": "Idempotent usage ingest (Meter)" }
+    },
+    "/v1/tenants/{tenant_id}/aggregations/run": {
+      "post": { "summary": "Build or refresh billable facts (Meter)" }
+    },
+    "/v1/tenants/{tenant_id}/aggregations/close": {
+      "post": { "summary": "Close windows; later usage becomes adjustment facts" }
+    },
+    "/v1/tenants/{tenant_id}/rating-runs": {
+      "post": { "summary": "Simulate or freeze a rating run (Rate)" }
+    },
+    "/v1/tenants/{tenant_id}/invoices/draft": {
+      "post": { "summary": "One draft invoice per legal entity from a frozen run (Ledger)" }
+    }
+  }
+}
