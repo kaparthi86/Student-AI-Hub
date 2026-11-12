@@ -34,12 +34,14 @@ Hugging Face tokens should include **Inference Providers** permissions (fine-gra
 
 ### Assistant feedback (Supabase)
 
-Helpful / Not helpful votes only appear in Supabase when **both** are true:
+Helpful / Not helpful votes **and** Help & Support form rows only appear in Supabase when **both** are true:
 
-1. `SUPABASE_SERVICE_ROLE_KEY` is set on the host (Render Environment / `.env`) — never in `public/config.js`
+1. **`SUPABASE_SERVICE_ROLE_KEY`** is set on the host (Render Environment / `.env`) — exact name, **not** the anon key and not `SUPABASE_KEY`
 2. Table `public.assistant_feedback` exists (run `supabase/assistant_feedback.sql` in SQL Editor)
 
-Otherwise the API still returns success, but rows are written to `feedback.ndjson` on the server (or `/tmp`, which is ephemeral on Render). Check `/api/health` → `feedbackSupabaseConfigured: true`, then submit a vote and query:
+`/api/health` shows `supabaseAnonConfigured` separately from `feedbackSupabaseConfigured`. Anon = login. Service role = DB inserts.
+
+Otherwise the API still returns success, but rows are written to `feedback.ndjson` on the server (or `/tmp`, which is ephemeral on Render). Check `/api/health` → `feedbackSupabaseConfigured: true`, then submit a vote/form and query:
 
 ```sql
 select id, rating, reason, mode, study_mode, created_at
@@ -47,6 +49,19 @@ from public.assistant_feedback
 order by created_at desc
 limit 50;
 ```
+
+### Help & Support → Google Groups
+
+The in-app form never shows the group address. On **Send**, the server can email the group:
+
+1. Set `SUPPORT_NOTIFY_TO` (e.g. `student-ai-hub-support@googlegroups.com`)
+2. Set `SUPPORT_FROM_EMAIL` (must be allowed to post to that group)
+3. Pick one mail path:
+   - **Resend:** `RESEND_API_KEY` (verify your domain in Resend), or
+   - **SMTP:** `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` (Google Workspace app password works)
+4. Redeploy, then confirm `/api/health` → `supportNotifyConfigured: true`
+
+In Google Groups, allow posts from `SUPPORT_FROM_EMAIL` (member, or allow external posts). Replies use the signed-in user’s email as Reply-To when available.
 
 ### Weekly feedback loop (quality)
 

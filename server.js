@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const { Readable } = require("node:stream");
 const multer = require("multer");
+const { supportNotifyConfigured, notifySupportInbox } = require("./lib/support-notify");
 
 const envPath = path.join(__dirname, ".env");
 const envResult = dotenv.config({ path: envPath });
@@ -2234,7 +2235,22 @@ app.post("/api/support", requireSession, async (req, res) => {
       assistantMessage: message,
       clientCreatedAt: createdAt,
     });
-    return res.json(result);
+
+    // Forward to Google Group / inbox (server-only address; never shown in UI).
+    const notify = await notifySupportInbox({
+      category,
+      message,
+      userEmail: String(req.user?.email || "").trim() || "",
+      userId: req.user?.id || "",
+      createdAt,
+    });
+    return res.json({
+      ...result,
+      emailed: Boolean(notify.emailed),
+      emailProvider: notify.provider || null,
+      emailSkipped: Boolean(notify.skipped),
+      emailWarning: notify.error || null,
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
@@ -2486,6 +2502,8 @@ app.get("/api/health", (_req, res) => {
     supabaseAnonConfigured: Boolean(SUPABASE_ANON_KEY),
     /** Needed to write thumbs feedback into public.assistant_feedback (never expose this key to the browser). */
     feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
+    /** Help & Support form can email Google Group / inbox (Resend or SMTP). */
+    supportNotifyConfigured: supportNotifyConfigured(),
     /** Founder weekly review endpoint allowlist configured. */
     feedbackReviewAllowlistConfigured: feedbackReviewAllowlist().length > 0,
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
