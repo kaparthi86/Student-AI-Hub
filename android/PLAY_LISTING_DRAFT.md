@@ -30,10 +30,15 @@ My Student Coach is for studying and practice. Follow your school honor code. Do
 **Privacy**
 Sign in with Google. We do not sell your personal data or show ads from your chats. See our Privacy Policy in the app.
 
-## Contact
+**Legal operator**
+My Student Coach is operated by SKM IT SOLUTIONS INC. Terms, Privacy, payment accounts, and customer agreements identify SKM IT SOLUTIONS INC as the legal operator.
 
+## Contact / developer
+
+- Legal operator / developer: SKM IT SOLUTIONS INC  
 - Privacy: https://www.my-student-coach.com/privacy.html  
 - Terms: https://www.my-student-coach.com/terms.html  
+- Customer Agreement: https://www.my-student-coach.com/customer-agreement.html  
 - Support: in-app Help & Support form (signed-in users) 
 
 ## Screenshots to capture

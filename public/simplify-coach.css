@@ -205,6 +205,12 @@ body.brand-msc .primary-btn {
   padding-top: 18px;
 }
 
+.msc-landing .landing-operator-line {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--muted, #6f6b63);
+}
+
 .msc-landing .landing-footer .fine-print-line + .fine-print-line {
   display: none;
 }
