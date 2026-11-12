@@ -528,7 +528,10 @@ const I18N = {
     profile_region: "State / region",
     profile_board: "Education board",
     profile_exam: "Exam focus",
-    profile_reply_lang: "Reply language",
+    study_language: "Language",
+    study_language_hint: "Ask and answers use this language",
+    study_language_ask_hint: "Your question and the coach reply stay in this language",
+    profile_reply_lang: "Study language",
     profile_locale_note: "These stay on this device and shape Ask answers, Home tips, and Voice Tutor language.",
     rec_cbse_revise: "CBSE revision",
     rec_jee_practice: "JEE practice",
@@ -1523,7 +1526,10 @@ const I18N = {
     profile_region: "மாநிலம் / பகுதி",
     profile_board: "கல்வி வாரியம்",
     profile_exam: "தேர்வு இலக்கு",
-    profile_reply_lang: "பதில் மொழி",
+    profile_reply_lang: "படிப்பு மொழி",
+    study_language: "மொழி",
+    study_language_hint: "கேள்விகளும் பதில்களும் இந்த மொழியில்",
+    study_language_ask_hint: "உங்கள் கேள்வியும் பயிற்சியாளர் பதிலும் இந்த மொழியிலேயே",
     profile_locale_note: "இவை இந்த சாதனத்தில் இருக்கும்; Ask, முகப்புப் பரிந்துரைகள், Voice Tutor மொழியை வடிவமைக்கும்.",
     rec_cbse_revise: "CBSE திருப்புதல்",
     rec_jee_practice: "JEE பயிற்சி",
@@ -2416,6 +2422,57 @@ function normalizeReplyLanguage(raw) {
   return SUPPORTED_UI_LANGS.includes(v) ? v : "";
 }
 
+function currentStudyLanguage() {
+  const prefs = loadPrefs();
+  return normalizeReplyLanguage(prefs.replyLanguage) || normalizeUiLanguage(prefs.uiLanguage) || "en";
+}
+
+function syncStudyLanguageSelects(lang) {
+  const value = normalizeUiLanguage(lang) || "en";
+  ["homeLanguageSelect", "headerLanguageSelect", "askLanguageSelect", "prefReplyLanguage", "prefUiLanguage"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+  const homeLabel = document.getElementById("homeLanguageLabel");
+  const askLabel = document.getElementById("askLanguageLabel");
+  const homeHint = document.getElementById("homeLanguageHint");
+  const askHint = document.getElementById("askLanguageHint");
+  if (homeLabel) homeLabel.textContent = t("study_language") || "Language";
+  if (askLabel) askLabel.textContent = t("study_language") || "Language";
+  if (homeHint) homeHint.textContent = t("study_language_hint") || "Ask and answers use this language";
+  if (askHint) askHint.textContent = t("study_language_ask_hint") || "Your question and the coach reply stay in this language";
+  const profileLabel = document.getElementById("prefReplyLanguageLabel");
+  if (profileLabel) profileLabel.textContent = t("profile_reply_lang") || "Study language";
+}
+
+/** Visible study language: drives UI chrome + model reply language together. */
+function applyStudyLanguage(rawLang, { toast } = {}) {
+  const lang = normalizeUiLanguage(rawLang) || "en";
+  const prefs = loadPrefs();
+  prefs.uiLanguage = lang;
+  prefs.replyLanguage = lang;
+  savePrefs(prefs);
+  setUiLanguage(lang);
+  syncStudyLanguageSelects(lang);
+  syncVoiceRegionHint?.();
+  if (mainTab === "home" && typeof renderCoachHome === "function") renderCoachHome();
+  if (toast) showToast(t("settings_saved_toast"));
+}
+
+function wireStudyLanguageUi() {
+  syncStudyLanguageSelects(currentStudyLanguage());
+  ["homeLanguageSelect", "headerLanguageSelect", "askLanguageSelect"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", (e) => {
+      applyStudyLanguage(e.target.value, { toast: true });
+    });
+  });
+  // Profile select also applies immediately for visibility
+  document.getElementById("prefReplyLanguage")?.addEventListener("change", (e) => {
+    applyStudyLanguage(e.target.value, { toast: false });
+  });
+}
+
+
 function normalizeCountryCode(raw) {
   const v = String(raw || "").trim().toUpperCase();
   if (v === "IN" || v === "INDIA") return "IN";
@@ -2448,7 +2505,7 @@ function getLearnerProfile() {
     region: prefs.region || "",
     board: prefs.board || "",
     examFocus: prefs.examFocus || "",
-    replyLanguage: prefs.replyLanguage || prefs.uiLanguage || "en",
+    replyLanguage: normalizeReplyLanguage(prefs.replyLanguage) || normalizeUiLanguage(prefs.uiLanguage) || "en",
   };
 }
 
@@ -2465,7 +2522,7 @@ function syncLearnerProfileForm() {
   set("prefRegion", prefs.region || "");
   set("prefBoard", prefs.board || "");
   set("prefExamFocus", prefs.examFocus || "");
-  set("prefReplyLanguage", prefs.replyLanguage || "");
+  set("prefReplyLanguage", normalizeReplyLanguage(prefs.replyLanguage) || normalizeUiLanguage(prefs.uiLanguage) || "en");
 }
 
 function saveLearnerProfileFromForm() {
@@ -2478,8 +2535,12 @@ function saveLearnerProfileFromForm() {
   prefs.region = normalizeRegion(document.getElementById("prefRegion")?.value || "");
   prefs.board = normalizeBoard(document.getElementById("prefBoard")?.value || "");
   prefs.examFocus = normalizeExamFocus(document.getElementById("prefExamFocus")?.value || "");
-  prefs.replyLanguage = normalizeReplyLanguage(document.getElementById("prefReplyLanguage")?.value || "");
+  const studyLang = normalizeReplyLanguage(document.getElementById("prefReplyLanguage")?.value || "") || "en";
+  prefs.replyLanguage = studyLang;
+  prefs.uiLanguage = normalizeUiLanguage(studyLang);
   savePrefs(prefs);
+  setUiLanguage(prefs.uiLanguage);
+  syncStudyLanguageSelects(studyLang);
   showToast(t("settings_saved_toast"));
   if (mainTab === "home") renderCoachHome();
   syncVoiceRegionHint();
@@ -4342,7 +4403,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     message: trimmed,
     history: historyForApi,
     studyMode: normalizeStudyMode(studyMode),
-    uiLanguage: profileForTurn.replyLanguage || activeUiLanguage,
+    uiLanguage: currentStudyLanguage(),
     learnerProfile: profileForTurn,
     stream: true,
   };
@@ -5774,7 +5835,7 @@ async function practiceApi(body) {
   const res = await fetchAuthed("/api/practice", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, uiLanguage: activeUiLanguage }),
+    body: JSON.stringify({ ...body, uiLanguage: currentStudyLanguage(), learnerProfile: getLearnerProfile() }),
   });
   let data = null;
   try { data = await res.json(); } catch { data = null; }
@@ -6208,6 +6269,8 @@ function wireSettingsUi() {
     const prefs = loadPrefs();
     if (prefRestoreSessions) prefRestoreSessions.checked = prefs.restoreSessions !== false;
     if (prefUiLanguage) prefUiLanguage.value = normalizeUiLanguage(prefs.uiLanguage);
+    syncStudyLanguageSelects(prefs.replyLanguage || prefs.uiLanguage);
+
     const fontScale = document.getElementById("prefFontScale");
     if (fontScale) fontScale.value = prefs.fontScale || "md";
     const highContrast = document.getElementById("prefHighContrast");
@@ -6229,10 +6292,14 @@ function wireSettingsUi() {
     if (e.target === settingsModal) settingsModal.classList.add("hidden");
   });
   saveSettingsBtn?.addEventListener("click", () => {
+    const lang = normalizeUiLanguage(prefUiLanguage?.value || "en");
+    const prev = loadPrefs();
     const prefs = {
+      ...prev,
       restoreSessions: prefRestoreSessions?.checked !== false,
-      uiLanguage: normalizeUiLanguage(prefUiLanguage?.value || "en"),
-      liveWeb: loadPrefs().liveWeb !== false,
+      uiLanguage: lang,
+      replyLanguage: lang,
+      liveWeb: prev.liveWeb !== false,
       fontScale: document.getElementById("prefFontScale")?.value || "md",
       highContrast: document.getElementById("prefHighContrast")?.checked === true,
       dyslexiaFont: document.getElementById("prefDyslexiaFont")?.checked === true,
@@ -6240,6 +6307,7 @@ function wireSettingsUi() {
     if (!["sm", "md", "lg"].includes(prefs.fontScale)) prefs.fontScale = "md";
     savePrefs(prefs);
     setUiLanguage(prefs.uiLanguage);
+    syncStudyLanguageSelects(lang);
     applyAccessibilityPrefs(prefs);
     saveSessionState();
     settingsModal?.classList.add("hidden");
@@ -6308,6 +6376,7 @@ const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
 applyAccessibilityPrefs(prefsAtBoot);
 setUiLanguage(prefsAtBoot.uiLanguage);
+wireStudyLanguageUi();
 syncLiveWebToggleUi();
 syncHubResumeButton();
 syncFirstSession();

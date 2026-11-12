@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=skm-operator-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=study-lang-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -388,6 +388,16 @@
               </div>
             </div>
             <div class="head-actions account-menu">
+              <label class="study-lang-bar study-lang-bar--header" for="headerLanguageSelect">
+                <span class="sr-only" id="headerLanguageLabel">Language</span>
+                <select id="headerLanguageSelect" class="study-lang-select" aria-label="Study language">
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="te">Telugu</option>
+                  <option value="ta">Tamil</option>
+                  <option value="es">Español</option>
+                </select>
+              </label>
               <button
                 type="button"
                 id="accountMenuBtn"
@@ -456,6 +466,17 @@
                 <button type="button" class="primary-btn" id="coachAskBtn">Ask your AI Coach</button>
                 <button type="button" class="ghost-btn" id="coachContinueBtn">Continue learning</button>
               </div>
+              <label class="study-lang-bar" for="homeLanguageSelect">
+                <span class="study-lang-label" id="homeLanguageLabel">Language</span>
+                <select id="homeLanguageSelect" class="study-lang-select" aria-label="Study language">
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="te">Telugu</option>
+                  <option value="ta">Tamil</option>
+                  <option value="es">Español</option>
+                </select>
+                <span class="muted study-lang-hint" id="homeLanguageHint">Ask and answers use this language</span>
+              </label>
               <aside id="indiaLocaleBanner" class="india-locale-banner hidden" hidden>
                 <p class="india-locale-title" id="indiaLocaleTitle">Personalize for India</p>
                 <p class="muted india-locale-body" id="indiaLocaleBody">Set your board, exam track, and language for local study recommendations. No GPS needed.</p>
@@ -602,14 +623,13 @@
                 <option value="cuet">CUET</option>
                 <option value="none">None / general learning</option>
               </select>
-              <label for="prefReplyLanguage" id="prefReplyLanguageLabel">Reply language</label>
-              <select id="prefReplyLanguage">
-                <option value="">Same as display language</option>
+              <label for="prefReplyLanguage" id="prefReplyLanguageLabel">Study language</label>
+              <select id="prefReplyLanguage" class="study-lang-select">
                 <option value="en">English</option>
                 <option value="hi">Hindi</option>
                 <option value="te">Telugu</option>
                 <option value="ta">Tamil</option>
-                <option value="es">Spanish</option>
+                <option value="es">Español</option>
               </select>
               <div class="msc-profile-actions">
                 <button type="button" class="primary-btn" id="saveLearnerPrefsBtn">Save learning profile</button>
@@ -763,6 +783,19 @@
         </section>
 
         <section id="panelChat" class="panel perplexity-panel hidden">
+          <div class="ask-lang-row">
+            <label class="study-lang-bar study-lang-bar--ask" for="askLanguageSelect">
+              <span class="study-lang-label" id="askLanguageLabel">Language</span>
+              <select id="askLanguageSelect" class="study-lang-select" aria-label="Study language">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="te">Telugu</option>
+                <option value="ta">Tamil</option>
+                <option value="es">Español</option>
+              </select>
+            </label>
+            <p class="muted study-lang-hint" id="askLanguageHint">Your question and the coach reply stay in this language</p>
+          </div>
           <details class="msc-advanced-options">
             <summary>Learning options</summary>
             <div id="studyModeBar" class="study-mode-bar" role="radiogroup" aria-label="How should Ask help?">
@@ -1319,7 +1352,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=voice-coach-2"></script>
+    <script defer src="./app.js?v=study-lang-1"></script>
     <script defer src="./coach-labs.js?v=voice-coach-2"></script>
   </body>
 </html>

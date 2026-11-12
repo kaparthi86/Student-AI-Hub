@@ -211,6 +211,66 @@ body.brand-msc .primary-btn {
   color: var(--muted, #6f6b63);
 }
 
+/* Visible study language control */
+.study-lang-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.study-lang-bar--header {
+  margin-top: 0;
+  margin-right: 4px;
+}
+
+.study-lang-bar--ask {
+  margin-top: 0;
+}
+
+.study-lang-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy, #142d4c);
+}
+
+.study-lang-select {
+  min-height: 40px;
+  min-width: 132px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 45, 76, 0.14);
+  background: #fff;
+  color: var(--navy, #142d4c);
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+.study-lang-hint {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.ask-lang-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(20, 45, 76, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 720px) {
+  .study-lang-bar--header .study-lang-select {
+    min-width: 112px;
+    font-size: 0.9rem;
+  }
+}
+
 .msc-landing .landing-footer .fine-print-line + .fine-print-line {
   display: none;
 }
