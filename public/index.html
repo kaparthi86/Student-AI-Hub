@@ -29,7 +29,7 @@
     />
     <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
+    <link rel="stylesheet" href="./coach-labs.css?v=realtime-mini-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=skm-operator-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
@@ -663,13 +663,25 @@
               </p>
             </header>
             <div class="voice-tutor-stage">
+              <fieldset class="voice-engine-picker" id="voiceEnginePicker">
+                <legend class="voice-engine-legend">Conversation engine</legend>
+                <label class="voice-engine-option">
+                  <input type="radio" name="voiceEngine" id="voiceEngineBrowser" value="browser" checked />
+                  <span>Browser coach (free)</span>
+                </label>
+                <label class="voice-engine-option">
+                  <input type="radio" name="voiceEngine" id="voiceEngineRealtime" value="realtime" />
+                  <span>Live OpenAI mini (cost-capped)</span>
+                </label>
+              </fieldset>
+              <p class="muted voice-realtime-quota" id="voiceRealtimeQuota" hidden></p>
               <p class="voice-session-badge" id="voiceSessionBadge" hidden>Live session</p>
               <button type="button" class="voice-tutor-mic" id="voiceTutorMicBtn" aria-pressed="false">Start conversation</button>
               <p class="muted voice-tutor-hint" id="voiceTutorHint">
                 I'm here with you. Take your time thinking — pause when you want a reply. Tap the mic anytime to interrupt.
               </p>
               <p class="muted voice-region-hint" id="voiceRegionHint">Voice uses your reply language and region.</p>
-              <label class="voice-converse-toggle">
+              <label class="voice-converse-toggle" id="voiceAutoContinueWrap">
                 <input type="checkbox" id="voiceAutoContinue" checked />
                 <span>Hands-free conversation (listen again after each reply)</span>
               </label>
@@ -1320,6 +1332,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
     <script defer src="./app.js?v=voice-coach-2"></script>
-    <script defer src="./coach-labs.js?v=voice-coach-2"></script>
+    <script defer src="./realtime-voice.js?v=realtime-mini-1"></script>
+    <script defer src="./coach-labs.js?v=realtime-mini-1"></script>
   </body>
 </html>

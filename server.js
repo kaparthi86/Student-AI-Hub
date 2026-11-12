@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const { Readable } = require("node:stream");
 const multer = require("multer");
+const { createRealtimeQuota } = require("./lib/realtime-quota");
 
 const envPath = path.join(__dirname, ".env");
 const envResult = dotenv.config({ path: envPath });
@@ -78,6 +79,44 @@ const BRAVE_SEARCH_API_KEY = normalizeEnvString(process.env.BRAVE_SEARCH_API_KEY
 const SERPER_API_KEY = normalizeEnvString(process.env.SERPER_API_KEY || "");
 const LIVE_WEB_MAX_RESULTS = Math.max(1, Math.min(8, Number(process.env.LIVE_WEB_MAX_RESULTS || 5) || 5));
 const LIVE_WEB_CONFIGURED = Boolean(TAVILY_API_KEY || BRAVE_SEARCH_API_KEY || SERPER_API_KEY);
+
+/** OpenAI Realtime (gpt-realtime-2.1-mini) — cost-gated live voice. */
+const OPENAI_API_KEY = normalizeEnvString(process.env.OPENAI_API_KEY || "");
+const OPENAI_REALTIME_MODEL =
+  normalizeEnvString(process.env.OPENAI_REALTIME_MODEL) || "gpt-realtime-2.1-mini";
+const OPENAI_REALTIME_VOICE = normalizeEnvString(process.env.OPENAI_REALTIME_VOICE) || "marin";
+const OPENAI_REALTIME_ENABLED = ["1", "true", "yes"].includes(
+  String(process.env.OPENAI_REALTIME_ENABLED ?? (OPENAI_API_KEY ? "1" : "0")).trim().toLowerCase(),
+) && Boolean(OPENAI_API_KEY);
+const REALTIME_DAILY_SECONDS = Math.max(
+  60,
+  Math.min(60 * 60, Number(process.env.REALTIME_DAILY_MINUTES || 10) * 60 || 600),
+);
+const REALTIME_MAX_SESSION_SECONDS = Math.max(
+  60,
+  Math.min(30 * 60, Number(process.env.REALTIME_MAX_SESSION_SECONDS || 480) || 480),
+);
+const realtimeQuota = createRealtimeQuota({
+  filePath: path.join(__dirname, "data", "realtime-quota.json"),
+  dailySeconds: REALTIME_DAILY_SECONDS,
+  maxSessionSeconds: REALTIME_MAX_SESSION_SECONDS,
+});
+
+function realtimeCoachInstructions() {
+  return [
+    "You are My Student Coach — a warm, polite, patient personal study coach in a live voice conversation.",
+    "Speak like a supportive tutor sitting beside the student, never commanding or judgmental.",
+    "Keep turns short (about 2-4 spoken sentences). One small idea at a time.",
+    "Use simple language. Celebrate progress lightly. If the student is stuck, acknowledge the attempt kindly and guide one next step.",
+    "Do not use markdown, lists, or filler closers like \"Is there anything else I can help with?\"",
+    "End most turns with one natural follow-up question. Allow thinking silence; do not rush the student.",
+    "My Student Coach is for learning and practice — never help hand in AI work as the student's own.",
+  ].join(" ");
+}
+
+function realtimeSafetyId(userId) {
+  return crypto.createHash("sha256").update(`msc-realtime:${String(userId || "anon")}`).digest("hex").slice(0, 64);
+}
 
 /** OpenAI-compatible chat completions endpoint (Inference Providers / Router). */
 const HF_CHAT_URL =
@@ -2428,6 +2467,128 @@ app.put("/api/workspace", requireSession, async (req, res) => {
   }
 });
 
+
+app.get("/api/realtime/status", requireSession, (req, res) => {
+  const userId = req.user?.id || "";
+  return res.json({
+    ok: true,
+    enabled: OPENAI_REALTIME_ENABLED,
+    model: OPENAI_REALTIME_MODEL,
+    voice: OPENAI_REALTIME_VOICE,
+    dailySeconds: realtimeQuota.dailySeconds,
+    maxSessionSeconds: realtimeQuota.maxSessionSeconds,
+    usedSeconds: realtimeQuota.getUsed(userId),
+    remainingSeconds: realtimeQuota.remaining(userId),
+    canStart: OPENAI_REALTIME_ENABLED && realtimeQuota.canStart(userId),
+  });
+});
+
+app.post("/api/realtime/session", requireSession, async (req, res) => {
+  try {
+    if (!OPENAI_REALTIME_ENABLED) {
+      return res.status(503).json({
+        error: "Live OpenAI voice is not configured. Set OPENAI_API_KEY (and OPENAI_REALTIME_ENABLED=1).",
+        fallback: "browser",
+      });
+    }
+    const userId = req.user?.id || "";
+    if (!realtimeQuota.canStart(userId)) {
+      return res.status(429).json({
+        error: "Daily live-voice minutes used up. Try again tomorrow, or use Browser coach (free).",
+        remainingSeconds: 0,
+        fallback: "browser",
+      });
+    }
+    const requested = Math.max(
+      60,
+      Math.min(realtimeQuota.maxSessionSeconds, Number(req.body?.maxSeconds) || realtimeQuota.maxSessionSeconds),
+    );
+    const reservation = realtimeQuota.reserve(userId, requested);
+    if (!reservation.ok) {
+      return res.status(429).json({
+        error: "Not enough live-voice minutes left today.",
+        remainingSeconds: reservation.remaining,
+        fallback: "browser",
+      });
+    }
+
+    const sessionBody = {
+      expires_after: { anchor: "created_at", seconds: Math.min(7200, Math.max(600, reservation.granted + 120)) },
+      session: {
+        type: "realtime",
+        model: OPENAI_REALTIME_MODEL,
+        instructions: realtimeCoachInstructions(),
+        audio: {
+          input: {
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 700,
+              create_response: true,
+              interrupt_response: true,
+            },
+          },
+          output: {
+            voice: OPENAI_REALTIME_VOICE,
+          },
+        },
+      },
+    };
+
+    const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+        "OpenAI-Safety-Identifier": realtimeSafetyId(userId),
+      },
+      body: JSON.stringify(sessionBody),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      // Refund the reservation if OpenAI failed.
+      realtimeQuota.settle(userId, reservation.granted, 0);
+      const msg = data?.error?.message || data?.error || "Could not start live voice session.";
+      return res.status(response.status >= 400 ? response.status : 502).json({ error: String(msg) });
+    }
+    const clientSecret = data.value || data.client_secret?.value || null;
+    if (!clientSecret) {
+      realtimeQuota.settle(userId, reservation.granted, 0);
+      return res.status(502).json({ error: "OpenAI did not return a client secret." });
+    }
+    return res.json({
+      ok: true,
+      clientSecret,
+      expiresAt: data.expires_at || null,
+      model: OPENAI_REALTIME_MODEL,
+      voice: OPENAI_REALTIME_VOICE,
+      reservedSeconds: reservation.granted,
+      remainingSeconds: reservation.remaining,
+      maxSessionSeconds: reservation.granted,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Live voice session failed." });
+  }
+});
+
+app.post("/api/realtime/usage", requireSession, (req, res) => {
+  try {
+    const userId = req.user?.id || "";
+    const reserved = Number(req.body?.reservedSeconds) || 0;
+    const actual = Number(req.body?.actualSeconds) || 0;
+    const result = realtimeQuota.settle(userId, reserved, actual);
+    return res.json({
+      ok: true,
+      chargedSeconds: result.charged,
+      remainingSeconds: result.remaining,
+      dailySeconds: realtimeQuota.dailySeconds,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Could not record usage." });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   const indexHtmlDeployed = fs.existsSync(indexHtmlPath);
   const prod = process.env.NODE_ENV === "production";
@@ -2444,6 +2605,8 @@ app.get("/api/health", (_req, res) => {
     feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
     /** Founder weekly review endpoint allowlist configured. */
     feedbackReviewAllowlistConfigured: feedbackReviewAllowlist().length > 0,
+    openaiRealtimeConfigured: OPENAI_REALTIME_ENABLED,
+    openaiRealtimeModel: OPENAI_REALTIME_ENABLED ? OPENAI_REALTIME_MODEL : null,
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
     supabaseAnonKeyIsSecretNotAllowed: SUPABASE_ANON_KEY.startsWith("sb_secret_"),
   };
