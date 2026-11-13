@@ -2713,6 +2713,18 @@ app.post("/api/analytics/learning", requireSession, async (req, res) => {
   }
 });
 
+/** Whether the signed-in user may see Admin analytics in the UI. */
+app.get("/api/analytics/admin-access", requireSession, async (req, res) => {
+  try {
+    return res.json({
+      ok: true,
+      allowed: analytics.canAccessAnalyticsAdmin(req.user),
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, allowed: false, error: error.message || "Access check failed" });
+  }
+});
+
 /** Admin-only product intelligence dashboard. */
 app.get("/api/analytics/dashboard", requireSession, async (req, res) => {
   try {
