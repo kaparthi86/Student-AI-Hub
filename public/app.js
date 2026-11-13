@@ -3198,7 +3198,17 @@ function renderAssistantHtml(text) {
 }
 
 function setMainTab(next) {
-  mainTab = COACH_TABS.has(next) ? next : "home";
+  let requested = COACH_TABS.has(next) ? next : "home";
+  // Admin analytics is product-owner only — never expose the panel to students.
+  if (
+    requested === "admin-analytics" &&
+    !(window.StudentAnalytics && typeof window.StudentAnalytics.canAccessAdminAnalytics === "function"
+      ? window.StudentAnalytics.canAccessAdminAnalytics()
+      : false)
+  ) {
+    requested = "profile";
+  }
+  mainTab = requested;
   if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
   if (mainTab !== "chat" && mainTab !== "voice" && mainTab !== "math") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat" && mainTab !== "math") clearLearnChatVisionAttachment();
@@ -5485,6 +5495,12 @@ async function handleLogout() {
     } catch {
       /* ignore */
     }
+  }
+  // Hide product-owner tools for the next session.
+  const adminTab = document.getElementById("tabAdminAnalytics");
+  if (adminTab) {
+    adminTab.hidden = true;
+    adminTab.classList.add("hidden");
   }
   if (!supabaseClient) {
     showAuth("Signed out.");
