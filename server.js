@@ -1488,6 +1488,52 @@ function learnerProfileInstruction(profile) {
   return "Learner profile:\n- " + bits.join("\n- ");
 }
 
+/** Persistent coach memory for continuity across sessions (client-supplied, sanitized). */
+function coachMemoryInstruction(memory) {
+  if (!memory || typeof memory !== "object") return "";
+  const bits = [];
+  const summary = String(memory.lastSummary || "").trim().slice(0, 500);
+  if (summary) bits.push("Continuity summary: " + summary);
+  const recent = Array.isArray(memory.recentTopics)
+    ? memory.recentTopics
+        .map((t) => (typeof t === "string" ? t : t?.topic))
+        .filter(Boolean)
+        .map((t) => String(t).trim().slice(0, 64))
+        .slice(0, 8)
+    : [];
+  if (recent.length) bits.push("Recently studied: " + recent.join(", ") + ".");
+  const struggles = Array.isArray(memory.struggles)
+    ? memory.struggles
+        .map((t) => (typeof t === "string" ? t : t?.topic))
+        .filter(Boolean)
+        .map((t) => String(t).trim().slice(0, 64))
+        .slice(0, 6)
+    : [];
+  if (struggles.length) {
+    bits.push("Needs extra support on: " + struggles.join(", ") + ". Build gently on prior misunderstandings.");
+  }
+  const strengths = Array.isArray(memory.strengths)
+    ? memory.strengths
+        .map((t) => (typeof t === "string" ? t : t?.topic))
+        .filter(Boolean)
+        .map((t) => String(t).trim().slice(0, 64))
+        .slice(0, 5)
+    : [];
+  if (strengths.length) bits.push("Stronger areas: " + strengths.join(", ") + ".");
+  const goal = String(memory.learningGoal || "").trim().slice(0, 40);
+  if (goal) bits.push("Learning goal: " + goal + ".");
+  const exam = String(memory.examFocus || "").trim().slice(0, 80);
+  if (exam) bits.push("Exam focus in progress: " + exam + ".");
+  const weekly = String(memory.weeklyProgress || "").trim().slice(0, 20);
+  if (weekly) bits.push("Weekly goals progress: " + weekly + ".");
+  if (!bits.length) return "";
+  return (
+    "Coach memory (use for continuity; do not invent past sessions the student did not have):\n- " +
+    bits.join("\n- ") +
+    "\nWhen relevant, briefly connect to what they studied before (one short sentence), then teach."
+  );
+}
+
 function uiLanguageInstruction(rawLang) {
   const lang = normalizeUiLanguage(rawLang);
   const shared =
@@ -1838,14 +1884,18 @@ app.post("/api/chat", requireSession, async (req, res) => {
       ? req.body.learnerProfile
       : null;
     const profileInstruction = learnerProfileInstruction(learnerProfile);
+    const coachMemory = req.body?.coachMemory && typeof req.body.coachMemory === "object"
+      ? req.body.coachMemory
+      : null;
+    const memoryInstruction = coachMemoryInstruction(coachMemory);
     const voiceMode = isTruthyFlag(req.body?.voiceMode);
     const voiceInstruction = voiceModeInstruction(voiceMode, req.body?.voiceLocale);
     let system =
       mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
-          )}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
-        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}`;
+          )}${profileInstruction ? `\n${profileInstruction}` : ""}${memoryInstruction ? `\n${memoryInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
+        : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}${memoryInstruction ? `\n${memoryInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}`;
     if (liveWebRequested) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }

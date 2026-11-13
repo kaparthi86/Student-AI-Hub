@@ -1,0 +1,373 @@
+/* Adaptive Learning Journey — Progress, Planner, Exam, Diagnostic, Home dash */
+
+.journey-dash {
+  margin: 1.25rem 0 0.5rem;
+  padding: 1.1rem 1.15rem 1.2rem;
+  border-radius: 18px;
+  background:
+    linear-gradient(165deg, rgba(40, 122, 137, 0.1), rgba(255, 255, 255, 0.55) 42%, rgba(31, 101, 113, 0.06)),
+    var(--surface, #f7f8f6);
+  border: 1px solid rgba(40, 122, 137, 0.14);
+}
+
+.journey-dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.journey-dash-title {
+  margin: 0.15rem 0 0.25rem;
+  font-size: clamp(1.25rem, 2.6vw, 1.65rem);
+  letter-spacing: -0.02em;
+}
+
+.journey-dash-lead {
+  margin: 0;
+}
+
+.journey-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.journey-stat-row--wide {
+  margin-bottom: 1rem;
+}
+
+.journey-stat {
+  min-width: 5.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(31, 101, 113, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.journey-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f6571;
+  letter-spacing: -0.03em;
+}
+
+.journey-stat-label {
+  font-size: 0.75rem;
+  color: var(--muted, #5c6b6e);
+}
+
+.journey-plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.journey-plan-head h4,
+.journey-block h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1.05rem;
+}
+
+.journey-plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.journey-plan-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(31, 101, 113, 0.1);
+}
+
+.journey-plan-item.is-recommended {
+  border-color: rgba(40, 122, 137, 0.35);
+  box-shadow: 0 0 0 1px rgba(40, 122, 137, 0.08);
+}
+
+.journey-plan-item.is-done {
+  opacity: 0.72;
+}
+
+.journey-plan-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 10rem;
+  flex: 1;
+}
+
+.journey-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.journey-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #1f6571;
+  background: rgba(40, 122, 137, 0.12);
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+}
+
+.journey-badge--done {
+  color: #2f6b3a;
+  background: rgba(47, 107, 58, 0.12);
+}
+
+.journey-coach-note {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(31, 101, 113, 0.06);
+}
+
+.journey-coach-note-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1f6571;
+}
+
+.journey-coach-note > p:nth-child(2) {
+  margin: 0 0 0.75rem;
+}
+
+.journey-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.journey-page .coach-lab-hero,
+.journey-page .msc-hub-hero {
+  margin-bottom: 1rem;
+}
+
+.journey-block {
+  margin: 1.15rem 0;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(31, 101, 113, 0.1);
+}
+
+.journey-mastery-list,
+.journey-revision-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.journey-mastery-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.92rem;
+}
+
+.journey-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(31, 101, 113, 0.1);
+  overflow: hidden;
+}
+
+.journey-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #287a89, #1f6571);
+}
+
+.journey-revision-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.journey-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.journey-week-day {
+  text-align: center;
+  padding: 0.55rem 0.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(31, 101, 113, 0.1);
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.journey-week-day.is-today {
+  border-color: rgba(40, 122, 137, 0.4);
+  background: rgba(40, 122, 137, 0.1);
+}
+
+.journey-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.journey-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.journey-form input[type="text"],
+.journey-form input[type="date"],
+.journey-quiz-card textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 101, 113, 0.2);
+  background: #fff;
+}
+
+.journey-quiz-mount {
+  margin-top: 0.85rem;
+}
+
+.journey-quiz-card,
+.journey-quiz-result {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(31, 101, 113, 0.12);
+}
+
+.journey-quiz-prompt {
+  font-size: 1.02rem;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.journey-quiz-card textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  margin-bottom: 0.65rem;
+  resize: vertical;
+}
+
+/* Progressive onboarding */
+.journey-onboard-modal .settings-modal-card,
+.journey-onboard-card {
+  max-width: 420px;
+  width: min(420px, 92vw);
+  padding: 1.25rem 1.2rem 1.35rem;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(20, 40, 48, 0.18);
+}
+
+.journey-onboard-step h2 {
+  margin: 0.2rem 0 0.45rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.journey-onboard-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.journey-onboard-options label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(31, 101, 113, 0.14);
+  background: rgba(247, 248, 246, 0.9);
+  cursor: pointer;
+  font-weight: 550;
+}
+
+.journey-onboard-options label:has(input:checked) {
+  border-color: rgba(40, 122, 137, 0.45);
+  background: rgba(40, 122, 137, 0.08);
+}
+
+.journey-onboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.coach-voice-elevate {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.35rem 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(40, 122, 137, 0.08);
+  border: 1px solid rgba(40, 122, 137, 0.14);
+}
+
+.coach-voice-elevate p {
+  margin: 0;
+  flex: 1;
+  min-width: 12rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .journey-week-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .journey-dash-head {
+    flex-direction: column;
+  }
+  .journey-start-btn,
+  .journey-plan-actions .primary-btn {
+    width: 100%;
+  }
+  .journey-plan-actions {
+    width: 100%;
+  }
+}

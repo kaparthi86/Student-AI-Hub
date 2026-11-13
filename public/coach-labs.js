@@ -666,6 +666,10 @@
             role: m.role === "assistant" ? "assistant" : "user",
             content: String(m.content || ""),
           }));
+      const coachMemory =
+        typeof window.StudentJourney?.getCoachMemory === "function"
+          ? window.StudentJourney.getCoachMemory()
+          : undefined;
       const res = await api().fetchAuthed("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -676,6 +680,7 @@
           studyMode: "explain",
           uiLanguage: api().getReplyLanguage?.() || api().getUiLanguage?.() || "en",
           learnerProfile: api().getLearnerProfile?.() || undefined,
+          coachMemory,
           voiceMode: true,
           voiceLocale: api().getVoiceLocale?.() || undefined,
           stream: true,
@@ -701,6 +706,13 @@
       if (coachLine) coachLine.textContent = `Coach: ${cleaned}`;
       voiceHistory.push({ role: "assistant", content: cleaned });
       voiceThinking = false;
+      if (typeof window.StudentJourney?.recordLearningEvent === "function") {
+        window.StudentJourney.recordLearningEvent({
+          message: asked,
+          mode: "voice",
+          minutes: 3,
+        });
+      }
 
       const remainder = cleaned.slice(spokenIdx).trim();
       const finishAndMaybeContinue = () => {

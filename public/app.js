@@ -38,9 +38,11 @@ const COACH_TABS = new Set([
   "planner",
   "exam",
   "progress",
+  "diagnostic",
 ]);
-const COACH_SOON_TABS = new Set(["planner", "exam", "progress"]);
+const COACH_SOON_TABS = new Set([]);
 const COACH_LAB_TABS = new Set(["voice", "flashcards", "math", "focus", "gaps"]);
+const COACH_JOURNEY_TABS = new Set(["progress", "planner", "exam", "diagnostic"]);
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -3190,8 +3192,18 @@ function setMainTab(next) {
   if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
   if (mainTab !== "chat" && mainTab !== "voice" && mainTab !== "math") stopReadAloud();
   if (LEARN_VISION_ENABLED && mainTab !== "chat" && mainTab !== "math") clearLearnChatVisionAttachment();
-  const learnTabs = new Set(["learning", "chat", "code", "notebook", "math", "flashcards", "voice", "exam"]);
-  const profileTabs = new Set(["profile", "progress", "gaps", "focus"]);
+  const learnTabs = new Set([
+    "learning",
+    "code",
+    "notebook",
+    "math",
+    "flashcards",
+    "voice",
+    "exam",
+    "diagnostic",
+    "planner",
+  ]);
+  const profileTabs = new Set(["profile", "gaps", "focus"]);
   document.querySelectorAll(".coach-nav .tab[data-tab], .tabs .tab[data-tab]").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
@@ -3199,14 +3211,15 @@ function setMainTab(next) {
   });
   document.getElementById("learnMenu")?.querySelector(".msc-nav-summary")?.classList.toggle(
     "active",
-    learnTabs.has(mainTab) && mainTab !== "chat"
+    learnTabs.has(mainTab)
   );
   document.getElementById("profileMenu")?.querySelector(".msc-nav-summary")?.classList.toggle(
     "active",
     profileTabs.has(mainTab)
   );
-  // AI Coach tab stays active for chat; Learn highlights for other learn tools.
+  // Coach tab stays active for chat; Progress is its own primary tab.
   document.getElementById("tabChat")?.classList.toggle("active", mainTab === "chat");
+  document.getElementById("tabProgress")?.classList.toggle("active", mainTab === "progress");
   const isSoon = COACH_SOON_TABS.has(mainTab);
   panelHome?.classList.toggle("hidden", mainTab !== "home");
   const panelLearning = document.getElementById("panelLearning");
@@ -3227,20 +3240,20 @@ function setMainTab(next) {
   panelChat?.classList.toggle("hidden", mainTab !== "chat");
   panelCode?.classList.toggle("hidden", mainTab !== "code");
   panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
-  // Android bottom nav active state
-  const bottomMap = {
-    home: "home",
-    chat: "chat",
-    learning: "learning",
-    profile: "profile",
-  };
+  document.querySelectorAll("[data-journey-panel]").forEach((panel) => {
+    const on = panel.getAttribute("data-journey-panel") === mainTab;
+    panel.classList.toggle("hidden", !on);
+    panel.hidden = !on;
+  });
   let bottomKey = "learning";
   if (mainTab === "home") bottomKey = "home";
   else if (mainTab === "chat") bottomKey = "chat";
-  else if (mainTab === "profile" || mainTab === "progress") bottomKey = "profile";
+  else if (mainTab === "progress") bottomKey = "progress";
   else if (mainTab === "learning") bottomKey = "learning";
-  else if (["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "gaps", "focus"].includes(mainTab)) {
-    // Tools opened from My Learning keep Learning selected in the bottom bar.
+  else if (mainTab === "profile" || mainTab === "gaps" || mainTab === "focus") bottomKey = "progress";
+  else if (
+    ["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "diagnostic"].includes(mainTab)
+  ) {
     bottomKey = "learning";
   } else bottomKey = "home";
   document.querySelectorAll("#mscBottomNav .msc-bottom-item").forEach((btn) => {
@@ -3255,6 +3268,9 @@ function setMainTab(next) {
   if (isSoon) renderComingSoonPanel(mainTab);
   if (COACH_LAB_TABS.has(mainTab) && typeof window.onCoachLabTab === "function") {
     window.onCoachLabTab(mainTab);
+  }
+  if (COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
+    window.StudentJourney.onTab(mainTab);
   }
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
@@ -3501,11 +3517,12 @@ function renderCoachHome() {
   const askBtn = document.getElementById("coachAskBtn");
   if (askBtn) askBtn.textContent = t("coach_ask_cta");
 
-  // Simplified home: action cards only. Continue still uses history helpers.
+  // Adaptive journey dashboard + action cards.
   if (list) {
     list.hidden = true;
     list.replaceChildren();
   }
+  if (window.StudentJourney?.renderHome) window.StudentJourney.renderHome();
   maybeShowIndiaLocaleBanner();
   renderLocaleRecommendations();
   syncVoiceRegionHint();
@@ -3581,7 +3598,7 @@ function wireCoachHome() {
     });
   });
 
-  // Learning + Profile hub tiles
+  // Learning + Profile hub tiles + Coach voice elevate + Journey panels
   document.getElementById("panelLearning")?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !document.getElementById("panelLearning")?.contains(target)) return;
@@ -3591,6 +3608,18 @@ function wireCoachHome() {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !document.getElementById("panelProfile")?.contains(target)) return;
     go(target.getAttribute("data-coach-tab"));
+  });
+  document.getElementById("panelChat")?.addEventListener("click", (e) => {
+    const target = e.target.closest?.("[data-coach-tab]");
+    if (!target || !document.getElementById("panelChat")?.contains(target)) return;
+    go(target.getAttribute("data-coach-tab"));
+  });
+  ["panelProgress", "panelPlanner", "panelExam", "panelDiagnostic"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("click", (e) => {
+      const target = e.target.closest?.("[data-coach-tab]");
+      if (!target || !document.getElementById(id)?.contains(target)) return;
+      go(target.getAttribute("data-coach-tab"));
+    });
   });
   document.getElementById("saveLearnerPrefsBtn")?.addEventListener("click", () => {
     if (typeof saveLearnerProfileFromForm === "function") saveLearnerProfileFromForm();
@@ -4398,6 +4427,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
         }));
 
   const profileForTurn = getLearnerProfile();
+  const coachMemory =
+    typeof window.StudentJourney?.getCoachMemory === "function"
+      ? window.StudentJourney.getCoachMemory()
+      : null;
   const chatBody = {
     mode,
     message: trimmed,
@@ -4405,6 +4438,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     studyMode: normalizeStudyMode(studyMode),
     uiLanguage: currentStudyLanguage(),
     learnerProfile: profileForTurn,
+    coachMemory,
     stream: true,
   };
   if (mode === "learn" && isLiveWebEnabled()) {
@@ -4546,6 +4580,14 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       if (jsonSources.length) assistantRow.sources = jsonSources;
       history.push(assistantRow);
       saveSessionState();
+      if (window.StudentJourney?.recordLearningEvent) {
+        window.StudentJourney.recordLearningEvent({
+          message: trimmed,
+          mode,
+          minutes: 5,
+          quiz: normalizeStudyMode(studyMode) === "quiz",
+        });
+      }
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
       else if (mode === "notebook") syncNotebookLayout();
@@ -4580,6 +4622,14 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     if (streamSources.length) assistantRow.sources = streamSources;
     history.push(assistantRow);
     saveSessionState();
+    if (window.StudentJourney?.recordLearningEvent) {
+      window.StudentJourney.recordLearningEvent({
+        message: trimmed,
+        mode,
+        minutes: 5,
+        quiz: normalizeStudyMode(studyMode) === "quiz",
+      });
+    }
     if (mode === "learn") syncLearnLayout();
     else if (mode === "code") syncCodeLayout();
     else if (mode === "notebook") syncNotebookLayout();
@@ -6328,12 +6378,31 @@ async function syncLearnVisionFromHealth() {
   if (typeof applyLearnVisionMuted === "function") applyLearnVisionMuted();
 }
 
-/** Shared helpers for coach-labs.js feature panels. */
+function patchLearnerPrefs(partial = {}) {
+  const prefs = loadPrefs();
+  if (partial.gradeLevel != null) {
+    prefs.gradeLevel = ["middle", "high", "college", "exam", ""].includes(String(partial.gradeLevel))
+      ? String(partial.gradeLevel)
+      : prefs.gradeLevel;
+  }
+  if (partial.subjects != null) prefs.subjects = String(partial.subjects).slice(0, 160);
+  if (partial.explainStyle != null) {
+    prefs.explainStyle = ["balanced", "simple", "steps", "examples"].includes(String(partial.explainStyle))
+      ? String(partial.explainStyle)
+      : prefs.explainStyle;
+  }
+  savePrefs(prefs);
+  syncLearnerProfileForm();
+  if (mainTab === "home") renderCoachHome();
+}
+
+/** Shared helpers for coach-labs.js / journey.js feature panels. */
 window.StudentCoach = {
   t: (...args) => t(...args),
   showToast: (...args) => showToast(...args),
   fetchAuthed: (...args) => fetchAuthed(...args),
   setMainTab: (tab) => setMainTab(tab),
+  setLearnStudyMode: (mode) => setLearnStudyMode(mode),
   polishText: (text) => polishModelMarkdown(text),
   getChatHistory: () => chatHistory,
   getCodeHistory: () => codeHistory,
@@ -6341,6 +6410,7 @@ window.StudentCoach = {
   getNotebookContext: () => notebookDocumentContext,
   getUiLanguage: () => activeUiLanguage,
   lastAskTopic: () => (typeof lastAskTopicGuess === "function" ? lastAskTopicGuess() : ""),
+  coachDisplayName: () => coachDisplayName(),
   speakText: (text, opts = {}) => {
     const prepared = prepareTextForSpeech(String(text || ""));
     if (!prepared) {
@@ -6363,6 +6433,8 @@ window.StudentCoach = {
   },
   stopSpeech: () => stopReadAloud(),
   getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
+  patchLearnerPrefs: (partial) => patchLearnerPrefs(partial),
+  scheduleWorkspaceSync: () => scheduleWorkspaceSync(),
   getVoiceLocale: () => (typeof voiceBcp47ForProfile === "function" ? voiceBcp47ForProfile() : "en-US"),
   getReplyLanguage: () => {
     const p = typeof getLearnerProfile === "function" ? getLearnerProfile() : null;
@@ -6434,6 +6506,10 @@ function slimHistory(history) {
 }
 
 function workspaceSnapshot() {
+  const journey =
+    typeof window.StudentJourney?.getSnapshot === "function"
+      ? window.StudentJourney.getSnapshot()
+      : null;
   return {
     updatedAt: new Date().toISOString(),
     learnStudyMode,
@@ -6444,6 +6520,7 @@ function workspaceSnapshot() {
     chatSessionOpen,
     codeSessionOpen,
     notebookSessionOpen,
+    journey,
   };
 }
 
@@ -6492,6 +6569,9 @@ function applyWorkspace(payload) {
     notebookSessionOpen = payload.notebookSessionOpen === true || notebookHistory.length > 0;
     if (payload.lastWorkspace === "student") {
       lastWorkspace = payload.lastWorkspace;
+    }
+    if (payload.journey && window.StudentJourney?.applySnapshot) {
+      window.StudentJourney.applySnapshot(payload.journey);
     }
     setLearnStudyMode(payload.learnStudyMode);
     renderThreadFromHistory(chatThread, chatHistory, "learn", learnStudyMode);
