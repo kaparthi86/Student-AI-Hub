@@ -81,6 +81,7 @@
   }
 
   let journey = loadJourney();
+  let serverInsights = null;
 
   function saveJourney() {
     try {
@@ -169,6 +170,35 @@
     return { action: "Explain & deepen", tab: "chat", mode: "explain", minutes: 12 };
   }
 
+  function applyServerInsights(insights) {
+    if (!insights || typeof insights !== "object") return;
+    serverInsights = insights;
+    const gaps = Array.isArray(insights.gaps) ? insights.gaps : [];
+    for (const g of gaps) {
+      const topic = String(g.topic || g.subject || "").trim();
+      if (topic) enqueueRevision(topic, 1);
+    }
+    if (gaps.length) {
+      journey.diagnostic.weak = [
+        ...new Set([
+          ...(journey.diagnostic.weak || []),
+          ...gaps.map((g) => String(g.topic || g.subject || "").trim()).filter(Boolean),
+        ]),
+      ].slice(0, 10);
+      const scores = { ...(journey.diagnostic.scores || {}) };
+      for (const g of gaps) {
+        const key = String(g.topic || g.subject || "").trim();
+        if (key && g.mastery_pct != null) scores[key] = Number(g.mastery_pct);
+      }
+      journey.diagnostic.scores = scores;
+      saveJourney();
+      buildDailyPlan(true);
+      renderAllVisible();
+    } else {
+      renderHomeJourney();
+    }
+  }
+
   function buildDailyPlan(force = false) {
     ensureWeek();
     if (!force && journey.dailyPlan.date === todayKey() && journey.dailyPlan.items?.length) {
@@ -177,12 +207,18 @@
     const subjects = subjectList();
     const map = loadMasteryMap();
     const weak = [...(journey.diagnostic.weak || [])];
+    const serverRecs = Array.isArray(serverInsights?.recommendations)
+      ? serverInsights.recommendations
+      : [];
+    const serverWeak = (serverInsights?.gaps || [])
+      .map((g) => String(g.topic || g.subject || "").trim())
+      .filter(Boolean);
     const revisionDue = (journey.revisionQueue || [])
       .filter((r) => !r.dueAt || r.dueAt <= Date.now())
       .map((r) => r.topic)
       .filter(Boolean);
     const topics = [];
-    for (const w of [...weak, ...revisionDue]) {
+    for (const w of [...serverWeak, ...weak, ...revisionDue]) {
       if (w && !topics.includes(w)) topics.push(w);
     }
     for (const s of subjects) {
@@ -190,22 +226,31 @@
     }
     // Prefer weak mastery topics first
     topics.sort((a, b) => {
-      const sa = topicMasteryScore(a, map);
-      const sb = topicMasteryScore(b, map);
+      const sa =
+        serverInsights?.gaps?.find((g) => (g.topic || g.subject) === a)?.mastery_pct ??
+        topicMasteryScore(a, map);
+      const sb =
+        serverInsights?.gaps?.find((g) => (g.topic || g.subject) === b)?.mastery_pct ??
+        topicMasteryScore(b, map);
       return (sa ?? 40) - (sb ?? 40);
     });
 
     const profile = api().getLearnerProfile?.() || {};
     const examFocus = profile.examFocus || "";
     const items = topics.slice(0, 3).map((topic, i) => {
-      const score = topicMasteryScore(topic, map);
+      const rec = serverRecs.find((r) => r.topic === topic || r.subject === topic);
+      const score =
+        serverInsights?.gaps?.find((g) => (g.topic || g.subject) === topic)?.mastery_pct ??
+        topicMasteryScore(topic, map);
       const meta = actionForTopic(topic, score);
-      let action = meta.action;
-      let tab = meta.tab;
+      let action = rec?.action || meta.action;
+      let tab = rec?.tab || meta.tab;
+      let mode = rec?.mode || meta.mode || "";
+      let minutes = rec?.minutes || meta.minutes;
       if (i === 2 && /python|code|java|js|programming/i.test(topic)) {
         action = "Coding practice";
         tab = "code";
-      } else if (examFocus && examFocus !== "none" && i === 0) {
+      } else if (examFocus && examFocus !== "none" && i === 0 && !rec) {
         action = "Exam-style practice";
         tab = "exam";
       }
@@ -213,11 +258,12 @@
         id: `${todayKey()}-${i}-${topic.toLowerCase().replace(/\s+/g, "-").slice(0, 24)}`,
         subject: topic,
         topic,
-        minutes: meta.minutes,
+        minutes,
         action,
         tab,
-        mode: meta.mode || "",
+        mode,
         recommended: i === 0,
+        fromIntelligence: Boolean(rec || serverWeak.includes(topic)),
         done: Boolean(journey.completedPlanIds[`${todayKey()}-${i}-${topic.toLowerCase().replace(/\s+/g, "-").slice(0, 24)}`]),
       };
     });
@@ -232,6 +278,7 @@
     if (force && window.StudentAnalytics?.track) {
       window.StudentAnalytics.track("study_plan_created", "planner", {
         items: items.length,
+        from_intelligence: items.some((it) => it.fromIntelligence),
       });
     }
     return journey.dailyPlan;
@@ -275,6 +322,30 @@
       bits.push(
         `Exam prep: ${journey.exam.name}${journey.exam.targetDate ? ` by ${journey.exam.targetDate}` : ""} (readiness ~${journey.exam.readiness}%).`,
       );
+    }
+    if (serverInsights?.gaps?.length) {
+      bits.push(
+        `Server learning intelligence gaps: ${serverInsights.gaps
+          .slice(0, 4)
+          .map((g) => g.topic || g.subject)
+          .join(", ")}.`,
+      );
+      for (const g of serverInsights.gaps.slice(0, 4)) {
+        const topic = g.topic || g.subject;
+        if (topic && !journey.memory.struggles.some((s) => s.topic === topic)) {
+          journey.memory.struggles.push({ topic, count: 1 });
+        }
+      }
+      journey.memory.struggles = journey.memory.struggles.slice(0, 6);
+    }
+    if (serverInsights?.strengths?.length) {
+      for (const s of serverInsights.strengths.slice(0, 3)) {
+        const topic = s.topic || s.subject;
+        if (topic && !journey.memory.strengths.some((x) => x.topic === topic)) {
+          journey.memory.strengths.push({ topic, score: s.mastery_pct || 70 });
+        }
+      }
+      journey.memory.strengths = journey.memory.strengths.slice(0, 5);
     }
     journey.memory.lastSummary = bits.join(" ").slice(0, 500);
     saveJourney();
@@ -379,6 +450,7 @@
   }
 
   function coachRecommendBlurb() {
+    if (serverInsights?.nudge) return serverInsights.nudge;
     const mem = coachMemoryPayload();
     const plan = buildDailyPlan();
     const first = plan.items?.[0];
@@ -439,6 +511,7 @@
                 </div>
                 <div class="journey-plan-actions">
                   ${item.recommended && !item.done ? '<span class="journey-badge">Recommended</span>' : ""}
+                  ${item.fromIntelligence && !item.done ? '<span class="journey-badge">From progress</span>' : ""}
                   ${item.done ? '<span class="journey-badge journey-badge--done">Done</span>' : ""}
                   <button type="button" class="primary-btn journey-start-btn" data-journey-start="${idx}">Start</button>
                   ${!item.done ? `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>` : ""}
@@ -1261,6 +1334,7 @@
     recordLearningEvent,
     getSnapshot: getJourneySnapshot,
     applySnapshot: applyJourneySnapshot,
+    applyServerInsights,
     maybeShowOnboarding,
     buildDailyPlan,
     overallMastery,
@@ -1272,6 +1346,12 @@
     renderHomeJourney();
     // Delay onboarding so auth/workspace can settle
     setTimeout(() => maybeShowOnboarding(), 1200);
+    setTimeout(async () => {
+      if (window.StudentAnalytics?.fetchInsights) {
+        const insights = await window.StudentAnalytics.fetchInsights(true);
+        applyServerInsights(insights);
+      }
+    }, 1800);
   }
 
   if (document.readyState === "loading") {

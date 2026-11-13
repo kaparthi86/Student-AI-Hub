@@ -63,14 +63,22 @@ Events never store emails, names, chat transcripts, or uploaded document content
 
 ### Help & Support → Google Groups
 
-The in-app form never shows the group address. On **Send**, the server can email the group:
+The in-app form never shows the group address. On **Send**, the server can email the group.
 
-1. Set `SUPPORT_NOTIFY_TO` (e.g. `student-ai-hub-support@googlegroups.com`)
-2. Set `SUPPORT_FROM_EMAIL` (must be allowed to post to that group)
-3. Pick one mail path:
-   - **Resend:** `RESEND_API_KEY` (verify your domain in Resend), or
-   - **SMTP:** `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` (Google Workspace app password works)
-4. Redeploy, then confirm `/api/health` → `supportNotifyConfigured: true`
+**Render Environment** (same web service) — add:
+
+| Key | Example |
+|-----|---------|
+| `SUPPORT_NOTIFY_TO` | `student-ai-hub-support@googlegroups.com` |
+| `SUPPORT_FROM_EMAIL` | `support@your-verified-domain.com` |
+| `RESEND_API_KEY` | from resend.com **or** use SMTP below |
+
+SMTP alternative: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` (Google Workspace app password works).
+
+Then **Manual Deploy**. Check `/api/health`:
+
+- `supportNotifyConfigured: true`
+- `supportNotify.missing: []` (shows which vars are still unset)
 
 In Google Groups, allow posts from `SUPPORT_FROM_EMAIL` (member, or allow external posts). Replies use the signed-in user’s email as Reply-To when available.
 

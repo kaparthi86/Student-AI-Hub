@@ -202,6 +202,37 @@
     }
   }
 
+  let cachedInsights = null;
+  let insightsAt = 0;
+
+  async function fetchInsights(force = false) {
+    if (consent.personalization_enabled === false || consent.learning_analytics_enabled === false) {
+      cachedInsights = {
+        ok: true,
+        gaps: [],
+        strengths: [],
+        recommendations: [],
+        nudge: "Personalization is off in Privacy settings.",
+        optedOut: true,
+      };
+      return cachedInsights;
+    }
+    if (!force && cachedInsights && Date.now() - insightsAt < 60_000) return cachedInsights;
+    const fetchAuthed = api().fetchAuthed;
+    if (typeof fetchAuthed !== "function") return cachedInsights;
+    try {
+      const res = await fetchAuthed("/api/analytics/insights");
+      const data = await res.json();
+      if (data && data.ok !== false) {
+        cachedInsights = data;
+        insightsAt = Date.now();
+      }
+    } catch {
+      /* ignore */
+    }
+    return cachedInsights;
+  }
+
   function tabFeature(tab) {
     const map = {
       home: "home",
@@ -272,6 +303,10 @@
     const profile = api().getLearnerProfile?.();
     if (profile) await syncProfile(profile);
     await resolveAdminAnalyticsAccess();
+    await fetchInsights(true);
+    if (window.StudentJourney?.applyServerInsights) {
+      window.StudentJourney.applyServerInsights(cachedInsights);
+    }
   }
 
   function wireConsentControls() {
@@ -291,6 +326,8 @@
     syncProfile,
     syncConsent,
     recordLearning,
+    fetchInsights,
+    getInsights: () => cachedInsights,
     onTab,
     bootAfterAuth,
     endSession,

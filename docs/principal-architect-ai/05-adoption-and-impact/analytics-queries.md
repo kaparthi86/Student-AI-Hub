@@ -37,7 +37,8 @@ APIs (signed-in):
 - `PUT /api/analytics/consent` — analytics / learning / personalization  
 - `POST /api/analytics/session/start|end`  
 - `POST /api/analytics/learning` — activity + progress upserts  
-- `GET /api/analytics/dashboard?days=7` — admin allowlist only  
+- `GET /api/analytics/insights` — per-user gaps/recommendations for the journey  
+- `GET /api/analytics/dashboard?days=7` — admin allowlist only (includes D1/D7 + funnel)  
 
 ```sql
 -- Feature adoption (30d)
