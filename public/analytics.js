@@ -265,6 +265,32 @@
     if (tab === "voice") track("voice_session_started", "voice", { source: "tab" });
   }
 
+  let adminAnalyticsAllowed = false;
+
+  function setAdminAnalyticsVisible(allowed) {
+    adminAnalyticsAllowed = Boolean(allowed);
+    const btn = document.getElementById("tabAdminAnalytics");
+    if (!btn) return;
+    btn.hidden = !adminAnalyticsAllowed;
+    btn.classList.toggle("hidden", !adminAnalyticsAllowed);
+  }
+
+  async function resolveAdminAnalyticsAccess() {
+    setAdminAnalyticsVisible(false);
+    const fetchAuthed = api().fetchAuthed;
+    if (typeof fetchAuthed !== "function") return false;
+    try {
+      const res = await fetchAuthed("/api/analytics/admin-access");
+      const data = await res.json().catch(() => ({}));
+      const allowed = Boolean(res.ok && data?.allowed);
+      setAdminAnalyticsVisible(allowed);
+      return allowed;
+    } catch {
+      setAdminAnalyticsVisible(false);
+      return false;
+    }
+  }
+
   async function bootAfterAuth() {
     if (started) return;
     started = true;
@@ -276,6 +302,7 @@
     track("session_started", "auth");
     const profile = api().getLearnerProfile?.();
     if (profile) await syncProfile(profile);
+    await resolveAdminAnalyticsAccess();
     await fetchInsights(true);
     if (window.StudentJourney?.applyServerInsights) {
       window.StudentJourney.applyServerInsights(cachedInsights);
@@ -304,8 +331,13 @@
     onTab,
     bootAfterAuth,
     endSession,
+    resolveAdminAnalyticsAccess,
+    canAccessAdminAnalytics: () => adminAnalyticsAllowed,
     getConsent: () => ({ ...consent }),
   };
+
+  // Hidden until allowlist check succeeds after sign-in.
+  setAdminAnalyticsVisible(false);
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flush();
