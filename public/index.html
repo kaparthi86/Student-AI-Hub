@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
+    <link rel="stylesheet" href="./journey.css?v=journey-p0-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=study-lang-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
@@ -146,7 +147,7 @@
               </li>
               <li>
                 <strong>Study Planner</strong>
-                <span>Organize your studies and prepare for exams. <em class="msc-soon">Coming soon</em></span>
+                <span>Daily plans, weekly goals, and exam readiness</span>
               </li>
             </ul>
           </div>
@@ -425,27 +426,25 @@
 
         <nav class="tabs coach-nav msc-main-nav" role="tablist" aria-label="My Student Coach">
           <button class="tab active" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="true">Home</button>
-          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">AI Coach</button>
+          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Coach</button>
           <details class="msc-nav-menu" id="learnMenu">
             <summary class="tab msc-nav-summary">Learn</summary>
             <div class="msc-nav-panel" role="menu">
-              <button type="button" class="msc-nav-item" data-tab="chat" role="menuitem">AI Coach</button>
               <button type="button" class="msc-nav-item" data-tab="notebook" role="menuitem" id="tabNotebook">Notebook</button>
               <button type="button" class="msc-nav-item" data-tab="code" role="menuitem" id="tabCode">Coding Coach</button>
               <button type="button" class="msc-nav-item" data-tab="math" role="menuitem" id="tabMath">Math &amp; Science</button>
               <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
               <button type="button" class="msc-nav-item" data-tab="voice" role="menuitem" id="tabVoice">Voice Tutor</button>
-              <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep <span class="tab-soon-badge">Soon</span></button>
+              <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep</button>
+              <button type="button" class="msc-nav-item" data-tab="diagnostic" role="menuitem" id="tabDiagnostic">Diagnostic</button>
+              <button type="button" class="msc-nav-item" data-tab="planner" role="menuitem" id="tabPlanner">Study Planner</button>
             </div>
           </details>
-          <button class="tab tab--soon" data-tab="planner" type="button" id="tabPlanner" role="tab" aria-selected="false">
-            <span id="tabPlannerLabel">Planner</span>
-            <span class="tab-soon-badge" id="tabPlannerBadge">Soon</span>
-          </button>
+          <button class="tab" data-tab="progress" type="button" id="tabProgress" role="tab" aria-selected="false">Progress</button>
           <details class="msc-nav-menu" id="profileMenu">
-            <summary class="tab msc-nav-summary">Profile</summary>
+            <summary class="tab msc-nav-summary" id="profileMenuSummary">Profile</summary>
             <div class="msc-nav-panel" role="menu">
-              <button type="button" class="msc-nav-item" data-tab="progress" role="menuitem" id="tabProgress">My Progress <span class="tab-soon-badge">Soon</span></button>
+              <button type="button" class="msc-nav-item" data-tab="profile" role="menuitem">Learning profile</button>
               <button type="button" class="msc-nav-item" data-tab="gaps" role="menuitem" id="tabGaps">Knowledge Gaps</button>
               <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
               <button type="button" class="msc-nav-item open-settings-btn" role="menuitem">Settings</button>
@@ -486,6 +485,8 @@
                 </div>
               </aside>
             </header>
+
+            <div id="journeyHomeMount" class="journey-home-mount"></div>
 
             <section id="localeRecs" class="coach-section locale-recs hidden" hidden>
               <div class="coach-section-head">
@@ -566,7 +567,15 @@
               </button>
               <button type="button" class="msc-hub-tile" data-coach-tab="planner">
                 <strong>Study Planner</strong>
-                <span>Coming soon — exam schedules</span>
+                <span>Daily and weekly learning plan</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="exam">
+                <strong>Exam Prep</strong>
+                <span>Mocks, readiness, and revision</span>
+              </button>
+              <button type="button" class="msc-hub-tile" data-coach-tab="diagnostic">
+                <strong>Diagnostic</strong>
+                <span>Find knowledge gaps quickly</span>
               </button>
             </div>
           </div>
@@ -641,7 +650,7 @@
             <div class="msc-hub-grid msc-hub-grid--compact">
               <button type="button" class="msc-hub-tile" data-coach-tab="progress">
                 <strong>My Progress</strong>
-                <span>Coming soon</span>
+                <span>Mastery, gaps, and study time</span>
               </button>
               <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
                 <strong>Knowledge Gaps</strong>
@@ -670,6 +679,50 @@
               <button type="button" class="primary-btn" id="soonBackHomeBtn">Back to Home</button>
               <button type="button" class="ghost-btn" id="soonGoAskBtn">Ask the tutor</button>
             </div>
+          </div>
+        </section>
+
+        <section id="panelProgress" class="panel journey-panel hidden" data-journey-panel="progress" hidden>
+          <div class="journey-page">
+            <header class="msc-hub-hero">
+              <p class="coach-kicker">Progress</p>
+              <h2 class="msc-hub-title">Your learning progress</h2>
+              <p class="muted msc-hub-lead">Mastery, knowledge gaps, study time, and smart revision in one place.</p>
+            </header>
+            <div id="progressPanelBody"></div>
+          </div>
+        </section>
+
+        <section id="panelPlanner" class="panel journey-panel hidden" data-journey-panel="planner" hidden>
+          <div class="journey-page">
+            <header class="msc-hub-hero">
+              <p class="coach-kicker">Planner</p>
+              <h2 class="msc-hub-title">Study planner</h2>
+              <p class="muted msc-hub-lead">Turn goals into daily activities and track your week.</p>
+            </header>
+            <div id="plannerPanelBody"></div>
+          </div>
+        </section>
+
+        <section id="panelExam" class="panel journey-panel hidden" data-journey-panel="exam" hidden>
+          <div class="journey-page">
+            <header class="msc-hub-hero">
+              <p class="coach-kicker">Exam Prep</p>
+              <h2 class="msc-hub-title">Exam preparation</h2>
+              <p class="muted msc-hub-lead">Topic plans, mock exams, readiness, and revision recommendations.</p>
+            </header>
+            <div id="examPanelBody"></div>
+          </div>
+        </section>
+
+        <section id="panelDiagnostic" class="panel journey-panel hidden" data-journey-panel="diagnostic" hidden>
+          <div class="journey-page">
+            <header class="msc-hub-hero">
+              <p class="coach-kicker">Diagnostic</p>
+              <h2 class="msc-hub-title">AI diagnostic assessment</h2>
+              <p class="muted msc-hub-lead">A short check that updates your gaps and today's learning plan.</p>
+            </header>
+            <div id="diagnosticPanelBody"></div>
           </div>
         </section>
 
@@ -783,6 +836,10 @@
         </section>
 
         <section id="panelChat" class="panel perplexity-panel hidden">
+          <div class="coach-voice-elevate" id="coachVoiceElevate">
+            <p>Prefer talking? Start a continuous Voice Tutor session — interrupt anytime, transcript included.</p>
+            <button type="button" class="primary-btn" data-coach-tab="voice" id="coachOpenVoiceBtn">Open Voice Tutor</button>
+          </div>
           <div class="ask-lang-row">
             <label class="study-lang-bar study-lang-bar--ask" for="askLanguageSelect">
               <span class="study-lang-label" id="askLanguageLabel">Language</span>
@@ -1181,15 +1238,15 @@
           </button>
           <button type="button" class="msc-bottom-item" data-bottom="chat" id="bottomTutor">
             <span class="msc-bottom-ico msc-ico-tutor" aria-hidden="true"></span>
-            <span>AI Tutor</span>
+            <span>Coach</span>
           </button>
           <button type="button" class="msc-bottom-item" data-bottom="learning" id="bottomLearning">
             <span class="msc-bottom-ico msc-ico-learn" aria-hidden="true"></span>
-            <span>My Learning</span>
+            <span>Learn</span>
           </button>
-          <button type="button" class="msc-bottom-item" data-bottom="profile" id="bottomProfile">
+          <button type="button" class="msc-bottom-item" data-bottom="progress" id="bottomProgress">
             <span class="msc-bottom-ico msc-ico-profile" aria-hidden="true"></span>
-            <span>Profile</span>
+            <span>Progress</span>
           </button>
         </nav>
 
@@ -1348,11 +1405,71 @@
 
     <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
+    <div
+      id="journeyOnboardModal"
+      class="settings-modal journey-onboard-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboardTitle"
+      hidden
+    >
+      <div class="settings-card journey-onboard-card">
+        <div class="journey-onboard-step" data-onboard-step="1">
+          <p class="coach-kicker">Welcome</p>
+          <h2 id="onboardTitle">What are you studying?</h2>
+          <p class="muted">Select your level and subjects. You can ask a question anytime — this just helps personalize.</p>
+          <div class="journey-onboard-options">
+            <label><input type="radio" name="onboardLevel" value="high" checked /> High school</label>
+            <label><input type="radio" name="onboardLevel" value="college" /> College</label>
+            <label><input type="radio" name="onboardLevel" value="exam" /> Exam prep</label>
+            <label><input type="radio" name="onboardLevel" value="middle" /> Middle school / self-learning</label>
+          </div>
+          <label for="onboardSubjects">Subjects (comma-separated)
+            <input id="onboardSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
+          </label>
+          <div class="journey-onboard-actions">
+            <button type="button" class="ghost-btn" data-onboard-skip>Skip for now</button>
+            <button type="button" class="primary-btn" data-onboard-next>Continue</button>
+          </div>
+        </div>
+        <div class="journey-onboard-step" data-onboard-step="2" hidden>
+          <p class="coach-kicker">Learning preferences</p>
+          <h2>How do you like to learn?</h2>
+          <div class="journey-onboard-options">
+            <label><input type="radio" name="onboardStyle" value="balanced" checked /> Balanced</label>
+            <label><input type="radio" name="onboardStyle" value="simple" /> Explain simply</label>
+            <label><input type="radio" name="onboardStyle" value="steps" /> Step-by-step</label>
+            <label><input type="radio" name="onboardStyle" value="examples" /> Examples first</label>
+          </div>
+          <div class="journey-onboard-actions">
+            <button type="button" class="ghost-btn" data-onboard-skip>Skip for now</button>
+            <button type="button" class="primary-btn" data-onboard-next>Continue</button>
+          </div>
+        </div>
+        <div class="journey-onboard-step" data-onboard-step="3" hidden>
+          <p class="coach-kicker">Your learning goal</p>
+          <h2>What would you like to achieve?</h2>
+          <div class="journey-onboard-options">
+            <label><input type="radio" name="onboardGoal" value="understand" checked /> Understand subjects</label>
+            <label><input type="radio" name="onboardGoal" value="exams" /> Prepare for exams</label>
+            <label><input type="radio" name="onboardGoal" value="coding" /> Improve coding</label>
+            <label><input type="radio" name="onboardGoal" value="habits" /> Build study habits</label>
+          </div>
+          <p class="muted">Your coach is ready. We'll use these preferences to personalize learning. Update anytime in Profile.</p>
+          <div class="journey-onboard-actions">
+            <button type="button" class="ghost-btn" data-onboard-skip>Skip for now</button>
+            <button type="button" class="primary-btn" data-onboard-finish>Start learning</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=study-lang-1"></script>
+    <script defer src="./app.js?v=journey-p0-1"></script>
     <script defer src="./coach-labs.js?v=voice-coach-2"></script>
+    <script defer src="./journey.js?v=journey-p0-1"></script>
   </body>
 </html>
