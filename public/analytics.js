@@ -110,6 +110,37 @@
     }
   }
 
+  /** Pull cloud student profile and merge into local prefs (cross-device sync). */
+  async function hydrateProfileFromServer() {
+    const fetchAuthed = api().fetchAuthed;
+    if (typeof fetchAuthed !== "function") return null;
+    try {
+      const res = await fetchAuthed("/api/analytics/profile");
+      const data = await res.json().catch(() => null);
+      const row = data?.profile;
+      if (!res.ok || !row) return null;
+      const mapped = {
+        gradeLevel: row.grade_level || "",
+        subjects: row.subjects || "",
+        explainStyle: row.explain_style || "",
+        country: row.country || "",
+        region: row.region || "",
+        board: row.board || "",
+        examFocus: row.exam_focus || "",
+        replyLanguage: row.reply_language || "",
+        learningGoal: row.learning_goal || "",
+      };
+      if (typeof api().applyCloudLearnerProfile === "function") {
+        api().applyCloudLearnerProfile(mapped);
+      } else if (typeof api().patchLearnerPrefs === "function") {
+        api().patchLearnerPrefs(mapped);
+      }
+      return mapped;
+    } catch {
+      return null;
+    }
+  }
+
   async function syncConsent(next) {
     consent = { ...consent, ...next };
     saveLocalConsent();
@@ -300,8 +331,13 @@
     await startSession();
     track("login_completed", "auth");
     track("session_started", "auth");
+    // Cloud profile wins when present; then push any local-only fields up.
+    const remote = await hydrateProfileFromServer();
     const profile = api().getLearnerProfile?.();
     if (profile) await syncProfile(profile);
+    if (remote && typeof api().syncLearnerProfileForm === "function") {
+      api().syncLearnerProfileForm();
+    }
     await resolveAdminAnalyticsAccess();
     await fetchInsights(true);
     if (window.StudentJourney?.applyServerInsights) {
@@ -324,6 +360,7 @@
     track,
     flush,
     syncProfile,
+    hydrateProfileFromServer,
     syncConsent,
     recordLearning,
     fetchInsights,
