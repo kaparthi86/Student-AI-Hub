@@ -7,7 +7,11 @@ const path = require("path");
 const fs = require("fs");
 const { Readable } = require("node:stream");
 const multer = require("multer");
-const { supportNotifyConfigured, notifySupportInbox } = require("./lib/support-notify");
+const {
+  supportNotifyConfigured,
+  supportNotifyStatus,
+  notifySupportInbox,
+} = require("./lib/support-notify");
 const analytics = require("./lib/analytics");
 
 const envPath = path.join(__dirname, ".env");
@@ -2713,6 +2717,39 @@ app.post("/api/analytics/learning", requireSession, async (req, res) => {
   }
 });
 
+/** Personalized learning insights from learning_progress (for journey / coach). */
+app.get("/api/analytics/insights", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return res.json({
+        ok: true,
+        gaps: [],
+        strengths: [],
+        recommendations: [],
+        nudge: "Analytics DB not configured yet.",
+        stored: false,
+      });
+    }
+    const userId = req.user?.id || "";
+    const consent = await analytics.getUserConsent(admin, userId);
+    if (consent.personalization_enabled === false || consent.learning_analytics_enabled === false) {
+      return res.json({
+        ok: true,
+        gaps: [],
+        strengths: [],
+        recommendations: [],
+        nudge: "Personalization is off in Privacy settings.",
+        optedOut: true,
+      });
+    }
+    const insights = await analytics.getLearningInsights(admin, userId);
+    return res.json({ ...insights, stored: true });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Insights error" });
+  }
+});
+
 /** Admin-only product intelligence dashboard. */
 app.get("/api/analytics/dashboard", requireSession, async (req, res) => {
   try {
@@ -2754,6 +2791,7 @@ app.get("/api/health", (_req, res) => {
     feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
     /** Help & Support form can email Google Group / inbox (Resend or SMTP). */
     supportNotifyConfigured: supportNotifyConfigured(),
+    supportNotify: supportNotifyStatus(),
     /** Student intelligence tables use the same service role key. */
     analyticsConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
     analyticsAdminConfigured: analytics.analyticsAdminAllowlist().length > 0,

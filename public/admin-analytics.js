@@ -49,14 +49,36 @@
         <div class="journey-stat"><span class="journey-stat-value">${fmt(k.registeredStudents)}</span><span class="journey-stat-label">Registered (profiles)</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${fmt(k.weeklyActiveStudents)}</span><span class="journey-stat-label">Active (${data.days}d)</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${fmtPct(k.onboardingCompletionPct)}</span><span class="journey-stat-label">Onboarding completion</span></div>
-        <div class="journey-stat"><span class="journey-stat-value">${fmtPct(k.retention7Pct)}</span><span class="journey-stat-label">Return rate (approx)</span></div>
+        <div class="journey-stat"><span class="journey-stat-value">${fmtPct(k.retentionD7Pct ?? k.retention7Pct)}</span><span class="journey-stat-label">D7 retention</span></div>
       </div>
       <div class="journey-stat-row journey-stat-row--wide">
+        <div class="journey-stat"><span class="journey-stat-value">${fmtPct(k.retentionD1Pct)}</span><span class="journey-stat-label">D1 retention</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${fmt(k.events)}</span><span class="journey-stat-label">Events</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${fmt(k.sessions)}</span><span class="journey-stat-label">Sessions</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${fmtPct(k.avgQuizAccuracyPct)}</span><span class="journey-stat-label">Avg quiz accuracy</span></div>
-        <div class="journey-stat"><span class="journey-stat-value">${fmt(k.learningActivityCount)}</span><span class="journey-stat-label">Learning activities</span></div>
       </div>
+      <section class="journey-block">
+        <h3>Retention cohorts</h3>
+        <p class="muted">Among users first seen in the last 30 days — % active on day +1 and day +7.</p>
+        <ul class="admin-event-list">
+          <li><strong>Cohort size</strong> <span>${fmt(data.retention?.cohortSize)}</span></li>
+          <li><strong>D1 eligible / retained</strong> <span>${fmt(data.retention?.d1Eligible)} · ${fmtPct(data.retention?.d1Pct)}</span></li>
+          <li><strong>D7 eligible / retained</strong> <span>${fmt(data.retention?.d7Eligible)} · ${fmtPct(data.retention?.d7Pct)}</span></li>
+        </ul>
+      </section>
+      <section class="journey-block">
+        <h3>Activation funnel</h3>
+        <ul class="journey-mastery-list">
+          ${(data.funnel?.steps || [])
+            .map(
+              (s) => `<li>
+              <div class="journey-mastery-meta"><strong>${escapeHtml(s.label)}</strong><span>${s.count} · ${s.pct == null ? "—" : `${s.pct}%`}</span></div>
+              <div class="journey-bar"><span style="width:${Math.min(100, s.pct || 0)}%"></span></div>
+            </li>`,
+            )
+            .join("") || "<li class='muted'>No funnel data yet</li>"}
+        </ul>
+      </section>
       <section class="journey-block">
         <h3>Feature adoption</h3>
         <ul class="journey-mastery-list">
