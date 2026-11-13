@@ -380,6 +380,9 @@
     setVoiceSessionBadge(false);
     setVoiceMicState("idle");
     setVoiceHint(hint || "Session ended. Tap Start conversation whenever you're ready.");
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("voice_session_ended", "voice", {});
+    }
   }
 
   function pauseVoiceConversation() {
@@ -523,9 +526,13 @@
     if (voiceListening) return;
 
     voicePaused = false;
+    const wasActive = voiceSessionActive;
     voiceSessionActive = true;
     setVoiceSessionBadge(true);
     if (!soft) stopVoiceSpeech();
+    if (!soft && !wasActive && window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("voice_session_started", "voice", { source: "mic" });
+    }
 
     voiceRec = new SpeechRecognition();
     voiceRec.continuous = true;

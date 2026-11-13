@@ -26,19 +26,32 @@ order by 1 desc
 limit 12;
 ```
 
-## Suggested event table (not yet required in app)
+## Student intelligence schema (shipped)
+
+Run `supabase/student_intelligence.sql`.
+
+APIs (signed-in):
+
+- `POST /api/analytics/events` — batched product events  
+- `PUT /api/analytics/profile` — sync learner profile  
+- `PUT /api/analytics/consent` — analytics / learning / personalization  
+- `POST /api/analytics/session/start|end`  
+- `POST /api/analytics/learning` — activity + progress upserts  
+- `GET /api/analytics/dashboard?days=7` — admin allowlist only  
 
 ```sql
-create table if not exists public.product_events (
-  id bigserial primary key,
-  user_id uuid,
-  event_name text not null,
-  mode text,
-  created_at timestamptz default now(),
-  meta jsonb default '{}'::jsonb
-);
+-- Feature adoption (30d)
+select coalesce(feature, event_name) as feature_key,
+       count(*) as events,
+       count(distinct user_id) as users
+from public.analytics_events
+where created_at > now() - interval '30 days'
+group by 1
+order by users desc;
 
--- Example: study_turn_completed, voice_barge_in, notebook_analyze
+-- Weekly active students
+select count(distinct user_id) as wau
+from public.analytics_events
+where created_at > now() - interval '7 days'
+  and user_id is not null;
 ```
-
-Instrument later from `sendChatMessage` success path and Voice Tutor completion.

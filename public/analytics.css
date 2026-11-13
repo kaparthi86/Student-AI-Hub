@@ -1,0 +1,67 @@
+/* Student Intelligence — admin analytics + consent chrome */
+
+.admin-analytics-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-analytics-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.admin-analytics-toolbar select {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.35rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 101, 113, 0.2);
+  background: #fff;
+}
+
+.admin-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admin-event-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(31, 101, 113, 0.08);
+  font-size: 0.92rem;
+}
+
+.admin-event-list code {
+  font-size: 0.85rem;
+}
+
+.settings-divider {
+  border: 0;
+  border-top: 1px solid rgba(31, 101, 113, 0.12);
+  margin: 0.85rem 0 0.65rem;
+}
+
+.settings-section-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+#saveAnalyticsConsentBtn {
+  margin-top: 0.35rem;
+  justify-self: start;
+}

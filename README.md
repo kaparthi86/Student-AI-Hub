@@ -50,6 +50,17 @@ order by created_at desc
 limit 50;
 ```
 
+### Student Intelligence & Product Analytics
+
+Extend the **same Supabase project** (auth + Postgres). Profiles today also live in browser `localStorage`; the app syncs them to `student_profiles`.
+
+1. Run `supabase/student_intelligence.sql` in the SQL Editor (after service role is set).
+2. Set `ANALYTICS_ADMIN_EMAILS` (or reuse `FEEDBACK_REVIEW_EMAILS`) for the in-app **Admin analytics** panel.
+3. Confirm `/api/health` → `analyticsConfigured: true` and `analyticsAdminConfigured: true`.
+
+Tables: `student_profiles`, `user_sessions`, `analytics_events`, `learning_activity`, `learning_progress`, `user_consents`.  
+Events never store emails, names, chat transcripts, or uploaded document contents. Students can opt out under Settings → Privacy & analytics.
+
 ### Help & Support → Google Groups
 
 The in-app form never shows the group address. On **Send**, the server can email the group:
