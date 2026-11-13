@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
     <link rel="stylesheet" href="./journey.css?v=journey-p0-1" />
+    <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=study-lang-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
@@ -447,6 +448,7 @@
               <button type="button" class="msc-nav-item" data-tab="profile" role="menuitem">Learning profile</button>
               <button type="button" class="msc-nav-item" data-tab="gaps" role="menuitem" id="tabGaps">Knowledge Gaps</button>
               <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
+              <button type="button" class="msc-nav-item" data-tab="admin-analytics" role="menuitem" id="tabAdminAnalytics">Admin analytics</button>
               <button type="button" class="msc-nav-item open-settings-btn" role="menuitem">Settings</button>
               <button type="button" class="msc-nav-item" id="profileInstallBtn" role="menuitem">Install app</button>
               <button type="button" class="msc-nav-item open-support-btn" id="profileHelpSupportBtn" role="menuitem">Help &amp; Support</button>
@@ -723,6 +725,28 @@
               <p class="muted msc-hub-lead">A short check that updates your gaps and today's learning plan.</p>
             </header>
             <div id="diagnosticPanelBody"></div>
+          </div>
+        </section>
+
+        <section id="panelAdminAnalytics" class="panel journey-panel hidden" data-journey-panel="admin-analytics" hidden>
+          <div class="journey-page admin-analytics-page">
+            <header class="msc-hub-hero">
+              <p class="coach-kicker">Product intelligence</p>
+              <h2 class="msc-hub-title">Admin analytics</h2>
+              <p class="muted msc-hub-lead">Engagement, feature adoption, and learning outcomes — allowlisted admins only.</p>
+            </header>
+            <div class="admin-analytics-toolbar">
+              <label for="adminAnalyticsDays">Period
+                <select id="adminAnalyticsDays">
+                  <option value="7" selected>Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </label>
+              <button type="button" class="ghost-btn" id="adminAnalyticsRefreshBtn">Refresh</button>
+              <span class="muted" id="adminAnalyticsStatus"></span>
+            </div>
+            <div id="adminAnalyticsBody"></div>
           </div>
         </section>
 
@@ -1361,6 +1385,21 @@
             <input id="prefDyslexiaFont" type="checkbox" />
             <span>Dyslexia-friendly font</span>
           </label>
+          <hr class="settings-divider" />
+          <p class="muted settings-section-label">Privacy &amp; analytics</p>
+          <label class="settings-checkbox">
+            <input id="prefAnalyticsEnabled" type="checkbox" checked />
+            <span>Product usage analytics (pages, features, sessions)</span>
+          </label>
+          <label class="settings-checkbox">
+            <input id="prefLearningAnalyticsEnabled" type="checkbox" checked />
+            <span>Learning analytics (quiz scores, mastery, gaps — no chat transcripts)</span>
+          </label>
+          <label class="settings-checkbox">
+            <input id="prefPersonalizationEnabled" type="checkbox" checked />
+            <span>Personalize recommendations from my progress</span>
+          </label>
+          <button id="saveAnalyticsConsentBtn" class="ghost-btn" type="button">Save privacy preferences</button>
         </div>
         <div class="settings-actions">
           <button id="saveSettingsBtn" class="primary-btn" type="button">Save preferences</button>
@@ -1468,8 +1507,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=journey-p0-1"></script>
+    <script defer src="./app.js?v=analytics-1"></script>
     <script defer src="./coach-labs.js?v=voice-coach-2"></script>
     <script defer src="./journey.js?v=journey-p0-1"></script>
+    <script defer src="./analytics.js?v=analytics-1"></script>
+    <script defer src="./admin-analytics.js?v=analytics-1"></script>
   </body>
 </html>

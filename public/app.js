@@ -39,10 +39,11 @@ const COACH_TABS = new Set([
   "exam",
   "progress",
   "diagnostic",
+  "admin-analytics",
 ]);
 const COACH_SOON_TABS = new Set([]);
 const COACH_LAB_TABS = new Set(["voice", "flashcards", "math", "focus", "gaps"]);
-const COACH_JOURNEY_TABS = new Set(["progress", "planner", "exam", "diagnostic"]);
+const COACH_JOURNEY_TABS = new Set(["progress", "planner", "exam", "diagnostic", "admin-analytics"]);
 
 const chatSearchShell = document.getElementById("chatSearchShell");
 const chatFollowupChips = document.getElementById("chatFollowupChips");
@@ -2546,6 +2547,15 @@ function saveLearnerProfileFromForm() {
   showToast(t("settings_saved_toast"));
   if (mainTab === "home") renderCoachHome();
   syncVoiceRegionHint();
+  if (window.StudentAnalytics?.syncProfile) {
+    window.StudentAnalytics.syncProfile(getLearnerProfile());
+  }
+  if (window.StudentAnalytics?.track) {
+    window.StudentAnalytics.track("profile_updated", "profile", {
+      has_subjects: Boolean(prefs.subjects),
+      grade_level: prefs.gradeLevel || "",
+    });
+  }
 }
 
 function loadPrefs() {
@@ -3203,7 +3213,7 @@ function setMainTab(next) {
     "diagnostic",
     "planner",
   ]);
-  const profileTabs = new Set(["profile", "gaps", "focus"]);
+  const profileTabs = new Set(["profile", "gaps", "focus", "admin-analytics"]);
   document.querySelectorAll(".coach-nav .tab[data-tab], .tabs .tab[data-tab]").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
@@ -3271,6 +3281,12 @@ function setMainTab(next) {
   }
   if (COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
     window.StudentJourney.onTab(mainTab);
+  }
+  if (mainTab === "admin-analytics" && window.AdminAnalytics?.onTab) {
+    window.AdminAnalytics.onTab();
+  }
+  if (window.StudentAnalytics?.onTab) {
+    window.StudentAnalytics.onTab(mainTab);
   }
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
@@ -4588,6 +4604,13 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
           quiz: normalizeStudyMode(studyMode) === "quiz",
         });
       }
+      if (window.StudentAnalytics?.track) {
+        window.StudentAnalytics.track("question_submitted", mode === "code" ? "code" : mode === "notebook" ? "notebook" : "coach", {
+          mode,
+          study_mode: normalizeStudyMode(studyMode),
+          message_len: trimmed.length,
+        });
+      }
       if (mode === "learn") syncLearnLayout();
       else if (mode === "code") syncCodeLayout();
       else if (mode === "notebook") syncNotebookLayout();
@@ -4628,6 +4651,13 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
         mode,
         minutes: 5,
         quiz: normalizeStudyMode(studyMode) === "quiz",
+      });
+    }
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("question_submitted", mode === "code" ? "code" : mode === "notebook" ? "notebook" : "coach", {
+        mode,
+        study_mode: normalizeStudyMode(studyMode),
+        message_len: trimmed.length,
       });
     }
     if (mode === "learn") syncLearnLayout();
@@ -5096,6 +5126,9 @@ function showApp(session) {
   void pullWorkspace();
   // Single product surface: always open Coach Home (Hub deep links included).
   showStudentWorkspace();
+  if (window.StudentAnalytics?.bootAfterAuth) {
+    void window.StudentAnalytics.bootAfterAuth();
+  }
 }
 
 function hidePwaChrome() {
@@ -5443,6 +5476,16 @@ notebookDropzone?.addEventListener("keydown", (e) => {
 
 async function handleLogout() {
   closeAccountMenu();
+  if (window.StudentAnalytics?.track) {
+    window.StudentAnalytics.track("logout", "auth");
+  }
+  if (window.StudentAnalytics?.endSession) {
+    try {
+      await window.StudentAnalytics.endSession();
+    } catch {
+      /* ignore */
+    }
+  }
   if (!supabaseClient) {
     showAuth("Signed out.");
     return;
@@ -5714,6 +5757,13 @@ docAnalyzeBtn?.addEventListener("click", async () => {
     saveSessionState();
     syncNotebookLayout();
     setStatus(notebookStatus, "status_ready");
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("notebook_uploaded", "notebook", { file_count: files.length });
+      window.StudentAnalytics.track("notebook_analyzed", "notebook", {
+        file_count: files.length,
+        chars_used: Number(data.charsUsed) || 0,
+      });
+    }
     if (Array.isArray(data.failures) && data.failures.length) {
       const failedNames = data.failures.map((f) => f.name).filter(Boolean).join(", ");
       if (failedNames) showToast(`${t("error_prefix")}: ${failedNames}`);

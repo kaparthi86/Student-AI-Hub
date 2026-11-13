@@ -229,6 +229,11 @@
 
     journey.dailyPlan = { date: todayKey(), items };
     saveJourney();
+    if (force && window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("study_plan_created", "planner", {
+        items: items.length,
+      });
+    }
     return journey.dailyPlan;
   }
 
@@ -343,6 +348,11 @@
       );
       const item = journey.dailyPlan.items?.find((i) => i.id === evt.planItemId);
       if (item) item.done = true;
+      if (window.StudentAnalytics?.track) {
+        window.StudentAnalytics.track("study_plan_item_completed", "journey", {
+          topic: (item && item.topic) || topic || "",
+        });
+      }
     }
 
     saveJourney();
@@ -764,6 +774,27 @@
         correct: pct >= 60,
         struggled: pct < 60,
       });
+      if (window.StudentAnalytics?.track) {
+        window.StudentAnalytics.track("exam_mock_completed", "exam", {
+          score_pct: pct,
+          questions_count: mockState.questions.length,
+          correct_answers: mockState.score,
+        });
+        window.StudentAnalytics.track("quiz_completed", "exam", {
+          score_pct: pct,
+          questions_count: mockState.questions.length,
+        });
+      }
+      if (window.StudentAnalytics?.recordLearning) {
+        window.StudentAnalytics.recordLearning({
+          activity_type: "exam_mock",
+          feature: "exam",
+          subject: journey.exam.subject || "",
+          questions_count: mockState.questions.length,
+          correct_count: mockState.score,
+          score_pct: pct,
+        });
+      }
       mount.innerHTML = `
         <div class="journey-quiz-result">
           <p><strong>Mock score: ${pct}%</strong></p>
@@ -964,6 +995,38 @@
     };
     saveJourney();
     buildDailyPlan(true);
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("diagnostic_completed", "diagnostic", {
+        weak_count: weak.length,
+        strong_count: strong.length,
+      });
+      if (weak.length) {
+        window.StudentAnalytics.track("knowledge_gap_detected", "diagnostic", {
+          weak_count: weak.length,
+        });
+      }
+    }
+    if (window.StudentAnalytics?.recordLearning) {
+      window.StudentAnalytics.recordLearning(
+        {
+          activity_type: "diagnostic",
+          feature: "diagnostic",
+          questions_count: diagState.results.length,
+          correct_count: diagState.results.filter((r) => r.correct).length,
+          score_pct: diagState.results.length
+            ? Math.round(
+                (diagState.results.filter((r) => r.correct).length / diagState.results.length) * 100,
+              )
+            : null,
+        },
+        Object.entries(scores).map(([subject, mastery_pct]) => ({
+          subject,
+          topic: subject,
+          mastery_pct,
+          knowledge_gap: mastery_pct < 60,
+        })),
+      );
+    }
     const mount = $("diagnosticMount");
     if (mount) {
       mount.innerHTML = `
@@ -1075,10 +1138,18 @@
     } catch {
       /* ignore */
     }
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track(completed ? "onboarding_completed" : "onboarding_skipped", "onboarding", {
+        learning_goal: journey.learningGoal || "",
+      });
+    }
     if (completed) {
       buildDailyPlan(true);
       api().showToast?.("Your coach is ready");
       renderHomeJourney();
+      if (window.StudentAnalytics?.syncProfile) {
+        window.StudentAnalytics.syncProfile(api().getLearnerProfile?.() || {});
+      }
     }
   }
 

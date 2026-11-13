@@ -8,6 +8,7 @@ const fs = require("fs");
 const { Readable } = require("node:stream");
 const multer = require("multer");
 const { supportNotifyConfigured, notifySupportInbox } = require("./lib/support-notify");
+const analytics = require("./lib/analytics");
 
 const envPath = path.join(__dirname, ".env");
 const envResult = dotenv.config({ path: envPath });
@@ -2538,6 +2539,205 @@ app.put("/api/workspace", requireSession, async (req, res) => {
   }
 });
 
+/** Student Intelligence — batch analytics events (sanitized, consent-aware). */
+app.post("/api/analytics/events", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return res.status(503).json({
+        ok: false,
+        error: "Analytics requires SUPABASE_SERVICE_ROLE_KEY and student_intelligence.sql",
+      });
+    }
+    const userId = req.user?.id || "";
+    const consent = await analytics.getUserConsent(admin, userId);
+    const result = await analytics.insertEvents(admin, userId, req.body?.events || [], {
+      sessionId: req.body?.sessionId || null,
+      platform: String(req.body?.platform || "web").slice(0, 16),
+      consent,
+    });
+    if (!result.ok) return res.status(500).json(result);
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Analytics error" });
+  }
+});
+
+app.put("/api/analytics/profile", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const userId = req.user?.id || "";
+    const profile = req.body?.profile && typeof req.body.profile === "object" ? req.body.profile : {};
+    const result = await analytics.upsertStudentProfile(admin, userId, profile, req.user?.created_at || null);
+    if (result.ok) {
+      await analytics.insertEvents(
+        admin,
+        userId,
+        [{ event_name: "profile_updated", feature: "profile", properties: { source: "sync" } }],
+        { consent: await analytics.getUserConsent(admin, userId) },
+      );
+    }
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Profile sync error" });
+  }
+});
+
+app.get("/api/analytics/profile", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const { data, error } = await admin
+      .from("student_profiles")
+      .select("*")
+      .eq("user_id", req.user?.id || "")
+      .maybeSingle();
+    if (error) return res.status(500).json({ ok: false, error: error.message });
+    return res.json({ ok: true, profile: data || null });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Profile read error" });
+  }
+});
+
+app.get("/api/analytics/consent", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return res.json({
+        ok: true,
+        consent: { analytics_enabled: true, learning_analytics_enabled: true, personalization_enabled: true },
+        stored: false,
+      });
+    }
+    const consent = await analytics.getUserConsent(admin, req.user?.id || "");
+    return res.json({ ok: true, consent, stored: true });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Consent error" });
+  }
+});
+
+app.put("/api/analytics/consent", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const userId = req.user?.id || "";
+    const result = await analytics.upsertConsent(admin, userId, req.body || {});
+    if (result.ok) {
+      await analytics.insertEvents(
+        admin,
+        userId,
+        [
+          {
+            event_name: "consent_updated",
+            feature: "profile",
+            properties: {
+              analytics_enabled: req.body?.analytics_enabled !== false,
+              learning_analytics_enabled: req.body?.learning_analytics_enabled !== false,
+            },
+          },
+        ],
+        { consent: { analytics_enabled: true } },
+      );
+    }
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Consent error" });
+  }
+});
+
+app.post("/api/analytics/session/start", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const userId = req.user?.id || "";
+    const started = await analytics.startUserSession(admin, {
+      userId,
+      clientSessionId: req.body?.clientSessionId,
+      platform: req.body?.platform || "web",
+      userAgent: req.headers["user-agent"] || "",
+    });
+    await analytics.insertEvents(
+      admin,
+      userId,
+      [{ event_name: "session_started", feature: "auth", properties: { device: analytics.deviceCategoryFromUa(req.headers["user-agent"]) } }],
+      {
+        sessionId: started.sessionId,
+        consent: await analytics.getUserConsent(admin, userId),
+      },
+    );
+    return res.json(started);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Session error" });
+  }
+});
+
+app.post("/api/analytics/session/end", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const userId = req.user?.id || "";
+    const ended = await analytics.endUserSession(admin, {
+      userId,
+      sessionId: req.body?.sessionId,
+      clientSessionId: req.body?.clientSessionId,
+    });
+    await analytics.insertEvents(
+      admin,
+      userId,
+      [{ event_name: "session_ended", feature: "auth", properties: {} }],
+      { sessionId: req.body?.sessionId || null, consent: await analytics.getUserConsent(admin, userId) },
+    );
+    return res.json(ended);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Session error" });
+  }
+});
+
+app.post("/api/analytics/learning", requireSession, async (req, res) => {
+  try {
+    const admin = getSupabaseAdminClient();
+    if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
+    const userId = req.user?.id || "";
+    const consent = await analytics.getUserConsent(admin, userId);
+    if (consent.learning_analytics_enabled === false) {
+      return res.json({ ok: true, skipped: "consent_opt_out" });
+    }
+    const activity = await analytics.recordLearningActivity(admin, userId, req.body?.activity || req.body || {});
+    if (Array.isArray(req.body?.progress) && req.body.progress.length) {
+      await analytics.upsertLearningProgress(admin, userId, req.body.progress);
+    }
+    return res.json(activity);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Learning analytics error" });
+  }
+});
+
+/** Admin-only product intelligence dashboard. */
+app.get("/api/analytics/dashboard", requireSession, async (req, res) => {
+  try {
+    if (!analytics.canAccessAnalyticsAdmin(req.user)) {
+      return res.status(403).json({
+        ok: false,
+        error:
+          "Analytics dashboard is limited to allowlisted admin emails. Set ANALYTICS_ADMIN_EMAILS (or FEEDBACK_REVIEW_EMAILS) on the server.",
+      });
+    }
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return res.status(503).json({
+        ok: false,
+        error: "Set SUPABASE_SERVICE_ROLE_KEY and run supabase/student_intelligence.sql",
+      });
+    }
+    const days = Math.min(90, Math.max(1, Number(req.query?.days) || 7));
+    const dash = await analytics.buildAdminDashboard(admin, { days });
+    return res.json(dash);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || "Dashboard error" });
+  }
+});
+
 app.get("/api/health", (_req, res) => {
   const indexHtmlDeployed = fs.existsSync(indexHtmlPath);
   const prod = process.env.NODE_ENV === "production";
@@ -2554,6 +2754,9 @@ app.get("/api/health", (_req, res) => {
     feedbackSupabaseConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
     /** Help & Support form can email Google Group / inbox (Resend or SMTP). */
     supportNotifyConfigured: supportNotifyConfigured(),
+    /** Student intelligence tables use the same service role key. */
+    analyticsConfigured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
+    analyticsAdminConfigured: analytics.analyticsAdminAllowlist().length > 0,
     /** Founder weekly review endpoint allowlist configured. */
     feedbackReviewAllowlistConfigured: feedbackReviewAllowlist().length > 0,
     /** If true, `SUPABASE_ANON_KEY` on the server is a secret key ? use publishable/anon only; sessions will fail. */
