@@ -40,7 +40,31 @@ const COACH_TABS = new Set([
   "diagnostic",
   "admin-analytics",
 ]);
-/** All former "coming soon" surfaces are live — never route to a roadmap panel. */
+/**
+ * Learn / coach feature → workspace mapping (single source of truth).
+ * panel: DOM id for the live workspace
+ * kind: how setMainTab reveals it
+ * Only put a tab in COACH_SOON_TABS when it is unfinished — then show feature-specific Coming Soon.
+ */
+const FEATURE_WORKSPACE_MAP = {
+  home: { panel: "panelHome", kind: "home", label: "Home" },
+  learning: { panel: "panelLearning", kind: "learning", label: "My Learning" },
+  profile: { panel: "panelProfile", kind: "profile", label: "Profile" },
+  chat: { panel: "panelChat", kind: "chat", label: "Ask / Coach" },
+  code: { panel: "panelCode", kind: "code", label: "Coding Coach" },
+  notebook: { panel: "panelNotebook", kind: "notebook", label: "Notebook" },
+  voice: { panel: "panelVoice", kind: "lab", label: "Voice Tutor" },
+  flashcards: { panel: "panelFlashcards", kind: "lab", label: "Flashcards" },
+  math: { panel: "panelMath", kind: "lab", label: "Math & Science" },
+  focus: { panel: "panelFocus", kind: "lab", label: "Focus Mode" },
+  gaps: { panel: "panelGaps", kind: "lab", label: "Knowledge Gaps" },
+  planner: { panel: "panelPlanner", kind: "journey", label: "Study Planner" },
+  exam: { panel: "panelExam", kind: "journey", label: "Exam Prep" },
+  progress: { panel: "panelProgress", kind: "journey", label: "Progress" },
+  diagnostic: { panel: "panelDiagnostic", kind: "journey", label: "Diagnostic" },
+  "admin-analytics": { panel: "panelAdminAnalytics", kind: "journey", label: "Admin analytics" },
+};
+/** Unfinished features only. Implemented features must never appear here. */
 const COACH_SOON_TABS = new Set();
 const COACH_LAB_TABS = new Set(["voice", "flashcards", "math", "focus", "gaps"]);
 const COACH_JOURNEY_TABS = new Set(["progress", "planner", "exam", "diagnostic", "admin-analytics"]);
@@ -3190,6 +3214,61 @@ function renderAssistantHtml(text) {
   }
 }
 
+function showPanelById(id, on) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle("hidden", !on);
+  el.hidden = !on;
+}
+
+function renderFeatureComingSoon(tab) {
+  const meta = FEATURE_WORKSPACE_MAP[tab] || { label: "This feature" };
+  const titleEl = document.getElementById("featureSoonTitle");
+  const bodyEl = document.getElementById("featureSoonBody");
+  const kickerEl = document.getElementById("featureSoonKicker");
+  if (kickerEl) kickerEl.textContent = "Coming soon";
+  if (titleEl) titleEl.textContent = meta.label;
+  if (bodyEl) {
+    bodyEl.textContent = `${meta.label} is not available yet. Study Planner, Progress, Ask, Code, and Notebook are ready today.`;
+  }
+}
+
+function syncWorkspaceUrl(tab) {
+  try {
+    if (!COACH_TABS.has(tab) || tab === "home") {
+      if (window.location.hash && /^#(planner|progress|chat|notebook|code|learning|profile|exam|diagnostic|voice|flashcards|math|focus|gaps)$/i.test(window.location.hash)) {
+        history.replaceState({}, "", `${window.location.pathname}${window.location.search}`);
+      }
+      return;
+    }
+    const nextHash = `#${tab}`;
+    if (window.location.hash !== nextHash) {
+      history.replaceState({}, "", `${window.location.pathname}${window.location.search}${nextHash}`);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function hydrateTabFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const fromQuery = String(params.get("tab") || params.get("workspace") || "").trim().toLowerCase();
+    const fromHash = String(window.location.hash || "")
+      .replace(/^#/, "")
+      .trim()
+      .toLowerCase();
+    const candidate = fromQuery || fromHash;
+    if (candidate && COACH_TABS.has(candidate) && candidate !== "admin-analytics") {
+      setMainTab(candidate);
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
 function setMainTab(next) {
   let requested = COACH_TABS.has(next) ? next : "home";
   // Admin analytics is product-owner only — never expose the panel to students.
@@ -3200,6 +3279,10 @@ function setMainTab(next) {
       : false)
   ) {
     requested = "profile";
+  }
+  // Implemented features must never fall through to a generic unavailable screen.
+  if (COACH_SOON_TABS.has(requested) && FEATURE_WORKSPACE_MAP[requested]?.kind !== "soon") {
+    // Keep soon list explicit; ignore accidental entries for mapped live workspaces.
   }
   mainTab = requested;
   if (mainTab !== "chat" && mainTab !== "voice") stopAllLearnVoice();
@@ -3233,21 +3316,13 @@ function setMainTab(next) {
   // Coach tab stays active for chat; Progress is its own primary tab.
   document.getElementById("tabChat")?.classList.toggle("active", mainTab === "chat");
   document.getElementById("tabProgress")?.classList.toggle("active", mainTab === "progress");
-  panelHome?.classList.toggle("hidden", mainTab !== "home");
-  if (panelHome) panelHome.hidden = mainTab !== "home";
-  const panelLearning = document.getElementById("panelLearning");
-  const panelProfile = document.getElementById("panelProfile");
-  if (panelLearning) {
-    const onLearn = mainTab === "learning";
-    panelLearning.classList.toggle("hidden", !onLearn);
-    panelLearning.hidden = !onLearn;
-  }
-  if (panelProfile) {
-    const onProfile = mainTab === "profile";
-    panelProfile.classList.toggle("hidden", !onProfile);
-    panelProfile.hidden = !onProfile;
-    if (onProfile) syncLearnerProfileForm();
-  }
+
+  const isSoon = COACH_SOON_TABS.has(mainTab);
+  const feature = FEATURE_WORKSPACE_MAP[mainTab];
+
+  // Hide all mapped workspaces, then show the active one (or feature-specific soon).
+  Object.values(FEATURE_WORKSPACE_MAP).forEach((meta) => showPanelById(meta.panel, false));
+  showPanelById("panelFeatureSoon", false);
   // Permanently hide any legacy Coming Soon markup if it still exists in cache.
   const legacySoon = document.getElementById("panelComingSoon");
   if (legacySoon) {
@@ -3255,17 +3330,16 @@ function setMainTab(next) {
     legacySoon.hidden = true;
     legacySoon.setAttribute("aria-hidden", "true");
   }
-  panelChat?.classList.toggle("hidden", mainTab !== "chat");
-  if (panelChat) panelChat.hidden = mainTab !== "chat";
-  panelCode?.classList.toggle("hidden", mainTab !== "code");
-  if (panelCode) panelCode.hidden = mainTab !== "code";
-  panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
-  if (panelNotebook) panelNotebook.hidden = mainTab !== "notebook";
-  document.querySelectorAll("[data-journey-panel]").forEach((panel) => {
-    const on = panel.getAttribute("data-journey-panel") === mainTab;
-    panel.classList.toggle("hidden", !on);
-    panel.hidden = !on;
-  });
+
+  if (isSoon) {
+    showPanelById("panelFeatureSoon", true);
+    renderFeatureComingSoon(mainTab);
+  } else if (feature?.panel) {
+    showPanelById(feature.panel, true);
+  }
+
+  if (mainTab === "profile") syncLearnerProfileForm();
+
   let bottomKey = "learning";
   if (mainTab === "home") bottomKey = "home";
   else if (mainTab === "chat") bottomKey = "chat";
@@ -3280,33 +3354,20 @@ function setMainTab(next) {
   document.querySelectorAll("#mscBottomNav .msc-bottom-item").forEach((btn) => {
     btn.classList.toggle("is-active", btn.getAttribute("data-bottom") === bottomKey);
   });
-  document.querySelectorAll("[data-coach-lab-panel]").forEach((panel) => {
-    const on = panel.getAttribute("data-coach-lab-panel") === mainTab;
-    panel.classList.toggle("hidden", !on);
-    panel.hidden = !on;
-  });
   if (mainTab === "home") renderCoachHome();
-  if (COACH_LAB_TABS.has(mainTab) && typeof window.onCoachLabTab === "function") {
+  if (!isSoon && COACH_LAB_TABS.has(mainTab) && typeof window.onCoachLabTab === "function") {
     window.onCoachLabTab(mainTab);
   }
-  if (COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
+  if (!isSoon && COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
     window.StudentJourney.onTab(mainTab);
   }
-  // Planner must always land on the real workspace (goal / tasks / rebuild).
-  if (mainTab === "planner") {
-    const planner = document.getElementById("panelPlanner");
-    if (planner) {
-      planner.classList.remove("hidden");
-      planner.hidden = false;
-    }
-    if (window.StudentJourney?.onTab) window.StudentJourney.onTab("planner");
-  }
-  if (mainTab === "admin-analytics" && window.AdminAnalytics?.onTab) {
+  if (!isSoon && mainTab === "admin-analytics" && window.AdminAnalytics?.onTab) {
     window.AdminAnalytics.onTab();
   }
   if (window.StudentAnalytics?.onTab) {
     window.StudentAnalytics.onTab(mainTab);
   }
+  syncWorkspaceUrl(mainTab);
   if (mainTab === "notebook") {
     syncNotebookAnalyzeVisibility();
     syncNotebookLayout();
@@ -3590,6 +3651,8 @@ function wireCoachHome() {
     go(preferredContinueTab());
   });
   document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
+  document.getElementById("featureSoonHomeBtn")?.addEventListener("click", () => go("home"));
+  document.getElementById("featureSoonPlannerBtn")?.addEventListener("click", () => go("planner"));
   document.querySelectorAll("[data-open-login]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -3604,6 +3667,10 @@ function wireCoachHome() {
     showLanding();
   });
   window.addEventListener("hashchange", () => {
+    if (activeSurface === "student") {
+      hydrateTabFromUrl();
+      return;
+    }
     if (activeSurface) return;
     if (wantsLoginHash()) showLoginGateway();
   });
@@ -5303,6 +5370,10 @@ function showApp(session) {
   void pullWorkspace();
   // Single product surface: always open Coach Home (Hub deep links included).
   showStudentWorkspace();
+  // Honor ?tab= / #planner deep links after auth (refresh + mobile share URLs).
+  if (!hydrateTabFromUrl()) {
+    /* keep current home from showStudentWorkspace */
+  }
   ensureAgeAckThenContinue();
   if (window.StudentAnalytics?.bootAfterAuth) {
     void window.StudentAnalytics.bootAfterAuth();

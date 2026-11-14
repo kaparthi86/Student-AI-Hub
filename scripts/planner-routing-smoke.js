@@ -26,8 +26,13 @@ assert(/function renderPlannerPanel/.test(journeyJs), "renderPlannerPanel requir
 assert(/plannerGoalForm|planGoal/.test(journeyJs), "planner goal form required");
 assert(/data-journey-done/.test(journeyJs), "mark-done controls required");
 assert(/refresh-plan/.test(journeyJs), "rebuild plan control required");
-assert(/COACH_SOON_TABS = new Set\(\)/.test(appJs), "no soon tabs");
-assert(/mainTab === "planner"/.test(appJs), "setMainTab must special-case planner visibility");
+assert(/COACH_SOON_TABS = new Set\(\)/.test(appJs), "no soon tabs for live features");
+assert(/FEATURE_WORKSPACE_MAP/.test(appJs), "FEATURE_WORKSPACE_MAP required");
+assert(/planner:\s*\{\s*panel:\s*"panelPlanner"/.test(appJs), "planner must map to panelPlanner");
+assert(/progress:\s*\{\s*panel:\s*"panelProgress"/.test(appJs), "progress must map to panelProgress");
+assert(/hydrateTabFromUrl/.test(appJs), "deep-link hydrateTabFromUrl required");
+assert(/id="panelFeatureSoon"/.test(indexHtml), "feature-specific soon panel exists for unfinished tabs only");
+assert(!/id="panelComingSoon"/.test(indexHtml), "generic More Learning Tools soon panel must stay removed");
 
 if (failures.length) {
   // eslint-disable-next-line no-console
