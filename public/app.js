@@ -207,8 +207,9 @@ const UI_LANG_LABELS = {
 
 const I18N = {
   en: {
-    signin_title: "Study smarter. Learn better. Achieve more.",
-    signin_tagline: "Your personal AI coach for studying, understanding difficult topics, and preparing for exams.",
+    signin_title: "A better way to learn, one step at a time.",
+    signin_tagline:
+      "Get clear explanations, practice with your study materials, and build confidence — with study integrity at the center.",
     free_for_students: "Free for students",
     brand_kicker: "Your personal AI study companion",
     live_web_label: "Live web",
@@ -221,7 +222,7 @@ const I18N = {
     resume_student: "Continue learning",
     live_web_unavailable: "Live web needs a search key on the server",
     visual_kicker: "Visual",
-    auth_brand_kicker: "Your personal AI study companion",
+    auth_brand_kicker: "Understand. Practice. Improve.",
     hub_brand: "My Student Coach",
     hub_tagline: "Study smarter. Learn better.",
     hub_welcome: "Welcome back, {name}",
@@ -3590,6 +3591,23 @@ function wireCoachHome() {
     go(preferredContinueTab());
   });
   document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
+  const landingNavToggle = document.getElementById("landingNavToggle");
+  const landingMobileNav = document.getElementById("landingMobileNav");
+  const setLandingMobileOpen = (open) => {
+    if (!landingMobileNav || !landingNavToggle) return;
+    landingMobileNav.classList.toggle("hidden", !open);
+    landingMobileNav.hidden = !open;
+    landingNavToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    landingNavToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+  landingNavToggle?.addEventListener("click", () => {
+    const open = landingMobileNav?.classList.contains("hidden") || landingMobileNav?.hidden;
+    setLandingMobileOpen(Boolean(open));
+  });
+  landingMobileNav?.querySelectorAll("a, button").forEach((el) => {
+    el.addEventListener("click", () => setLandingMobileOpen(false));
+  });
+
   document.querySelectorAll("[data-open-login]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();

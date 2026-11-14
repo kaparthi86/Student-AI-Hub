@@ -32,7 +32,7 @@
     <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
     <link rel="stylesheet" href="./journey.css?v=planner-route-4" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=study-lang-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=landing-exp-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -74,7 +74,7 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-            <!-- Marketing landing (sells the vision) -->
+            <!-- Marketing landing (student experience first; same brand as app shell) -->
       <section class="auth auth-shell landing msc-landing" id="landingCard" aria-label="My Student Coach">
         <header class="msc-topnav">
           <a class="msc-logo" href="#landingCard" aria-label="My Student Coach home">
@@ -96,47 +96,134 @@
             </span>
             <span class="msc-logo-text" id="authBrandTitle">My Student Coach</span>
           </a>
-          <nav class="msc-topnav-links" aria-label="Landing">
+          <nav class="msc-topnav-links" id="landingDesktopNav" aria-label="Landing">
+            <a href="#mscHow">How it works</a>
             <a href="#mscFeatures">Features</a>
-            <a href="#mscAbout">About</a>
+            <a href="#mscFaq">FAQ</a>
             <a href="#login" id="landingNavSignIn" data-open-login>Sign in</a>
           </nav>
+          <button
+            type="button"
+            class="msc-nav-toggle ghost-btn"
+            id="landingNavToggle"
+            aria-expanded="false"
+            aria-controls="landingMobileNav"
+            aria-label="Open menu"
+          >
+            Menu
+          </button>
         </header>
+        <nav class="msc-mobile-nav hidden" id="landingMobileNav" aria-label="Landing mobile" hidden>
+          <a href="#mscHow">How it works</a>
+          <a href="#mscFeatures">Features</a>
+          <a href="#mscFaq">FAQ</a>
+          <a href="#mscAbout">Why us</a>
+          <button type="button" class="primary-btn" data-open-login>Get Started Free</button>
+          <button type="button" class="ghost-btn" id="landingMobileSignIn" data-open-login>Sign in</button>
+        </nav>
 
         <div class="landing-hero msc-hero" id="mscStart">
           <div class="landing-hero-content msc-hero-content">
-            <p class="msc-eyebrow" id="authBrandKicker">Your personal AI study companion</p>
-            <h1 class="landing-headline msc-headline" id="authSigninTitle">Study smarter. Learn better. Achieve more.</h1>
+            <p class="msc-brand-line" id="authBrandTitleHero">My Student Coach</p>
+            <p class="msc-eyebrow" id="authBrandKicker">Understand. Practice. Improve.</p>
+            <h1 class="landing-headline msc-headline" id="authSigninTitle">
+              A better way to learn, one step at a time.
+            </h1>
             <p class="landing-support msc-support" id="authSigninTagline">
-              Your personal AI coach for studying, understanding difficult topics, and preparing for exams.
+              Get clear explanations, practice with your study materials, and build confidence — with study integrity at the center.
             </p>
             <div class="landing-cta msc-cta">
-              <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
-                Get Started Free
-              </button>
-              <p class="msc-cta-note muted">Learn at your own pace. Stay in control.</p>
+              <div class="msc-cta-row">
+                <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
+                  Get Started Free
+                </button>
+                <a class="ghost-btn msc-secondary-cta" href="#mscHow" id="landingExploreBtn">Explore how it works</a>
+              </div>
+              <p class="msc-cta-note muted">Free to start · Ages 13+ · Your data, your privacy</p>
             </div>
           </div>
+
+          <aside class="landing-preview" aria-label="Product preview of Ask / AI Coach">
+            <div class="landing-preview-frame">
+              <div class="landing-preview-bar">
+                <span class="landing-preview-app">Ask · AI Coach</span>
+                <span class="landing-preview-status">Ready to learn with you</span>
+              </div>
+              <div class="landing-preview-thread">
+                <div class="landing-msg landing-msg-user">
+                  Can you explain photosynthesis in simple steps?
+                </div>
+                <div class="landing-msg landing-msg-coach">
+                  <p class="landing-msg-lead">Let’s break it down together.</p>
+                  <ol>
+                    <li>Plants absorb sunlight.</li>
+                    <li>Roots absorb water.</li>
+                    <li>Leaves take in carbon dioxide.</li>
+                    <li>Plants produce glucose and release oxygen.</li>
+                  </ol>
+                  <p class="landing-msg-next"><strong>Next:</strong> Try a practice question.</p>
+                </div>
+              </div>
+              <div class="landing-preview-composer" aria-hidden="true">
+                <span>Ask your next question…</span>
+              </div>
+            </div>
+          </aside>
         </div>
+
+        <section class="msc-journey-strip" aria-label="Learning journey">
+          <div class="msc-journey-item">
+            <strong>Understand</strong>
+            <span>Clear explanations when you’re stuck</span>
+          </div>
+          <div class="msc-journey-item">
+            <strong>Practice</strong>
+            <span>Notes, quizzes, and coding help</span>
+          </div>
+          <div class="msc-journey-item">
+            <strong>Improve</strong>
+            <span>Progress and plans that move you forward</span>
+          </div>
+        </section>
 
         <section class="msc-section" id="mscHow" aria-label="How it works">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title">How it works</h2>
+            <p class="msc-section-kicker">A simpler learning journey</p>
+            <h2 class="landing-section-title">Everything connects to how you learn.</h2>
+            <p class="landing-section-lead">
+              Learning is more than an answer — understand the idea, practice it, then know what to do next.
+            </p>
             <ol class="msc-steps">
-              <li><strong>Ask</strong><span>Bring a question, notes, or a stuck problem.</span></li>
-              <li><strong>Learn</strong><span>Get clear explanations, practice, and study plans.</span></li>
-              <li><strong>Improve</strong><span>Build understanding — not shortcuts.</span></li>
+              <li>
+                <span class="msc-step-num">01</span>
+                <strong>Understand</strong>
+                <span>Ask questions and get explanations that make sense to you.</span>
+              </li>
+              <li>
+                <span class="msc-step-num">02</span>
+                <strong>Practice</strong>
+                <span>Use your notes, quizzes, and coding problems to lock it in.</span>
+              </li>
+              <li>
+                <span class="msc-step-num">03</span>
+                <strong>Improve</strong>
+                <span>Review progress, spot gaps, and keep moving forward — not shortcuts.</span>
+              </li>
             </ol>
           </div>
         </section>
 
         <section class="landing-below msc-section" id="mscFeatures" aria-label="Features">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title">Everything you need to succeed</h2>
+            <p class="msc-section-kicker">Your learning toolkit</p>
+            <h2 class="landing-section-title">Tools that support the journey</h2>
+            <p class="landing-section-lead">
+              Available after you sign in — each one opens a real workspace, not a placeholder.
+            </p>
             <ul class="landing-tools msc-feature-cards">
               <li>
                 <strong>AI Coach</strong>
-                <span>Understand difficult topics with personalized explanations.</span>
+                <span>Step-by-step explanations for hard topics.</span>
               </li>
               <li>
                 <strong>Smart Notebook</strong>
@@ -147,8 +234,8 @@
                 <span>Learn programming and understand errors.</span>
               </li>
               <li>
-                <strong>Study Planner</strong>
-                <span>Daily plans, weekly goals, and exam readiness — available after sign-in</span>
+                <strong>Study Planner &amp; Progress</strong>
+                <span>Daily plans, weekly focus, and learning progress — live after sign-in.</span>
               </li>
             </ul>
           </div>
@@ -156,7 +243,8 @@
 
         <section class="landing-integrity msc-section" id="mscAbout" aria-label="About">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title" id="landingMissionTitle">Why My Student Coach</h2>
+            <p class="msc-section-kicker">Why My Student Coach</p>
+            <h2 class="landing-section-title" id="landingMissionTitle">Learning with integrity</h2>
             <p class="landing-section-lead" id="landingMissionLead">
               Personalized learning with study integrity and privacy at the center.
             </p>
@@ -168,11 +256,58 @@
           </div>
         </section>
 
+        <section class="msc-section" id="mscFaq" aria-label="Frequently asked questions">
+          <div class="landing-below-inner">
+            <p class="msc-section-kicker">FAQ</p>
+            <h2 class="landing-section-title">Good questions. Clear answers.</h2>
+            <div class="msc-faq">
+              <details class="msc-faq-item" open>
+                <summary>What is My Student Coach?</summary>
+                <p>
+                  A personal AI learning companion to help you understand concepts, practice subjects, and build better
+                  learning habits — operated by SKM IT SOLUTIONS INC.
+                </p>
+              </details>
+              <details class="msc-faq-item">
+                <summary>Who can use it?</summary>
+                <p>
+                  Learners <strong>13 years of age or older</strong>. Review the
+                  <a href="./privacy.html">Privacy Policy</a> and <a href="./terms.html">Terms</a> before creating an
+                  account.
+                </p>
+              </details>
+              <details class="msc-faq-item">
+                <summary>Can I upload my own study materials?</summary>
+                <p>
+                  Smart Notebook accepts supported document formats so you can work with your own notes. File limits and
+                  formats apply in the product.
+                </p>
+              </details>
+              <details class="msc-faq-item">
+                <summary>Can I learn with voice?</summary>
+                <p>
+                  Voice Tutor lets you talk through concepts in the browser. Spoken turns sent for a coach reply follow
+                  the same path as Ask; see Privacy for transcript handling.
+                </p>
+              </details>
+              <details class="msc-faq-item">
+                <summary>How do I get help or delete my data?</summary>
+                <p>
+                  Use <strong>Support</strong> below (ticket ID for signed-in users). Signed-in students can delete
+                  account &amp; data in settings. Guests can use the public support form linked from Privacy.
+                </p>
+              </details>
+            </div>
+          </div>
+        </section>
+
         <section class="msc-section msc-final-cta" aria-label="Get started">
           <div class="landing-below-inner">
-            <h2 class="landing-section-title">Your success starts with one step</h2>
-            <p class="landing-section-lead">Join My Student Coach and make learning easier.</p>
-            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn" data-open-login>Get Started Free</button>
+            <h2 class="landing-section-title">Your next learning step starts here.</h2>
+            <p class="landing-section-lead">Understand. Practice. Improve. — with privacy controls you can manage.</p>
+            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn" data-open-login>
+              Get Started Free
+            </button>
           </div>
         </section>
 
@@ -184,7 +319,7 @@
             <button type="button" class="linkish open-support-btn" id="landingSupportBtn">Support</button>
           </nav>
           <p class="fine-print-line landing-operator-line">
-            My Student Coach is operated by SKM IT SOLUTIONS INC.
+            My Student Coach is operated by SKM IT SOLUTIONS INC. · Understand. Practice. Improve.
           </p>
         </footer>
       </section>
@@ -1586,7 +1721,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=planner-route-4"></script>
+    <script defer src="./app.js?v=landing-exp-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
     <script defer src="./journey.js?v=planner-route-4"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>
