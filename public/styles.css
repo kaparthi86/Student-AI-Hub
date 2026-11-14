@@ -2125,10 +2125,10 @@ textarea:focus {
   }
 
   .workspace-shell #panelHome:not(.hidden),
-  .workspace-shell #panelComingSoon:not(.hidden),
   .workspace-shell #panelLearning:not(.hidden),
   .workspace-shell #panelProfile:not(.hidden),
-  .workspace-shell .coach-lab-panel:not(.hidden) {
+  .workspace-shell .coach-lab-panel:not(.hidden),
+  .workspace-shell .journey-panel:not(.hidden) {
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }

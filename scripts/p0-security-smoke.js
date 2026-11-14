@@ -83,10 +83,16 @@ const indexHtml = read("public/index.html");
 assert(!/These stay on this device/i.test(indexHtml), "index.html must not claim profile stays on this device only");
 assert(/stay in sync across devices/i.test(indexHtml), "index.html should describe cross-device profile sync");
 
-// 8) Study Planner must not be advertised as Coming Soon / Phase 1 roadmap
+// 8) Study Planner must be a live workspace — no Coming Soon / roadmap screen
 assert(!/Phase 1 roadmap/i.test(indexHtml), "index.html must not show Phase 1 roadmap Coming Soon for planner");
+assert(!/id="panelComingSoon"/i.test(indexHtml), "Coming Soon panel must be removed from index.html");
+assert(!/This workspace is not available yet/i.test(indexHtml), "index.html must not say workspace is not available yet");
 assert(/Available now — daily activities/i.test(indexHtml), "planner panel should state Available now");
-assert(/COACH_SOON_TABS = new Set\(\[\]\)/.test(read("public/app.js")), "COACH_SOON_TABS must stay empty (planner is live)");
+assert(/id="panelPlanner"/i.test(indexHtml), "live panelPlanner must exist");
+assert(/data-tab="planner"/i.test(indexHtml), "Learn nav must route to planner");
+const appJs = read("public/app.js");
+assert(/COACH_SOON_TABS = new Set\(\)/.test(appJs), "COACH_SOON_TABS must be empty (no soon routes)");
+assert(/"planner"/.test(appJs) && /COACH_JOURNEY_TABS/.test(appJs), "planner must be a journey tab");
 
 // 9) Terms describe broader product + AI processing
 const terms = read("public/terms.html");

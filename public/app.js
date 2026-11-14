@@ -18,7 +18,6 @@ const prefUiLanguage = document.getElementById("prefUiLanguage");
 const toastStack = document.getElementById("toastStack");
 
 const panelHome = document.getElementById("panelHome");
-const panelComingSoon = document.getElementById("panelComingSoon");
 const panelChat = document.getElementById("panelChat");
 const panelCode = document.getElementById("panelCode");
 const panelNotebook = document.getElementById("panelNotebook");
@@ -41,7 +40,8 @@ const COACH_TABS = new Set([
   "diagnostic",
   "admin-analytics",
 ]);
-const COACH_SOON_TABS = new Set([]);
+/** All former "coming soon" surfaces are live — never route to a roadmap panel. */
+const COACH_SOON_TABS = new Set();
 const COACH_LAB_TABS = new Set(["voice", "flashcards", "math", "focus", "gaps"]);
 const COACH_JOURNEY_TABS = new Set(["progress", "planner", "exam", "diagnostic", "admin-analytics"]);
 
@@ -297,20 +297,6 @@ const I18N = {
     coach_priority_ask: "Ask one clear question in AI Coach",
     coach_priority_practice: "Practice a topic after Ask",
     coach_priority_notes: "Upload notes in Notebook",
-    soon_kicker: "Coming soon",
-    soon_planner_title: "More learning tools",
-    soon_planner_body:
-      "This workspace is not available yet. Study Planner is available now from Learn → Study Planner.",
-    soon_generic_title: "More learning tools",
-    soon_generic_body:
-      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.",
-    soon_exam_title: "More learning tools",
-    soon_exam_body:
-      "This workspace is not available yet. Exam Prep is available now from Learn → Exam Prep.",
-    soon_progress_title: "More learning tools",
-    soon_progress_body:
-      "This workspace is not available yet. Progress is available now from the Progress tab.",
-    soon_back_home: "Back to Home",
     chip_practice: "Practice",
     ctrl_explain_simply: "Explain simply",
     ctrl_step_by_step: "Step by step",
@@ -1333,20 +1319,6 @@ const I18N = {
     coach_priority_ask: "Ask one clear question in AI Coach",
     coach_priority_practice: "Practice a topic after Ask",
     coach_priority_notes: "Upload notes in Notebook",
-    soon_kicker: "Coming soon",
-    soon_planner_title: "More learning tools",
-    soon_planner_body:
-      "This workspace is not available yet. Study Planner is available now from Learn → Study Planner.",
-    soon_generic_title: "More learning tools",
-    soon_generic_body:
-      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.",
-    soon_exam_title: "More learning tools",
-    soon_exam_body:
-      "This workspace is not available yet. Exam Prep is available now from Learn → Exam Prep.",
-    soon_progress_title: "More learning tools",
-    soon_progress_body:
-      "This workspace is not available yet. Progress is available now from the Progress tab.",
-    soon_back_home: "Back to Home",
     chip_practice: "Practice",
     ctrl_explain_simply: "எளிதாக விளக்கு",
     ctrl_step_by_step: "படிப்படியாக",
@@ -1645,9 +1617,6 @@ function applyTranslations() {
     tabPlannerLabel: "tab_planner",
     tabExamLabel: "tab_exam",
     tabProgressLabel: "tab_progress",
-    tabPlannerBadge: "tab_soon",
-    tabExamBadge: "tab_soon",
-    tabProgressBadge: "tab_soon",
     coachKicker: "coach_kicker",
     coachSub: "coach_sub",
     coachAskBtn: "coach_ask_cta",
@@ -1655,23 +1624,12 @@ function applyTranslations() {
     coachPrioritiesLead: "coach_priorities_lead",
     coachToolsTitle: "coach_tools_title",
     coachToolsLead: "coach_tools_lead",
-    coachNextTitle: "coach_next_title",
-    coachNextLead: "coach_next_lead",
     coachToolAskTitle: "coach_tool_ask_title",
     coachToolAskSub: "coach_tool_ask_sub",
     coachToolCodeTitle: "coach_tool_code_title",
     coachToolCodeSub: "coach_tool_code_sub",
     coachToolNotebookTitle: "coach_tool_notebook_title",
     coachToolNotebookSub: "coach_tool_notebook_sub",
-    coachSoonPlannerTitle: "coach_soon_planner_title",
-    coachSoonPlannerSub: "coach_soon_planner_sub",
-    coachSoonExamTitle: "coach_soon_exam_title",
-    coachSoonExamSub: "coach_soon_exam_sub",
-    coachSoonProgressTitle: "coach_soon_progress_title",
-    coachSoonProgressSub: "coach_soon_progress_sub",
-    soonPanelKicker: "soon_kicker",
-    soonBackHomeBtn: "soon_back_home",
-    soonGoAskBtn: "coach_ask_cta",
     practiceSubmitAnswer: "practice_check",
     practiceSkipBtn: "practice_skip",
     practiceAgainBtn: "practice_again",
@@ -3275,8 +3233,8 @@ function setMainTab(next) {
   // Coach tab stays active for chat; Progress is its own primary tab.
   document.getElementById("tabChat")?.classList.toggle("active", mainTab === "chat");
   document.getElementById("tabProgress")?.classList.toggle("active", mainTab === "progress");
-  const isSoon = COACH_SOON_TABS.has(mainTab);
   panelHome?.classList.toggle("hidden", mainTab !== "home");
+  if (panelHome) panelHome.hidden = mainTab !== "home";
   const panelLearning = document.getElementById("panelLearning");
   const panelProfile = document.getElementById("panelProfile");
   if (panelLearning) {
@@ -3290,11 +3248,19 @@ function setMainTab(next) {
     panelProfile.hidden = !onProfile;
     if (onProfile) syncLearnerProfileForm();
   }
-  panelComingSoon?.classList.toggle("hidden", !isSoon);
-  if (panelComingSoon) panelComingSoon.hidden = !isSoon;
+  // Permanently hide any legacy Coming Soon markup if it still exists in cache.
+  const legacySoon = document.getElementById("panelComingSoon");
+  if (legacySoon) {
+    legacySoon.classList.add("hidden");
+    legacySoon.hidden = true;
+    legacySoon.setAttribute("aria-hidden", "true");
+  }
   panelChat?.classList.toggle("hidden", mainTab !== "chat");
+  if (panelChat) panelChat.hidden = mainTab !== "chat";
   panelCode?.classList.toggle("hidden", mainTab !== "code");
+  if (panelCode) panelCode.hidden = mainTab !== "code";
   panelNotebook?.classList.toggle("hidden", mainTab !== "notebook");
+  if (panelNotebook) panelNotebook.hidden = mainTab !== "notebook";
   document.querySelectorAll("[data-journey-panel]").forEach((panel) => {
     const on = panel.getAttribute("data-journey-panel") === mainTab;
     panel.classList.toggle("hidden", !on);
@@ -3320,12 +3286,20 @@ function setMainTab(next) {
     panel.hidden = !on;
   });
   if (mainTab === "home") renderCoachHome();
-  if (isSoon) renderComingSoonPanel(mainTab);
   if (COACH_LAB_TABS.has(mainTab) && typeof window.onCoachLabTab === "function") {
     window.onCoachLabTab(mainTab);
   }
   if (COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
     window.StudentJourney.onTab(mainTab);
+  }
+  // Planner must always land on the real workspace (goal / tasks / rebuild).
+  if (mainTab === "planner") {
+    const planner = document.getElementById("panelPlanner");
+    if (planner) {
+      planner.classList.remove("hidden");
+      planner.hidden = false;
+    }
+    if (window.StudentJourney?.onTab) window.StudentJourney.onTab("planner");
   }
   if (mainTab === "admin-analytics" && window.AdminAnalytics?.onTab) {
     window.AdminAnalytics.onTab();
@@ -3360,22 +3334,6 @@ function preferredContinueTab() {
   if (Array.isArray(codeHistory) && codeHistory.length > 0) return "code";
   if (Array.isArray(notebookHistory) && notebookHistory.length > 0) return "notebook";
   return "chat";
-}
-
-function renderComingSoonPanel(tab) {
-  const titleEl = document.getElementById("soonPanelTitle");
-  const bodyEl = document.getElementById("soonPanelBody");
-  const kickerEl = document.getElementById("soonPanelKicker");
-  if (kickerEl) kickerEl.textContent = t("soon_kicker");
-  // Study Planner / Progress / Exam are live journey tabs — never label them Coming Soon.
-  const key =
-    tab === "exam" || tab === "progress" || tab === "planner" ? "generic" : "generic";
-  if (titleEl) titleEl.textContent = t(`soon_${key}_title`) || "More learning tools";
-  if (bodyEl) {
-    bodyEl.textContent =
-      t(`soon_${key}_body`) ||
-      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.";
-  }
 }
 
 
@@ -3632,8 +3590,6 @@ function wireCoachHome() {
     go(preferredContinueTab());
   });
   document.getElementById("coachAskBtn")?.addEventListener("click", () => go("chat"));
-  document.getElementById("soonBackHomeBtn")?.addEventListener("click", () => go("home"));
-  document.getElementById("soonGoAskBtn")?.addEventListener("click", () => go("chat"));
   document.querySelectorAll("[data-open-login]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -3711,11 +3667,6 @@ function wireCoachHome() {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !panelHome.contains(target)) return;
     go(target.getAttribute("data-coach-tab"), target.getAttribute("data-coach-mode"));
-  });
-  panelComingSoon?.addEventListener("click", (e) => {
-    const target = e.target.closest?.("[data-coach-tab]");
-    if (!target || !panelComingSoon.contains(target)) return;
-    go(target.getAttribute("data-coach-tab"));
   });
   document.addEventListener("pointerdown", (e) => {
     if (e.target.closest?.(".msc-nav-menu")) return;

@@ -14,7 +14,8 @@
     "test:account-delete": "node scripts/account-delete-unit.js",
     "test:consent": "node scripts/consent-opt-out-unit.js",
     "test:isolation": "node scripts/isolation-ownership-smoke.js",
-    "test": "npm run test:p0-smoke && npm run test:account-delete && npm run test:consent && npm run test:isolation"
+    "test:planner": "node scripts/planner-routing-smoke.js",
+    "test": "npm run test:p0-smoke && npm run test:account-delete && npm run test:consent && npm run test:isolation && npm run test:planner"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
