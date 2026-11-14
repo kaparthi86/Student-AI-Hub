@@ -23,9 +23,9 @@ body.brand-msc .bg-glow {
 
 /* Landing */
 .msc-landing {
-  max-width: 920px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 18px 18px 40px;
+  padding: 18px 18px 48px;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -36,7 +36,13 @@ body.brand-msc .bg-glow {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
 }
 
 .msc-logo {
@@ -70,33 +76,87 @@ body.brand-msc .bg-glow {
   color: var(--navy);
 }
 
-.msc-hero {
-  display: block !important;
-  padding: 28px 0 18px;
-  min-height: auto !important;
+.msc-nav-toggle {
+  display: none;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-weight: 700;
 }
 
-.msc-hero-content {
-  max-width: 640px;
-  margin: 0 auto;
+.msc-mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  background: #fff;
+}
+
+.msc-mobile-nav a {
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 650;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(20, 45, 76, 0.06);
+}
+
+.msc-mobile-nav.hidden {
+  display: none !important;
+}
+
+/* Beat world-class full-bleed hero overrides — keep student preview composition */
+.msc-landing .landing-hero.msc-hero,
+.msc-landing .msc-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 28px 36px;
+  align-items: center;
+  padding: 18px 0 10px;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+.msc-landing .landing-hero.msc-hero::after {
+  display: none !important;
+}
+
+.msc-landing .msc-hero-content,
+.msc-landing .landing-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: none !important;
+  width: auto !important;
+  margin: 0 !important;
   text-align: left;
   padding: 0 !important;
+  animation: none !important;
+}
+
+.msc-brand-line {
+  margin: 0 0 8px;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--navy);
 }
 
 .msc-eyebrow {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   color: var(--teal);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .msc-headline {
   margin: 0;
   font-family: "Source Serif 4", Georgia, serif;
-  font-size: clamp(2rem, 5vw, 3.1rem);
-  line-height: 1.08;
+  font-size: clamp(2rem, 4.4vw, 2.85rem);
+  line-height: 1.12;
   letter-spacing: -0.03em;
   color: var(--navy);
   background: none !important;
@@ -105,9 +165,9 @@ body.brand-msc .bg-glow {
 
 .msc-support {
   margin: 14px 0 0;
-  max-width: 42ch;
-  font-size: 1.08rem;
-  line-height: 1.5;
+  max-width: 46ch;
+  font-size: 1.05rem;
+  line-height: 1.55;
 }
 
 .msc-cta {
@@ -115,7 +175,227 @@ body.brand-msc .bg-glow {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 10px;
+}
+
+.msc-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.msc-secondary-cta {
+  text-decoration: none;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* Brand-matched Ask preview (not a stock image) */
+.landing-preview {
+  position: relative;
+}
+
+.landing-preview::before {
+  content: "";
+  position: absolute;
+  inset: 12% -6% -4% 8%;
+  border-radius: 40% 60% 50% 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(40, 122, 137, 0.18), transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-preview-frame {
+  position: relative;
+  z-index: 1;
+  border-radius: 22px;
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  background: #fff;
+  overflow: hidden;
+}
+
+.landing-preview-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(20, 45, 76, 0.08);
+  background: linear-gradient(180deg, #f7fafc, #fff);
+}
+
+.landing-preview-app {
+  font-weight: 800;
+  color: var(--navy);
+  font-size: 0.92rem;
+}
+
+.landing-preview-status {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--teal);
+}
+
+.landing-preview-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  min-height: 280px;
+  background:
+    linear-gradient(180deg, rgba(247, 250, 252, 0.9), rgba(255, 255, 255, 0.95));
+}
+
+.landing-msg {
+  max-width: 92%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--navy);
+}
+
+.landing-msg-user {
+  align-self: flex-start;
+  background: #eef2f5;
+  border-bottom-left-radius: 6px;
+}
+
+.landing-msg-coach {
+  align-self: flex-end;
+  background: linear-gradient(160deg, rgba(40, 122, 137, 0.1), rgba(20, 45, 76, 0.06));
+  border: 1px solid rgba(40, 122, 137, 0.14);
+  border-bottom-right-radius: 6px;
+}
+
+.landing-msg-lead {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.landing-msg-coach ol {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.landing-msg-coach li + li {
+  margin-top: 4px;
+}
+
+.landing-msg-next {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(20, 45, 76, 0.08);
+  font-size: 0.88rem;
+}
+
+.landing-preview-composer {
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  color: var(--muted);
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.msc-journey-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+  padding: 18px 0;
+  border-top: 1px solid rgba(20, 45, 76, 0.08);
+  border-bottom: 1px solid rgba(20, 45, 76, 0.08);
+}
+
+.msc-journey-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.msc-journey-item strong {
+  color: var(--navy);
+  font-size: 1.02rem;
+}
+
+.msc-journey-item span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.msc-section-kicker {
+  margin: 0 0 8px;
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.msc-step-num {
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.msc-faq {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msc-faq-item {
+  border-radius: 14px;
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  background: #fff;
+  padding: 0 16px;
+}
+
+.msc-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 0;
+  font-weight: 750;
+  color: var(--navy);
+}
+
+.msc-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.msc-faq-item summary::after {
+  content: "+";
+  float: right;
+  color: var(--teal);
+  font-weight: 800;
+}
+
+.msc-faq-item[open] summary::after {
+  content: "–";
+}
+
+.msc-faq-item p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+.msc-faq-item a {
+  color: var(--teal);
+  font-weight: 650;
 }
 
 .msc-primary-cta,
@@ -155,7 +435,7 @@ body.brand-msc .primary-btn {
   background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .msc-steps strong {
@@ -275,9 +555,49 @@ body.brand-msc .primary-btn {
   display: none;
 }
 
-/* Hide decorative landing illustration from older layout */
+/* Legacy decorative illustration stays hidden; product preview is the visual */
 .msc-landing .landing-hero-visual {
   display: none !important;
+}
+
+@media (max-width: 900px) {
+  .msc-hero {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .msc-journey-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .msc-topnav-links {
+    display: none;
+  }
+
+  .msc-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .msc-cta-row {
+    width: 100%;
+  }
+
+  .msc-cta-row .primary-btn,
+  .msc-cta-row .msc-secondary-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .msc-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .msc-feature-cards {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Workspace nav — overflow must stay visible so Learn/Profile panels are not clipped */
@@ -409,8 +729,8 @@ body.brand-msc .primary-btn {
   }
 
   .msc-topnav {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
   }
 
   .msc-hero-content {
