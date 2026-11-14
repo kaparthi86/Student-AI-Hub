@@ -459,7 +459,7 @@
     if (serverInsights?.nudge) return serverInsights.nudge;
     const mem = coachMemoryPayload();
     const plan = buildDailyPlan();
-    const first = plan.items?.[0];
+    const first = (plan.items || []).find((i) => !i.done) || plan.items?.[0];
     if (mem.struggles?.length && first) {
       return `You're building momentum. Let's focus on ${first.topic} next — ${first.action.toLowerCase()}.`;
     }
@@ -470,6 +470,106 @@
     return "Set your subjects in Profile so your coach can personalize today's plan.";
   }
 
+  function hasInsufficientLearningSignal() {
+    const attempts = Number(journey.quizStats?.attempts || 0);
+    const assessed = Object.keys(journey.diagnostic?.scores || {}).length;
+    const practiced = Object.keys(loadMasteryMap()).length;
+    return attempts < 3 && assessed === 0 && practiced === 0;
+  }
+
+  function phaseForAction(action, mode) {
+    const a = String(action || "").toLowerCase();
+    const m = String(mode || "").toLowerCase();
+    if (m === "quiz" || /practice|exam|quiz|flash|revise|diagnostic/.test(a)) return "Practice";
+    if (/progress|mastery|improve|gap/.test(a)) return "Improve";
+    return "Understand";
+  }
+
+  /**
+   * Single personalized next step for Home — adaptive loop entry point.
+   * Priority: cold-start diagnostic → incomplete recommended plan item → Progress wrap-up.
+   */
+  function pickNextStep() {
+    ensureWeek();
+    const plan = buildDailyPlan();
+    const items = Array.isArray(plan.items) ? plan.items : [];
+    const incomplete = items.filter((i) => !i.done);
+    const recommended = incomplete.find((i) => i.recommended) || incomplete[0];
+    const insufficient = hasInsufficientLearningSignal();
+    const diagnosticDone = Boolean(
+      journey.diagnostic?.lastAt ||
+        journey.diagnostic?.completedAt ||
+        Object.keys(journey.diagnostic?.scores || {}).length
+    );
+
+    if (insufficient && !diagnosticDone) {
+      return {
+        phase: "Practice",
+        title: "Take a quick diagnostic",
+        reason:
+          "We do not invent mastery scores. A short check unlocks personalized practice and today’s plan.",
+        cta: "Start diagnostic",
+        tab: "diagnostic",
+        mode: "",
+        topic: "",
+        minutes: 5,
+        planIndex: null,
+        source: "cold-start",
+      };
+    }
+
+    if (recommended) {
+      const idx = items.indexOf(recommended);
+      const phase = phaseForAction(recommended.action, recommended.mode);
+      const why = recommended.fromIntelligence
+        ? `From your progress signals — ${recommended.minutes} minutes on ${recommended.topic}.`
+        : coachRecommendBlurb();
+      return {
+        phase,
+        title: `${recommended.action}: ${recommended.topic}`,
+        reason: why,
+        cta: "Start this step",
+        tab: recommended.tab || "chat",
+        mode: recommended.mode || "",
+        topic: recommended.topic,
+        minutes: recommended.minutes || 12,
+        planIndex: idx,
+        source: recommended.fromIntelligence ? "progress" : "plan",
+      };
+    }
+
+    return {
+      phase: "Improve",
+      title: "Review your progress",
+      reason: "Today’s plan is complete. Check mastery, gaps, and what to practice next.",
+      cta: "Open Progress",
+      tab: "progress",
+      mode: "",
+      topic: "",
+      minutes: 5,
+      planIndex: null,
+      source: "wrap-up",
+    };
+  }
+
+  function startNextStep(step) {
+    const next = step || pickNextStep();
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("home_next_step_started", "home", {
+        source: next.source,
+        tab: next.tab,
+        topic: next.topic || "",
+        phase: next.phase,
+      });
+    }
+    if (next.planIndex != null && Number.isFinite(Number(next.planIndex))) {
+      startPlanItem(Number(next.planIndex));
+      return;
+    }
+    if (next.mode && typeof api().setLearnStudyMode === "function") api().setLearnStudyMode(next.mode);
+    api().setMainTab?.(next.tab || "chat");
+  }
+
   /* ---------- Rendering ---------- */
 
   function renderHomeJourney() {
@@ -477,23 +577,26 @@
     if (!mount) return;
     ensureWeek();
     const plan = buildDailyPlan();
+    const next = pickNextStep();
     const mastery = overallMastery();
     const weekly = journey.weeklyGoals;
     const name = typeof api().coachDisplayName === "function" ? api().coachDisplayName() : "there";
+    const insufficient = hasInsufficientLearningSignal();
+    const moreItems = (plan.items || []).filter((_, idx) => idx !== next.planIndex);
 
     mount.hidden = false;
     mount.innerHTML = `
       <section class="journey-dash" aria-labelledby="journeyDashTitle">
         <div class="journey-dash-head">
           <div>
-            <p class="coach-kicker">Your coach</p>
+            <p class="coach-kicker">Understand · Practice · Improve</p>
             <h3 class="journey-dash-title" id="journeyDashTitle">Good ${greetingHour()}, ${escapeHtml(name)}</h3>
-            <p class="muted journey-dash-lead">Your personalized learning journey</p>
+            <p class="muted journey-dash-lead">One clear next step — then keep going.</p>
           </div>
           <div class="journey-stat-row">
             <div class="journey-stat">
-              <span class="journey-stat-value">${mastery}%</span>
-              <span class="journey-stat-label">Learning mastery</span>
+              <span class="journey-stat-value">${insufficient ? "—" : `${mastery}%`}</span>
+              <span class="journey-stat-label">${insufficient ? "Mastery (need more data)" : "Learning mastery"}</span>
             </div>
             <div class="journey-stat">
               <span class="journey-stat-value">${weekly.completed}/${weekly.target}</span>
@@ -501,41 +604,53 @@
             </div>
           </div>
         </div>
-        <div class="journey-plan">
-          <div class="journey-plan-head">
-            <h4>Today's learning plan</h4>
-            <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh</button>
+
+        <article class="journey-next-step" aria-labelledby="journeyNextTitle">
+          <p class="journey-next-kicker">${escapeHtml(next.phase)} · Your next step</p>
+          <h4 class="journey-next-title" id="journeyNextTitle">${escapeHtml(next.title)}</h4>
+          <p class="muted journey-next-reason">${escapeHtml(next.reason)}</p>
+          <div class="journey-next-meta">
+            ${next.minutes ? `<span>${next.minutes} min</span>` : ""}
+            ${next.source === "progress" ? '<span class="journey-badge">From progress</span>' : ""}
+            ${next.source === "cold-start" ? '<span class="journey-badge">Personalize</span>' : ""}
+            ${next.source === "wrap-up" ? '<span class="journey-badge journey-badge--done">Plan done</span>' : ""}
           </div>
+          <div class="journey-next-actions">
+            <button type="button" class="primary-btn" data-journey-next-step> ${escapeHtml(next.cta)} </button>
+            <button type="button" class="ghost-btn" data-coach-tab="progress">Progress</button>
+            <button type="button" class="ghost-btn" data-coach-tab="planner">Full plan</button>
+          </div>
+        </article>
+
+        ${
+          moreItems.length
+            ? `<details class="journey-more-today">
+          <summary>More for today (${moreItems.length})</summary>
           <ol class="journey-plan-list">
-            ${(plan.items || [])
-              .map(
-                (item, idx) => `
-              <li class="journey-plan-item${item.recommended ? " is-recommended" : ""}${item.done ? " is-done" : ""}">
+            ${moreItems
+              .map((item) => {
+                const idx = (plan.items || []).indexOf(item);
+                return `
+              <li class="journey-plan-item${item.done ? " is-done" : ""}">
                 <div class="journey-plan-main">
                   <strong>${escapeHtml(item.topic)}</strong>
                   <span class="muted">${item.minutes} minutes · ${escapeHtml(item.action)}</span>
                 </div>
                 <div class="journey-plan-actions">
-                  ${item.recommended && !item.done ? '<span class="journey-badge">Recommended</span>' : ""}
-                  ${item.fromIntelligence && !item.done ? '<span class="journey-badge">From progress</span>' : ""}
                   ${item.done ? '<span class="journey-badge journey-badge--done">Done</span>' : ""}
                   <button type="button" class="primary-btn journey-start-btn" data-journey-start="${idx}">Start</button>
                   ${!item.done ? `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>` : ""}
                 </div>
-              </li>`,
-              )
+              </li>`;
+              })
               .join("")}
           </ol>
-        </div>
-        <aside class="journey-coach-note">
-          <p class="journey-coach-note-label">Your coach recommends</p>
-          <p>${escapeHtml(coachRecommendBlurb())}</p>
-          <div class="coach-hero-actions">
-            <button type="button" class="ghost-btn" data-coach-tab="diagnostic">Take a quick check</button>
-            <button type="button" class="ghost-btn" data-coach-tab="progress">View progress</button>
-            <button type="button" class="ghost-btn" data-coach-tab="voice">Talk with coach</button>
-          </div>
-        </aside>
+          <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
+        </details>`
+            : `<div class="journey-plan-head" style="margin-top:0.75rem">
+            <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
+          </div>`
+        }
       </section>
     `;
   }
@@ -1351,6 +1466,12 @@
 
   function wireJourneyUi() {
     document.addEventListener("click", (e) => {
+      const nextBtn = e.target.closest?.("[data-journey-next-step]");
+      if (nextBtn) {
+        e.preventDefault();
+        startNextStep();
+        return;
+      }
       const start = e.target.closest?.("[data-journey-start]");
       if (start) {
         e.preventDefault();
@@ -1437,6 +1558,8 @@
     maybeShowOnboarding,
     buildDailyPlan,
     overallMastery,
+    pickNextStep,
+    startNextStep,
   };
 
   function boot() {
