@@ -148,7 +148,7 @@
               </li>
               <li>
                 <strong>Study Planner</strong>
-                <span>Daily plans, weekly goals, and exam readiness</span>
+                <span>Daily plans, weekly goals, and exam readiness — available after sign-in</span>
               </li>
             </ul>
           </div>
@@ -238,7 +238,10 @@
           </button>
           <p id="authStatus" class="muted auth-status msc-login-status" role="status" aria-live="polite"></p>
           <p class="msc-login-privacy" id="loginPrivacyLine">Your learning journey. Your data. Your privacy.</p>
-          <p class="muted msc-login-age" id="loginAgeLine">For learners age 13+. By continuing you confirm you meet this requirement.</p>
+          <p class="muted msc-login-age" id="loginAgeLine">
+            For learners age 13+. By continuing you confirm you meet this requirement. Parents/guardians: review
+            <a href="./privacy.html">Privacy</a> before teen use.
+          </p>
           <nav class="msc-login-legal" aria-label="Legal">
             <a href="./terms.html">Terms of Service</a>
             <span aria-hidden="true">·</span>
@@ -674,9 +677,9 @@
         <section id="panelComingSoon" class="panel coach-soon-panel hidden" hidden>
           <div class="coach-soon-empty">
             <p class="coach-kicker" id="soonPanelKicker">Coming soon</p>
-            <h2 class="coach-welcome" id="soonPanelTitle">Study Planner</h2>
+            <h2 class="coach-welcome" id="soonPanelTitle">More learning tools</h2>
             <p class="coach-sub muted" id="soonPanelBody">
-              This workspace is on the Phase 1 roadmap. Use Ask, Code, and Notebook today while we build it.
+              This workspace is not available yet. Study Planner, Progress, Ask, Code, and Notebook are ready today.
             </p>
             <div class="coach-hero-actions">
               <button type="button" class="primary-btn" id="soonBackHomeBtn">Back to Home</button>
@@ -701,7 +704,9 @@
             <header class="msc-hub-hero">
               <p class="coach-kicker">Planner</p>
               <h2 class="msc-hub-title">Study planner</h2>
-              <p class="muted msc-hub-lead">Turn goals into daily activities and track your week.</p>
+              <p class="muted msc-hub-lead">
+                Available now — daily activities, weekly focus, and rebuildable plans from your learning profile.
+              </p>
             </header>
             <div id="plannerPanelBody"></div>
           </div>
@@ -1460,12 +1465,16 @@
         </div>
         <p class="muted" id="ageGateBody">
           My Student Coach is for learners age 13 and older. Confirm below to continue. If you are under 13, do not
-          create an account.
+          create an account. Parents and guardians of teens should review our Privacy notice and in-app privacy
+          controls; an age confirmation does not replace applicable student-privacy obligations.
         </p>
         <label class="settings-checkbox">
           <input id="ageGateConfirm" type="checkbox" />
           <span id="ageGateConfirmLabel">I confirm I am 13 or older</span>
         </label>
+        <p class="muted" id="ageGatePrivacyLink">
+          Read the <a href="./privacy.html" target="_blank" rel="noopener">Privacy Policy</a> before continuing.
+        </p>
         <p class="muted support-form-status" id="ageGateStatus" role="status" aria-live="polite"></p>
         <div class="settings-actions">
           <button id="ageGateContinueBtn" class="primary-btn" type="button">Continue</button>
@@ -1480,7 +1489,8 @@
           <button id="closeSupportBtn" class="ghost-btn tiny-btn" type="button">Close</button>
         </div>
         <p class="muted" id="supportModalBody">
-          Questions, bugs, or ideas — send a short note below. We read every message.
+          Questions, bugs, account access, or privacy requests — send a short note below. We read every message and
+          return a ticket ID.
         </p>
         <form id="supportForm" class="support-form" novalidate>
           <label for="supportCategory" id="supportCategoryLabel">Topic</label>
@@ -1488,9 +1498,21 @@
             <option value="question">Question</option>
             <option value="bug">Bug report</option>
             <option value="account">Account help</option>
+            <option value="privacy">Privacy / data request</option>
             <option value="idea">Idea / feedback</option>
             <option value="other">Other</option>
           </select>
+          <div id="supportGuestFields" class="support-guest-fields hidden" hidden>
+            <label for="supportContactEmail" id="supportContactEmailLabel">Contact email (required if not signed in)</label>
+            <input
+              id="supportContactEmail"
+              name="contactEmail"
+              type="email"
+              maxlength="120"
+              autocomplete="email"
+              placeholder="you@example.com"
+            />
+          </div>
           <label for="supportMessage" id="supportMessageLabel">Your message</label>
           <textarea
             id="supportMessage"
@@ -1578,9 +1600,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=p0-launch-1"></script>
+    <script defer src="./app.js?v=launch-ready-2"></script>
     <script defer src="./coach-labs.js?v=voice-coach-2"></script>
-    <script defer src="./journey.js?v=p0-launch-1"></script>
+    <script defer src="./journey.js?v=launch-ready-2"></script>
     <script defer src="./analytics.js?v=p0-launch-1"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>
