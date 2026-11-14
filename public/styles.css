@@ -532,6 +532,16 @@ p {
   font-size: 0.85rem;
 }
 
+.support-guest-fields {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+
+.support-guest-fields.hidden {
+  display: none;
+}
+
 .head-actions {
   display: flex;
   gap: 8px;

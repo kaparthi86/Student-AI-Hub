@@ -10,7 +10,9 @@
     "start": "node server.js",
     "dev": "node server.js",
     "privacy-dns": "node privacy-agent-dns/server.js",
-    "test:p0-smoke": "node scripts/p0-security-smoke.js"
+    "test:p0-smoke": "node scripts/p0-security-smoke.js",
+    "test:account-delete": "node scripts/account-delete-unit.js",
+    "test": "npm run test:p0-smoke && npm run test:account-delete"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

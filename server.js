@@ -2264,7 +2264,67 @@ app.post("/api/feedback", requireSession, async (req, res) => {
   }
 });
 
-const SUPPORT_CATEGORIES = new Set(["question", "bug", "account", "idea", "other"]);
+const SUPPORT_CATEGORIES = new Set(["question", "bug", "account", "privacy", "idea", "other"]);
+
+function isValidSupportEmail(raw) {
+  const email = String(raw || "").trim().toLowerCase().slice(0, 120);
+  if (!email || email.length > 120) return "";
+  // Practical validation — not full RFC.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "";
+  return email;
+}
+
+async function handleSupportSubmission({
+  category,
+  message,
+  createdAt,
+  userId,
+  userEmail,
+}) {
+  const entry = {
+    type: "support_request",
+    rating: 1,
+    reason: category,
+    mode: "support",
+    studyMode: "support",
+    assistantMessage: message,
+    createdAt,
+    receivedAt: new Date().toISOString(),
+    userEmail: userEmail || null,
+    userId: userId || null,
+  };
+
+  const result = await persistFeedbackEntry(entry, {
+    userId: userId || "",
+    rating: 1,
+    reason: category,
+    mode: "support",
+    studyMode: "support",
+    assistantMessage: userEmail ? `[contact:${userEmail}]\n${message}` : message,
+    clientCreatedAt: createdAt,
+  });
+  if (!result.ok) {
+    return { ok: false, error: "Could not save your message. Please try again." };
+  }
+  const ticketId = result.ticketId || `MSC-F-${Date.now().toString(36).toUpperCase()}`;
+  const notify = await notifySupportInbox({
+    category,
+    message,
+    userEmail: userEmail || "",
+    userId: userId || "",
+    createdAt,
+    ticketId,
+  });
+  return {
+    ok: true,
+    ...result,
+    ticketId,
+    emailed: Boolean(notify.emailed),
+    emailProvider: notify.provider || null,
+    emailSkipped: Boolean(notify.skipped),
+    emailWarning: notify.error || null,
+  };
+}
 
 app.post("/api/support", requireSession, async (req, res) => {
   try {
@@ -2275,48 +2335,43 @@ app.post("/api/support", requireSession, async (req, res) => {
       return res.status(400).json({ error: "Please write a short message (at least a few words)." });
     }
     const createdAt = String(req.body?.createdAt || new Date().toISOString());
-    const entry = {
-      type: "support_request",
-      rating: 1,
-      reason: category,
-      mode: "support",
-      studyMode: "support",
-      assistantMessage: message,
-      createdAt,
-      receivedAt: new Date().toISOString(),
-    };
-
-    const result = await persistFeedbackEntry(entry, {
-      userId: req.user?.id || "",
-      rating: 1,
-      reason: category,
-      mode: "support",
-      studyMode: "support",
-      assistantMessage: message,
-      clientCreatedAt: createdAt,
-    });
-    if (!result.ok) {
-      return res.status(500).json({ error: "Could not save your message. Please try again." });
-    }
-    const ticketId = result.ticketId || `MSC-F-${Date.now().toString(36).toUpperCase()}`;
-
-    // Forward to Google Group / inbox (server-only address; never shown in UI).
-    const notify = await notifySupportInbox({
+    const out = await handleSupportSubmission({
       category,
       message,
-      userEmail: String(req.user?.email || "").trim() || "",
-      userId: req.user?.id || "",
       createdAt,
-      ticketId,
+      userId: req.user?.id || "",
+      userEmail: String(req.user?.email || "").trim() || "",
     });
-    return res.json({
-      ...result,
-      ticketId,
-      emailed: Boolean(notify.emailed),
-      emailProvider: notify.provider || null,
-      emailSkipped: Boolean(notify.skipped),
-      emailWarning: notify.error || null,
+    if (!out.ok) return res.status(500).json({ error: out.error });
+    return res.json(out);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+/** Pre-login / guest support for account-access and privacy requests (rate-limited via /api limiter). */
+app.post("/api/public-support", async (req, res) => {
+  try {
+    const categoryRaw = String(req.body?.category || "other").trim().toLowerCase().slice(0, 32);
+    const category = SUPPORT_CATEGORIES.has(categoryRaw) ? categoryRaw : "other";
+    const message = String(req.body?.message || "").trim().slice(0, 2000);
+    const contactEmail = isValidSupportEmail(req.body?.contactEmail || req.body?.email);
+    if (!contactEmail) {
+      return res.status(400).json({ error: "A valid contact email is required when you are not signed in." });
+    }
+    if (message.length < 8) {
+      return res.status(400).json({ error: "Please write a short message (at least a few words)." });
+    }
+    const createdAt = String(req.body?.createdAt || new Date().toISOString());
+    const out = await handleSupportSubmission({
+      category,
+      message,
+      createdAt,
+      userId: "",
+      userEmail: contactEmail,
     });
+    if (!out.ok) return res.status(500).json({ error: out.error });
+    return res.json(out);
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });
   }
@@ -2341,6 +2396,7 @@ app.post("/api/account/delete", requireSession, async (req, res) => {
       return res.status(500).json({
         error: result.authError || "Could not delete account. Please contact support.",
         tables: result.tables,
+        verified: result.verified || [],
       });
     }
     return res.json({
@@ -2348,6 +2404,7 @@ app.post("/api/account/delete", requireSession, async (req, res) => {
       deleted: true,
       authDeleted: result.authDeleted,
       tables: result.tables,
+      verified: result.verified || [],
     });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });

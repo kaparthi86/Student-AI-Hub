@@ -92,6 +92,8 @@ const NOTEBOOK_MAX_FILES = 5;
 
 let mainTab = "home";
 let supabaseClient = null;
+/** Latest auth session (null when signed out). */
+let authSession = null;
 
 /** Learn Ask hero + follow-up: Web Speech with silence auto-stop and tap-to-stop. */
 const LEARN_VOICE_SILENCE_MS = 2000;
@@ -296,12 +298,18 @@ const I18N = {
     coach_priority_practice: "Practice a topic after Ask",
     coach_priority_notes: "Upload notes in Notebook",
     soon_kicker: "Coming soon",
-    soon_planner_title: "Study Planner",
-    soon_planner_body: "AI-generated schedules, deadlines, and weekly targets are on the roadmap. Use Ask and Notebook today while we build it.",
-    soon_exam_title: "Exam Prep",
-    soon_exam_body: "Mock exams, adaptive practice, and topic analysis are coming next. Practice from Ask or Notebook in the meantime.",
-    soon_progress_title: "My Progress",
-    soon_progress_body: "Streaks, subject strengths, and weekly reviews are planned for Phase 1. Keep studying ? history already syncs on this device.",
+    soon_planner_title: "More learning tools",
+    soon_planner_body:
+      "This workspace is not available yet. Study Planner is available now from Learn → Study Planner.",
+    soon_generic_title: "More learning tools",
+    soon_generic_body:
+      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.",
+    soon_exam_title: "More learning tools",
+    soon_exam_body:
+      "This workspace is not available yet. Exam Prep is available now from Learn → Exam Prep.",
+    soon_progress_title: "More learning tools",
+    soon_progress_body:
+      "This workspace is not available yet. Progress is available now from the Progress tab.",
     soon_back_home: "Back to Home",
     chip_practice: "Practice",
     ctrl_explain_simply: "Explain simply",
@@ -1326,12 +1334,18 @@ const I18N = {
     coach_priority_practice: "Practice a topic after Ask",
     coach_priority_notes: "Upload notes in Notebook",
     soon_kicker: "Coming soon",
-    soon_planner_title: "Study Planner",
-    soon_planner_body: "AI-generated schedules, deadlines, and weekly targets are on the roadmap. Use Ask and Notebook today while we build it.",
-    soon_exam_title: "Exam Prep",
-    soon_exam_body: "Mock exams, adaptive practice, and topic analysis are coming next. Practice from Ask or Notebook in the meantime.",
-    soon_progress_title: "My Progress",
-    soon_progress_body: "Streaks, subject strengths, and weekly reviews are planned for Phase 1. Keep studying ? history already syncs on this device.",
+    soon_planner_title: "More learning tools",
+    soon_planner_body:
+      "This workspace is not available yet. Study Planner is available now from Learn → Study Planner.",
+    soon_generic_title: "More learning tools",
+    soon_generic_body:
+      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.",
+    soon_exam_title: "More learning tools",
+    soon_exam_body:
+      "This workspace is not available yet. Exam Prep is available now from Learn → Exam Prep.",
+    soon_progress_title: "More learning tools",
+    soon_progress_body:
+      "This workspace is not available yet. Progress is available now from the Progress tab.",
     soon_back_home: "Back to Home",
     chip_practice: "Practice",
     ctrl_explain_simply: "எளிதாக விளக்கு",
@@ -3353,9 +3367,15 @@ function renderComingSoonPanel(tab) {
   const bodyEl = document.getElementById("soonPanelBody");
   const kickerEl = document.getElementById("soonPanelKicker");
   if (kickerEl) kickerEl.textContent = t("soon_kicker");
-  const key = tab === "exam" ? "exam" : tab === "progress" ? "progress" : "planner";
-  if (titleEl) titleEl.textContent = t(`soon_${key}_title`);
-  if (bodyEl) bodyEl.textContent = t(`soon_${key}_body`);
+  // Study Planner / Progress / Exam are live journey tabs — never label them Coming Soon.
+  const key =
+    tab === "exam" || tab === "progress" || tab === "planner" ? "generic" : "generic";
+  if (titleEl) titleEl.textContent = t(`soon_${key}_title`) || "More learning tools";
+  if (bodyEl) {
+    bodyEl.textContent =
+      t(`soon_${key}_body`) ||
+      "This workspace is not available yet. Use Ask, Code, Notebook, Progress, and Study Planner today.";
+  }
 }
 
 
@@ -5250,13 +5270,26 @@ async function confirmDeleteAccount() {
       throw new Error(data?.error || t("delete_account_failed") || "Could not delete account.");
     }
     try {
-      localStorage.removeItem(USER_PREFS_KEY);
-      localStorage.removeItem(CHAT_SESSION_KEY);
-      localStorage.removeItem(AGE_ACK_KEY);
-      localStorage.removeItem(HONOR_CODE_ACK_KEY);
+      const keysToClear = [
+        USER_PREFS_KEY,
+        CHAT_SESSION_KEY,
+        AGE_ACK_KEY,
+        HONOR_CODE_ACK_KEY,
+        WORKSPACE_STAMP_KEY,
+        LAST_WORKSPACE_KEY,
+        "student_ai_analytics_consent_v1",
+        "student_ai_analytics_sid_v1",
+        "student_ai_journey_v1",
+        "student_ai_onboard_v1",
+        "student_ai_flashcards_v1",
+        "student_ai_topic_mastery_v1",
+        "student_ai_focus_sessions_v1",
+      ];
+      keysToClear.forEach((k) => localStorage.removeItem(k));
     } catch {
       /* ignore */
     }
+    authSession = null;
     if (status) {
       status.textContent = t("delete_account_done") || "Your account and data were deleted.";
       status.classList.add("ok");
@@ -5311,6 +5344,7 @@ function wireAccountPrivacyControls() {
 }
 
 function showApp(session) {
+  authSession = session || null;
   const display = getSessionDisplayName(session);
   if (userName) userName.textContent = display;
   syncAccountAvatars(display);
@@ -5450,6 +5484,7 @@ async function initAuth() {
   }
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
+    authSession = session || null;
     if (session) showApp(session);
     else showLoginGateway();
   });
@@ -6445,6 +6480,7 @@ function localizeSupportForm() {
       question: t("support_cat_question") || "Question",
       bug: t("support_cat_bug") || "Bug report",
       account: t("support_cat_account") || "Account help",
+      privacy: t("support_cat_privacy") || "Privacy / data request",
       idea: t("support_cat_idea") || "Idea / feedback",
       other: t("support_cat_other") || "Other",
     };
@@ -6454,15 +6490,42 @@ function localizeSupportForm() {
   }
 }
 
-function openSupportModal() {
+function isSignedInForSupport() {
+  return Boolean(authSession?.access_token);
+}
+
+function syncSupportGuestFields(forceGuest = false) {
+  const guestWrap = document.getElementById("supportGuestFields");
+  const emailInput = document.getElementById("supportContactEmail");
+  const signedIn = !forceGuest && isSignedInForSupport();
+  if (guestWrap) {
+    guestWrap.classList.toggle("hidden", signedIn);
+    guestWrap.hidden = signedIn;
+  }
+  if (emailInput) {
+    emailInput.required = !signedIn;
+    if (signedIn) emailInput.value = "";
+  }
+}
+
+function openSupportModal(opts = {}) {
   const modal = document.getElementById("supportModal");
   if (!modal) return;
   closeCoachNavMenus?.();
   localizeSupportForm();
   setSupportFormStatus("");
+  syncSupportGuestFields(Boolean(opts.forceGuest));
+  const category = document.getElementById("supportCategory");
+  if (opts.category && category) {
+    const exists = Array.from(category.options).some((o) => o.value === opts.category);
+    if (exists) category.value = opts.category;
+  }
   modal.hidden = false;
   modal.classList.remove("hidden");
-  document.getElementById("supportMessage")?.focus();
+  const focusEl = !isSignedInForSupport() || opts.forceGuest
+    ? document.getElementById("supportContactEmail")
+    : document.getElementById("supportMessage");
+  focusEl?.focus();
 }
 
 async function submitSupportForm(e) {
@@ -6471,8 +6534,14 @@ async function submitSupportForm(e) {
   const submit = document.getElementById("supportSubmitBtn");
   const category = String(document.getElementById("supportCategory")?.value || "other");
   const message = String(document.getElementById("supportMessage")?.value || "").trim();
+  const contactEmail = String(document.getElementById("supportContactEmail")?.value || "").trim();
+  const signedIn = isSignedInForSupport();
   if (message.length < 8) {
     setSupportFormStatus(t("support_need_message") || "Please write a short message first.", "error");
+    return;
+  }
+  if (!signedIn && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    setSupportFormStatus("Enter a valid contact email so we can reply.", "error");
     return;
   }
   if (submit) {
@@ -6482,29 +6551,48 @@ async function submitSupportForm(e) {
   }
   setSupportFormStatus("");
   try {
-    const res = await fetchAuthed("/api/support", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        category,
-        message,
-        createdAt: new Date().toISOString(),
-      }),
-    });
+    const payload = {
+      category,
+      message,
+      createdAt: new Date().toISOString(),
+    };
+    let res;
+    if (signedIn) {
+      res = await fetchAuthed("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      payload.contactEmail = contactEmail;
+      res = await fetch("/api/public-support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
     let data = null;
     try {
       data = await res.json();
     } catch {
       data = null;
     }
-    if (res.status === 401) {
-      setSupportFormStatus(t("support_need_signin") || "Sign in to send a message.", "error");
+    if (res.status === 401 && signedIn) {
+      // Session expired — fall back to guest path if email present.
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+        syncSupportGuestFields(true);
+        setSupportFormStatus("Session expired — enter email and send again, or sign in.", "error");
+        return;
+      }
+      syncSupportGuestFields(true);
+      setSupportFormStatus(t("support_need_signin") || "Sign in or enter a contact email.", "error");
       return;
     }
     if (!res.ok) {
       throw new Error(data?.error || "Could not send.");
     }
     if (form) form.reset();
+    syncSupportGuestFields();
     const ticketId = data?.ticketId ? String(data.ticketId) : "";
     const sentMsg = ticketId
       ? String(t("support_ticket_sent") || "Thanks — ticket {id}. We read every message.").replace("{id}", ticketId)
@@ -6537,8 +6625,17 @@ function maybeOpenSupportFromQuery() {
     const params = new URLSearchParams(window.location.search || "");
     const flag = String(params.get("support") || "").trim().toLowerCase();
     if (!["1", "true", "yes", "open"].includes(flag)) return;
-    openSupportModal();
+    const guest = String(params.get("guest") || "").trim().toLowerCase();
+    const forceGuest = ["1", "true", "yes"].includes(guest);
+    const category = String(params.get("topic") || params.get("category") || "").trim().toLowerCase();
+    openSupportModal({
+      forceGuest,
+      category: category || (forceGuest ? "account" : ""),
+    });
     params.delete("support");
+    params.delete("guest");
+    params.delete("topic");
+    params.delete("category");
     const next = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash || ""}`;
     window.history.replaceState({}, "", next);
   } catch {
