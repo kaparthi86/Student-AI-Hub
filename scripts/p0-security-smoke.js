@@ -77,6 +77,11 @@ assert(/Render/i.test(privacy), "privacy.html must name Render hosting");
 assert(/Hugging Face/i.test(privacy), "privacy.html must name Hugging Face");
 assert(/Retention schedule/i.test(privacy), "privacy.html must include retention schedule");
 assert(!/remove \(or request deletion of\)/i.test(privacy), "privacy.html must not hedge deletion language");
+assert(!/or similar providers/i.test(privacy), "privacy.html must not use 'or similar providers'");
+assert(!/such as Render/i.test(privacy), "privacy.html must name Render directly, not 'such as Render'");
+assert(!/rolling operational window/i.test(privacy), "privacy.html must not use vague rolling operational window");
+assert(/router\.huggingface\.co/i.test(privacy), "privacy.html must name the HF router endpoint");
+assert(/180 days/i.test(privacy), "privacy.html must state guest support retention days");
 
 // 7) Profile copy no longer claims device-only storage
 const indexHtml = read("public/index.html");

@@ -12,13 +12,13 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./legal.css?v=skm-operator-1" />
+    <link rel="stylesheet" href="./legal.css?v=privacy-14b" />
   </head>
   <body>
     <main class="legal-page">
       <p class="legal-back"><a href="./">← Back to My Student Coach</a></p>
       <h1>Privacy</h1>
-      <p class="legal-updated">Last updated: November 14, 2026 · Policy version 2026-11-14</p>
+      <p class="legal-updated">Last updated: November 14, 2026 · Policy version 2026-11-14b</p>
       <h2>Legal operator / controller</h2>
       <p>
         My Student Coach is operated by <strong>SKM IT SOLUTIONS INC</strong> (“SKM,” “we,” “us,” or “our”).
@@ -127,13 +127,14 @@
       <h2>How AI providers handle prompts and documents</h2>
       <p>
         To generate answers, My Student Coach sends your prompts, relevant conversation context, and (for Notebook)
-        extracted text from uploaded documents to model inference providers we configure — currently via
-        <strong>Hugging Face Inference Providers</strong> (or similar providers set in server configuration). Those
-        providers process the content to return a model response. Uploaded files are parsed on our server; extracted
-        text may be included in the model request. We do not use your chats to sell ads. Model providers may process
-        requests under their own terms and retention practices for API inference; treat prompts and uploads as content
-        you are comfortable sending to a cloud AI service. Always avoid passwords, financial account numbers, health
-        records, or material you are not allowed to share.
+        extracted text from uploaded documents to <strong>Hugging Face Inference Providers</strong> through the
+        Hugging Face router endpoint configured on our Render-hosted API
+        (<code>https://router.huggingface.co/v1/chat/completions</code>). Hugging Face processes that content to return
+        a model response under Hugging Face’s Inference Providers terms. Uploaded files are parsed on our Render server;
+        extracted text may be included in the Hugging Face request. We do not use your chats to sell ads, and we do not
+        configure Hugging Face Inference Providers to train foundation models on your My Student Coach prompts. Treat
+        prompts and uploads as content you are comfortable sending to a cloud AI service. Always avoid passwords,
+        financial account numbers, health records, or material you are not allowed to share.
       </p>
 
       <h2>How we use information</h2>
@@ -145,46 +146,52 @@
       </p>
 
       <h2>Processors (production)</h2>
-      <p>My Student Coach currently uses these production services:</p>
+      <p>My Student Coach production services are:</p>
       <ul>
         <li><strong>Authentication &amp; database:</strong> Supabase Auth + Supabase PostgreSQL</li>
-        <li><strong>Application hosting:</strong> Render</li>
-        <li><strong>AI inference:</strong> Hugging Face Inference Providers (prompts and extracted document text for Notebook)</li>
-        <li><strong>Support email delivery (when configured):</strong> Resend and/or SMTP to an operator inbox</li>
-        <li><strong>Payments:</strong> not enabled in the current public launch unless a checkout screen says otherwise</li>
-        <li><strong>Analytics:</strong> first-party events in our Supabase database (no separate third-party analytics SDK)</li>
+        <li><strong>Application hosting:</strong> Render (web service for my-student-coach.com)</li>
+        <li>
+          <strong>AI inference:</strong> Hugging Face Inference Providers via
+          <code>router.huggingface.co</code> (prompts, conversation context, and Notebook extracted text)
+        </li>
+        <li>
+          <strong>Support email delivery:</strong> Resend when <code>RESEND_API_KEY</code> is configured; otherwise SMTP
+          when SMTP host credentials are configured (operator inbox only; address not shown in the product UI)
+        </li>
+        <li><strong>Payments:</strong> not enabled in the current public launch</li>
+        <li><strong>Analytics:</strong> first-party events stored in our Supabase PostgreSQL database only (no third-party analytics SDK)</li>
       </ul>
 
       <h2>Retention schedule</h2>
       <ul>
         <li>
-          <strong>Account profile &amp; preferences:</strong> while the account is active; deleted when Delete account
-          &amp; data completes successfully.
+          <strong>Account profile &amp; preferences:</strong> retained while the account is active; deleted when Delete
+          account &amp; data completes successfully.
         </li>
         <li>
-          <strong>Chat / workspace history (Ask, Code, Notebook state):</strong> while the account is active for
-          cross-device continuity; deleted with the account. Notebook uploads are processed in memory on the server and
-          extracted text may be stored in your workspace payload — not in a separate public file CDN.
+          <strong>Chat / workspace history (Ask, Code, Notebook state):</strong> retained while the account is active for
+          cross-device continuity; deleted with the account. Notebook uploads are parsed in memory on Render; extracted
+          text may remain in the account workspace payload in Supabase until account deletion.
         </li>
         <li>
-          <strong>Analytics events &amp; learning activity/progress:</strong> while the account is active; deleted with
-          the account. Admin aggregate dashboards typically query the last <strong>30 days</strong> of activity.
+          <strong>Analytics events &amp; learning activity/progress:</strong> retained while the account is active;
+          deleted with the account. Admin aggregate dashboards query the trailing <strong>30 days</strong> of activity.
         </li>
         <li>
-          <strong>Support / feedback rows:</strong> while needed to resolve tickets; deleted with the account when tied
-          to your user ID. Guest tickets (contact email only) are retained up to <strong>180 days</strong> for follow-up
-          unless you request earlier deletion.
+          <strong>Support / feedback rows:</strong> retained while the account is active and deleted with the account when
+          tied to your user ID. Guest tickets (contact email only) are retained for <strong>180 days</strong>, then
+          removed, unless you request earlier deletion.
         </li>
         <li>
-          <strong>Security / rate-limit logs:</strong> typically rotated within <strong>14–30 days</strong>.
+          <strong>Security / rate-limit logs:</strong> retained for up to <strong>30 days</strong>, then rotated.
         </li>
         <li>
-          <strong>Backups:</strong> platform backups (Supabase / Render) follow each provider’s backup cycle and expire
-          on that schedule after account deletion.
+          <strong>Backups:</strong> Supabase and Render platform backups follow each provider’s backup retention window
+          (commonly up to <strong>7–30 days</strong> depending on plan) and expire on that cycle after account deletion.
         </li>
         <li>
-          <strong>Deletion audit:</strong> a minimal hashed record that deletion ran (no email, name, or message text)
-          may be kept up to <strong>2 years</strong> for security and compliance evidence.
+          <strong>Deletion audit:</strong> a minimal hashed record that deletion ran (no email, name, or message text) is
+          retained for up to <strong>2 years</strong> for security and compliance evidence.
         </li>
       </ul>
 
