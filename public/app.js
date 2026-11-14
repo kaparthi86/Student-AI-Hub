@@ -3192,7 +3192,11 @@ function renderAssistantHtml(text) {
 }
 
 function setMainTab(next) {
+  const rawNext = String(next || "");
   let requested = COACH_TABS.has(next) ? next : "home";
+  // Knowledge Gaps merged into Progress (Improve group).
+  const openGapsSection = requested === "gaps" || rawNext === "gaps";
+  if (requested === "gaps") requested = "progress";
   // Admin analytics is product-owner only — never expose the panel to students.
   if (
     requested === "admin-analytics" &&
@@ -3216,8 +3220,9 @@ function setMainTab(next) {
     "exam",
     "diagnostic",
     "planner",
+    "focus",
   ]);
-  const profileTabs = new Set(["profile", "gaps", "focus", "admin-analytics"]);
+  const profileTabs = new Set(["profile", "admin-analytics"]);
   document.querySelectorAll(".coach-nav .tab[data-tab], .tabs .tab[data-tab]").forEach((tab) => {
     const on = tab.dataset.tab === mainTab;
     tab.classList.toggle("active", on);
@@ -3272,9 +3277,11 @@ function setMainTab(next) {
   else if (mainTab === "chat") bottomKey = "chat";
   else if (mainTab === "progress") bottomKey = "progress";
   else if (mainTab === "learning") bottomKey = "learning";
-  else if (mainTab === "profile" || mainTab === "gaps" || mainTab === "focus") bottomKey = "progress";
+  else if (mainTab === "profile") bottomKey = "progress";
   else if (
-    ["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "diagnostic"].includes(mainTab)
+    ["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "diagnostic", "focus"].includes(
+      mainTab
+    )
   ) {
     bottomKey = "learning";
   } else bottomKey = "home";
@@ -3292,6 +3299,17 @@ function setMainTab(next) {
   }
   if (COACH_JOURNEY_TABS.has(mainTab) && window.StudentJourney?.onTab) {
     window.StudentJourney.onTab(mainTab);
+  }
+  // Legacy gaps panel is empty — always keep it hidden (scan lives on Progress).
+  const legacyGaps = document.getElementById("panelGaps");
+  if (legacyGaps) {
+    legacyGaps.classList.add("hidden");
+    legacyGaps.hidden = true;
+  }
+  if (openGapsSection && mainTab === "progress") {
+    requestAnimationFrame(() => {
+      document.getElementById("progressGapsSection")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    });
   }
   // Planner must always land on the real workspace (goal / tasks / rebuild).
   if (mainTab === "planner") {
@@ -4227,9 +4245,16 @@ function syncAccountAvatars(name) {
 }
 
 function setLearnStudyMode(next) {
-  learnStudyMode = normalizeStudyMode(next);
+  const raw = String(next || "explain").trim().toLowerCase();
+  // Math & Science is a Coach mode entry that opens the dedicated solver workspace.
+  if (raw === "math") {
+    setMainTab("math");
+    return;
+  }
+  learnStudyMode = normalizeStudyMode(raw);
   document.querySelectorAll("#studyModeBar .study-mode-btn").forEach((btn) => {
-    const on = btn.getAttribute("data-study-mode") === learnStudyMode;
+    const mode = btn.getAttribute("data-study-mode");
+    const on = mode === learnStudyMode;
     btn.classList.toggle("is-active", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
