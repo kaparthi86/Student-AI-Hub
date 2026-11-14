@@ -54,6 +54,9 @@
       studyMinutes: { total: 0, byDay: {} },
       quizStats: { attempts: 0, correct: 0, byTopic: {} },
       completedPlanIds: {},
+      planGoal: "",
+      planTargetDate: "",
+      focusSessions: [],
     };
   }
 
@@ -74,6 +77,9 @@
         quizStats: { ...base.quizStats, ...(parsed.quizStats || {}) },
         completedPlanIds: parsed.completedPlanIds || {},
         revisionQueue: Array.isArray(parsed.revisionQueue) ? parsed.revisionQueue : [],
+        focusSessions: Array.isArray(parsed.focusSessions) ? parsed.focusSessions.slice(-100) : [],
+        planGoal: String(parsed.planGoal || ""),
+        planTargetDate: String(parsed.planTargetDate || ""),
       };
     } catch {
       return defaultJourney();
@@ -572,29 +578,41 @@
       : rows.filter((r) => r.score != null && r.score < 60).map((r) => r.topic);
     const revision = (journey.revisionQueue || []).slice(0, 6);
     const minutesToday = journey.studyMinutes.byDay[todayKey()] || 0;
+    const attempts = Number(journey.quizStats?.attempts || 0);
+    const assessed = rows.filter((r) => r.score != null).length;
+    const insufficient = attempts < 3 && assessed === 0;
 
     const body = $("progressPanelBody");
     if (!body) return;
     body.innerHTML = `
+      ${
+        insufficient
+          ? `<p class="muted journey-insufficient" role="status">Not enough practice data yet for verified mastery. Complete a diagnostic or a few quiz checks — we will not invent scores.</p>`
+          : ""
+      }
       <div class="journey-stat-row journey-stat-row--wide">
-        <div class="journey-stat"><span class="journey-stat-value">${mastery}%</span><span class="journey-stat-label">Overall mastery</span></div>
+        <div class="journey-stat"><span class="journey-stat-value">${insufficient ? "—" : `${mastery}%`}</span><span class="journey-stat-label">Overall mastery${insufficient ? " (need more data)" : ""}</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${journey.weeklyGoals.completed}/${journey.weeklyGoals.target}</span><span class="journey-stat-label">Weekly goals</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${minutesToday}</span><span class="journey-stat-label">Minutes today</span></div>
-        <div class="journey-stat"><span class="journey-stat-value">${journey.quizStats.attempts}</span><span class="journey-stat-label">Practice checks</span></div>
+        <div class="journey-stat"><span class="journey-stat-value">${attempts}</span><span class="journey-stat-label">Practice checks</span></div>
       </div>
       <section class="journey-block">
         <h3>Subject mastery</h3>
         <ul class="journey-mastery-list">
-          ${rows
-            .map((r) => {
-              const pct = r.score == null ? 0 : r.score;
-              const label = r.score == null ? "Not assessed" : `${pct}%`;
-              return `<li>
+          ${
+            rows.length
+              ? rows
+                  .map((r) => {
+                    const pct = r.score == null ? 0 : r.score;
+                    const label = r.score == null ? "Insufficient data" : `${pct}% (from practice)`;
+                    return `<li>
                 <div class="journey-mastery-meta"><strong>${escapeHtml(r.topic)}</strong><span>${label}</span></div>
-                <div class="journey-bar"><span style="width:${pct}%"></span></div>
+                <div class="journey-bar"><span style="width:${r.score == null ? 0 : pct}%"></span></div>
               </li>`;
-            })
-            .join("")}
+                  })
+                  .join("")
+              : `<li><p class="muted">Add subjects in Profile, then practice so mastery can be calculated.</p></li>`
+          }
         </ul>
       </section>
       <section class="journey-block">
@@ -643,7 +661,17 @@
     }
     const subjects = subjectList();
     body.innerHTML = `
-      <p class="muted">Goals become daily activities. Complete items on Home to advance weekly goals (${journey.weeklyGoals.completed}/${journey.weeklyGoals.target}).</p>
+      <p class="muted">Available now — goals, daily tasks, and weekly focus sync to your signed-in account across devices.</p>
+      <form id="plannerGoalForm" class="journey-form">
+        <label>Learning goal
+          <input id="plannerGoalInput" type="text" maxlength="120" value="${escapeAttr(journey.planGoal || journey.learningGoal || "")}" placeholder="e.g. Finish Algebra chapter 4" />
+        </label>
+        <label>Target date
+          <input id="plannerTargetDateInput" type="date" value="${escapeAttr(journey.planTargetDate || "")}" />
+        </label>
+        <button type="submit" class="primary-btn">Save goal &amp; rebuild plan</button>
+      </form>
+      <p class="muted">Weekly goals: ${journey.weeklyGoals.completed}/${journey.weeklyGoals.target} completed this week.</p>
       <div class="journey-week-grid">
         ${weekDays
           .map(
@@ -657,29 +685,40 @@
       <section class="journey-block">
         <h3>This week's focus</h3>
         <ul class="journey-plan-list">
-          ${subjects
-            .slice(0, 5)
-            .map((s, i) => {
-              const score = topicMasteryScore(s, loadMasteryMap());
-              const meta = actionForTopic(s, score);
-              return `<li class="journey-plan-item">
+          ${
+            subjects.length
+              ? subjects
+                  .slice(0, 5)
+                  .map((s, i) => {
+                    const score = topicMasteryScore(s, loadMasteryMap());
+                    const meta = actionForTopic(s, score);
+                    return `<li class="journey-plan-item">
                 <div class="journey-plan-main"><strong>${escapeHtml(s)}</strong>
                 <span class="muted">${meta.minutes} min · ${escapeHtml(meta.action)}</span></div>
                 <button type="button" class="primary-btn" data-journey-plan-go="${i}" data-tab="${meta.tab}" data-topic="${escapeAttr(s)}" data-mode="${meta.mode || ""}">Open</button>
               </li>`;
-            })
-            .join("")}
+                  })
+                  .join("")
+              : `<li class="muted">Add subjects in Profile to personalize weekly focus.</li>`
+          }
         </ul>
       </section>
       <section class="journey-block">
-        <h3>Today</h3>
+        <h3>Today's tasks</h3>
         <ol class="journey-plan-list">
           ${(plan.items || [])
             .map(
               (item, idx) => `<li class="journey-plan-item${item.done ? " is-done" : ""}">
               <div class="journey-plan-main"><strong>${escapeHtml(item.topic)}</strong>
-              <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}</span></div>
-              <button type="button" class="primary-btn" data-journey-start="${idx}">Start</button>
+              <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}${item.done ? " · Done" : ""}</span></div>
+              <div class="journey-plan-actions">
+                <button type="button" class="primary-btn" data-journey-start="${idx}">Start</button>
+                ${
+                  item.done
+                    ? ""
+                    : `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>`
+                }
+              </div>
             </li>`,
             )
             .join("")}
@@ -687,6 +726,44 @@
         <button type="button" class="ghost-btn" data-journey-action="refresh-plan">Rebuild today's plan</button>
       </section>
     `;
+    $("plannerGoalForm")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      journey.planGoal = String($("plannerGoalInput")?.value || "").trim().slice(0, 120);
+      journey.planTargetDate = String($("plannerTargetDateInput")?.value || "").trim().slice(0, 16);
+      if (journey.planGoal) journey.learningGoal = journey.planGoal;
+      saveJourney();
+      buildDailyPlan(true);
+      renderAllVisible();
+      if (window.StudentAnalytics?.track) {
+        window.StudentAnalytics.track("study_plan_created", "planner", {
+          has_goal: Boolean(journey.planGoal),
+          has_target: Boolean(journey.planTargetDate),
+        });
+      }
+      api().showToast?.("Goal saved — plan updated");
+    });
+  }
+
+  function recordFocusSessionCloud(session = {}) {
+    const row = {
+      day: session.day || todayKey(),
+      task: String(session.task || "Focus block").slice(0, 120),
+      at: session.at || Date.now(),
+      kind: session.kind || "focus",
+      durationSec: Math.max(0, Math.min(7200, Number(session.durationSec) || 25 * 60)),
+      pausedSec: Math.max(0, Math.min(7200, Number(session.pausedSec) || 0)),
+    };
+    const list = Array.isArray(journey.focusSessions) ? journey.focusSessions : [];
+    list.push(row);
+    journey.focusSessions = list.slice(-100);
+    const focusedMin = Math.max(1, Math.round((row.durationSec - row.pausedSec) / 60));
+    recordLearningEvent({ minutes: focusedMin, topic: "Focus Mode", activity: "focus" });
+    return row;
+  }
+
+  function focusSessionsToday() {
+    const day = todayKey();
+    return (journey.focusSessions || []).filter((r) => r.day === day).length;
   }
 
   function renderExamPanel() {
@@ -1352,6 +1429,8 @@
     onTab: onJourneyTab,
     getCoachMemory: coachMemoryPayload,
     recordLearningEvent,
+    recordFocusSession: recordFocusSessionCloud,
+    focusSessionsToday,
     getSnapshot: getJourneySnapshot,
     applySnapshot: applyJourneySnapshot,
     applyServerInsights,

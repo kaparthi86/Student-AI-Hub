@@ -217,6 +217,10 @@
   }
 
   function focusTodayCount() {
+    if (typeof window.StudentJourney?.focusSessionsToday === "function") {
+      const n = window.StudentJourney.focusSessionsToday();
+      if (Number.isFinite(n)) return n;
+    }
     try {
       const rows = JSON.parse(localStorage.getItem(FOCUS_KEY) || "[]");
       const day = new Date().toISOString().slice(0, 10);
@@ -228,17 +232,47 @@
 
   function recordFocusSession() {
     const task = String($("focusTaskInput")?.value || "").trim() || "Focus block";
+    const durationSec = focusSeconds;
+    const pausedSec = Math.max(0, focusSeconds - Math.max(0, focusRemaining));
+    const entry = {
+      day: new Date().toISOString().slice(0, 10),
+      task,
+      at: Date.now(),
+      kind: focusMode,
+      durationSec,
+      pausedSec: 0,
+    };
+    // Prefer cloud-synced journey (workspace) so Focus counts follow the signed-in account.
+    if (typeof window.StudentJourney?.recordFocusSession === "function") {
+      window.StudentJourney.recordFocusSession(entry);
+    }
     let rows = [];
     try {
       rows = JSON.parse(localStorage.getItem(FOCUS_KEY) || "[]");
     } catch {
       rows = [];
     }
-    rows.push({ day: new Date().toISOString().slice(0, 10), task, at: Date.now(), kind: focusMode });
+    rows.push(entry);
     try {
       localStorage.setItem(FOCUS_KEY, JSON.stringify(rows.slice(-100)));
     } catch {
       /* ignore */
+    }
+    if (window.StudentAnalytics?.recordLearning) {
+      void window.StudentAnalytics.recordLearning(
+        {
+          activity_type: "focus",
+          feature: "focus",
+          topic: "Focus Mode",
+          duration_seconds: durationSec,
+        },
+        null,
+      );
+    }
+    if (window.StudentAnalytics?.track) {
+      window.StudentAnalytics.track("focus_session_completed", "focus", {
+        duration_sec: durationSec,
+      });
     }
     updateFocusStatus();
   }

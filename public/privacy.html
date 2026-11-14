@@ -18,7 +18,7 @@
     <main class="legal-page">
       <p class="legal-back"><a href="./">← Back to My Student Coach</a></p>
       <h1>Privacy</h1>
-      <p class="legal-updated">Last updated: November 14, 2026</p>
+      <p class="legal-updated">Last updated: November 14, 2026 · Policy version 2026-11-14</p>
       <h2>Legal operator / controller</h2>
       <p>
         My Student Coach is operated by <strong>SKM IT SOLUTIONS INC</strong> (“SKM,” “we,” “us,” or “our”).
@@ -144,53 +144,63 @@
         AI models can make mistakes — check important facts.
       </p>
 
-      <h2>Processors</h2>
-      <p>
-        Sign-in and database hosting are handled by <strong>Supabase</strong> (PostgreSQL for profiles, workspace
-        history, analytics events, learning records, consent, and support/feedback rows). Model inference is provided
-        via <strong>Hugging Face</strong> Inference Providers (or similar). Hosting may be on platforms such as
-        <strong>Render</strong>. Optional support email delivery may use <strong>Resend</strong> or SMTP. Payment
-        processors (if enabled) handle card or wallet transactions for SKM IT SOLUTIONS INC.
-      </p>
+      <h2>Processors (production)</h2>
+      <p>My Student Coach currently uses these production services:</p>
+      <ul>
+        <li><strong>Authentication &amp; database:</strong> Supabase Auth + Supabase PostgreSQL</li>
+        <li><strong>Application hosting:</strong> Render</li>
+        <li><strong>AI inference:</strong> Hugging Face Inference Providers (prompts and extracted document text for Notebook)</li>
+        <li><strong>Support email delivery (when configured):</strong> Resend and/or SMTP to an operator inbox</li>
+        <li><strong>Payments:</strong> not enabled in the current public launch unless a checkout screen says otherwise</li>
+        <li><strong>Analytics:</strong> first-party events in our Supabase database (no separate third-party analytics SDK)</li>
+      </ul>
 
-      <h2>Retention</h2>
+      <h2>Retention schedule</h2>
       <ul>
         <li>
-          <strong>Account, profile, and workspace history:</strong> kept while your account is active so learning can
-          continue across devices; removed when you complete Delete account &amp; data (subject to short backup/log
-          windows).
+          <strong>Account profile &amp; preferences:</strong> while the account is active; deleted when Delete account
+          &amp; data completes successfully.
         </li>
         <li>
-          <strong>Analytics events and learning activity/progress:</strong> retained for product improvement while the
-          account is active; deleted with your account. Operational reviews typically focus on recent rolling windows
-          (for example the last 30–90 days of aggregate metrics); older raw events are not needed indefinitely for
-          product operation.
+          <strong>Chat / workspace history (Ask, Code, Notebook state):</strong> while the account is active for
+          cross-device continuity; deleted with the account. Notebook uploads are processed in memory on the server and
+          extracted text may be stored in your workspace payload — not in a separate public file CDN.
         </li>
         <li>
-          <strong>Support / feedback rows:</strong> kept to resolve tickets and improve quality; deleted with your
-          account when linked to your user ID. Guest support messages keyed only by contact email may be retained for
-          support follow-up and then removed on a similar operational schedule.
+          <strong>Analytics events &amp; learning activity/progress:</strong> while the account is active; deleted with
+          the account. Admin aggregate dashboards typically query the last <strong>30 days</strong> of activity.
         </li>
         <li>
-          <strong>Server logs / rate limits / backups:</strong> short-lived operational retention (typically days to a
-          few weeks) for security and reliability, then rotated. Legal, fraud, or payment obligations may require longer
-          retention of limited records.
+          <strong>Support / feedback rows:</strong> while needed to resolve tickets; deleted with the account when tied
+          to your user ID. Guest tickets (contact email only) are retained up to <strong>180 days</strong> for follow-up
+          unless you request earlier deletion.
+        </li>
+        <li>
+          <strong>Security / rate-limit logs:</strong> typically rotated within <strong>14–30 days</strong>.
+        </li>
+        <li>
+          <strong>Backups:</strong> platform backups (Supabase / Render) follow each provider’s backup cycle and expire
+          on that schedule after account deletion.
+        </li>
+        <li>
+          <strong>Deletion audit:</strong> a minimal hashed record that deletion ran (no email, name, or message text)
+          may be kept up to <strong>2 years</strong> for security and compliance evidence.
         </li>
       </ul>
 
       <h2>Delete account and data</h2>
       <p>
         Signed-in students can open <strong>More settings → Delete account &amp; data</strong>, type
-        <strong>DELETE</strong>, and confirm. The backend then attempts to delete rows for your user ID in:
+        <strong>DELETE</strong>, and confirm. The backend <strong>deletes</strong> rows for your user ID in:
         student profile, workspace history, learning activity, learning progress, analytics events, sessions, consent,
-        and feedback/support rows — then deletes your Supabase Auth user. Deletion verifies critical tables are empty
-        for your ID before removing the auth account.
+        and feedback/support rows — verifies critical tables are empty — then deletes your Supabase Auth user. The UI
+        reports success only after that backend confirmation. A minimal hashed deletion audit may be stored without
+        your personal content.
       </p>
       <p>
         Client-side preferences and cached sessions on the device are cleared after a successful delete. Browser
-        caches or offline copies on other devices may remain until those devices sign out. Third-party processors are
-        instructed or configured to delete or stop processing personal data they hold for your account where
-        applicable. If you cannot sign in, use the public contact form below.
+        caches on other devices may remain until those devices sign out. If you cannot sign in, use the public contact
+        form below for account-access or deletion help.
       </p>
 
       <h2>Children and age policy (13+)</h2>
