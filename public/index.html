@@ -30,9 +30,9 @@
     <link rel="stylesheet" href="./styles.css?v=planner-route-4" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
-    <link rel="stylesheet" href="./journey.css?v=home-next-1" />
+    <link rel="stylesheet" href="./journey.css?v=ia-groups-1" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=landing-exp-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=ia-groups-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -569,14 +569,17 @@
           <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Coach</button>
           <details class="msc-nav-menu" id="learnMenu">
             <summary class="tab msc-nav-summary">Learn</summary>
-            <div class="msc-nav-panel" role="menu">
+            <div class="msc-nav-panel msc-nav-panel--grouped" role="menu">
+              <p class="msc-nav-group-label" role="presentation">Understand</p>
               <button type="button" class="msc-nav-item" data-tab="notebook" role="menuitem" id="tabNotebook">Notebook</button>
               <button type="button" class="msc-nav-item" data-tab="code" role="menuitem" id="tabCode">Coding Coach</button>
-              <button type="button" class="msc-nav-item" data-tab="math" role="menuitem" id="tabMath">Math &amp; Science</button>
-              <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
               <button type="button" class="msc-nav-item" data-tab="voice" role="menuitem" id="tabVoice">Voice Tutor</button>
+              <p class="msc-nav-group-label" role="presentation">Practice</p>
+              <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
               <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep</button>
               <button type="button" class="msc-nav-item" data-tab="diagnostic" role="menuitem" id="tabDiagnostic">Diagnostic</button>
+              <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
+              <p class="msc-nav-group-label" role="presentation">Plan</p>
               <button type="button" class="msc-nav-item" data-tab="planner" role="menuitem" id="tabPlanner">Study Planner</button>
             </div>
           </details>
@@ -585,8 +588,6 @@
             <summary class="tab msc-nav-summary" id="profileMenuSummary">Profile</summary>
             <div class="msc-nav-panel" role="menu">
               <button type="button" class="msc-nav-item" data-tab="profile" role="menuitem">Learning profile</button>
-              <button type="button" class="msc-nav-item" data-tab="gaps" role="menuitem" id="tabGaps">Knowledge Gaps</button>
-              <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
               <button type="button" class="msc-nav-item hidden" data-tab="admin-analytics" role="menuitem" id="tabAdminAnalytics" hidden>Admin analytics</button>
               <button type="button" class="msc-nav-item open-settings-btn" role="menuitem">Settings</button>
               <button type="button" class="msc-nav-item" id="profileInstallBtn" role="menuitem">Install app</button>
@@ -675,49 +676,66 @@
           <div class="msc-hub-page">
             <header class="msc-hub-hero">
               <h2 class="msc-hub-title" id="learningHubTitle">My Learning</h2>
-              <p class="muted msc-hub-lead" id="learningHubLead">Notebooks, practice tools, and study utilities in one place.</p>
+              <p class="muted msc-hub-lead" id="learningHubLead">
+                Grouped by how you learn — Understand, Practice, then Plan.
+              </p>
             </header>
-            <div class="msc-hub-grid">
-              <button type="button" class="msc-hub-tile" data-coach-tab="notebook">
-                <strong>Notebook</strong>
-                <span>Summarize notes and ask grounded questions</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="code">
-                <strong>Coding Coach</strong>
-                <span>Debug and learn programming</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="math">
-                <strong>Math &amp; Science</strong>
-                <span>Step-by-step problem solving</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="flashcards">
-                <strong>Flashcards</strong>
-                <span>Review key ideas with spaced practice</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="voice">
-                <strong>Voice Tutor</strong>
-                <span>Continuous conversation with your coach</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
-                <strong>Knowledge Gaps</strong>
-                <span>Find weak topics from recent Ask work</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="focus">
-                <strong>Focus Mode</strong>
-                <span>Timed study sessions</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="planner">
-                <strong>Study Planner</strong>
-                <span>Daily and weekly learning plan</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="exam">
-                <strong>Exam Prep</strong>
-                <span>Mocks, readiness, and revision</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="diagnostic">
-                <strong>Diagnostic</strong>
-                <span>Find knowledge gaps quickly</span>
-              </button>
+            <div class="msc-hub-groups">
+              <section class="msc-hub-group" aria-labelledby="learnGroupUnderstand">
+                <h3 class="msc-hub-group-title" id="learnGroupUnderstand">Understand</h3>
+                <div class="msc-hub-grid">
+                  <button type="button" class="msc-hub-tile" data-coach-tab="notebook">
+                    <strong>Notebook</strong>
+                    <span>Summarize notes and ask grounded questions</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="code">
+                    <strong>Coding Coach</strong>
+                    <span>Debug and learn programming</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="voice">
+                    <strong>Voice Tutor</strong>
+                    <span>Talk through concepts with your coach</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="math">
+                    <strong>Math &amp; Science</strong>
+                    <span>Step-by-step problems (also under Coach)</span>
+                  </button>
+                </div>
+              </section>
+              <section class="msc-hub-group" aria-labelledby="learnGroupPractice">
+                <h3 class="msc-hub-group-title" id="learnGroupPractice">Practice</h3>
+                <div class="msc-hub-grid">
+                  <button type="button" class="msc-hub-tile" data-coach-tab="flashcards">
+                    <strong>Flashcards</strong>
+                    <span>Spaced review of key ideas</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="exam">
+                    <strong>Exam Prep</strong>
+                    <span>Mocks, readiness, and revision</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="diagnostic">
+                    <strong>Diagnostic</strong>
+                    <span>Quick check to personalize practice</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="focus">
+                    <strong>Focus Mode</strong>
+                    <span>Timed study sessions</span>
+                  </button>
+                </div>
+              </section>
+              <section class="msc-hub-group" aria-labelledby="learnGroupPlan">
+                <h3 class="msc-hub-group-title" id="learnGroupPlan">Plan</h3>
+                <div class="msc-hub-grid">
+                  <button type="button" class="msc-hub-tile" data-coach-tab="planner">
+                    <strong>Study Planner</strong>
+                    <span>Daily and weekly learning plan</span>
+                  </button>
+                  <button type="button" class="msc-hub-tile" data-coach-tab="progress">
+                    <strong>Progress</strong>
+                    <span>Mastery, gaps, and revision</span>
+                  </button>
+                </div>
+              </section>
             </div>
           </div>
         </section>
@@ -789,18 +807,6 @@
               <p class="muted msc-profile-note" id="profileHubNote">Saved to your account when you are signed in, so Ask answers, Home tips, and Voice Tutor language stay in sync across devices.</p>
             </div>
             <div class="msc-hub-grid msc-hub-grid--compact">
-              <button type="button" class="msc-hub-tile" data-coach-tab="progress">
-                <strong>My Progress</strong>
-                <span>Mastery, gaps, and study time</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="gaps">
-                <strong>Knowledge Gaps</strong>
-                <span>Weak topics scan</span>
-              </button>
-              <button type="button" class="msc-hub-tile" data-coach-tab="focus">
-                <strong>Focus Mode</strong>
-                <span>Pomodoro timer</span>
-              </button>
               <button type="button" class="msc-hub-tile open-support-btn" id="profileHubSupportBtn">
                 <strong>Help &amp; Support</strong>
                 <span>Send a message — we read every one</span>
@@ -812,11 +818,24 @@
         <section id="panelProgress" class="panel journey-panel hidden" data-journey-panel="progress" hidden>
           <div class="journey-page">
             <header class="msc-hub-hero">
-              <p class="coach-kicker">Progress</p>
+              <p class="coach-kicker">Improve</p>
               <h2 class="msc-hub-title">Your learning progress</h2>
               <p class="muted msc-hub-lead">Mastery, knowledge gaps, study time, and smart revision in one place.</p>
             </header>
             <div id="progressPanelBody"></div>
+            <section class="journey-block" id="progressGapsSection" aria-labelledby="progressGapsTitle">
+              <h3 id="progressGapsTitle">Scan knowledge gaps</h3>
+              <p class="muted">
+                Analyze recent Ask activity for weak topics and get a short revision plan. Results stay here in Progress.
+              </p>
+              <div class="coach-hero-actions">
+                <button type="button" class="primary-btn" id="gapsScanBtn">Find my weak areas</button>
+                <button type="button" class="ghost-btn" id="gapsPracticeBtn">Practice in Ask</button>
+                <button type="button" class="ghost-btn" data-coach-tab="diagnostic">Start diagnostic</button>
+              </div>
+              <p class="muted" id="gapsStatus"></p>
+              <div id="gapsOutput" class="gaps-output"></div>
+            </section>
           </div>
         </section>
 
@@ -970,21 +989,8 @@
           </div>
         </section>
 
-        <section id="panelGaps" class="panel coach-lab-panel hidden" data-coach-lab-panel="gaps" hidden>
-          <div class="coach-lab">
-            <header class="coach-lab-hero">
-              <p class="coach-kicker">Knowledge Gaps</p>
-              <h2 class="coach-welcome">Fix what keeps slipping</h2>
-              <p class="coach-sub muted">Scan recent Ask activity for weak topics and get a short revision plan.</p>
-            </header>
-            <div class="coach-hero-actions">
-              <button type="button" class="primary-btn" id="gapsScanBtn">Find my weak areas</button>
-              <button type="button" class="ghost-btn" id="gapsPracticeBtn">Practice in Ask</button>
-            </div>
-            <p class="muted" id="gapsStatus"></p>
-            <div id="gapsOutput" class="gaps-output"></div>
-          </div>
-        </section>
+        <!-- Knowledge Gaps lives under Progress (Improve). Legacy panel kept hidden for deep-link redirect. -->
+        <section id="panelGaps" class="panel coach-lab-panel hidden" data-coach-lab-panel="gaps" hidden aria-hidden="true"></section>
 
         <section id="panelChat" class="panel perplexity-panel hidden">
           <div class="coach-voice-elevate" id="coachVoiceElevate">
@@ -1010,6 +1016,7 @@
               <button type="button" class="study-mode-btn is-active" data-study-mode="explain" aria-pressed="true">Explain</button>
               <button type="button" class="study-mode-btn" data-study-mode="quiz" aria-pressed="false">Quiz me</button>
               <button type="button" class="study-mode-btn" data-study-mode="guide" aria-pressed="false">Don't give the answer</button>
+              <button type="button" class="study-mode-btn" data-study-mode="math" aria-pressed="false" id="coachMathModeBtn">Math &amp; Science</button>
             </div>
             <div class="live-web-row live-web-row--nested">
               <button
@@ -1721,9 +1728,9 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=home-next-1"></script>
+    <script defer src="./app.js?v=ia-groups-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
-    <script defer src="./journey.js?v=home-next-1"></script>
+    <script defer src="./journey.js?v=ia-groups-1"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>

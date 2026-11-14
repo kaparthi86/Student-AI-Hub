@@ -613,6 +613,41 @@ body.brand-msc .primary-btn {
   z-index: 1;
 }
 
+.msc-nav-panel--grouped {
+  min-width: 220px;
+  max-height: min(70vh, 520px);
+  overflow: auto;
+}
+
+.msc-nav-group-label {
+  margin: 10px 10px 4px;
+  padding: 0 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal, #287a89);
+}
+
+.msc-nav-group-label:first-child {
+  margin-top: 6px;
+}
+
+.msc-hub-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.msc-hub-group-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal, #287a89);
+}
+
 .msc-nav-menu[open] {
   z-index: 120;
 }

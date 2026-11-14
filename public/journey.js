@@ -732,10 +732,10 @@
       </section>
       <section class="journey-block">
         <h3>Knowledge gaps</h3>
-        <p class="muted">${weak.length ? escapeHtml(weak.join(", ")) : "No gaps flagged yet. Take a diagnostic or practice a quiz."}</p>
+        <p class="muted">${weak.length ? escapeHtml(weak.join(", ")) : "No gaps flagged yet. Take a diagnostic, practice a quiz, or scan Ask activity below."}</p>
         <div class="coach-hero-actions">
           <button type="button" class="primary-btn" data-coach-tab="diagnostic">Start diagnostic</button>
-          <button type="button" class="ghost-btn" data-coach-tab="gaps">Scan recent Ask work</button>
+          <button type="button" class="ghost-btn" data-scroll-to="progressGapsSection">Scan Ask activity</button>
         </div>
       </section>
       <section class="journey-block">
@@ -1490,6 +1490,14 @@
         buildDailyPlan(true);
         renderAllVisible();
         api().showToast?.("Plan refreshed");
+        return;
+      }
+      const scrollTo = e.target.closest?.("[data-scroll-to]");
+      if (scrollTo) {
+        e.preventDefault();
+        const id = scrollTo.getAttribute("data-scroll-to");
+        const el = id ? document.getElementById(id) : null;
+        el?.scrollIntoView?.({ behavior: "smooth", block: "start" });
         return;
       }
       const revise = e.target.closest?.("[data-journey-revise]");
