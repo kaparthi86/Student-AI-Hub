@@ -27,10 +27,10 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=locale-voice-1" />
+    <link rel="stylesheet" href="./styles.css?v=sprint1-trust-3" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
-    <link rel="stylesheet" href="./coach-labs.css?v=voice-coach-2" />
-    <link rel="stylesheet" href="./journey.css?v=journey-p0-1" />
+    <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
+    <link rel="stylesheet" href="./journey.css?v=sprint1-trust-3" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=study-lang-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
@@ -597,7 +597,7 @@
               <label for="prefGradeLevel" id="prefGradeLevelLabel">Grade / level</label>
               <select id="prefGradeLevel">
                 <option value="">Prefer not to say</option>
-                <option value="middle">Middle school</option>
+                <option value="middle">Middle school (13+) / self-learning</option>
                 <option value="high">High school</option>
                 <option value="college">College / university</option>
                 <option value="exam">Exam prep</option>
@@ -836,7 +836,7 @@
             <header class="coach-lab-hero">
               <p class="coach-kicker">Focus Mode</p>
               <h2 class="coach-welcome">One task. One block.</h2>
-              <p class="coach-sub muted">25-minute focus / 5-minute break. Track completed sessions on this device.</p>
+              <p class="coach-sub muted">25-minute focus / 5-minute break. Completed sessions sync to your signed-in account across devices.</p>
             </header>
             <div class="focus-timer" id="focusTimerDisplay">25:00</div>
             <input id="focusTaskInput" class="flash-topic-input" type="text" maxlength="120" placeholder="What are you focusing on?" />
@@ -1438,9 +1438,9 @@
           <button id="closeDeleteAccountBtn" class="ghost-btn tiny-btn" type="button">Close</button>
         </div>
         <p class="muted" id="deleteAccountModalLead">
-          This permanently deletes your student profile, conversation history, uploaded files in our systems, learning
-          activity, and analytics events tied to your account, then removes your sign-in. Some records may be retained
-          briefly where required by law or fraud prevention.
+          This permanently deletes your student profile, conversation/workspace history, learning activity, analytics
+          events, and linked support rows, then removes your sign-in. Success is shown only after the backend confirms
+          deletion. Short security logs, backups, and a hashed deletion audit may remain under documented retention.
         </p>
         <label for="deleteAccountConfirmInput" id="deleteAccountConfirmLabel">Type DELETE to confirm</label>
         <input id="deleteAccountConfirmInput" type="text" autocomplete="off" placeholder="DELETE" />
@@ -1549,7 +1549,7 @@
             <label><input type="radio" name="onboardLevel" value="high" checked /> High school</label>
             <label><input type="radio" name="onboardLevel" value="college" /> College</label>
             <label><input type="radio" name="onboardLevel" value="exam" /> Exam prep</label>
-            <label><input type="radio" name="onboardLevel" value="middle" /> Middle school / self-learning</label>
+            <label><input type="radio" name="onboardLevel" value="middle" /> Middle school (13+) / self-learning</label>
           </div>
           <label for="onboardSubjects">Subjects (comma-separated)
             <input id="onboardSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
@@ -1600,10 +1600,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=launch-ready-2"></script>
-    <script defer src="./coach-labs.js?v=voice-coach-2"></script>
-    <script defer src="./journey.js?v=launch-ready-2"></script>
-    <script defer src="./analytics.js?v=p0-launch-1"></script>
+    <script defer src="./app.js?v=sprint1-trust-3"></script>
+    <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
+    <script defer src="./journey.js?v=sprint1-trust-3"></script>
+    <script defer src="./analytics.js?v=sprint1-trust-3"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>
 </html>

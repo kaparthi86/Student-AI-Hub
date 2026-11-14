@@ -12,7 +12,9 @@
     "privacy-dns": "node privacy-agent-dns/server.js",
     "test:p0-smoke": "node scripts/p0-security-smoke.js",
     "test:account-delete": "node scripts/account-delete-unit.js",
-    "test": "npm run test:p0-smoke && npm run test:account-delete"
+    "test:consent": "node scripts/consent-opt-out-unit.js",
+    "test:isolation": "node scripts/isolation-ownership-smoke.js",
+    "test": "npm run test:p0-smoke && npm run test:account-delete && npm run test:consent && npm run test:isolation"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

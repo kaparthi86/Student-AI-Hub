@@ -2726,23 +2726,25 @@ app.put("/api/analytics/consent", requireSession, async (req, res) => {
     const admin = getSupabaseAdminClient();
     if (!admin) return res.status(503).json({ ok: false, error: "Supabase admin not configured" });
     const userId = req.user?.id || "";
-    const result = await analytics.upsertConsent(admin, userId, req.body || {});
-    if (result.ok) {
-      await analytics.insertEvents(
-        admin,
-        userId,
-        [
-          {
-            event_name: "consent_updated",
-            feature: "profile",
-            properties: {
-              analytics_enabled: req.body?.analytics_enabled !== false,
-              learning_analytics_enabled: req.body?.learning_analytics_enabled !== false,
-            },
+    const result = await analytics.upsertConsent(admin, userId, {
+      ...(req.body || {}),
+      policy_version: analytics.PRIVACY_POLICY_VERSION,
+      consent_version: analytics.PRIVACY_POLICY_VERSION,
+    });
+    // Only record consent_updated when product analytics remains enabled after the save.
+    if (result.ok && result.consent?.analytics_enabled !== false) {
+      await analytics.insertEvents(admin, userId, [
+        {
+          event_name: "consent_updated",
+          feature: "profile",
+          properties: {
+            analytics_enabled: result.consent.analytics_enabled !== false,
+            learning_analytics_enabled: result.consent.learning_analytics_enabled !== false,
+            personalization_enabled: result.consent.personalization_enabled !== false,
+            policy_version: analytics.PRIVACY_POLICY_VERSION,
           },
-        ],
-        { consent: { analytics_enabled: true } },
-      );
+        },
+      ]);
     }
     return res.json(result);
   } catch (error) {
@@ -2807,7 +2809,12 @@ app.post("/api/analytics/learning", requireSession, async (req, res) => {
     if (consent.learning_analytics_enabled === false) {
       return res.json({ ok: true, skipped: "consent_opt_out" });
     }
-    const activity = await analytics.recordLearningActivity(admin, userId, req.body?.activity || req.body || {});
+    const activity = await analytics.recordLearningActivity(
+      admin,
+      userId,
+      req.body?.activity || req.body || {},
+      consent,
+    );
     if (Array.isArray(req.body?.progress) && req.body.progress.length) {
       await analytics.upsertLearningProgress(admin, userId, req.body.progress);
     }

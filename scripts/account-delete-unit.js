@@ -10,6 +10,11 @@ function makeAdmin({ failTables = [], remainingAfter = {} } = {}) {
   const store = Object.fromEntries(OWNED_TABLES.map((t) => [t, [{ user_id: "u1" }]]));
   return {
     from(table) {
+      if (table === "account_deletion_audit") {
+        return {
+          insert: async () => ({ error: null }),
+        };
+      }
       return {
         delete() {
           return {

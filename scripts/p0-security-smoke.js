@@ -72,6 +72,11 @@ assert(/How AI providers handle/i.test(privacy), "privacy.html must explain AI p
 assert(/Delete account and data/i.test(privacy), "privacy.html must describe deletion workflow");
 assert(/13 years of age or older/i.test(privacy), "privacy.html must state age policy");
 assert(/public support form/i.test(privacy), "privacy.html must offer public contact without sign-in");
+assert(/Supabase Auth/i.test(privacy), "privacy.html must name Supabase Auth");
+assert(/Render/i.test(privacy), "privacy.html must name Render hosting");
+assert(/Hugging Face/i.test(privacy), "privacy.html must name Hugging Face");
+assert(/Retention schedule/i.test(privacy), "privacy.html must include retention schedule");
+assert(!/remove \(or request deletion of\)/i.test(privacy), "privacy.html must not hedge deletion language");
 
 // 7) Profile copy no longer claims device-only storage
 const indexHtml = read("public/index.html");
