@@ -1151,6 +1151,26 @@
         return;
       }
       if (next) {
+        if (step === 1) {
+          const ageAck = document.getElementById("onboardAgeAck");
+          const ageStatus = document.getElementById("onboardAgeStatus");
+          if (ageAck && !ageAck.checked) {
+            if (ageStatus) {
+              ageStatus.textContent = "Confirm you are 13 or older to continue.";
+              ageStatus.classList.add("error");
+            }
+            return;
+          }
+          if (ageStatus) {
+            ageStatus.textContent = "";
+            ageStatus.classList.remove("error");
+          }
+          try {
+            localStorage.setItem("student_ai_age_ack_v1", "1");
+          } catch {
+            /* ignore */
+          }
+        }
         // capture step fields
         captureOnboardStep(step);
         step = Math.min(3, step + 1);

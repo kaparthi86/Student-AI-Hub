@@ -18,7 +18,7 @@
     <main class="legal-page">
       <p class="legal-back"><a href="./">← Back to My Student Coach</a></p>
       <h1>Privacy</h1>
-      <p class="legal-updated">Last updated: November 12, 2026</p>
+      <p class="legal-updated">Last updated: November 13, 2026</p>
       <h2>Legal operator / controller</h2>
       <p>
         My Student Coach is operated by <strong>SKM IT SOLUTIONS INC</strong> (“SKM,” “we,” “us,” or “our”).
@@ -34,12 +34,23 @@
       <ul>
         <li>
           <strong>Account:</strong> when you sign in with Google through Supabase Auth, we receive basic profile details
-          needed for login (such as email and name) from that provider.
+          needed for login (such as email and name) from that provider. Your learning profile preferences (level,
+          subjects, language, region, board/exam focus) are stored in our database and linked to your account so they
+          sync across devices.
         </li>
         <li>
-          <strong>Usage:</strong> messages and files you send to My Student Coach (Ask, Code, Notebook) are processed to
-          generate responses. Optional feedback (helpful / not helpful) and Help &amp; Support form messages may be stored
-          to improve the product and assist you.
+          <strong>Usage:</strong> messages and files you send to My Student Coach (Ask, Code, Notebook, Voice Tutor) are
+          processed to generate responses. Conversation and notebook workspace data may be saved to your account so you
+          can continue across devices. Optional feedback (helpful / not helpful) and Help &amp; Support form messages
+          (including a ticket ID) may be stored to improve the product and assist you.
+        </li>
+        <li>
+          <strong>Behavioral / product analytics (optional):</strong> when analytics are enabled in Settings, we may
+          store product events such as feature opens (for example Ask, Notebook, Voice Tutor), session start/end,
+          onboarding completion, profile updates, quiz or practice outcomes, and high-level learning progress signals
+          (for example topic mastery scores). Analytics events are tied to your account ID. We do
+          <strong>not</strong> put full chat transcripts into the analytics event stream. You can turn product usage
+          analytics, learning analytics, and personalization off in Settings → Privacy &amp; analytics.
         </li>
         <li>
           <strong>Technical:</strong> standard server logs and rate-limit data (for example IP-based request counts) to
@@ -54,30 +65,60 @@
       <h2>How we use information</h2>
       <p>
         SKM IT SOLUTIONS INC uses account and usage data to provide My Student Coach, maintain security, debug issues,
-        improve answer quality, and (when applicable) process payments and customer support. AI models process your
-        prompts to generate replies and can make mistakes — check important facts.
+        improve answer quality, personalize learning when you allow it, operate support tickets, and (when applicable)
+        process payments. Analytics help us understand which features help students learn and where the product fails.
+        AI models process your prompts to generate replies and can make mistakes — check important facts.
       </p>
       <h2>Processors</h2>
       <p>
-        Sign-in is handled by Supabase. Model inference is provided via Hugging Face Inference Providers (or similar
-        providers we configure). Hosting may be on platforms such as Render. Payment processors (if enabled) handle
-        card or wallet transactions for SKM IT SOLUTIONS INC. Those services process data only to run My Student Coach
-        and related payment accounts.
+        Sign-in and database hosting are handled by Supabase (including PostgreSQL storage for profiles, workspace
+        history, analytics events, and support records). Model inference is provided via Hugging Face Inference
+        Providers (or similar providers we configure). Hosting may be on platforms such as Render. Optional support
+        email delivery may use Resend or SMTP. Payment processors (if enabled) handle card or wallet transactions for
+        SKM IT SOLUTIONS INC. Those services process data only to run My Student Coach and related accounts.
       </p>
       <h2>Retention</h2>
       <p>
-        We keep account and operational data only as long as needed to run and improve the service, meet customer
-        agreement or payment obligations, or as required by law. You can sign out at any time from the account menu.
+        We keep account, learning, and operational data only as long as needed to run and improve the service, meet
+        customer agreement or payment obligations, or as required by law. Analytics events are retained for product
+        improvement and typically reviewed on a rolling operational window; they are deleted with your account unless
+        a shorter legal or security hold applies. You can sign out at any time from the account menu.
+      </p>
+      <h2>Delete account and data</h2>
+      <p>
+        Signed-in students can open <strong>More settings → Delete account &amp; data</strong>, type
+        <strong>DELETE</strong>, and confirm. That workflow instructs our backend to remove (or request deletion of):
+      </p>
+      <ul>
+        <li>Student profile and preferences</li>
+        <li>Saved conversation / workspace history we store for your account</li>
+        <li>Learning activity and progress records</li>
+        <li>Analytics events and consent records associated with your account</li>
+        <li>Help &amp; Support / feedback rows linked to your user ID</li>
+        <li>Your authentication account with our identity provider</li>
+      </ul>
+      <p>
+        Deletion is enforced in backend systems (not only by hiding UI). Some backups, server logs, or payment records
+        may remain for a limited period where required for security, fraud prevention, or law. Third-party processors
+        are instructed or configured to delete or stop processing personal data they hold for your account where
+        applicable. For help with deletion, use
+        <a href="./?support=1">Help &amp; Support</a>.
       </p>
       <h2>Your choices</h2>
       <p>
         Do not submit sensitive personal information (passwords, financial account numbers, health records, or material
-        you are not allowed to share). For account-related help, sign in and use
-        <a href="./?support=1">Help &amp; Support</a> in the app.
+        you are not allowed to share). You may disable optional analytics and personalization in Settings. For
+        account-related help, sign in and use
+        <a href="./?support=1">Help &amp; Support</a> in the app. Applicable privacy rights (access, correction,
+        deletion, or objection) can be exercised through account deletion, Settings, or Support.
       </p>
-      <h2>Children</h2>
+      <h2>Children and age policy</h2>
       <p>
-        My Student Coach is aimed at students and adults who can create a Google account. It is not directed at children under 13.
+        My Student Coach is aimed at students and adults who can create a Google account and who are
+        <strong>13 years of age or older</strong>. It is not directed at children under 13. We ask users to confirm
+        this age requirement during sign-in / onboarding. Do not use the product if you are under 13. We do not
+        knowingly collect personal information from children under 13. If you believe a child under 13 has created an
+        account, contact us via Help &amp; Support so we can delete the account and associated data.
       </p>
       <h2>Contact</h2>
       <p>

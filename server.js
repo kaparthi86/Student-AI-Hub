@@ -13,6 +13,7 @@ const {
   notifySupportInbox,
 } = require("./lib/support-notify");
 const analytics = require("./lib/analytics");
+const { deleteAccountCompletely } = require("./lib/account-delete");
 
 const envPath = path.join(__dirname, ".env");
 const envResult = dotenv.config({ path: envPath });
@@ -326,16 +327,17 @@ async function persistFeedbackRow({
     client_created_at: parseClientCreatedAt(clientCreatedAt),
   };
 
-  const { error } = await admin.from("assistant_feedback").insert(row);
+  const { data, error } = await admin.from("assistant_feedback").insert(row).select("id").maybeSingle();
   if (error) {
     const msg = String(error.message || error);
     const hint =
       /Could not find the table|relation .* does not exist|schema cache/i.test(msg)
         ? " Run supabase/assistant_feedback.sql in the Supabase SQL Editor."
         : "";
-    return { stored: null, error: new Error(`${msg}${hint}`) };
+    return { stored: null, error: new Error(`${msg}${hint}`), ticketId: null };
   }
-  return { stored: "supabase", error: null };
+  const ticketId = data?.id != null ? `MSC-${data.id}` : null;
+  return { stored: "supabase", error: null, ticketId };
 }
 
 function mustVerifySession() {
@@ -2174,7 +2176,7 @@ async function persistFeedbackEntry(entry, { userId, rating, reason, mode, study
   });
 
   if (dbResult.stored === "supabase") {
-    return { ok: true, stored: "supabase" };
+    return { ok: true, stored: "supabase", ticketId: dbResult.ticketId || null };
   }
 
   if (dbResult.error) {
@@ -2185,11 +2187,13 @@ async function persistFeedbackEntry(entry, { userId, rating, reason, mode, study
     );
   }
 
+  const fallbackTicket = `MSC-F-${Date.now().toString(36).toUpperCase()}`;
   try {
     await fs.promises.appendFile(feedbackLogPath, line, "utf8");
     return {
       ok: true,
       stored: "project",
+      ticketId: fallbackTicket,
       warning:
         dbResult.error?.message ||
         "Saved to server file only. Set SUPABASE_SERVICE_ROLE_KEY and create public.assistant_feedback to see rows in Supabase.",
@@ -2200,6 +2204,7 @@ async function persistFeedbackEntry(entry, { userId, rating, reason, mode, study
       return {
         ok: true,
         stored: "tmp",
+        ticketId: fallbackTicket,
         warning:
           dbResult.error?.message ||
           "Saved to /tmp only (ephemeral on Render). Configure Supabase feedback table + service role key.",
@@ -2290,6 +2295,10 @@ app.post("/api/support", requireSession, async (req, res) => {
       assistantMessage: message,
       clientCreatedAt: createdAt,
     });
+    if (!result.ok) {
+      return res.status(500).json({ error: "Could not save your message. Please try again." });
+    }
+    const ticketId = result.ticketId || `MSC-F-${Date.now().toString(36).toUpperCase()}`;
 
     // Forward to Google Group / inbox (server-only address; never shown in UI).
     const notify = await notifySupportInbox({
@@ -2298,13 +2307,47 @@ app.post("/api/support", requireSession, async (req, res) => {
       userEmail: String(req.user?.email || "").trim() || "",
       userId: req.user?.id || "",
       createdAt,
+      ticketId,
     });
     return res.json({
       ...result,
+      ticketId,
       emailed: Boolean(notify.emailed),
       emailProvider: notify.provider || null,
       emailSkipped: Boolean(notify.skipped),
       emailWarning: notify.error || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Unexpected error" });
+  }
+});
+
+app.post("/api/account/delete", requireSession, async (req, res) => {
+  try {
+    const confirm = String(req.body?.confirm || "").trim().toUpperCase();
+    if (confirm !== "DELETE") {
+      return res.status(400).json({
+        error: "Type DELETE to confirm permanent account and data deletion.",
+      });
+    }
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return res.status(503).json({
+        error: "Account deletion is not available right now. Please try again later or contact support.",
+      });
+    }
+    const result = await deleteAccountCompletely(admin, req.user.id);
+    if (!result.ok) {
+      return res.status(500).json({
+        error: result.authError || "Could not delete account. Please contact support.",
+        tables: result.tables,
+      });
+    }
+    return res.json({
+      ok: true,
+      deleted: true,
+      authDeleted: result.authDeleted,
+      tables: result.tables,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message || "Unexpected error" });

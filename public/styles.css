@@ -510,6 +510,28 @@ p {
   border-color: rgba(28, 27, 25, 0.18);
 }
 
+.danger-text-btn {
+  color: #8b2e2e;
+  border-color: rgba(139, 46, 46, 0.35);
+}
+
+.danger-btn {
+  background: linear-gradient(120deg, #a33b3b, #7a2424);
+  color: #fff;
+  border-color: transparent;
+}
+
+.msc-login-age {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.settings-privacy-link {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
 .head-actions {
   display: flex;
   gap: 8px;

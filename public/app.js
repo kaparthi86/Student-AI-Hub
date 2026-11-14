@@ -169,8 +169,10 @@ const PWA_INSTALL_BAR_DISMISSED_KEY = "student_ai_pwa_install_bar_dismissed_v1";
 const LANGUAGE_HINT_DISMISSED_KEY = "student_ai_lang_hint_dismissed_v1";
 const INDIA_LOCALE_HINT_KEY = "student_ai_india_locale_hint_v1";
 const HONOR_CODE_ACK_KEY = "ai_hub_student_honor_ack_v1";
+const AGE_ACK_KEY = "student_ai_age_ack_v1";
 /** Session fallback when localStorage is unavailable. */
 let honorCodeAckThisSession = false;
+let ageAckThisSession = false;
 /** @type {"hub" | "student" | null} */
 let activeSurface = null;
 
@@ -535,7 +537,22 @@ const I18N = {
     study_language_hint: "Ask and answers use this language",
     study_language_ask_hint: "Your question and the coach reply stay in this language",
     profile_reply_lang: "Study language",
-    profile_locale_note: "These stay on this device and shape Ask answers, Home tips, and Voice Tutor language.",
+    profile_locale_note:
+      "Saved to your account when you are signed in, so Ask answers, Home tips, and Voice Tutor language stay in sync across devices.",
+    age_gate_title: "Confirm your age",
+    age_gate_body:
+      "My Student Coach is for learners age 13 and older. Confirm below to continue. Under 13? Please do not create an account.",
+    age_gate_confirm: "I confirm I am 13 or older",
+    age_gate_continue: "Continue",
+    age_gate_required: "Confirm you are 13 or older to continue.",
+    delete_account_title: "Delete account & data",
+    delete_account_lead:
+      "Permanently deletes your profile, conversations, uploaded files in our systems, learning activity, and analytics linked to your account (subject to legal retention). This cannot be undone.",
+    delete_account_confirm_label: "Type DELETE to confirm",
+    delete_account_btn: "Delete my account",
+    delete_account_done: "Your account and data were deleted.",
+    delete_account_failed: "Could not delete account. Try again or contact support.",
+    support_ticket_sent: "Thanks — ticket {id}. We read every message.",
     rec_cbse_revise: "CBSE revision",
     rec_jee_practice: "JEE practice",
     rec_neet_bio: "NEET biology",
@@ -1533,7 +1550,11 @@ const I18N = {
     study_language: "மொழி",
     study_language_hint: "கேள்விகளும் பதில்களும் இந்த மொழியில்",
     study_language_ask_hint: "உங்கள் கேள்வியும் பயிற்சியாளர் பதிலும் இந்த மொழியிலேயே",
-    profile_locale_note: "இவை இந்த சாதனத்தில் இருக்கும்; Ask, முகப்புப் பரிந்துரைகள், Voice Tutor மொழியை வடிவமைக்கும்.",
+    profile_locale_note:
+      "நீங்கள் உள்நுழைந்திருக்கும்போது உங்கள் கணக்கில் சேமிக்கப்படும்; Ask, முகப்புப் பரிந்துரைகள், Voice Tutor மொழி சாதனங்களிடையே ஒத்திசைக்கும்.",
+    age_gate_confirm: "எனக்கு 13 வயது அல்லது அதற்கு மேல் என்பதை உறுதிசெய்கிறேன்",
+    delete_account_btn: "என் கணக்கை நீக்கு",
+    support_ticket_sent: "நன்றி — டிக்கெட் {id}. ஒவ்வொரு செய்தியையும் படிக்கிறோம்.",
     rec_cbse_revise: "CBSE திருப்புதல்",
     rec_jee_practice: "JEE பயிற்சி",
     rec_neet_bio: "NEET உயிரியல்",
@@ -5128,6 +5149,167 @@ function showStudentWorkspace() {
 }
 
 
+function hasAgeAck() {
+  if (ageAckThisSession) return true;
+  try {
+    return localStorage.getItem(AGE_ACK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setAgeAck() {
+  ageAckThisSession = true;
+  try {
+    localStorage.setItem(AGE_ACK_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+function openAgeGateModal() {
+  const modal = document.getElementById("ageGateModal");
+  if (!modal) {
+    setAgeAck();
+    return;
+  }
+  const status = document.getElementById("ageGateStatus");
+  const checkbox = document.getElementById("ageGateConfirm");
+  if (status) {
+    status.textContent = "";
+    status.classList.remove("ok", "error");
+  }
+  if (checkbox) checkbox.checked = false;
+  modal.classList.remove("hidden");
+  modal.hidden = false;
+}
+
+function closeAgeGateModal() {
+  const modal = document.getElementById("ageGateModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.hidden = true;
+}
+
+function ensureAgeAckThenContinue() {
+  if (hasAgeAck()) return;
+  openAgeGateModal();
+}
+
+function openDeleteAccountModal() {
+  const modal = document.getElementById("deleteAccountModal");
+  if (!modal) return;
+  const input = document.getElementById("deleteAccountConfirmInput");
+  const status = document.getElementById("deleteAccountStatus");
+  if (input) input.value = "";
+  if (status) {
+    status.textContent = "";
+    status.classList.remove("ok", "error");
+  }
+  modal.classList.remove("hidden");
+  modal.hidden = false;
+  document.getElementById("settingsModal")?.classList.add("hidden");
+}
+
+function closeDeleteAccountModal() {
+  const modal = document.getElementById("deleteAccountModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.hidden = true;
+}
+
+async function confirmDeleteAccount() {
+  const input = document.getElementById("deleteAccountConfirmInput");
+  const status = document.getElementById("deleteAccountStatus");
+  const btn = document.getElementById("confirmDeleteAccountBtn");
+  const confirm = String(input?.value || "").trim().toUpperCase();
+  if (confirm !== "DELETE") {
+    if (status) {
+      status.textContent = t("delete_account_confirm_label") || "Type DELETE to confirm";
+      status.classList.add("error");
+      status.classList.remove("ok");
+    }
+    return;
+  }
+  if (btn) {
+    btn.disabled = true;
+    btn.dataset.busy = "1";
+  }
+  if (status) {
+    status.textContent = "Deleting…";
+    status.classList.remove("ok", "error");
+  }
+  try {
+    const res = await fetchAuthed("/api/account/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: "DELETE" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.error || t("delete_account_failed") || "Could not delete account.");
+    }
+    try {
+      localStorage.removeItem(USER_PREFS_KEY);
+      localStorage.removeItem(CHAT_SESSION_KEY);
+      localStorage.removeItem(AGE_ACK_KEY);
+      localStorage.removeItem(HONOR_CODE_ACK_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (status) {
+      status.textContent = t("delete_account_done") || "Your account and data were deleted.";
+      status.classList.add("ok");
+      status.classList.remove("error");
+    }
+    showToast(t("delete_account_done") || "Your account and data were deleted.");
+    closeDeleteAccountModal();
+    try {
+      await supabaseClient?.auth?.signOut?.();
+    } catch {
+      /* ignore */
+    }
+    window.location.hash = "#login";
+    window.location.reload();
+  } catch (err) {
+    if (status) {
+      status.textContent = err?.message || t("delete_account_failed") || "Could not delete account.";
+      status.classList.add("error");
+      status.classList.remove("ok");
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      delete btn.dataset.busy;
+    }
+  }
+}
+
+function wireAccountPrivacyControls() {
+  document.getElementById("openDeleteAccountBtn")?.addEventListener("click", () => openDeleteAccountModal());
+  document.getElementById("closeDeleteAccountBtn")?.addEventListener("click", () => closeDeleteAccountModal());
+  document.getElementById("confirmDeleteAccountBtn")?.addEventListener("click", () => {
+    void confirmDeleteAccount();
+  });
+  document.getElementById("ageGateContinueBtn")?.addEventListener("click", () => {
+    const checked = document.getElementById("ageGateConfirm")?.checked === true;
+    const status = document.getElementById("ageGateStatus");
+    if (!checked) {
+      if (status) {
+        status.textContent = t("age_gate_required") || "Confirm you are 13 or older to continue.";
+        status.classList.add("error");
+        status.classList.remove("ok");
+      }
+      return;
+    }
+    setAgeAck();
+    closeAgeGateModal();
+  });
+  document.getElementById("deleteAccountModal")?.addEventListener("click", (e) => {
+    if (e.target?.id === "deleteAccountModal") closeDeleteAccountModal();
+  });
+}
+
 function showApp(session) {
   const display = getSessionDisplayName(session);
   if (userName) userName.textContent = display;
@@ -5136,6 +5318,7 @@ function showApp(session) {
   void pullWorkspace();
   // Single product surface: always open Coach Home (Hub deep links included).
   showStudentWorkspace();
+  ensureAgeAckThenContinue();
   if (window.StudentAnalytics?.bootAfterAuth) {
     void window.StudentAnalytics.bootAfterAuth();
   }
@@ -6322,8 +6505,12 @@ async function submitSupportForm(e) {
       throw new Error(data?.error || "Could not send.");
     }
     if (form) form.reset();
-    setSupportFormStatus(t("support_sent") || "Thanks — we got your message.", "ok");
-    showToast(t("support_sent") || "Thanks — we got your message.");
+    const ticketId = data?.ticketId ? String(data.ticketId) : "";
+    const sentMsg = ticketId
+      ? String(t("support_ticket_sent") || "Thanks — ticket {id}. We read every message.").replace("{id}", ticketId)
+      : t("support_sent") || "Thanks — we got your message.";
+    setSupportFormStatus(sentMsg, "ok");
+    showToast(sentMsg);
   } catch (err) {
     setSupportFormStatus(
       (err && err.message) || t("support_send_failed") || "Could not send. Please try again.",
@@ -6457,9 +6644,28 @@ function patchLearnerPrefs(partial = {}) {
       ? String(partial.explainStyle)
       : prefs.explainStyle;
   }
+  if (partial.country != null) prefs.country = normalizeCountryCode(partial.country);
+  if (partial.region != null) prefs.region = normalizeRegion(partial.region);
+  if (partial.board != null) prefs.board = normalizeBoard(partial.board);
+  if (partial.examFocus != null) prefs.examFocus = normalizeExamFocus(partial.examFocus);
+  if (partial.replyLanguage != null) {
+    const lang = normalizeReplyLanguage(partial.replyLanguage);
+    if (lang) {
+      prefs.replyLanguage = lang;
+      prefs.uiLanguage = normalizeUiLanguage(lang);
+    }
+  }
   savePrefs(prefs);
   syncLearnerProfileForm();
   if (mainTab === "home") renderCoachHome();
+}
+
+/** Merge cloud student_profiles into local prefs (signed-in hydrate). */
+function applyCloudLearnerProfile(partial = {}) {
+  patchLearnerPrefs(partial || {});
+  const prefs = loadPrefs();
+  if (prefs.uiLanguage) setUiLanguage(prefs.uiLanguage);
+  if (prefs.replyLanguage) syncStudyLanguageSelects(prefs.replyLanguage);
 }
 
 /** Shared helpers for coach-labs.js / journey.js feature panels. */
@@ -6500,6 +6706,8 @@ window.StudentCoach = {
   stopSpeech: () => stopReadAloud(),
   getLearnerProfile: () => (typeof getLearnerProfile === "function" ? getLearnerProfile() : null),
   patchLearnerPrefs: (partial) => patchLearnerPrefs(partial),
+  applyCloudLearnerProfile: (partial) => applyCloudLearnerProfile(partial),
+  syncLearnerProfileForm: () => syncLearnerProfileForm(),
   scheduleWorkspaceSync: () => scheduleWorkspaceSync(),
   getVoiceLocale: () => (typeof voiceBcp47ForProfile === "function" ? voiceBcp47ForProfile() : "en-US"),
   getReplyLanguage: () => {
@@ -6687,6 +6895,7 @@ initPwaInstallSupport();
 wireCoachHome();
 setMainTab("home");
 wireSettingsUi();
+wireAccountPrivacyControls();
 wireSupportUi();
 wireHonorCodeModal();
 wireDefaultPageHintModal();

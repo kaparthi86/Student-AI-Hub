@@ -8,3 +8,6 @@ create table if not exists public.user_workspace (
 );
 
 alter table public.user_workspace enable row level security;
+
+-- Server writes with service_role (bypasses RLS). Do not grant client roles direct access.
+revoke all on public.user_workspace from anon, authenticated;

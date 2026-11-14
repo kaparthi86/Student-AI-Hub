@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "privacy-dns": "node privacy-agent-dns/server.js"
+    "privacy-dns": "node privacy-agent-dns/server.js",
+    "test:p0-smoke": "node scripts/p0-security-smoke.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

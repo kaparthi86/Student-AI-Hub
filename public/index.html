@@ -238,6 +238,7 @@
           </button>
           <p id="authStatus" class="muted auth-status msc-login-status" role="status" aria-live="polite"></p>
           <p class="msc-login-privacy" id="loginPrivacyLine">Your learning journey. Your data. Your privacy.</p>
+          <p class="muted msc-login-age" id="loginAgeLine">For learners age 13+. By continuing you confirm you meet this requirement.</p>
           <nav class="msc-login-legal" aria-label="Legal">
             <a href="./terms.html">Terms of Service</a>
             <span aria-hidden="true">·</span>
@@ -647,7 +648,7 @@
                 <button type="button" class="ghost-btn open-settings-btn">More settings</button>
                 <button type="button" class="ghost-btn" id="profileHubInstallBtn">Install app</button>
               </div>
-              <p class="muted msc-profile-note" id="profileHubNote">These stay on this device and shape Ask answers, Home tips, and Voice Tutor language.</p>
+              <p class="muted msc-profile-note" id="profileHubNote">Saved to your account when you are signed in, so Ask answers, Home tips, and Voice Tutor language stay in sync across devices.</p>
             </div>
             <div class="msc-hub-grid msc-hub-grid--compact">
               <button type="button" class="msc-hub-tile" data-coach-tab="progress">
@@ -1400,9 +1401,74 @@
             <span>Personalize recommendations from my progress</span>
           </label>
           <button id="saveAnalyticsConsentBtn" class="ghost-btn" type="button">Save privacy preferences</button>
+          <p class="muted settings-privacy-link">
+            See our <a href="./privacy.html" target="_blank" rel="noopener">Privacy Policy</a> for analytics events,
+            retention, and how to delete your data.
+          </p>
+          <hr class="settings-divider" />
+          <p class="muted settings-section-label" id="deleteAccountSectionLabel">Account deletion</p>
+          <p class="muted" id="deleteAccountLead">
+            Permanently delete your profile, conversations, files we store, learning activity, and account-linked
+            analytics (subject to legal retention).
+          </p>
+          <button id="openDeleteAccountBtn" class="ghost-btn danger-text-btn" type="button">Delete account &amp; data…</button>
         </div>
         <div class="settings-actions">
           <button id="saveSettingsBtn" class="primary-btn" type="button">Save preferences</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="deleteAccountModal"
+      class="settings-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deleteAccountTitle"
+      hidden
+    >
+      <div class="settings-card">
+        <div class="settings-head">
+          <h3 id="deleteAccountTitle">Delete account &amp; data</h3>
+          <button id="closeDeleteAccountBtn" class="ghost-btn tiny-btn" type="button">Close</button>
+        </div>
+        <p class="muted" id="deleteAccountModalLead">
+          This permanently deletes your student profile, conversation history, uploaded files in our systems, learning
+          activity, and analytics events tied to your account, then removes your sign-in. Some records may be retained
+          briefly where required by law or fraud prevention.
+        </p>
+        <label for="deleteAccountConfirmInput" id="deleteAccountConfirmLabel">Type DELETE to confirm</label>
+        <input id="deleteAccountConfirmInput" type="text" autocomplete="off" placeholder="DELETE" />
+        <p class="muted support-form-status" id="deleteAccountStatus" role="status" aria-live="polite"></p>
+        <div class="settings-actions">
+          <button id="confirmDeleteAccountBtn" class="primary-btn danger-btn" type="button">Delete my account</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="ageGateModal"
+      class="settings-modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ageGateTitle"
+      hidden
+    >
+      <div class="settings-card">
+        <div class="settings-head">
+          <h3 id="ageGateTitle">Confirm your age</h3>
+        </div>
+        <p class="muted" id="ageGateBody">
+          My Student Coach is for learners age 13 and older. Confirm below to continue. If you are under 13, do not
+          create an account.
+        </p>
+        <label class="settings-checkbox">
+          <input id="ageGateConfirm" type="checkbox" />
+          <span id="ageGateConfirmLabel">I confirm I am 13 or older</span>
+        </label>
+        <p class="muted support-form-status" id="ageGateStatus" role="status" aria-live="polite"></p>
+        <div class="settings-actions">
+          <button id="ageGateContinueBtn" class="primary-btn" type="button">Continue</button>
         </div>
       </div>
     </div>
@@ -1466,6 +1532,11 @@
           <label for="onboardSubjects">Subjects (comma-separated)
             <input id="onboardSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
           </label>
+          <label class="settings-checkbox journey-onboard-age">
+            <input id="onboardAgeAck" type="checkbox" />
+            <span>I confirm I am 13 or older</span>
+          </label>
+          <p class="muted support-form-status" id="onboardAgeStatus" role="status" aria-live="polite"></p>
           <div class="journey-onboard-actions">
             <button type="button" class="ghost-btn" data-onboard-skip>Skip for now</button>
             <button type="button" class="primary-btn" data-onboard-next>Continue</button>
@@ -1507,10 +1578,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=intel-loop-2"></script>
+    <script defer src="./app.js?v=p0-launch-1"></script>
     <script defer src="./coach-labs.js?v=voice-coach-2"></script>
-    <script defer src="./journey.js?v=intel-loop-2"></script>
-    <script defer src="./analytics.js?v=intel-loop-2"></script>
+    <script defer src="./journey.js?v=p0-launch-1"></script>
+    <script defer src="./analytics.js?v=p0-launch-1"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>
 </html>
