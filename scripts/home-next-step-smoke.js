@@ -24,7 +24,8 @@ assert(/cold-start/.test(journeyJs), "cold-start diagnostic path");
 assert(/home_next_step_started/.test(journeyJs), "analytics event for next step");
 assert(/pickNextStep,/.test(journeyJs) || /pickNextStep\s*,/.test(journeyJs), "pickNextStep exported");
 assert(/\.journey-next-step\s*\{/.test(journeyCss), "next-step styles");
-assert(/Or pick a path/.test(indexHtml), "tool grid demoted to secondary");
-assert(/Your next step is personalized below/.test(indexHtml), "home hero points at next step");
+assert(/msc-more-tools/.test(indexHtml), "tool grid demoted under More tools");
+assert(/companion-home|journey-home-mount/.test(indexHtml), "companion home mount present");
+assert(/Create My Learning Snapshot/.test(journeyJs) || /Continue Learning/.test(journeyJs), "primary home CTA path");
 
 console.log("home-next-step-smoke OK");

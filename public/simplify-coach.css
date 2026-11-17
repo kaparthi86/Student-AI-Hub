@@ -720,6 +720,36 @@ body.brand-msc .primary-btn {
   background: linear-gradient(135deg, rgba(20, 45, 76, 0.05), rgba(40, 122, 137, 0.08)), #fff !important;
 }
 
+.msc-home--companion {
+  max-width: 720px;
+}
+
+.msc-home-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.35rem;
+}
+
+.msc-more-tools {
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.85rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(20, 45, 76, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.msc-more-tools > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 750;
+  color: var(--navy, #142d4c);
+  padding: 0.55rem 0;
+}
+
+.msc-more-tools > summary::-webkit-details-marker {
+  display: none;
+}
+
 .msc-home-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }

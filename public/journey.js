@@ -582,49 +582,73 @@
     ensureWeek();
     const plan = buildDailyPlan();
     const next = pickNextStep();
-    const mastery = overallMastery();
     const weekly = journey.weeklyGoals;
     const name = typeof api().coachDisplayName === "function" ? api().coachDisplayName() : "there";
     const insufficient = hasInsufficientLearningSignal();
     const moreItems = (plan.items || []).filter((_, idx) => idx !== next.planIndex);
+    const weekPct = weekly.target ? Math.min(100, Math.round((weekly.completed / weekly.target) * 100)) : 0;
+    const recommendLead =
+      next.source === "cold-start"
+        ? "Your AI Coach recommends"
+        : next.source === "wrap-up"
+          ? "Nice work today"
+          : "Your AI Coach recommends";
 
     mount.hidden = false;
     mount.innerHTML = `
-      <section class="journey-dash" aria-labelledby="journeyDashTitle">
-        <div class="journey-dash-head">
-          <div>
-            <p class="coach-kicker">Understand · Practice · Improve</p>
-            <h3 class="journey-dash-title" id="journeyDashTitle">Good ${greetingHour()}, ${escapeHtml(name)}</h3>
-            <p class="muted journey-dash-lead">One clear next step — then keep going.</p>
-          </div>
-          <div class="journey-stat-row">
-            <div class="journey-stat">
-              <span class="journey-stat-value">${insufficient ? "—" : `${mastery}%`}</span>
-              <span class="journey-stat-label">${insufficient ? "Mastery (need more data)" : "Learning mastery"}</span>
-            </div>
-            <div class="journey-stat">
-              <span class="journey-stat-value">${weekly.completed}/${weekly.target}</span>
-              <span class="journey-stat-label">Weekly goals</span>
-            </div>
-          </div>
-        </div>
+      <section class="companion-home" aria-labelledby="journeyDashTitle">
+        <header class="companion-home-hero">
+          <p class="companion-kicker">My Student Coach</p>
+          <h2 class="companion-greeting" id="journeyDashTitle">Good ${greetingHour()}${name ? `, ${escapeHtml(name)}` : ""}!</h2>
+          <p class="muted companion-lead">Ready to make progress today?</p>
+        </header>
 
-        <article class="journey-next-step" aria-labelledby="journeyNextTitle">
-          <p class="journey-next-kicker">${escapeHtml(next.phase)} · Your next step</p>
-          <h4 class="journey-next-title" id="journeyNextTitle">${escapeHtml(next.title)}</h4>
+        <article class="journey-next-step companion-primary" aria-labelledby="journeyNextTitle">
+          <p class="journey-next-kicker">${escapeHtml(recommendLead)}</p>
+          <h3 class="journey-next-title" id="journeyNextTitle">${escapeHtml(next.title)}</h3>
           <p class="muted journey-next-reason">${escapeHtml(next.reason)}</p>
           <div class="journey-next-meta">
+            <span>${escapeHtml(next.phase)}</span>
             ${next.minutes ? `<span>${next.minutes} min</span>` : ""}
             ${next.source === "progress" ? '<span class="journey-badge">From progress</span>' : ""}
-            ${next.source === "cold-start" ? '<span class="journey-badge">Personalize</span>' : ""}
-            ${next.source === "wrap-up" ? '<span class="journey-badge journey-badge--done">Plan done</span>' : ""}
+            ${next.source === "cold-start" ? '<span class="journey-badge">Learning Snapshot</span>' : ""}
+            ${insufficient ? '<span class="journey-badge">Evidence-based</span>' : ""}
           </div>
           <div class="journey-next-actions">
-            <button type="button" class="primary-btn" data-journey-next-step> ${escapeHtml(next.cta)} </button>
-            <button type="button" class="ghost-btn" data-coach-tab="progress">Progress</button>
-            <button type="button" class="ghost-btn" data-coach-tab="planner">Full plan</button>
+            <button type="button" class="primary-btn" data-journey-next-step>${escapeHtml(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>
           </div>
         </article>
+
+        <section class="companion-secondary" aria-label="Key learning destinations">
+          <button type="button" class="companion-tile" data-coach-tab="diagnostic">
+            <strong>Learning Snapshot</strong>
+            <span>Explore strengths and growth areas</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="chat">
+            <strong>Ask Your Coach</strong>
+            <span>Ask, explore, and understand anything</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="chat" data-coach-mode="quiz">
+            <strong>Practice</strong>
+            <span>Personalized questions and exercises</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="planner">
+            <strong>My Study Plan</strong>
+            <span>Your daily learning goals</span>
+          </button>
+        </section>
+
+        <section class="companion-momentum" aria-label="Your learning momentum">
+          <div class="companion-momentum-copy">
+            <p class="companion-momentum-label">Your learning momentum</p>
+            <p class="companion-momentum-title">Weekly learning goal</p>
+            <p class="muted">${weekly.completed} of ${weekly.target} sessions</p>
+          </div>
+          <div class="companion-ring" style="--ring:${weekPct}" aria-hidden="true">
+            <span>${weekPct}%</span>
+          </div>
+          <button type="button" class="ghost-btn" data-coach-tab="progress">View Progress</button>
+        </section>
 
         ${
           moreItems.length
@@ -651,9 +675,7 @@
           </ol>
           <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
         </details>`
-            : `<div class="journey-plan-head" style="margin-top:0.75rem">
-            <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
-          </div>`
+            : `<button type="button" class="ghost-btn journey-refresh-plan companion-refresh" data-journey-action="refresh-plan">Refresh plan</button>`
         }
       </section>
     `;
@@ -1212,25 +1234,41 @@
             <h4>What You're Doing Well</h4>
             <p>${journey.diagnostic.strong?.length ? escapeHtml(journey.diagnostic.strong.join(", ")) : "Keep practicing — strengths will show here."}</p>
           </article>
-          <article class="snapshot-card">
-            <h4>Areas to Improve</h4>
-            <p>${journey.diagnostic.weak?.length ? escapeHtml(journey.diagnostic.weak.join(", ")) : "No gaps flagged in your latest snapshot."}</p>
-          </article>
-        </div>
-        <article class="snapshot-card snapshot-card--wide">
-          <h4>Your Personalized Practice Plan</h4>
-          ${
-            recItems.length
-              ? `<ul class="snapshot-plan-list">${recItems
-                  .map(
-                    (item) =>
-                      `<li><strong>${escapeHtml(item.topic)}</strong> <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}</span></li>`,
-                  )
-                  .join("")}</ul>
-                <button type="button" class="ghost-btn" data-coach-tab="home">Start from Home next step</button>`
+            <article class="snapshot-card">
+              <h4>Areas to Improve</h4>
+              ${
+                journey.diagnostic.weak?.length
+                  ? `<ul class="snapshot-gap-actions">${journey.diagnostic.weak
+                      .map(
+                        (topic) =>
+                          `<li>
+                            <span>${escapeHtml(topic)}</span>
+                            <button type="button" class="ghost-btn" data-journey-plan-go data-tab="chat" data-mode="quiz" data-topic="${escapeAttr(topic)}">Practice</button>
+                          </li>`,
+                      )
+                      .join("")}</ul>`
+                  : `<p>No gaps flagged in your latest snapshot.</p>`
+              }
+              <p class="muted snapshot-evidence-note">Based on your latest snapshot answers — not a definitive academic grade.</p>
+            </article>
+          </div>
+          <article class="snapshot-card snapshot-card--wide">
+            <h4>Your Personalized Practice Plan</h4>
+            ${
+              recItems.length
+                ? `<ul class="snapshot-plan-list">${recItems
+                    .map(
+                      (item, idx) =>
+                        `<li>
+                          <div><strong>${escapeHtml(item.topic)}</strong> <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}</span></div>
+                          <button type="button" class="ghost-btn" data-journey-start="${(plan.items || []).indexOf(item)}">Practice</button>
+                        </li>`,
+                    )
+                    .join("")}</ul>
+                <button type="button" class="ghost-btn" data-coach-tab="home">Back to Home next step</button>`
               : `<p class="muted">Create a snapshot to unlock today’s practice recommendations.</p>`
           }
-        </article>
+          </article>
         <article class="snapshot-card snapshot-card--wide">
           <h4>Your Learning Growth</h4>
           ${growth ? `<p class="snapshot-growth-line">${escapeHtml(growth)}</p>` : `<p class="muted">Create another snapshot later to see how much you've improved.</p>`}
