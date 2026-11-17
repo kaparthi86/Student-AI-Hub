@@ -1,6 +1,7 @@
 /**
  * Adaptive Learning Journey (P0/P1): daily plan, progress, planner, memory,
- * diagnostic, exam prep, and smart revision. Depends on window.StudentCoach.
+ * Learning Snapshot (diagnostic), exam prep, and smart revision.
+ * Depends on window.StudentCoach.
  */
 (function initJourney() {
   const JOURNEY_KEY = "student_ai_journey_v1";
@@ -41,6 +42,8 @@
         preferredStyleNote: "",
       },
       diagnostic: { lastAt: "", scores: {}, weak: [], strong: [], questions: [] },
+      /** Recurring Learning Snapshot history for growth comparison (newest last). */
+      snapshots: [],
       exam: {
         name: "",
         subject: "",
@@ -72,6 +75,7 @@
         dailyPlan: { ...base.dailyPlan, ...(parsed.dailyPlan || {}) },
         memory: { ...base.memory, ...(parsed.memory || {}) },
         diagnostic: { ...base.diagnostic, ...(parsed.diagnostic || {}) },
+        snapshots: Array.isArray(parsed.snapshots) ? parsed.snapshots.slice(-12) : [],
         exam: { ...base.exam, ...(parsed.exam || {}) },
         studyMinutes: { ...base.studyMinutes, ...(parsed.studyMinutes || {}) },
         quizStats: { ...base.quizStats, ...(parsed.quizStats || {}) },
@@ -505,10 +509,10 @@
     if (insufficient && !diagnosticDone) {
       return {
         phase: "Practice",
-        title: "Take a quick diagnostic",
+        title: "Create your Learning Snapshot",
         reason:
-          "We do not invent mastery scores. A short check unlocks personalized practice and today’s plan.",
-        cta: "Start diagnostic",
+          "We do not invent mastery scores. A short Learning Snapshot unlocks personalized practice and today’s plan.",
+        cta: "Create My Learning Snapshot",
         tab: "diagnostic",
         mode: "",
         topic: "",
@@ -702,7 +706,7 @@
     body.innerHTML = `
       ${
         insufficient
-          ? `<p class="muted journey-insufficient" role="status">Not enough practice data yet for verified mastery. Complete a diagnostic or a few quiz checks — we will not invent scores.</p>`
+          ? `<p class="muted journey-insufficient" role="status">Not enough practice data yet for verified mastery. Create a Learning Snapshot or complete a few quiz checks — we will not invent scores.</p>`
           : ""
       }
       <div class="journey-stat-row journey-stat-row--wide">
@@ -732,9 +736,9 @@
       </section>
       <section class="journey-block">
         <h3>Knowledge gaps</h3>
-        <p class="muted">${weak.length ? escapeHtml(weak.join(", ")) : "No gaps flagged yet. Take a diagnostic, practice a quiz, or scan Ask activity below."}</p>
+        <p class="muted">${weak.length ? escapeHtml(weak.join(", ")) : "No gaps flagged yet. Create a Learning Snapshot, practice a quiz, or scan Ask activity below."}</p>
         <div class="coach-hero-actions">
-          <button type="button" class="primary-btn" data-coach-tab="diagnostic">Start diagnostic</button>
+          <button type="button" class="primary-btn" data-coach-tab="diagnostic">Create My Learning Snapshot</button>
           <button type="button" class="ghost-btn" data-scroll-to="progressGapsSection">Scan Ask activity</button>
         </div>
       </section>
@@ -1119,26 +1123,122 @@
     }, 700);
   }
 
+  function snapshotOverall(scores) {
+    const vals = Object.values(scores || {}).map(Number).filter((n) => Number.isFinite(n));
+    if (!vals.length) return null;
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+
+  function formatSnapshotWhen(iso) {
+    try {
+      return new Date(iso).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return String(iso || "");
+    }
+  }
+
+  function growthDeltaLabel(current, previous) {
+    if (current == null || previous == null) return null;
+    const d = current - previous;
+    if (d === 0) return "Steady with your last snapshot";
+    if (d > 0) return `Up ${d} pts since your last snapshot`;
+    return `Down ${Math.abs(d)} pts since your last snapshot — practice will help`;
+  }
+
+  function renderSnapshotHistory() {
+    const history = Array.isArray(journey.snapshots) ? journey.snapshots.slice(-5).reverse() : [];
+    if (!history.length) {
+      return `<p class="muted snapshot-history-empty">Take snapshots over time to see Your Learning Growth.</p>`;
+    }
+    return `
+      <ol class="snapshot-history-list">
+        ${history
+          .map((s, idx) => {
+            const overall = s.overall != null ? s.overall : snapshotOverall(s.scores);
+            const prev = history[idx + 1];
+            const prevOverall = prev
+              ? prev.overall != null
+                ? prev.overall
+                : snapshotOverall(prev.scores)
+              : null;
+            const delta = growthDeltaLabel(overall, prevOverall);
+            return `<li class="snapshot-history-item">
+              <div>
+                <strong>${escapeHtml(formatSnapshotWhen(s.at))}</strong>
+                <span class="muted">${overall != null ? `${overall}% picture` : "Snapshot"}</span>
+              </div>
+              ${delta ? `<span class="snapshot-delta">${escapeHtml(delta)}</span>` : ""}
+            </li>`;
+          })
+          .join("")}
+      </ol>`;
+  }
+
   function renderDiagnosticPanel() {
     const body = $("diagnosticPanelBody");
     if (!body || $("panelDiagnostic")?.hidden) return;
-    const last = journey.diagnostic.lastAt
-      ? new Date(journey.diagnostic.lastAt).toLocaleString()
-      : "Not taken yet";
+    const hasSnapshot = Boolean(journey.diagnostic.lastAt || Object.keys(journey.diagnostic.scores || {}).length);
+    const overall = snapshotOverall(journey.diagnostic.scores);
+    const last = journey.diagnostic.lastAt ? formatSnapshotWhen(journey.diagnostic.lastAt) : "";
+    const prev = Array.isArray(journey.snapshots) && journey.snapshots.length > 1
+      ? journey.snapshots[journey.snapshots.length - 2]
+      : null;
+    const prevOverall = prev ? (prev.overall != null ? prev.overall : snapshotOverall(prev.scores)) : null;
+    const growth = hasSnapshot ? growthDeltaLabel(overall, prevOverall) : null;
+    const plan = buildDailyPlan();
+    const recItems = (plan.items || []).slice(0, 3);
+
     body.innerHTML = `
-      <p class="muted">A short check finds strong and weak topics so your daily plan stays honest.</p>
-      <p><strong>Last check:</strong> ${escapeHtml(last)}</p>
+      <section class="snapshot-intro">
+        <p class="snapshot-intro-lead">
+          Your AI learning coach will create a personalized picture of your understanding and recommend what to practice next.
+        </p>
+        <button type="button" class="primary-btn" id="diagnosticStartBtn">Create My Learning Snapshot</button>
+        <p class="muted snapshot-intro-note">About 5 quick prompts · Recurring — compare growth anytime</p>
+      </section>
       ${
-        journey.diagnostic.weak?.length
-          ? `<p><strong>Weak:</strong> ${escapeHtml(journey.diagnostic.weak.join(", "))}</p>`
+        hasSnapshot
+          ? `<section class="snapshot-results journey-block" aria-labelledby="snapshotResultsTitle">
+        <h3 id="snapshotResultsTitle">Your Learning Snapshot</h3>
+        <p class="muted">Last created: ${escapeHtml(last)}${overall != null ? ` · ${overall}% overall picture` : ""}</p>
+        <div class="snapshot-grid">
+          <article class="snapshot-card">
+            <h4>What You're Doing Well</h4>
+            <p>${journey.diagnostic.strong?.length ? escapeHtml(journey.diagnostic.strong.join(", ")) : "Keep practicing — strengths will show here."}</p>
+          </article>
+          <article class="snapshot-card">
+            <h4>Areas to Improve</h4>
+            <p>${journey.diagnostic.weak?.length ? escapeHtml(journey.diagnostic.weak.join(", ")) : "No gaps flagged in your latest snapshot."}</p>
+          </article>
+        </div>
+        <article class="snapshot-card snapshot-card--wide">
+          <h4>Your Personalized Practice Plan</h4>
+          ${
+            recItems.length
+              ? `<ul class="snapshot-plan-list">${recItems
+                  .map(
+                    (item) =>
+                      `<li><strong>${escapeHtml(item.topic)}</strong> <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}</span></li>`,
+                  )
+                  .join("")}</ul>
+                <button type="button" class="ghost-btn" data-coach-tab="home">Start from Home next step</button>`
+              : `<p class="muted">Create a snapshot to unlock today’s practice recommendations.</p>`
+          }
+        </article>
+        <article class="snapshot-card snapshot-card--wide">
+          <h4>Your Learning Growth</h4>
+          ${growth ? `<p class="snapshot-growth-line">${escapeHtml(growth)}</p>` : `<p class="muted">Create another snapshot later to see how much you've improved.</p>`}
+          ${renderSnapshotHistory()}
+        </article>
+      </section>`
           : ""
       }
-      ${
-        journey.diagnostic.strong?.length
-          ? `<p><strong>Strong:</strong> ${escapeHtml(journey.diagnostic.strong.join(", "))}</p>`
-          : ""
-      }
-      <button type="button" class="primary-btn" id="diagnosticStartBtn">Start 5-question diagnostic</button>
       <div id="diagnosticMount" class="journey-quiz-mount"></div>
     `;
     $("diagnosticStartBtn")?.addEventListener("click", () => startDiagnostic());
@@ -1149,7 +1249,7 @@
   async function startDiagnostic() {
     const mount = $("diagnosticMount");
     if (!mount) return;
-    mount.innerHTML = `<p class="muted">Building your check…</p>`;
+    mount.innerHTML = `<p class="muted">Building your Learning Snapshot…</p>`;
     const subjects = subjectList();
     const topic = subjects.slice(0, 3).join(", ");
     try {
@@ -1158,7 +1258,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "start",
-          topic: `Diagnostic check covering: ${topic}`,
+          topic: `Learning Snapshot covering: ${topic}`,
           uiLanguage: api().getReplyLanguage?.() || "en",
         }),
       });
@@ -1210,7 +1310,7 @@
     const q = diagState.questions[diagState.i];
     mount.innerHTML = `
       <div class="journey-quiz-card">
-        <p class="muted">${escapeHtml(q.topic)} · ${diagState.i + 1}/${diagState.questions.length}</p>
+        <p class="muted">Learning Snapshot · ${escapeHtml(q.topic)} · ${diagState.i + 1}/${diagState.questions.length}</p>
         <p class="journey-quiz-prompt">${escapeHtml(q.prompt)}</p>
         <textarea id="diagAnswer" rows="3" placeholder="Your answer"></textarea>
         <div class="coach-hero-actions">
@@ -1251,8 +1351,27 @@
         enqueueRevision(topic, 1);
       } else if (pct >= 75) strong.push(topic);
     }
+    const at = new Date().toISOString();
+    const overall = snapshotOverall(scores);
+    const snapshot = { at, scores, weak: [...weak], strong: [...strong], overall };
+    const history = Array.isArray(journey.snapshots) ? [...journey.snapshots] : [];
+    if (journey.diagnostic?.lastAt && Object.keys(journey.diagnostic.scores || {}).length) {
+      // Ensure previous live diagnostic is represented once in history before adding the new one.
+      const lastHist = history[history.length - 1];
+      if (!lastHist || lastHist.at !== journey.diagnostic.lastAt) {
+        history.push({
+          at: journey.diagnostic.lastAt,
+          scores: { ...(journey.diagnostic.scores || {}) },
+          weak: [...(journey.diagnostic.weak || [])],
+          strong: [...(journey.diagnostic.strong || [])],
+          overall: snapshotOverall(journey.diagnostic.scores),
+        });
+      }
+    }
+    history.push(snapshot);
+    journey.snapshots = history.slice(-12);
     journey.diagnostic = {
-      lastAt: new Date().toISOString(),
+      lastAt: at,
       scores,
       weak,
       strong,
@@ -1264,6 +1383,8 @@
       window.StudentAnalytics.track("diagnostic_completed", "diagnostic", {
         weak_count: weak.length,
         strong_count: strong.length,
+        snapshot: true,
+        overall,
       });
       if (weak.length) {
         window.StudentAnalytics.track("knowledge_gap_detected", "diagnostic", {
@@ -1275,14 +1396,10 @@
       window.StudentAnalytics.recordLearning(
         {
           activity_type: "diagnostic",
-          feature: "diagnostic",
+          feature: "learning_snapshot",
           questions_count: diagState.results.length,
           correct_count: diagState.results.filter((r) => r.correct).length,
-          score_pct: diagState.results.length
-            ? Math.round(
-                (diagState.results.filter((r) => r.correct).length / diagState.results.length) * 100,
-              )
-            : null,
+          score_pct: overall,
         },
         Object.entries(scores).map(([subject, mastery_pct]) => ({
           subject,
@@ -1292,19 +1409,22 @@
         })),
       );
     }
+    api().showToast?.("Learning Snapshot saved — plan updated");
+    renderProgressPanel();
+    renderHomeJourney();
+    renderDiagnosticPanel();
     const mount = $("diagnosticMount");
     if (mount) {
       mount.innerHTML = `
-        <div class="journey-quiz-result">
-          <p><strong>Diagnostic complete</strong></p>
-          <p class="muted">Weak: ${weak.length ? escapeHtml(weak.join(", ")) : "none flagged"}</p>
-          <p class="muted">Strong: ${strong.length ? escapeHtml(strong.join(", ")) : "keep practicing"}</p>
-          <button type="button" class="primary-btn" data-coach-tab="home">See today's plan</button>
+        <div class="journey-quiz-result snapshot-complete" role="status">
+          <p><strong>Snapshot ready.</strong> Review Your Learning Snapshot above, then start practice.</p>
+          <div class="coach-hero-actions">
+            <button type="button" class="primary-btn" data-coach-tab="home">Start next practice</button>
+            <button type="button" class="ghost-btn" id="snapshotAgainBtn">Create another snapshot</button>
+          </div>
         </div>`;
+      $("snapshotAgainBtn")?.addEventListener("click", () => startDiagnostic());
     }
-    api().showToast?.("Diagnostic saved — plan updated");
-    renderProgressPanel();
-    renderHomeJourney();
   }
 
   function renderAllVisible() {

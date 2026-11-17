@@ -239,6 +239,124 @@
   padding: 0.5rem 0 1.5rem;
 }
 
+/* Learning Snapshot */
+.snapshot-intro {
+  margin: 0 0 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  border: 1px solid rgba(40, 122, 137, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.snapshot-intro-lead {
+  margin: 0 0 0.85rem;
+  line-height: 1.5;
+  color: var(--navy, #142d4c);
+  max-width: 48ch;
+}
+
+.snapshot-intro-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.88rem;
+}
+
+.snapshot-results h3,
+.snapshot-complete h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.15rem;
+  color: var(--navy, #142d4c);
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.75rem 0;
+}
+
+.snapshot-card {
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(31, 101, 113, 0.12);
+  background: #fff;
+}
+
+.snapshot-card--wide {
+  grid-column: 1 / -1;
+}
+
+.snapshot-card h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1f6571;
+}
+
+.snapshot-card p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.snapshot-plan-list {
+  margin: 0 0 0.65rem;
+  padding-left: 1.1rem;
+}
+
+.snapshot-plan-list li + li {
+  margin-top: 0.35rem;
+}
+
+.snapshot-growth-line {
+  margin: 0 0 0.65rem !important;
+  font-weight: 650;
+  color: var(--navy, #142d4c);
+}
+
+.snapshot-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.snapshot-history-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid rgba(20, 45, 76, 0.08);
+}
+
+.snapshot-history-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.snapshot-history-item strong {
+  display: block;
+}
+
+.snapshot-delta {
+  font-size: 0.85rem;
+  color: #1f6571;
+  font-weight: 650;
+}
+
+.snapshot-complete {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .journey-page .coach-lab-hero,
 .journey-page .msc-hub-hero {
   margin-bottom: 1rem;
