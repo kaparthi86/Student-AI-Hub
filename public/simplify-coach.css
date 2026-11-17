@@ -288,6 +288,21 @@ body.brand-msc .bg-glow {
   margin-top: 4px;
 }
 
+.landing-preview-thread--snapshot {
+  gap: 0.65rem;
+}
+
+.landing-snapshot-gap {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.landing-msg-cta-preview {
+  font-weight: 650;
+  text-align: center;
+}
+
 .landing-msg-next {
   margin: 10px 0 0;
   padding-top: 8px;

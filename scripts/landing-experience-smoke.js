@@ -23,10 +23,17 @@ assert(/id="mscFaq"/.test(indexHtml), "FAQ section present");
 assert(/data-open-login/.test(indexHtml), "Get Started uses existing login gateway");
 assert(/href="\.\/privacy\.html"/.test(indexHtml), "privacy.html route preserved");
 assert(/href="\.\/terms\.html"/.test(indexHtml), "terms.html route preserved");
-assert(/Study Planner &amp; Progress/.test(indexHtml), "Planner/Progress advertised as live");
+assert(/Learning Snapshot/.test(indexHtml), "Learning Snapshot positioned on landing");
+assert(/Coach · Snapshot · Practice · Progress/.test(indexHtml), "four-noun companion framing");
+assert(/knows what to learn next/i.test(indexHtml), "companion differentiator in hero");
+assert(/Recommended next:/.test(indexHtml), "Snapshot → next practice preview");
+assert(/Progress/.test(indexHtml), "Progress advertised as live journey pillar");
+assert(!/Your learning toolkit/.test(indexHtml), "toolkit laundry-list kicker removed");
 assert(!/from-blue-600 to-violet-600/.test(indexHtml), "no purple SaaS gradient markup");
 assert(/landingNavToggle/.test(appJs), "mobile nav toggle wired");
 assert(/\.landing-preview-frame/.test(css), "preview styles present");
 assert(/msc-landing \.landing-hero\.msc-hero::after/.test(css), "legacy hero overlay disabled");
+assert(!/Finance AI/.test(fs.readFileSync(path.join(root, "README.md"), "utf8")), "README drops Finance AI identity");
+assert(/# My Student Coach/.test(fs.readFileSync(path.join(root, "README.md"), "utf8")), "README uses My Student Coach");
 
 console.log("landing-experience-smoke OK");
