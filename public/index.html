@@ -30,9 +30,9 @@
     <link rel="stylesheet" href="./styles.css?v=planner-route-4" />
     <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
-    <link rel="stylesheet" href="./journey.css?v=ia-groups-1" />
+    <link rel="stylesheet" href="./journey.css?v=companion-1" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=ia-groups-1" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=companion-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -577,7 +577,7 @@
               <p class="msc-nav-group-label" role="presentation">Practice</p>
               <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
               <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep</button>
-              <button type="button" class="msc-nav-item" data-tab="diagnostic" role="menuitem" id="tabDiagnostic">Diagnostic</button>
+              <button type="button" class="msc-nav-item" data-tab="diagnostic" role="menuitem" id="tabDiagnostic">Learning Snapshot</button>
               <button type="button" class="msc-nav-item" data-tab="focus" role="menuitem" id="tabFocus">Focus Mode</button>
               <p class="msc-nav-group-label" role="presentation">Plan</p>
               <button type="button" class="msc-nav-item" data-tab="planner" role="menuitem" id="tabPlanner">Study Planner</button>
@@ -598,16 +598,10 @@
 
 
         <section id="panelHome" class="panel coach-home-panel">
-          <div class="coach-home msc-home">
-            <header class="coach-home-hero msc-home-hero">
-              <p class="coach-kicker" id="coachKicker">Welcome back</p>
-              <h2 class="coach-welcome" id="coachWelcome">What would you like to learn?</h2>
-              <p class="coach-sub muted" id="coachSub">Your next step is personalized below — or ask anything.</p>
-              <div class="coach-hero-actions">
-                <button type="button" class="primary-btn" id="coachAskBtn">Ask your AI Coach</button>
-                <button type="button" class="ghost-btn" id="coachContinueBtn">Continue learning</button>
-              </div>
-              <label class="study-lang-bar" for="homeLanguageSelect">
+          <div class="coach-home msc-home msc-home--companion">
+            <!-- Companion home: journey mount owns greeting + primary next step. -->
+            <div class="msc-home-toolbar">
+              <label class="study-lang-bar study-lang-bar--home" for="homeLanguageSelect">
                 <span class="study-lang-label" id="homeLanguageLabel">Language</span>
                 <select id="homeLanguageSelect" class="study-lang-select" aria-label="Study language">
                   <option value="en">English</option>
@@ -616,17 +610,23 @@
                   <option value="ta">Tamil</option>
                   <option value="es">Español</option>
                 </select>
-                <span class="muted study-lang-hint" id="homeLanguageHint">Ask and answers use this language</span>
               </label>
-              <aside id="indiaLocaleBanner" class="india-locale-banner hidden" hidden>
-                <p class="india-locale-title" id="indiaLocaleTitle">Personalize for India</p>
-                <p class="muted india-locale-body" id="indiaLocaleBody">Set your board, exam track, and language for local study recommendations. No GPS needed.</p>
-                <div class="india-locale-actions">
-                  <button type="button" class="primary-btn" id="indiaLocaleCta">Set up for India</button>
-                  <button type="button" class="ghost-btn" id="indiaLocaleSkip">Not now</button>
-                </div>
-              </aside>
-            </header>
+              <!-- Hidden legacy hooks kept for i18n / continue wiring -->
+              <h2 class="coach-welcome sr-only" id="coachWelcome">What would you like to learn?</h2>
+              <p class="coach-kicker sr-only" id="coachKicker">Welcome back</p>
+              <p class="coach-sub sr-only" id="coachSub">Your next step is personalized below.</p>
+              <button type="button" class="sr-only" id="coachAskBtn">Ask your AI Coach</button>
+              <button type="button" class="sr-only" id="coachContinueBtn">Continue learning</button>
+            </div>
+
+            <aside id="indiaLocaleBanner" class="india-locale-banner hidden" hidden>
+              <p class="india-locale-title" id="indiaLocaleTitle">Personalize for India</p>
+              <p class="muted india-locale-body" id="indiaLocaleBody">Set your board, exam track, and language for local study recommendations. No GPS needed.</p>
+              <div class="india-locale-actions">
+                <button type="button" class="primary-btn" id="indiaLocaleCta">Set up for India</button>
+                <button type="button" class="ghost-btn" id="indiaLocaleSkip">Not now</button>
+              </div>
+            </aside>
 
             <div id="journeyHomeMount" class="journey-home-mount"></div>
 
@@ -638,20 +638,10 @@
               <div class="locale-recs-grid" id="localeRecsGrid"></div>
             </section>
 
-            <section class="coach-section" aria-labelledby="coachToolsTitle">
-              <div class="coach-section-head">
-                <h3 class="coach-section-title" id="coachToolsTitle">Or pick a path</h3>
-                <p class="coach-section-lead muted" id="coachToolsLead">Shortcuts if you want something else. More tools stay under Learn.</p>
-              </div>
+            <details class="msc-more-tools">
+              <summary id="coachToolsTitle">More tools</summary>
+              <p class="muted coach-section-lead" id="coachToolsLead">Notebook, coding, and other workspaces — also under Learn.</p>
               <div class="coach-tool-grid msc-home-actions" id="coachToolGrid">
-                <button type="button" class="coach-tool-card" data-coach-tab="chat">
-                  <span class="coach-tool-label" id="coachToolAskTitle">Explain a topic</span>
-                  <span class="coach-tool-sub muted" id="coachToolAskSub">Understand anything</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="chat" data-coach-mode="quiz">
-                  <span class="coach-tool-label">Practice a quiz</span>
-                  <span class="coach-tool-sub muted">Test your knowledge</span>
-                </button>
                 <button type="button" class="coach-tool-card" data-coach-tab="notebook">
                   <span class="coach-tool-label" id="coachToolNotebookTitle">Study my notes</span>
                   <span class="coach-tool-sub muted" id="coachToolNotebookSub">Upload your documents</span>
@@ -660,8 +650,16 @@
                   <span class="coach-tool-label" id="coachToolCodeTitle">Learn coding</span>
                   <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and understand</span>
                 </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="voice">
+                  <span class="coach-tool-label" id="coachToolAskTitle">Voice Tutor</span>
+                  <span class="coach-tool-sub muted" id="coachToolAskSub">Talk through a concept</span>
+                </button>
+                <button type="button" class="coach-tool-card" data-coach-tab="flashcards">
+                  <span class="coach-tool-label">Flashcards</span>
+                  <span class="coach-tool-sub muted">Spaced review</span>
+                </button>
               </div>
-            </section>
+            </details>
 
             <ul class="coach-priority-list msc-priority-list" id="coachPriorityList" hidden></ul>
             <p class="muted msc-trust-line">
@@ -714,8 +712,8 @@
                     <span>Mocks, readiness, and revision</span>
                   </button>
                   <button type="button" class="msc-hub-tile" data-coach-tab="diagnostic">
-                    <strong>Diagnostic</strong>
-                    <span>Quick check to personalize practice</span>
+                    <strong>Learning Snapshot</strong>
+                    <span>See strengths, gaps, and what to practice next</span>
                   </button>
                   <button type="button" class="msc-hub-tile" data-coach-tab="focus">
                     <strong>Focus Mode</strong>
@@ -831,7 +829,7 @@
               <div class="coach-hero-actions">
                 <button type="button" class="primary-btn" id="gapsScanBtn">Find my weak areas</button>
                 <button type="button" class="ghost-btn" id="gapsPracticeBtn">Practice in Ask</button>
-                <button type="button" class="ghost-btn" data-coach-tab="diagnostic">Start diagnostic</button>
+                <button type="button" class="ghost-btn" data-coach-tab="diagnostic">Create Learning Snapshot</button>
               </div>
               <p class="muted" id="gapsStatus"></p>
               <div id="gapsOutput" class="gaps-output"></div>
@@ -866,9 +864,11 @@
         <section id="panelDiagnostic" class="panel journey-panel hidden" data-journey-panel="diagnostic" hidden>
           <div class="journey-page">
             <header class="msc-hub-hero">
-              <p class="coach-kicker">Diagnostic</p>
-              <h2 class="msc-hub-title">AI diagnostic assessment</h2>
-              <p class="muted msc-hub-lead">A short check that updates your gaps and today's learning plan.</p>
+              <p class="coach-kicker">Understand · Practice · Improve</p>
+              <h2 class="msc-hub-title">Your Learning Snapshot</h2>
+              <p class="muted msc-hub-lead">
+                Understand what you know, discover your strengths, and find opportunities to improve.
+              </p>
             </header>
             <div id="diagnosticPanelBody"></div>
           </div>
@@ -1730,7 +1730,7 @@
     <script defer src="./config.js"></script>
     <script defer src="./app.js?v=ia-groups-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
-    <script defer src="./journey.js?v=ia-groups-1"></script>
+    <script defer src="./journey.js?v=companion-1"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>
