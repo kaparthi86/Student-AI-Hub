@@ -134,6 +134,9 @@
 .google-btn:focus-visible,
 .starter-chip:focus-visible,
 .settings-grid select:focus-visible,
+.msc-profile-card select:focus-visible,
+.msc-profile-card input:focus-visible,
+.journey-onboard-subjects input:focus-visible,
 .search-submit:focus-visible,
 .notebook-dropzone:focus-within {
   outline: none;

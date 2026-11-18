@@ -691,6 +691,23 @@
   background: rgba(40, 122, 137, 0.08);
 }
 
+.journey-onboard-subjects {
+  display: grid;
+  gap: 6px;
+  margin: 0.15rem 0 0.85rem;
+}
+
+.journey-onboard-subjects input {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 45, 76, 0.14);
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+  color: inherit;
+}
+
 .journey-onboard-actions {
   display: flex;
   flex-wrap: wrap;
