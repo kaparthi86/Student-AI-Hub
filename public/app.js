@@ -2632,6 +2632,153 @@ function showToast(msg) {
   }, 2600);
 }
 
+function escapeHtmlApp(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+let celebrateToastTimer = null;
+function showCelebrateToast(message) {
+  const el = document.getElementById("celebrateToast");
+  if (!el) {
+    showToast(message);
+    return;
+  }
+  el.textContent = String(message || "Nice work");
+  el.classList.add("is-on");
+  clearTimeout(celebrateToastTimer);
+  celebrateToastTimer = setTimeout(() => el.classList.remove("is-on"), 2800);
+}
+
+function coachContextTopic() {
+  const fromJourney =
+    window.StudentJourney?.pickNextStep?.()?.topic ||
+    window.StudentJourney?.getCoachMemory?.()?.recentTopics?.[0]?.topic ||
+    "";
+  if (fromJourney) return String(fromJourney).trim().slice(0, 80);
+  for (let i = chatHistory.length - 1; i >= 0; i -= 1) {
+    const row = chatHistory[i];
+    if (row?.role === "user" && typeof row.content === "string" && row.content.trim()) {
+      return row.content.trim().slice(0, 80);
+    }
+  }
+  return "";
+}
+
+function renderCoachKeepGoing() {
+  const mount = document.getElementById("coachKeepGoing");
+  if (!mount) return;
+  if (!chatSessionOpen && (!Array.isArray(chatHistory) || chatHistory.length < 2)) {
+    mount.classList.add("hidden");
+    mount.hidden = true;
+    mount.replaceChildren();
+    return;
+  }
+  const topic = coachContextTopic();
+  const next = window.StudentJourney?.pickNextStep?.();
+  const title = topic ? `Keep going on ${topic}` : "Keep the conversation going";
+  const reason = next?.reason
+    ? next.reason
+    : "Explain → practice → check Progress. Your coach remembers what you just covered.";
+  mount.hidden = false;
+  mount.classList.remove("hidden");
+  mount.innerHTML = `
+    <strong>${escapeHtmlApp(title)}</strong>
+    <p>${escapeHtmlApp(reason)}</p>
+    <div class="coach-keep-going-actions">
+      <button type="button" class="ghost-btn" data-keep-going="practice">Practice this</button>
+      <button type="button" class="ghost-btn" data-keep-going="voice">Talk it through</button>
+      <button type="button" class="ghost-btn" data-keep-going="progress">See Progress</button>
+      ${next?.tab && next.tab !== "progress" ? `<button type="button" class="primary-btn" data-keep-going="next">${escapeHtmlApp(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>` : ""}
+    </div>
+  `;
+}
+
+function wireCoachKeepGoing() {
+  const mount = document.getElementById("coachKeepGoing");
+  if (!mount || mount.dataset.wired === "1") return;
+  mount.dataset.wired = "1";
+  mount.addEventListener("click", (e) => {
+    const btn = e.target.closest?.("[data-keep-going]");
+    if (!btn || !mount.contains(btn)) return;
+    const action = btn.getAttribute("data-keep-going");
+    const topic = coachContextTopic();
+    if (action === "practice") {
+      if (typeof setLearnStudyMode === "function") setLearnStudyMode("quiz");
+      if (topic && typeof startPracticeSession === "function") {
+        void startPracticeSession({ source: "ask", topic });
+      } else {
+        setMainTab("chat");
+        showToast("Ask about a topic first, then practice it here.");
+      }
+      return;
+    }
+    if (action === "voice") {
+      setMainTab("voice");
+      return;
+    }
+    if (action === "progress") {
+      setMainTab("progress");
+      return;
+    }
+    if (action === "next") {
+      if (window.StudentJourney?.startNextStep) window.StudentJourney.startNextStep();
+      else setMainTab("home");
+    }
+  });
+}
+
+function renderPracticeJourneyCta() {
+  const mount = document.getElementById("practiceJourneyCta");
+  if (!mount) return;
+  const topic = String(practiceState.topic || coachContextTopic() || "").trim();
+  const next = window.StudentJourney?.pickNextStep?.();
+  mount.hidden = false;
+  mount.innerHTML = `
+    <button type="button" class="ghost-btn" data-practice-journey="explain">Explain ${topic ? escapeHtmlApp(topic) : "again"}</button>
+    <button type="button" class="ghost-btn" data-practice-journey="voice">Talk with Coach</button>
+    <button type="button" class="ghost-btn" data-practice-journey="progress">Update Progress</button>
+    ${next ? `<button type="button" class="primary-btn" data-practice-journey="next">${escapeHtmlApp(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>` : ""}
+  `;
+}
+
+function wirePracticeJourneyCta() {
+  const mount = document.getElementById("practiceJourneyCta");
+  if (!mount || mount.dataset.wired === "1") return;
+  mount.dataset.wired = "1";
+  mount.addEventListener("click", (e) => {
+    const btn = e.target.closest?.("[data-practice-journey]");
+    if (!btn || !mount.contains(btn)) return;
+    const action = btn.getAttribute("data-practice-journey");
+    const topic = String(practiceState.topic || coachContextTopic() || "").trim();
+    closePracticeDock();
+    if (action === "explain") {
+      if (typeof setLearnStudyMode === "function") setLearnStudyMode("explain");
+      setMainTab("chat");
+      if (topic && chatFollowupInput) {
+        chatFollowupInput.value = `Explain ${topic} in simpler steps`;
+        chatFollowupInput.focus();
+      }
+      return;
+    }
+    if (action === "voice") {
+      setMainTab("voice");
+      return;
+    }
+    if (action === "progress") {
+      setMainTab("progress");
+      return;
+    }
+    if (action === "next") {
+      if (window.StudentJourney?.startNextStep) window.StudentJourney.startNextStep();
+      else setMainTab("home");
+    }
+  });
+}
+
 function beginLearnVoiceSession(stopFn) {
   const prev = learnVoiceGlobalStop;
   learnVoiceGlobalStop = stopFn;
@@ -3275,11 +3422,12 @@ function setMainTab(next) {
   let bottomKey = "learning";
   if (mainTab === "home") bottomKey = "home";
   else if (mainTab === "chat") bottomKey = "chat";
+  else if (mainTab === "voice") bottomKey = "voice";
   else if (mainTab === "progress") bottomKey = "progress";
   else if (mainTab === "learning") bottomKey = "learning";
   else if (mainTab === "profile") bottomKey = "progress";
   else if (
-    ["notebook", "code", "math", "flashcards", "voice", "exam", "planner", "diagnostic", "focus"].includes(
+    ["notebook", "code", "math", "flashcards", "exam", "planner", "diagnostic", "focus"].includes(
       mainTab
     )
   ) {
@@ -4660,7 +4808,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       else if (mode === "code") syncCodeLayout();
       else if (mode === "notebook") syncNotebookLayout();
         setStatus(statusEl, "status_ready");
-      if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+      if (mode === "learn") {
+        renderSmartFollowupChips(chatFollowupChips, history, "learn");
+        renderCoachKeepGoing();
+      }
       if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
         return true;
     }
@@ -4709,7 +4860,10 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     else if (mode === "code") syncCodeLayout();
     else if (mode === "notebook") syncNotebookLayout();
     setStatus(statusEl, "status_ready");
-    if (mode === "learn") renderSmartFollowupChips(chatFollowupChips, history, "learn");
+    if (mode === "learn") {
+      renderSmartFollowupChips(chatFollowupChips, history, "learn");
+      renderCoachKeepGoing();
+    }
     if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
     return true;
   } catch (error) {
@@ -6283,14 +6437,26 @@ function showInlinePracticeFeedback(check) {
 
 async function advancePracticeAfterCheck(check, answer) {
   const q = practiceState.questions[practiceState.index];
+  const correct = Boolean(check?.correct);
   practiceState.results.push({
     question: q?.prompt || "",
     prompt: q?.prompt || "",
     answer,
-    correct: Boolean(check?.correct),
+    correct,
     feedback: String(check?.feedback || ""),
     key_point: String(check?.key_point || ""),
   });
+  if (window.StudentJourney?.recordLearningEvent) {
+    window.StudentJourney.recordLearningEvent({
+      topic: practiceState.topic || "",
+      message: q?.prompt || practiceState.topic || "",
+      mode: "practice",
+      minutes: 2,
+      quiz: true,
+      correct,
+      struggled: !correct,
+    });
+  }
   showInlinePracticeFeedback(check);
   if (practiceSubmitAnswer) practiceSubmitAnswer.disabled = true;
   if (practiceSkipBtn) practiceSkipBtn.disabled = true;
@@ -6388,6 +6554,10 @@ async function finishPracticeSession() {
       }
     }
     showPracticeView("summary");
+    renderPracticeJourneyCta();
+    const pct = total ? Math.round((correct / total) * 100) : 0;
+    if (pct >= 70) showCelebrateToast(`Nice practice — ${correct}/${total} correct`);
+    else showCelebrateToast(`Practice logged — keep going on the next step`);
   } catch (e) {
     showToast(e.message || t("status_failed"));
   } finally {
@@ -6409,6 +6579,8 @@ practiceAgainBtn?.addEventListener("click", () => {
   if (opts) startPracticeSession(opts);
 });
 practiceDoneBtn?.addEventListener("click", () => closePracticeDock());
+wireCoachKeepGoing();
+wirePracticeJourneyCta();
 
 async function initBetaBanner() {
   const el = document.getElementById("betaBanner");

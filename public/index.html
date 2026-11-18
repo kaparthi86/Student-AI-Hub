@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="./journey.css?v=companion-1" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=position-1" />
+    <link rel="stylesheet" href="./companion-experience.css?v=companion-phases-1" />
     <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
   </head>
   <body class="brand-msc">
@@ -1147,6 +1148,7 @@
                   <p class="practice-next-kicker" id="practiceNextLabel">Next best step</p>
                   <p id="practiceNextStep"></p>
                 </div>
+                <div class="practice-journey-cta" id="practiceJourneyCta" hidden></div>
                 <div class="practice-summary-actions">
                   <button type="button" id="practiceAgainBtn" class="primary-btn">Practice again</button>
                   <button type="button" id="practiceDoneBtn" class="ghost-btn">Done</button>
@@ -1155,6 +1157,7 @@
               <p id="practiceEmptyStatus" class="muted status-line practice-dock-status hidden" data-i18n-status="status_ready"></p>
             </section>
             <div class="followup-bar">
+              <aside id="coachKeepGoing" class="coach-keep-going hidden" aria-label="Keep going with your coach" hidden></aside>
               <div
                 id="chatFollowupChips"
                 class="starter-chips starter-chips--inline"
@@ -1392,6 +1395,10 @@
           <button type="button" class="msc-bottom-item" data-bottom="chat" id="bottomTutor">
             <span class="msc-bottom-ico msc-ico-tutor" aria-hidden="true"></span>
             <span>Coach</span>
+          </button>
+          <button type="button" class="msc-bottom-item" data-bottom="voice" id="bottomVoice">
+            <span class="msc-bottom-ico msc-ico-talk" aria-hidden="true"></span>
+            <span>Talk</span>
           </button>
           <button type="button" class="msc-bottom-item" data-bottom="learning" id="bottomLearning">
             <span class="msc-bottom-ico msc-ico-learn" aria-hidden="true"></span>
@@ -1723,9 +1730,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
-    <script defer src="./app.js?v=position-1"></script>
+    <div id="celebrateToast" class="celebrate-toast" role="status" aria-live="polite"></div>
+    <script defer src="./app.js?v=companion-phases-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
-    <script defer src="./journey.js?v=companion-1"></script>
+    <script defer src="./journey.js?v=companion-phases-1"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>
     <script defer src="./admin-analytics.js?v=intel-loop-2"></script>
   </body>

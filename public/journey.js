@@ -628,6 +628,10 @@
             <strong>Ask Your Coach</strong>
             <span>Ask, explore, and understand anything</span>
           </button>
+          <button type="button" class="companion-tile" data-coach-tab="voice">
+            <strong>Talk with Coach</strong>
+            <span>Voice-first conversation when you’re stuck</span>
+          </button>
           <button type="button" class="companion-tile" data-coach-tab="chat" data-coach-mode="quiz">
             <strong>Practice</strong>
             <span>Personalized questions and exercises</span>
@@ -725,12 +729,25 @@
 
     const body = $("progressPanelBody");
     if (!body) return;
+    const next = pickNextStep();
+    const masteryRows = rows.map((r) => ({
+      ...r,
+      attempts: Number(journey.quizStats?.byTopic?.[r.topic]?.attempts || 0),
+    }));
     body.innerHTML = `
       ${
         insufficient
           ? `<p class="muted journey-insufficient" role="status">Not enough practice data yet for verified mastery. Create a Learning Snapshot or complete a few quiz checks — we will not invent scores.</p>`
           : ""
       }
+      <aside class="progress-next-banner" aria-label="Recommended next step">
+        <p class="coach-kicker">Recommended next</p>
+        <p><strong>${escapeHtml(next.title)}</strong></p>
+        <p class="muted">${escapeHtml(next.reason)}</p>
+        <button type="button" class="primary-btn" data-journey-next-step>${escapeHtml(
+          next.cta === "Start this step" ? "Continue Learning" : next.cta,
+        )}</button>
+      </aside>
       <div class="journey-stat-row journey-stat-row--wide">
         <div class="journey-stat"><span class="journey-stat-value">${insufficient ? "—" : `${mastery}%`}</span><span class="journey-stat-label">Overall mastery${insufficient ? " (need more data)" : ""}</span></div>
         <div class="journey-stat"><span class="journey-stat-value">${journey.weeklyGoals.completed}/${journey.weeklyGoals.target}</span><span class="journey-stat-label">Weekly goals</span></div>
@@ -738,27 +755,21 @@
         <div class="journey-stat"><span class="journey-stat-value">${attempts}</span><span class="journey-stat-label">Practice checks</span></div>
       </div>
       <section class="journey-block">
-        <h3>Subject mastery</h3>
-        <ul class="journey-mastery-list">
-          ${
-            rows.length
-              ? rows
-                  .map((r) => {
-                    const pct = r.score == null ? 0 : r.score;
-                    const label = r.score == null ? "Insufficient data" : `${pct}% (from practice)`;
-                    return `<li>
-                <div class="journey-mastery-meta"><strong>${escapeHtml(r.topic)}</strong><span>${label}</span></div>
-                <div class="journey-bar"><span style="width:${r.score == null ? 0 : pct}%"></span></div>
-              </li>`;
-                  })
-                  .join("")
-              : `<li><p class="muted">Add subjects in Profile, then practice so mastery can be calculated.</p></li>`
-          }
-        </ul>
+        <h3>Concept mastery</h3>
+        ${renderConceptMasteryList(masteryRows)}
       </section>
       <section class="journey-block">
-        <h3>Knowledge gaps</h3>
-        <p class="muted">${weak.length ? escapeHtml(weak.join(", ")) : "No gaps flagged yet. Create a Learning Snapshot, practice a quiz, or scan Ask activity below."}</p>
+        <h3>Areas to Improve</h3>
+        ${
+          weak.length
+            ? `<ul class="snapshot-gap-actions">${weak
+                .map(
+                  (topic) =>
+                    `<li><span>${escapeHtml(topic)}</span><button type="button" class="ghost-btn" data-journey-plan-go data-tab="chat" data-mode="quiz" data-topic="${escapeAttr(topic)}">Practice</button></li>`,
+                )
+                .join("")}</ul>`
+            : `<p class="muted">No gaps flagged yet. Create a Learning Snapshot, practice a quiz, or scan Ask activity below.</p>`
+        }
         <div class="coach-hero-actions">
           <button type="button" class="primary-btn" data-coach-tab="diagnostic">Create My Learning Snapshot</button>
           <button type="button" class="ghost-btn" data-scroll-to="progressGapsSection">Scan Ask activity</button>
@@ -1176,7 +1187,7 @@
   function renderSnapshotHistory() {
     const history = Array.isArray(journey.snapshots) ? journey.snapshots.slice(-5).reverse() : [];
     if (!history.length) {
-      return `<p class="muted snapshot-history-empty">Take snapshots over time to see Your Learning Growth.</p>`;
+      return `<div class="empty-state"><h3>Your Learning Growth</h3><p>Take snapshots over time to see how your understanding changes.</p></div>`;
     }
     return `
       <ol class="snapshot-history-list">
@@ -1202,6 +1213,49 @@
       </ol>`;
   }
 
+  function masteryTone(pct) {
+    if (pct == null) return "is-mid";
+    if (pct < 55) return "is-low";
+    if (pct < 75) return "is-mid";
+    return "is-high";
+  }
+
+  function confidenceLabel(pct, attempts) {
+    if (pct == null) return "Need more evidence";
+    if (attempts != null && attempts < 2) return "Early signal";
+    if (pct >= 75) return "Stronger understanding";
+    if (pct >= 55) return "Developing";
+    return "Needs practice";
+  }
+
+  function renderConceptMasteryList(rows, { actionable = true } = {}) {
+    if (!rows.length) {
+      return `<div class="empty-state"><h3>Concept mastery</h3><p>Add subjects in Profile, then create a Learning Snapshot or practice so mastery can be calculated.</p><button type="button" class="primary-btn" data-coach-tab="diagnostic">Create My Learning Snapshot</button></div>`;
+    }
+    return `<ul class="concept-mastery-list">${rows
+      .map((r) => {
+        const pct = r.score == null ? null : Number(r.score);
+        const width = pct == null ? 0 : Math.max(0, Math.min(100, pct));
+        const label = pct == null ? "Insufficient data" : `${pct}%`;
+        return `<li class="concept-mastery-item">
+          <div class="concept-mastery-meta">
+            <strong>${escapeHtml(r.topic)}</strong>
+            <span class="muted">${label} · ${escapeHtml(confidenceLabel(pct, r.attempts))}</span>
+          </div>
+          <div class="concept-mastery-track" role="presentation"><span class="concept-mastery-fill ${masteryTone(pct)}" style="width:${width}%"></span></div>
+          ${
+            actionable
+              ? `<div class="concept-mastery-actions">
+            <button type="button" class="ghost-btn" data-journey-plan-go data-tab="chat" data-mode="explain" data-topic="${escapeAttr(r.topic)}">Explain</button>
+            <button type="button" class="ghost-btn" data-journey-plan-go data-tab="chat" data-mode="quiz" data-topic="${escapeAttr(r.topic)}">Practice</button>
+          </div>`
+              : ""
+          }
+        </li>`;
+      })
+      .join("")}</ul>`;
+  }
+
   function renderDiagnosticPanel() {
     const body = $("diagnosticPanelBody");
     if (!body || $("panelDiagnostic")?.hidden) return;
@@ -1216,6 +1270,11 @@
     const plan = buildDailyPlan();
     const recItems = (plan.items || []).slice(0, 3);
 
+    const masteryRows = Object.entries(journey.diagnostic.scores || {}).map(([topic, score]) => ({
+      topic,
+      score: Number(score),
+      attempts: 1,
+    }));
     body.innerHTML = `
       <section class="snapshot-intro">
         <p class="snapshot-intro-lead">
@@ -1228,7 +1287,20 @@
         hasSnapshot
           ? `<section class="snapshot-results journey-block" aria-labelledby="snapshotResultsTitle">
         <h3 id="snapshotResultsTitle">Your Learning Snapshot</h3>
-        <p class="muted">Last created: ${escapeHtml(last)}${overall != null ? ` · ${overall}% overall picture` : ""}</p>
+        <p class="muted">Last created: ${escapeHtml(last)}</p>
+        <div class="snapshot-overall">
+          <div class="snapshot-overall-ring" style="--ring:${overall == null ? 0 : overall}" aria-label="Overall understanding ${overall == null ? "unknown" : overall + " percent"}">
+            <span>${overall == null ? "—" : `${overall}%`}</span>
+          </div>
+          <div class="snapshot-overall-copy">
+            <h4>Overall understanding</h4>
+            <p>A quick picture of where you are — not a final grade. Confidence grows as you practice and take new snapshots.</p>
+          </div>
+        </div>
+        <article class="snapshot-card snapshot-card--wide">
+          <h4>Concept mastery</h4>
+          ${renderConceptMasteryList(masteryRows)}
+        </article>
         <div class="snapshot-grid">
           <article class="snapshot-card">
             <h4>What You're Doing Well</h4>
@@ -1258,13 +1330,17 @@
               recItems.length
                 ? `<ul class="snapshot-plan-list">${recItems
                     .map(
-                      (item, idx) =>
+                      (item) =>
                         `<li>
                           <div><strong>${escapeHtml(item.topic)}</strong> <span class="muted">${item.minutes} min · ${escapeHtml(item.action)}</span></div>
                           <button type="button" class="ghost-btn" data-journey-start="${(plan.items || []).indexOf(item)}">Practice</button>
                         </li>`,
                     )
                     .join("")}</ul>
+                <div class="journey-connected">
+                  <strong>Connected journey</strong>
+                  <span class="muted">Explain → practice → check Progress. Each step updates your next recommendation.</span>
+                </div>
                 <button type="button" class="ghost-btn" data-coach-tab="home">Back to Home next step</button>`
               : `<p class="muted">Create a snapshot to unlock today’s practice recommendations.</p>`
           }
@@ -1275,7 +1351,10 @@
           ${renderSnapshotHistory()}
         </article>
       </section>`
-          : ""
+          : `<div class="empty-state" style="margin-top:1rem">
+              <h3>No snapshot yet</h3>
+              <p>Create your first Learning Snapshot to unlock mastery visuals, practice recommendations, and growth history.</p>
+            </div>`
       }
       <div id="diagnosticMount" class="journey-quiz-mount"></div>
     `;
@@ -1287,7 +1366,11 @@
   async function startDiagnostic() {
     const mount = $("diagnosticMount");
     if (!mount) return;
-    mount.innerHTML = `<p class="muted">Building your Learning Snapshot…</p>`;
+    mount.innerHTML = `
+      <div class="skeleton-block" aria-hidden="true"></div>
+      <p class="muted" style="margin-top:0.65rem">Building your Learning Snapshot…</p>
+      <div class="skeleton-line" aria-hidden="true"></div>
+      <div class="skeleton-line" style="width:70%" aria-hidden="true"></div>`;
     const subjects = subjectList();
     const topic = subjects.slice(0, 3).join(", ");
     try {

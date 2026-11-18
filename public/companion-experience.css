@@ -1,0 +1,312 @@
+/* Phases 2–4: companion polish — mastery viz, motion, mobile, a11y (teal/navy) */
+
+:root {
+  --companion-radius: 14px;
+  --companion-space: 8px;
+}
+
+/* Phase 2 — concept mastery */
+.concept-mastery-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.concept-mastery-item {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.concept-mastery-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+}
+
+.concept-mastery-meta strong {
+  color: var(--navy, #142d4c);
+}
+
+.concept-mastery-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(20, 45, 76, 0.08);
+  overflow: hidden;
+}
+
+.concept-mastery-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #287a89, #1f6571);
+  transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.concept-mastery-fill.is-low {
+  background: linear-gradient(90deg, #b45309, #c2410c);
+}
+
+.concept-mastery-fill.is-mid {
+  background: linear-gradient(90deg, #287a89, #3d8b97);
+}
+
+.concept-mastery-fill.is-high {
+  background: linear-gradient(90deg, #1f6571, #2f8a6b);
+}
+
+.concept-mastery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.snapshot-overall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.snapshot-overall-ring {
+  --ring: 0;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #1f6571;
+  background:
+    radial-gradient(circle at center, #fff 56%, transparent 57%),
+    conic-gradient(#287a89 calc(var(--ring) * 1%), rgba(20, 45, 76, 0.1) 0);
+}
+
+.snapshot-overall-copy {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.snapshot-overall-copy h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1f6571;
+}
+
+.progress-next-banner {
+  margin: 0 0 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: var(--companion-radius);
+  border: 1px solid rgba(40, 122, 137, 0.22);
+  background: #fff;
+}
+
+.progress-next-banner p {
+  margin: 0.25rem 0 0.65rem;
+}
+
+.journey-connected {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(40, 122, 137, 0.08);
+  border: 1px solid rgba(40, 122, 137, 0.14);
+}
+
+.journey-connected strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--navy, #142d4c);
+}
+
+/* Phase 3 — continuous coach strip */
+.coach-keep-going {
+  margin: 0.75rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--companion-radius);
+  border: 1px solid rgba(20, 45, 76, 0.1);
+  background: linear-gradient(165deg, rgba(40, 122, 137, 0.07), #fff);
+  animation: companion-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.coach-keep-going-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.practice-journey-cta {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Phase 4 — motion, skeleton, a11y, mobile */
+@keyframes companion-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes companion-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.companion-home,
+.snapshot-results,
+.progress-next-banner {
+  animation: companion-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.skeleton-line {
+  height: 0.85rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(20, 45, 76, 0.06), rgba(40, 122, 137, 0.12), rgba(20, 45, 76, 0.06));
+  background-size: 200% 100%;
+  animation: companion-shimmer 1.2s linear infinite;
+}
+
+.skeleton-line + .skeleton-line {
+  margin-top: 0.5rem;
+}
+
+.skeleton-block {
+  min-height: 4.5rem;
+  border-radius: var(--companion-radius);
+  background: linear-gradient(90deg, rgba(20, 45, 76, 0.05), rgba(40, 122, 137, 0.1), rgba(20, 45, 76, 0.05));
+  background-size: 200% 100%;
+  animation: companion-shimmer 1.2s linear infinite;
+}
+
+.empty-state {
+  padding: 1.1rem 1rem;
+  border-radius: var(--companion-radius);
+  border: 1px dashed rgba(20, 45, 76, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  text-align: left;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: var(--navy, #142d4c);
+}
+
+.empty-state p {
+  margin: 0 0 0.75rem;
+  color: var(--muted, #5c6b6e);
+  line-height: 1.45;
+}
+
+.msc-bottom-nav .msc-bottom-item {
+  min-height: 52px;
+  min-width: 56px;
+  touch-action: manipulation;
+}
+
+.msc-bottom-item:focus-visible,
+.companion-tile:focus-visible,
+.primary-btn:focus-visible,
+.ghost-btn:focus-visible,
+.study-mode-btn:focus-visible {
+  outline: 3px solid rgba(40, 122, 137, 0.45);
+  outline-offset: 2px;
+}
+
+.celebrate-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(12px);
+  z-index: 80;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: #142d4c;
+  color: #fff;
+  font-weight: 650;
+  font-size: 0.92rem;
+  box-shadow: 0 8px 24px rgba(20, 45, 76, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.celebrate-toast.is-on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.companion-secondary .companion-tile:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.coach-keep-going.hidden,
+#practiceJourneyCta[hidden] {
+  display: none !important;
+}
+
+.coach-keep-going strong {
+  display: block;
+  color: var(--navy, #142d4c);
+  margin-bottom: 0.2rem;
+}
+
+.coach-keep-going p {
+  margin: 0;
+  color: var(--muted, #5c6b6e);
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .companion-secondary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .companion-secondary .companion-tile:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .msc-bottom-nav {
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .snapshot-overall {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .companion-home,
+  .snapshot-results,
+  .progress-next-banner,
+  .coach-keep-going,
+  .concept-mastery-fill,
+  .skeleton-line,
+  .skeleton-block,
+  .celebrate-toast {
+    animation: none !important;
+    transition: none !important;
+  }
+}
