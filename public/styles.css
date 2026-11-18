@@ -29,7 +29,7 @@
 
 * {
   box-sizing: border-box;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: Outfit, system-ui, -apple-system, sans-serif;
 }
 
 .sr-only {
@@ -44,14 +44,14 @@
   border: 0;
 }
 
-/* Logo / product wordmark (Outfit) */
+/* Logo / product wordmark + reading titles (Outfit / Source Serif via design-system) */
 .app-brand .brand-title,
 .search-title,
 .auth-signin-title,
 .bubble-md h1,
 .bubble-md h2,
 .bubble-md h3 {
-  font-family: Outfit, Inter, system-ui, sans-serif;
+  font-family: Outfit, system-ui, sans-serif;
 }
 
 html {
@@ -64,8 +64,8 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    radial-gradient(ellipse 60% 45% at 15% 0%, rgba(47, 111, 237, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 35% at 90% 8%, rgba(255, 255, 255, 0.8) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 45% at 15% 0%, rgba(40, 122, 137, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 90% 8%, rgba(20, 45, 76, 0.04) 0%, transparent 50%),
     linear-gradient(180deg, #FBFAF7 0%, var(--bg) 40%, var(--bg2) 100%);
   background-attachment: fixed;
   color: var(--text);

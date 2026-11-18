@@ -19,7 +19,8 @@
     "test:home-next": "node scripts/home-next-step-smoke.js",
     "test:ia-groups": "node scripts/ia-grouping-smoke.js",
     "test:snapshot": "node scripts/learning-snapshot-smoke.js",
-    "test": "npm run test:p0-smoke && npm run test:account-delete && npm run test:consent && npm run test:isolation && npm run test:planner && npm run test:landing && npm run test:home-next && npm run test:ia-groups && npm run test:snapshot"
+    "test:companion-phases": "node scripts/companion-phases-smoke.js",
+    "test": "npm run test:p0-smoke && npm run test:account-delete && npm run test:consent && npm run test:isolation && npm run test:planner && npm run test:landing && npm run test:home-next && npm run test:ia-groups && npm run test:snapshot && npm run test:companion-phases"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

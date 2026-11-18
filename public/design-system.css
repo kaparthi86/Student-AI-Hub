@@ -1,0 +1,204 @@
+/**
+ * My Student Coach — premium design system
+ * Brand tokens: Teal + Navy + Outfit / Source Serif 4
+ * Structure from §4 (8pt grid, radius, a11y, motion) — brand fonts only, no generic SaaS palette.
+ */
+
+:root {
+  /* Color */
+  --ds-navy: #142d4c;
+  --ds-teal: #287a89;
+  --ds-teal-deep: #1f6571;
+  --ds-paper: #f7f6f3;
+  --ds-paper-2: #f1f0ec;
+  --ds-mist: #f1f5f9;
+  --ds-soft-green: #e7f4ef;
+  --ds-ink: #1c1b19;
+  --ds-muted: #6f6b63;
+  --ds-surface: #ffffff;
+  --ds-border: rgba(20, 45, 76, 0.12);
+  --ds-border-strong: rgba(20, 45, 76, 0.18);
+  --ds-focus: rgba(40, 122, 137, 0.4);
+
+  /* Map onto existing app vars when present */
+  --navy: var(--ds-navy);
+  --teal: var(--ds-teal);
+  --primary: var(--ds-teal);
+  --primary-2: var(--ds-teal-deep);
+  --bg: var(--ds-paper);
+  --bg2: var(--ds-paper-2);
+  --mist: var(--ds-mist);
+  --soft-green: var(--ds-soft-green);
+  --text: var(--ds-ink);
+  --muted: var(--ds-muted);
+  --surface: var(--ds-surface);
+  --border: var(--ds-border);
+
+  /* 8-point spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+
+  /* Radius 12–16 family */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-ui: Outfit, system-ui, -apple-system, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Motion */
+  --motion-fast: 160ms ease;
+  --motion-med: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-slow: 420ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Elevation — soft, not floating stacks */
+  --elev-1: 0 1px 0 rgba(20, 45, 76, 0.04);
+  --elev-2: 0 8px 24px rgba(20, 45, 76, 0.08);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(20, 45, 76, 0.1);
+  --glass-blur: 18px;
+}
+
+html {
+  font-family: var(--font-ui);
+  color: var(--ds-ink);
+  background: var(--ds-paper);
+}
+
+body.brand-msc {
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(ellipse 55% 40% at 12% 0%, rgba(40, 122, 137, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 92% 6%, rgba(20, 45, 76, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #fbfaf7 0%, var(--ds-paper) 42%, var(--ds-paper-2) 100%);
+  background-attachment: fixed;
+}
+
+/* Typography roles */
+.ds-display,
+.msc-headline,
+.companion-greeting,
+.landing-headline,
+.auth-signin-title,
+.search-title {
+  font-family: var(--font-serif);
+  color: var(--ds-navy);
+  letter-spacing: -0.02em;
+}
+
+.ds-ui,
+.primary-btn,
+.ghost-btn,
+.msc-bottom-item,
+.companion-tile,
+.starter-chip {
+  font-family: var(--font-ui);
+}
+
+/* Surfaces */
+.ds-card,
+.companion-tile,
+.snapshot-card,
+.progress-next-banner,
+.journey-next-step,
+.empty-state {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+}
+
+.ds-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  border-radius: var(--radius-lg);
+}
+
+/* Buttons — one primary language */
+.primary-btn {
+  border-radius: var(--radius-md);
+  background: var(--ds-teal);
+  border-color: var(--ds-teal-deep);
+  transition: transform var(--motion-fast), background var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.primary-btn:hover {
+  background: var(--ds-teal-deep);
+}
+
+.ghost-btn {
+  border-radius: var(--radius-md);
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+
+.primary-btn:focus-visible,
+.ghost-btn:focus-visible,
+.companion-tile:focus-visible,
+.msc-bottom-item:focus-visible,
+.study-mode-btn:focus-visible,
+.starter-chip:focus-visible {
+  outline: 3px solid var(--ds-focus);
+  outline-offset: 2px;
+}
+
+/* Spacing helpers */
+.ds-stack-2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ds-stack-3 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ds-stack-4 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Skeleton / empty (shared language) */
+.ds-skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    rgba(20, 45, 76, 0.05),
+    rgba(40, 122, 137, 0.1),
+    rgba(20, 45, 76, 0.05)
+  );
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.2s linear infinite;
+}
+
+@keyframes ds-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-btn,
+  .ghost-btn,
+  .companion-tile,
+  .ds-skeleton {
+    animation: none !important;
+    transition: none !important;
+  }
+}
