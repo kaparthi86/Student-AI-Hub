@@ -17,7 +17,14 @@ function assert(cond, msg) {
   }
 }
 
+assert(/design-system\.css/.test(indexHtml), "design-system.css linked");
 assert(/companion-experience\.css/.test(indexHtml), "companion-experience.css linked");
+const ds = fs.readFileSync(path.join(root, "public/design-system.css"), "utf8");
+assert(/--ds-teal:\s*#287a89/i.test(ds), "design system keeps brand teal");
+assert(/Outfit/.test(ds), "design system uses Outfit");
+assert(/Source Serif 4/.test(ds), "design system uses Source Serif");
+assert(!/Inter/.test(ds), "design system rejects Inter");
+assert(!/lavender|indigo/i.test(ds), "design system rejects indigo/lavender SaaS palette");
 assert(/id="celebrateToast"/.test(indexHtml), "celebrate toast mount");
 assert(/id="coachKeepGoing"/.test(indexHtml), "keep-going mount");
 assert(/id="practiceJourneyCta"/.test(indexHtml), "practice journey CTA mount");
