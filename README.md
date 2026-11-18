@@ -1,12 +1,18 @@
-# Student AI Hub MVP
+# My Student Coach
 
-A prototype for a free student-focused AI app with:
+Personal AI learning companion for students (ages 13+): **Understand. Practice. Improve.**
+
+My Student Coach helps learners see what they understand, practice what matters, and know what to learn next — through **Coach · Learning Snapshot · Practice · Progress**.
+
+## What’s included
 
 - Google login (Supabase Auth)
-- Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
-- **Finance AI**: Ask, a local Budget planner, and Goals with educational (not advice) guardrails
-- **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
-- Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
+- **Coach** — Ask (text), Voice Tutor, conversation memory in session
+- **Learning Snapshot** — strengths, gaps, and recommended next practice (evidence-based)
+- **Practice** — personalized questions tied to Snapshot / notes / code topics
+- **Progress** — mastery signals, study planner, and next-step recommendations
+- Nested tools: Coding Coach, Smart Notebook (upload `.txt/.md/.csv/.json/.pdf`), Flashcards, Exam prep, Focus Mode
+- Backend API with open-source models via Hugging Face **Inference Providers** (Router)
 
 ## 1) Setup
 
@@ -161,9 +167,9 @@ In **Google Cloud Console** (OAuth client used by Supabase): add **Authorized Ja
 
 ### Message you can paste
 
-> **AI Hub** is open — start with **Student AI**.  
+> **My Student Coach** is open — your personal AI learning companion.  
 > **Link:** `https://www.my-student-coach.com`  
-> Join with **Google**. Use **Ask**, **Code**, or **Notebook** for study help.  
+> Join with **Google**. Start with a **Learning Snapshot**, then **Coach**, **Practice**, and **Progress**.  
 > AI can be wrong - check important facts. Follow your honor code; do not submit AI output if your course forbids it.
 
 ### Checks
@@ -173,7 +179,7 @@ In **Google Cloud Console** (OAuth client used by Supabase): add **Authorized Ja
   1. Locally: `git add public` then `git commit` and `git push` so GitHub contains `public/index.html`, `public/app.js`, `public/styles.css`, and `public/config.js`.
   2. Render **Settings → Root Directory**: leave **empty** unless the app really lives in a subfolder (then Root Directory must be that folder, and `public/` must be inside it).
   3. Trigger **Manual Deploy** on Render after the push.
-- Confirm `/` shows the marketing landing (AI Hub + Join with Google) and that `/privacy.html` + `/terms.html` load.
+- Confirm `/` shows the marketing landing (My Student Coach + Get Started Free) and that `/privacy.html` + `/terms.html` load.
 
 ### Optional: tunnel instead of deploy
 

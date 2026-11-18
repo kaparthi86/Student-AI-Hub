@@ -1,10 +1,10 @@
 # My Student Coach
 
-A prototype for a free student-focused AI app with:
+Personal AI learning companion: **Coach · Learning Snapshot · Practice · Progress**.
 
 - Google login (Supabase Auth)
-- Chat-style **Learning** + **Code** tutors (conversation memory in the browser session)
-- **Doc Notebook**: upload `.txt/.md/.csv/.json/.pdf` and get structured study notes
+- Coach (Ask + Voice), Learning Snapshot, Practice, and Progress
+- Nested tools: Coding Coach, Smart Notebook (`.txt/.md/.csv/.json/.pdf`), Flashcards, Exam prep
 - Backend API calling open-source models via Hugging Face **Inference Providers** (Router)
 
 ## 1) Setup
