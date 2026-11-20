@@ -29,13 +29,13 @@
     />
     <link rel="stylesheet" href="./styles.css?v=design-system-1" />
     <link rel="stylesheet" href="./design-system.css?v=design-system-1" />
-    <link rel="stylesheet" href="./world-class-overrides.css?v=voice-converse-1" />
+    <link rel="stylesheet" href="./world-class-overrides.css?v=profile-labels-1" />
     <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
-    <link rel="stylesheet" href="./journey.css?v=companion-1" />
+    <link rel="stylesheet" href="./journey.css?v=profile-labels-1" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
     <link rel="stylesheet" href="./simplify-coach.css?v=position-1" />
     <link rel="stylesheet" href="./companion-experience.css?v=companion-phases-1" />
-    <link rel="stylesheet" href="./android-shell.css?v=help-support-1" />
+    <link rel="stylesheet" href="./android-shell.css?v=profile-labels-1" />
   </head>
   <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
@@ -742,58 +742,84 @@
               <p class="muted msc-hub-lead" id="profileHubLead">Personalize how your coach teaches you.</p>
             </header>
             <div class="msc-profile-card">
-              <label for="prefGradeLevel" id="prefGradeLevelLabel">Grade / level</label>
-              <select id="prefGradeLevel">
-                <option value="">Prefer not to say</option>
-                <option value="middle">Middle school (13+) / self-learning</option>
-                <option value="high">High school</option>
-                <option value="college">College / university</option>
-                <option value="exam">Exam prep</option>
-              </select>
-              <label for="prefSubjects" id="prefSubjectsLabel">Subjects (comma-separated)</label>
-              <input id="prefSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
-              <label for="prefExplainStyle" id="prefExplainStyleLabel">Explanation style</label>
-              <select id="prefExplainStyle">
-                <option value="balanced">Balanced</option>
-                <option value="simple">Explain simply</option>
-                <option value="steps">Step by step</option>
-                <option value="examples">Examples first</option>
-              </select>
-              <label for="prefCountry" id="prefCountryLabel">Country</label>
-              <select id="prefCountry">
-                <option value="">Prefer not to say</option>
-                <option value="IN">India</option>
-                <option value="US">United States</option>
-                <option value="OTHER">Other</option>
-              </select>
-              <label for="prefRegion" id="prefRegionLabel">State / region</label>
-              <input id="prefRegion" type="text" maxlength="40" placeholder="e.g. Tamil Nadu, Maharashtra, Telangana" />
-              <label for="prefBoard" id="prefBoardLabel">Education board</label>
-              <select id="prefBoard">
-                <option value="">Prefer not to say</option>
-                <option value="cbse">CBSE</option>
-                <option value="icse">ICSE</option>
-                <option value="state">State board</option>
-                <option value="ib">IB</option>
-                <option value="other">Other</option>
-              </select>
-              <label for="prefExamFocus" id="prefExamFocusLabel">Exam focus</label>
-              <select id="prefExamFocus">
-                <option value="">Prefer not to say</option>
-                <option value="boards">Board exams</option>
-                <option value="jee">JEE</option>
-                <option value="neet">NEET</option>
-                <option value="cuet">CUET</option>
-                <option value="none">None / general learning</option>
-              </select>
-              <label for="prefReplyLanguage" id="prefReplyLanguageLabel">Study language</label>
-              <select id="prefReplyLanguage" class="study-lang-select">
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="te">Telugu</option>
-                <option value="ta">Tamil</option>
-                <option value="es">Español</option>
-              </select>
+              <section class="msc-profile-section" aria-labelledby="profileSectionAbout">
+                <h3 class="msc-profile-section-title" id="profileSectionAbout">About you</h3>
+                <div class="msc-profile-field">
+                  <label for="prefGradeLevel" id="prefGradeLevelLabel">Grade / level</label>
+                  <select id="prefGradeLevel">
+                    <option value="">Prefer not to say</option>
+                    <option value="middle">Middle school (13+) / self-learning</option>
+                    <option value="high">High school</option>
+                    <option value="college">College / university</option>
+                    <option value="exam">Exam prep</option>
+                  </select>
+                </div>
+                <div class="msc-profile-field">
+                  <label for="prefSubjects" id="prefSubjectsLabel">Subjects</label>
+                  <input id="prefSubjects" type="text" maxlength="160" placeholder="Algebra, Biology, Python" />
+                  <p class="msc-profile-hint" id="prefSubjectsHint">Separate with commas.</p>
+                </div>
+              </section>
+              <section class="msc-profile-section" aria-labelledby="profileSectionLearn">
+                <h3 class="msc-profile-section-title" id="profileSectionLearn">How you learn</h3>
+                <div class="msc-profile-field">
+                  <label for="prefExplainStyle" id="prefExplainStyleLabel">Explanation style</label>
+                  <select id="prefExplainStyle">
+                    <option value="balanced">Balanced</option>
+                    <option value="simple">Explain simply</option>
+                    <option value="steps">Step by step</option>
+                    <option value="examples">Examples first</option>
+                  </select>
+                </div>
+                <div class="msc-profile-field">
+                  <label for="prefReplyLanguage" id="prefReplyLanguageLabel">Study language</label>
+                  <select id="prefReplyLanguage" class="study-lang-select">
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="te">Telugu</option>
+                    <option value="ta">Tamil</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+              </section>
+              <section class="msc-profile-section" aria-labelledby="profileSectionPlace">
+                <h3 class="msc-profile-section-title" id="profileSectionPlace">Where you study</h3>
+                <div class="msc-profile-field">
+                  <label for="prefCountry" id="prefCountryLabel">Country</label>
+                  <select id="prefCountry">
+                    <option value="">Prefer not to say</option>
+                    <option value="IN">India</option>
+                    <option value="US">United States</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div class="msc-profile-field">
+                  <label for="prefRegion" id="prefRegionLabel">State / region</label>
+                  <input id="prefRegion" type="text" maxlength="40" placeholder="Tamil Nadu, Maharashtra, Telangana" />
+                </div>
+                <div class="msc-profile-field">
+                  <label for="prefBoard" id="prefBoardLabel">Education board</label>
+                  <select id="prefBoard">
+                    <option value="">Prefer not to say</option>
+                    <option value="cbse">CBSE</option>
+                    <option value="icse">ICSE</option>
+                    <option value="state">State board</option>
+                    <option value="ib">IB</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="msc-profile-field">
+                  <label for="prefExamFocus" id="prefExamFocusLabel">Exam focus</label>
+                  <select id="prefExamFocus">
+                    <option value="">Prefer not to say</option>
+                    <option value="boards">Board exams</option>
+                    <option value="jee">JEE</option>
+                    <option value="neet">NEET</option>
+                    <option value="cuet">CUET</option>
+                    <option value="none">None / general learning</option>
+                  </select>
+                </div>
+              </section>
               <div class="msc-profile-actions">
                 <button type="button" class="primary-btn" id="saveLearnerPrefsBtn">Save learning profile</button>
                 <button type="button" class="ghost-btn open-settings-btn">More settings</button>
@@ -1682,9 +1708,11 @@
             <label><input type="radio" name="onboardLevel" value="exam" /> Exam prep</label>
             <label><input type="radio" name="onboardLevel" value="middle" /> Middle school (13+) / self-learning</label>
           </div>
-          <label for="onboardSubjects">Subjects (comma-separated)
-            <input id="onboardSubjects" type="text" maxlength="160" placeholder="e.g. Algebra, Biology, Python" />
-          </label>
+          <div class="msc-profile-field journey-onboard-subjects">
+            <label for="onboardSubjects" id="onboardSubjectsLabel">Subjects</label>
+            <input id="onboardSubjects" type="text" maxlength="160" placeholder="Algebra, Biology, Python" />
+            <p class="msc-profile-hint" id="onboardSubjectsHint">Separate with commas.</p>
+          </div>
           <label class="settings-checkbox journey-onboard-age">
             <input id="onboardAgeAck" type="checkbox" />
             <span>I confirm I am 13 or older</span>
@@ -1732,7 +1760,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
     <div id="celebrateToast" class="celebrate-toast" role="status" aria-live="polite"></div>
-    <script defer src="./app.js?v=companion-phases-1"></script>
+    <script defer src="./app.js?v=profile-labels-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
     <script defer src="./journey.js?v=companion-phases-1"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>
