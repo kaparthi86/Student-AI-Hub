@@ -397,11 +397,11 @@
 
 /* India locale personalization */
 .india-locale-banner {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(40, 122, 137, 0.22);
-  background: linear-gradient(135deg, rgba(40, 122, 137, 0.08), rgba(20, 45, 76, 0.04)), #fff;
+  margin-top: 0;
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
+  background: #fff;
 }
 
 .india-locale-title {

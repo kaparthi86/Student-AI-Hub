@@ -102,11 +102,12 @@
 }
 
 .progress-next-banner {
-  margin: 0 0 1rem;
-  padding: 0.95rem 1rem;
-  border-radius: var(--companion-radius);
-  border: 1px solid rgba(40, 122, 137, 0.22);
+  margin: 0 0 24px;
+  padding: 24px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
   background: #fff;
+  box-shadow: none;
 }
 
 .progress-next-banner p {
@@ -172,9 +173,7 @@
   }
 }
 
-.companion-home,
-.snapshot-results,
-.progress-next-banner {
+.snapshot-results {
   animation: companion-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -256,7 +255,7 @@
   transform: translateX(-50%) translateY(0);
 }
 
-.companion-secondary .companion-tile:last-child:nth-child(odd) {
+.companion-secondary .companion-tile:last-child:nth-child(even) {
   grid-column: 1 / -1;
 }
 
@@ -283,7 +282,7 @@
     grid-template-columns: 1fr !important;
   }
 
-  .companion-secondary .companion-tile:last-child:nth-child(odd) {
+  .companion-secondary .companion-tile:last-child:nth-child(even) {
     grid-column: auto;
   }
 
@@ -298,9 +297,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .companion-home,
   .snapshot-results,
-  .progress-next-banner,
   .coach-keep-going,
   .concept-mastery-fill,
   .skeleton-line,

@@ -78,19 +78,43 @@
 }
 
 .journey-more-today {
-  margin-top: 0.35rem;
-  border-radius: 14px;
-  border: 1px solid rgba(31, 101, 113, 0.1);
-  background: rgba(255, 255, 255, 0.55);
-  padding: 0.35rem 0.75rem 0.75rem;
+  margin-top: 0;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
+  background: #fff;
+  padding: 8px 16px 16px;
 }
 
 .journey-more-today > summary {
   cursor: pointer;
   list-style: none;
-  font-weight: 700;
-  color: var(--navy, #142d4c);
-  padding: 0.55rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-ui, Outfit, system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-teal, #287a89);
+  padding: 8px 0;
+}
+
+.journey-more-today > summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -4px;
+  flex: 0 0 auto;
+}
+
+.journey-more-today[open] > summary::after {
+  transform: rotate(-135deg);
+  margin-top: 4px;
 }
 
 .journey-more-today > summary::-webkit-details-marker {
@@ -117,13 +141,13 @@
 
 .journey-stat {
   min-width: 5.5rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(31, 101, 113, 0.1);
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  background: #fff;
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 4px;
 }
 
 .journey-stat-value {
@@ -243,7 +267,7 @@
 .companion-home {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 24px;
 }
 
 .companion-home-hero {
@@ -275,32 +299,47 @@
 
 .companion-primary {
   margin: 0;
+  padding: 24px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
+  background: #fff;
+  box-shadow: none;
+}
+
+.companion-primary .journey-next-title {
+  font-family: var(--font-ui, Outfit, system-ui, sans-serif);
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
 }
 
 .companion-secondary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  gap: 16px;
+}
+
+.companion-secondary .ds-section-label {
+  grid-column: 1 / -1;
 }
 
 .companion-tile {
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.95rem 1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(20, 45, 76, 0.1);
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
   background: #fff;
   cursor: pointer;
   color: inherit;
   font: inherit;
-  transition: border-color 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease;
 }
 
 .companion-tile:hover {
-  border-color: rgba(40, 122, 137, 0.35);
-  transform: translateY(-1px);
+  border-color: rgba(40, 122, 137, 0.45);
 }
 
 .companion-tile strong {
@@ -318,11 +357,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.85rem 1rem;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(40, 122, 137, 0.14);
-  background: linear-gradient(165deg, rgba(40, 122, 137, 0.08), rgba(255, 255, 255, 0.9));
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
+  background: #fff;
 }
 
 .companion-momentum-copy {
@@ -530,11 +569,11 @@
 }
 
 .journey-block {
-  margin: 1.15rem 0;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(31, 101, 113, 0.1);
+  margin: 24px 0;
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  background: #fff;
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
 }
 
 .journey-mastery-list,
@@ -718,13 +757,13 @@
 .coach-voice-elevate {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 8px 16px;
   align-items: center;
-  margin: 0.35rem 0 0.75rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 12px;
-  background: rgba(40, 122, 137, 0.08);
-  border: 1px solid rgba(40, 122, 137, 0.14);
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: var(--radius-md, 14px);
+  background: #fff;
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
 }
 
 .coach-voice-elevate p {

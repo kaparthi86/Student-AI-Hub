@@ -619,7 +619,8 @@
           </div>
         </article>
 
-        <section class="companion-secondary" aria-label="Key learning destinations">
+        <section class="companion-secondary" aria-labelledby="companionPathsTitle">
+          <h3 class="ds-section-label" id="companionPathsTitle">Continue with</h3>
           <button type="button" class="companion-tile" data-coach-tab="diagnostic">
             <strong>Learning Snapshot</strong>
             <span>Explore strengths and growth areas</span>
@@ -670,7 +671,7 @@
                 </div>
                 <div class="journey-plan-actions">
                   ${item.done ? '<span class="journey-badge journey-badge--done">Done</span>' : ""}
-                  <button type="button" class="primary-btn journey-start-btn" data-journey-start="${idx}">Start</button>
+                  <button type="button" class="ghost-btn journey-start-btn" data-journey-start="${idx}">Start</button>
                   ${!item.done ? `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>` : ""}
                 </div>
               </li>`;
@@ -771,7 +772,7 @@
             : `<p class="muted">No gaps flagged yet. Create a Learning Snapshot, practice a quiz, or scan Ask activity below.</p>`
         }
         <div class="coach-hero-actions">
-          <button type="button" class="primary-btn" data-coach-tab="diagnostic">Create My Learning Snapshot</button>
+          <button type="button" class="ghost-btn" data-coach-tab="diagnostic">Create My Learning Snapshot</button>
           <button type="button" class="ghost-btn" data-scroll-to="progressGapsSection">Scan Ask activity</button>
         </div>
       </section>

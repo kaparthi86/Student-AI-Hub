@@ -746,23 +746,47 @@ body.brand-msc .primary-btn {
 }
 
 .msc-more-tools {
-  margin-top: 0.35rem;
-  padding: 0.35rem 0.85rem 0.85rem;
-  border-radius: 14px;
-  border: 1px solid rgba(20, 45, 76, 0.08);
-  background: rgba(255, 255, 255, 0.65);
+  margin-top: 0;
+  padding: 8px 16px 16px;
+  border-radius: var(--radius-md, 14px);
+  border: 1px solid var(--ds-border, rgba(20, 45, 76, 0.12));
+  background: #fff;
 }
 
 .msc-more-tools > summary {
   cursor: pointer;
   list-style: none;
-  font-weight: 750;
-  color: var(--navy, #142d4c);
-  padding: 0.55rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-ui, Outfit, system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-teal, #287a89);
+  padding: 8px 0;
 }
 
 .msc-more-tools > summary::-webkit-details-marker {
   display: none;
+}
+
+.msc-more-tools > summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-top: -4px;
+  flex: 0 0 auto;
+}
+
+.msc-more-tools[open] > summary::after {
+  transform: rotate(-135deg);
+  margin-top: 4px;
 }
 
 .msc-home-actions {
