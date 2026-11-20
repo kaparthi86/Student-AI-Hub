@@ -154,6 +154,17 @@ body.brand-msc {
   outline-offset: 2px;
 }
 
+/* Section labels — same voice as Profile groups */
+.ds-section-label {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ds-teal);
+}
+
 /* Spacing helpers */
 .ds-stack-2 {
   display: flex;
