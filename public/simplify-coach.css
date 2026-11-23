@@ -813,6 +813,10 @@ body.brand-msc .primary-btn {
   font-size: 0.9rem;
 }
 
+.msc-advanced-options:not([open]) > :not(summary) {
+  display: none !important;
+}
+
 .msc-advanced-options[open] > summary {
   margin-bottom: 8px;
   color: var(--navy);

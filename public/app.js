@@ -2741,15 +2741,8 @@ function wireCoachKeepGoing() {
 function renderPracticeJourneyCta() {
   const mount = document.getElementById("practiceJourneyCta");
   if (!mount) return;
-  const topic = String(practiceState.topic || coachContextTopic() || "").trim();
-  const next = window.StudentJourney?.pickNextStep?.();
-  mount.hidden = false;
-  mount.innerHTML = `
-    <button type="button" class="ghost-btn" data-practice-journey="explain">Explain ${topic ? escapeHtmlApp(topic) : "again"}</button>
-    <button type="button" class="ghost-btn" data-practice-journey="voice">Talk with Coach</button>
-    <button type="button" class="ghost-btn" data-practice-journey="progress">Update Progress</button>
-    ${next ? `<button type="button" class="primary-btn" data-practice-journey="next">${escapeHtmlApp(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>` : ""}
-  `;
+  mount.hidden = true;
+  mount.replaceChildren();
 }
 
 function wirePracticeJourneyCta() {
@@ -6271,28 +6264,8 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 
 
 /* ---- Practice loop under topic (no separate tab) ---- */
-function mountAssistantPractice(bubble, rawText) {
-  bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
-  const mode = bubble.dataset.mode || "learn";
-  // Quiz me on an Ask reply is the practice path. Do not also show Practice this topic.
-  if (mode === "learn" || mode === "ask" || bubble.closest?.("#chatThread")) return;
-  if (bubble.querySelector(".bubble-actions")) return;
-  if (mode !== "notebook" && mode !== "code") return;
-  const wrap = document.createElement("div");
-  wrap.className = "assistant-practice";
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "text-link-btn assistant-practice-btn";
-  btn.textContent = t("practice_this_topic");
-  btn.addEventListener("click", () => {
-    if (mode === "notebook") {
-      startPracticeSession({ source: "notebook", topic: "My notes" });
-      return;
-    }
-    startPracticeSession({ source: "code", topic: topicFromCodeContext(bubble, rawText) });
-  });
-  wrap.appendChild(btn);
-  bubble.appendChild(wrap);
+function mountAssistantPractice(bubble) {
+  bubble?.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
 }
 
 function topicFromAskContext(bubble, rawText) {

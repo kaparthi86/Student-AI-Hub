@@ -542,8 +542,8 @@ app.use(
         res.setHeader("Content-Type", "application/json; charset=utf-8");
         res.setHeader("Cache-Control", "public, max-age=300");
       }
-      if (filePath.endsWith("sw.js")) {
-        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      if (filePath.endsWith("sw.js") || filePath.endsWith(`${path.sep}index.html`) || filePath.endsWith("/index.html")) {
+        res.setHeader("Cache-Control", "no-cache");
         return;
       }
       // Versioned static assets (?v=...) are safe to cache briefly at the edge/browser.
