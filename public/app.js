@@ -1984,12 +1984,14 @@ function analyzeAssistantForFollowups(raw) {
  */
 function pickSmartFollowupKeys(analysis, scope) {
   const a = analysis || analyzeAssistantForFollowups("");
-  const keys = ["simpler", "example", "practice"];
+  // Ask replies already show Explain simply, Give an example, and Quiz me.
+  // Do not add a second practice chip beside those, or beside Practice this topic.
+  if (scope === "learn" || scope === "ask" || scope === "chat") return [];
+  const keys = ["simpler", "example"];
   if (!a.hasSteps) keys.push("steps");
   else if (scope === "notebook") keys.push("studyPlan");
   else keys.push("studyNext");
   if (a.isLong || a.hasCode) keys.push("summarize");
-  // Cap content chips, then Listen.
   const content = [];
   for (const key of keys) {
     if (content.includes(key)) continue;
@@ -2002,6 +2004,10 @@ function pickSmartFollowupKeys(analysis, scope) {
 
 function renderSmartFollowupChips(container, history, scope) {
   if (!container) return;
+  if (container.id === "chatFollowupChips" || scope === "learn" || scope === "ask" || scope === "chat") {
+    clearAskFollowupChips();
+    return;
+  }
   const last = getLastAssistantMarkdownFromHistory(history);
   const analysis = analyzeAssistantForFollowups(last);
   const keys = pickSmartFollowupKeys(analysis, scope);
@@ -4191,10 +4197,12 @@ function fillAssistantBubbleBody(bubble, text) {
   }
   wireAssistantCopy(bubble, text);
   mountAssistantFeedback(bubble, text);
-  mountAssistantPractice(bubble, text);
-  if (bubble.dataset.mode === "learn" || !bubble.dataset.mode) {
+  const mode = bubble.dataset.mode || "learn";
+  const inAskThread = Boolean(bubble.closest?.("#chatThread"));
+  if (mode === "learn" || mode === "ask" || inAskThread || !bubble.dataset.mode) {
     mountAssistantResponseControls(bubble, text);
   }
+  mountAssistantPractice(bubble, text);
 }
 
 /** @returns {{ wrap: HTMLDivElement, bubble: HTMLDivElement }} */
@@ -6019,14 +6027,6 @@ wireAskLaunch();
 
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
   readAloud: () => readLastAssistantAloud(chatHistory),
-  practice: () => {
-    const topic = lastAskTopicGuess();
-    if (!topic) {
-      showToast(t("practice_need_ask"));
-      return;
-    }
-    startPracticeSession({ source: "ask", topic });
-  },
 });
 clearAskFollowupChips();
 
@@ -6274,8 +6274,9 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 function mountAssistantPractice(bubble, rawText) {
   bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
   const mode = bubble.dataset.mode || "learn";
-  // Ask replies keep only Explain simply, Give an example, and Quiz me.
-  if (mode === "learn") return;
+  // Quiz me on an Ask reply is the practice path. Do not also show Practice this topic.
+  if (mode === "learn" || mode === "ask" || bubble.closest?.("#chatThread")) return;
+  if (bubble.querySelector(".bubble-actions")) return;
   if (mode !== "notebook" && mode !== "code") return;
   const wrap = document.createElement("div");
   wrap.className = "assistant-practice";
@@ -6288,11 +6289,7 @@ function mountAssistantPractice(bubble, rawText) {
       startPracticeSession({ source: "notebook", topic: "My notes" });
       return;
     }
-    if (mode === "code") {
-      startPracticeSession({ source: "code", topic: topicFromCodeContext(bubble, rawText) });
-      return;
-    }
-    startPracticeSession({ source: "ask", topic: topicFromAskContext(bubble, rawText) });
+    startPracticeSession({ source: "code", topic: topicFromCodeContext(bubble, rawText) });
   });
   wrap.appendChild(btn);
   bubble.appendChild(wrap);
