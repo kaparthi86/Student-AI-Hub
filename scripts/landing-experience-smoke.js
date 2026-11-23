@@ -17,22 +17,26 @@ function assert(cond, msg) {
 }
 
 assert(/id="landingCard"/.test(indexHtml), "landingCard present");
-assert(/class="landing-preview"/.test(indexHtml), "product preview present");
-assert(/Understand\. Practice\. Improve\./.test(indexHtml), "journey positioning present");
-assert(/id="mscFaq"/.test(indexHtml), "FAQ section present");
+assert(/class="[^"]*msc-welcome/.test(indexHtml), "welcome is a single screen");
+assert(/id="landingGetStartedBtn"/.test(indexHtml), "Get Started button present");
 assert(/data-open-login/.test(indexHtml), "Get Started uses existing login gateway");
 assert(/href="\.\/privacy\.html"/.test(indexHtml), "privacy.html route preserved");
 assert(/href="\.\/terms\.html"/.test(indexHtml), "terms.html route preserved");
-assert(/Learning Snapshot/.test(indexHtml), "Learning Snapshot positioned on landing");
-assert(/Coach · Snapshot · Practice · Progress/.test(indexHtml), "four-noun companion framing");
-assert(/knows what to learn next/i.test(indexHtml), "companion differentiator in hero");
-assert(/Recommended next:/.test(indexHtml), "Snapshot → next practice preview");
-assert(/Progress/.test(indexHtml), "Progress advertised as live journey pillar");
-assert(!/Your learning toolkit/.test(indexHtml), "toolkit laundry-list kicker removed");
+assert(/id="panelChat"/.test(indexHtml), "Ask panel preserved");
+assert(/id="askProgressChip"/.test(indexHtml), "quiet progress chip on Ask");
+assert(/id="askScanBtn"/.test(indexHtml), "scan a page is a visible way in");
+assert(/id="askSubjectRow"/.test(indexHtml), "pick a subject is a visible way in");
+assert(/id="chatSearchInput"/.test(indexHtml), "composer is on Ask");
+assert(/data-ask-action="planner"/.test(indexHtml), "planner is a chat action");
+assert(/data-ask-action="flashcards"/.test(indexHtml), "flashcards stay reachable from chat");
+assert(/id="tabProgress"/.test(indexHtml), "Progress tab preserved");
+assert(/id="panelPlanner"/.test(indexHtml) || /data-tab="planner"/.test(indexHtml), "planner screen preserved");
+assert(!/class="landing-preview"/.test(indexHtml), "welcome is not a snapshot preview");
+assert(!/id="mscFaq"/.test(indexHtml), "welcome is not a long marketing page");
 assert(!/from-blue-600 to-violet-600/.test(indexHtml), "no purple SaaS gradient markup");
-assert(/landingNavToggle/.test(appJs), "mobile nav toggle wired");
-assert(/\.landing-preview-frame/.test(css), "preview styles present");
-assert(/msc-landing \.landing-hero\.msc-hero::after/.test(css), "legacy hero overlay disabled");
+assert(/setMainTab\("chat"\)/.test(appJs), "signed-in entry opens Ask");
+assert(/\.msc-welcome-glass/.test(css), "welcome uses the glass surface");
+assert(/--ds-navy:\s*#142d4c/i.test(fs.readFileSync(path.join(root, "public/design-system.css"), "utf8")), "navy glass tokens remain");
 assert(!/Finance AI/.test(fs.readFileSync(path.join(root, "README.md"), "utf8")), "README drops Finance AI identity");
 assert(/# My Student Coach/.test(fs.readFileSync(path.join(root, "README.md"), "utf8")), "README uses My Student Coach");
 
