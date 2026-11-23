@@ -318,10 +318,10 @@
                   type="button"
                   class="workspace-hub-link"
                   id="backToHubBtn"
-                  aria-label="Home overview"
-                  title="Home overview"
+                  aria-label="Back to Ask"
+                  title="Back to Ask"
                 >
-                  Overview
+                  Ask
                 </button>
                 <span class="brand-title workspace-title" id="crumbStudent">My Student Coach</span>
               </div>
@@ -363,16 +363,17 @@
         </header>
 
         <nav class="tabs coach-nav msc-main-nav" role="tablist" aria-label="My Student Coach">
-          <button class="tab" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="false">Home</button>
           <button class="tab active" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="true">Ask</button>
           <details class="msc-nav-menu" id="learnMenu">
             <summary class="tab msc-nav-summary">Learn</summary>
             <div class="msc-nav-panel msc-nav-panel--grouped" role="menu">
               <p class="msc-nav-group-label" role="presentation">Understand</p>
+              <button type="button" class="msc-nav-item" data-tab="profile" data-focus="prefSubjects" role="menuitem" id="navSubjects">Subjects</button>
               <button type="button" class="msc-nav-item" data-tab="notebook" role="menuitem" id="tabNotebook">Notebook</button>
               <button type="button" class="msc-nav-item" data-tab="code" role="menuitem" id="tabCode">Coding Coach</button>
               <button type="button" class="msc-nav-item" data-tab="voice" role="menuitem" id="tabVoice">Voice Tutor</button>
               <p class="msc-nav-group-label" role="presentation">Practice</p>
+              <button type="button" class="msc-nav-item" data-tab="chat" data-coach-mode="quiz" role="menuitem" id="navQuiz">Quiz</button>
               <button type="button" class="msc-nav-item" data-tab="flashcards" role="menuitem" id="tabFlashcards">Flashcards</button>
               <button type="button" class="msc-nav-item" data-tab="exam" role="menuitem" id="tabExam">Exam Prep</button>
               <button type="button" class="msc-nav-item" data-tab="diagnostic" role="menuitem" id="tabDiagnostic">Learning Snapshot</button>
@@ -466,6 +467,10 @@
               <section class="msc-hub-group" aria-labelledby="learnGroupUnderstand">
                 <h3 class="msc-hub-group-title" id="learnGroupUnderstand">Understand</h3>
                 <div class="msc-hub-grid">
+                  <button type="button" class="msc-hub-tile" data-coach-tab="profile" data-focus="prefSubjects">
+                    <strong>Subjects</strong>
+                    <span>Set the subjects your coach should know</span>
+                  </button>
                   <button type="button" class="msc-hub-tile" data-coach-tab="notebook">
                     <strong>Notebook</strong>
                     <span>Summarize notes and ask grounded questions</span>
@@ -487,6 +492,10 @@
               <section class="msc-hub-group" aria-labelledby="learnGroupPractice">
                 <h3 class="msc-hub-group-title" id="learnGroupPractice">Practice</h3>
                 <div class="msc-hub-grid">
+                  <button type="button" class="msc-hub-tile" data-coach-tab="chat" data-coach-mode="quiz">
+                    <strong>Quiz</strong>
+                    <span>Ask one question at a time</span>
+                  </button>
                   <button type="button" class="msc-hub-tile" data-coach-tab="flashcards">
                     <strong>Flashcards</strong>
                     <span>Spaced review of key ideas</span>
@@ -914,19 +923,6 @@
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
-            <div class="ask-ways" id="askWays">
-              <button type="button" class="ask-scan-btn" id="askScanBtn" aria-expanded="false" aria-controls="askScanPanel">
-                Scan a page
-              </button>
-              <div id="askScanPanel" class="ask-scan-panel hidden" hidden>
-                <p>Photograph a worksheet or choose a picture of the page.</p>
-                <button type="button" class="primary-btn" id="askScanPickBtn">Choose a page</button>
-              </div>
-              <div class="ask-subject-block">
-                <p class="ask-way-label" id="askSubjectLabel">Pick a subject</p>
-                <div id="askSubjectRow" class="ask-subjects" role="group" aria-label="Pick a subject"></div>
-              </div>
-            </div>
 
             <div id="firstSession" class="first-session hidden" role="group" aria-label="Start here" hidden>
               <p class="empty-prompts-label">Start here</p>
@@ -1220,10 +1216,6 @@
         </section>
 
         <nav class="msc-bottom-nav" id="mscBottomNav" aria-label="Primary">
-          <button type="button" class="msc-bottom-item" data-bottom="home" id="bottomHome">
-            <span class="msc-bottom-ico msc-ico-home" aria-hidden="true"></span>
-            <span>Home</span>
-          </button>
           <button type="button" class="msc-bottom-item is-active" data-bottom="chat" id="bottomTutor">
             <span class="msc-bottom-ico msc-ico-tutor" aria-hidden="true"></span>
             <span>Ask</span>
@@ -1279,7 +1271,7 @@
         </p>
         <div class="honor-code-actions">
           <button id="honorCodeAckBtn" class="primary-btn" type="button">I understand</button>
-          <button id="honorCodeBackBtn" class="ghost-btn" type="button">Back to Home</button>
+          <button id="honorCodeBackBtn" class="ghost-btn" type="button">Back to Ask</button>
         </div>
       </div>
     </div>    </div>
