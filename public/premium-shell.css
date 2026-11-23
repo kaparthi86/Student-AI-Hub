@@ -3,7 +3,12 @@
  * Deep navy-to-purple gradients, glass cards, cyan/magenta accents.
  */
 
+html {
+  background: #070b18;
+}
+
 body.premium-ui {
+  margin: 0;
   --prem-ink: #f4f7ff;
   --prem-muted: rgba(214, 224, 255, 0.72);
   --prem-glass: rgba(18, 26, 58, 0.55);
@@ -11,12 +16,23 @@ body.premium-ui {
   --prem-cyan: #3de2ff;
   --prem-magenta: #d946ef;
   --prem-violet: #7c5cff;
+  --type-display: clamp(2rem, 4.8vw, 2.5rem);
+  --type-title: clamp(1.7rem, 3.2vw, 2.05rem);
+  --type-card: 1.125rem;
+  --type-body: 0.98rem;
+  --type-ui: 0.92rem;
+  --type-meta: 0.8rem;
+  --type-kicker: 0.72rem;
   background:
-    radial-gradient(900px 520px at 50% -10%, rgba(124, 92, 255, 0.28), transparent 60%),
-    radial-gradient(700px 480px at 80% 110%, rgba(61, 226, 255, 0.12), transparent 55%),
-    #e6e4f1;
+    radial-gradient(1100px 620px at 50% -10%, rgba(124, 92, 255, 0.42), transparent 60%),
+    radial-gradient(820px 520px at 100% 110%, rgba(61, 226, 255, 0.16), transparent 55%),
+    radial-gradient(720px 480px at 0% 90%, rgba(192, 38, 211, 0.2), transparent 55%),
+    linear-gradient(180deg, #070b18 0%, #101433 46%, #1c1248 100%);
   color: var(--prem-ink);
   font-family: Outfit, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.45;
+  min-height: 100dvh;
 }
 
 body.premium-ui .bg-glow {
@@ -34,26 +50,15 @@ body.premium-ui .bg-glow.two {
 
 body.premium-ui .container,
 body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
-  width: min(430px, 100%);
-  max-width: 430px;
+  width: 100%;
+  max-width: none;
   min-height: 100dvh;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
   background: transparent;
-}
-
-@media (min-width: 880px) {
-  body.premium-ui .container,
-  body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
-    margin: 28px auto;
-    min-height: calc(100dvh - 56px);
-    border-radius: 40px;
-    overflow: hidden;
-    border: 10px solid #10131c;
-    box-shadow:
-      0 30px 80px rgba(28, 22, 68, 0.28),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  }
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* ---------- Welcome ---------- */
@@ -67,7 +72,7 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 8px 22px 28px;
+  padding: max(18px, env(safe-area-inset-top)) 22px max(28px, env(safe-area-inset-bottom));
   background:
     radial-gradient(420px 320px at 50% 28%, rgba(80, 140, 255, 0.35), transparent 70%),
     radial-gradient(380px 280px at 50% 78%, rgba(150, 40, 220, 0.35), transparent 72%),
@@ -75,22 +80,8 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
   overflow: hidden;
 }
 
-@media (min-width: 880px) {
-  .premium-welcome,
-  body.premium-ui .workspace-shell.card {
-    min-height: calc(100dvh - 56px);
-  }
-}
-
 .premium-statusbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 28px;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 14px;
-  font-weight: 650;
-  letter-spacing: 0.02em;
+  display: none;
 }
 
 .premium-statusbar-icons {
@@ -106,7 +97,7 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
 .premium-welcome-stage {
   position: relative;
   flex: 1 1 auto;
-  min-height: 340px;
+  min-height: min(42vh, 360px);
 }
 
 .premium-brain {
@@ -178,18 +169,20 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
 
 .premium-welcome-title {
   margin: 0;
-  font-size: clamp(2rem, 7vw, 2.55rem);
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: var(--type-display);
   line-height: 1.12;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.03em;
   color: #fff;
 }
 
 .premium-welcome-sub {
   margin: 12px auto 0;
-  max-width: 28ch;
+  max-width: 32ch;
   color: rgba(232, 236, 255, 0.82);
-  font-size: 0.98rem;
+  font-size: var(--type-body);
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -221,9 +214,10 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
   border-radius: 16px;
   min-height: 54px;
   color: #fff;
-  font: inherit;
-  font-size: 1.05rem;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 1.02rem;
   font-weight: 700;
+  line-height: 1.2;
   letter-spacing: 0.01em;
   cursor: pointer;
   background: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #38bdf8 100%);
@@ -241,12 +235,14 @@ body.premium-ui .container:has(.workspace-shell:not(.hidden)) {
 }
 
 .premium-signin {
-  margin-top: 10px;
+  margin-top: 12px;
   background: none;
   border: 0;
-  color: rgba(255, 255, 255, 0.72);
-  font: inherit;
-  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: var(--type-meta);
+  font-weight: 500;
+  line-height: 1.35;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -349,15 +345,16 @@ body.premium-ui .msc-bottom-item {
   appearance: none;
   border: 0;
   background: transparent;
-  color: rgba(214, 224, 255, 0.62);
-  font: inherit;
-  font-size: 0.68rem;
-  font-weight: 700;
+  color: rgba(214, 224, 255, 0.72);
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  min-height: 48px;
+  min-height: 52px;
   cursor: pointer;
 }
 
@@ -401,11 +398,15 @@ body.premium-ui #panelHome {
 
 .premium-hello strong {
   font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .premium-hello span {
   color: var(--prem-muted);
-  font-size: 0.82rem;
+  font-size: var(--type-meta);
+  font-weight: 400;
+  line-height: 1.35;
 }
 
 .premium-icon-btn {
@@ -425,10 +426,11 @@ body.premium-ui #panelHome {
 
 .premium-home-title {
   margin: 22px 0 16px;
-  font-size: clamp(1.85rem, 6vw, 2.15rem);
-  line-height: 1.15;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: var(--type-title);
+  line-height: 1.16;
   letter-spacing: -0.03em;
-  font-weight: 720;
+  font-weight: 700;
   color: #fff;
 }
 
@@ -469,8 +471,9 @@ body.premium-ui #panelHome {
 }
 
 .premium-action strong {
-  font-size: 1.2rem;
-  font-weight: 680;
+  font-size: var(--type-card);
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .premium-streak {
@@ -505,17 +508,28 @@ body.premium-ui #panelHome {
 
 .premium-progress {
   margin: 12px 0 4px;
-  height: 12px;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+  overflow: visible;
+}
+
+.premium-progress::before {
+  content: "";
+  display: block;
+  height: 10px;
   border-radius: 99px;
   background: rgba(255, 255, 255, 0.08);
-  position: relative;
-  overflow: hidden;
 }
 
 .premium-progress > span {
   display: block;
-  height: 100%;
-  border-radius: inherit;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 10px;
+  border-radius: 99px;
   background:
     repeating-linear-gradient(-55deg, rgba(255, 255, 255, 0.18) 0 6px, transparent 6px 12px),
     linear-gradient(90deg, #7c4dff, #3de2ff);
@@ -523,14 +537,16 @@ body.premium-ui #panelHome {
 }
 
 .premium-progress em {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: static;
+  display: block;
+  transform: none;
+  margin: 8px 0 0;
+  text-align: right;
   font-style: normal;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .premium-streak-btn {
@@ -603,8 +619,8 @@ body.premium-ui #panelHome {
   min-width: 0;
 }
 
-.premium-lesson-copy strong { font-size: 0.98rem; }
-.premium-lesson-copy span { color: var(--prem-muted); font-size: 0.82rem; }
+.premium-lesson-copy strong { font-size: 0.98rem; font-weight: 600; line-height: 1.25; }
+.premium-lesson-copy span { color: var(--prem-muted); font-size: var(--type-meta); font-weight: 400; line-height: 1.35; }
 
 .premium-lesson-meta {
   display: flex;
@@ -657,8 +673,8 @@ body.premium-ui[data-screen="chat"] #panelChat {
   flex-direction: column;
 }
 
-.premium-chat-titles strong { font-size: 1.02rem; }
-.premium-chat-titles span { color: var(--prem-muted); font-size: 0.8rem; }
+.premium-chat-titles strong { font-size: 1.02rem; font-weight: 600; line-height: 1.25; }
+.premium-chat-titles span { color: var(--prem-muted); font-size: var(--type-meta); font-weight: 400; line-height: 1.35; }
 
 .premium-statusbar--chat,
 .premium-statusbar--app {
@@ -786,8 +802,9 @@ body.premium-ui .bubble .md {
   margin: 0;
   color: #f4f7ff;
   font-family: Outfit, system-ui, sans-serif;
-  font-size: 0.92rem;
-  line-height: 1.4;
+  font-size: var(--type-ui);
+  font-weight: 400;
+  line-height: 1.45;
   white-space: pre-wrap;
   background: transparent;
 }
@@ -977,13 +994,22 @@ body.premium-ui .premium-login-card {
 body.premium-ui .msc-login-title,
 body.premium-ui .msc-logo-text {
   color: #fff;
-  font-family: Outfit, system-ui, sans-serif;
+  font-family: Outfit, system-ui, sans-serif !important;
   letter-spacing: -0.03em;
 }
 
 body.premium-ui .msc-login-title {
-  font-size: 2rem;
-  margin: 18px 0 8px;
+  font-size: var(--type-title);
+  font-weight: 700;
+  line-height: 1.16;
+  margin: 16px 0 8px;
+}
+
+body.premium-ui .msc-login-logo .msc-logo-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 body.premium-ui #authCard .muted,
@@ -997,14 +1023,16 @@ body.premium-ui #authCard .msc-login-status {
 body.premium-ui #googleLoginBtn {
   width: 100%;
   min-height: 54px;
-  margin-top: 18px;
+  margin-top: 22px;
   border: 0;
   border-radius: 16px;
   color: #fff;
-  font: inherit;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 1.02rem;
   font-weight: 700;
+  line-height: 1.2;
   background: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #38bdf8 100%);
-  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 body.premium-ui .msc-login-legal a,
@@ -1037,9 +1065,18 @@ body.premium-ui .workspace-shell .coach-section-lead {
 body.premium-ui .msc-hub-title,
 body.premium-ui .coach-welcome,
 body.premium-ui .journey-panel h2,
-body.premium-ui .coach-lab h2 {
+body.premium-ui .coach-lab h2,
+body.premium-ui .search-title,
+body.premium-ui .focus-timer,
+body.premium-ui .companion-greeting,
+body.premium-ui .journey-dash-title {
+  font-family: Outfit, system-ui, sans-serif !important;
   letter-spacing: -0.03em;
-  font-weight: 720;
+  font-weight: 700;
+  line-height: 1.16;
+  color: #fff;
+  background: none;
+  -webkit-text-fill-color: #fff;
 }
 
 body.premium-ui .msc-hub-tile,
@@ -1077,13 +1114,28 @@ body.premium-ui .coach-kicker {
   font-size: 0.75rem;
 }
 
-body.premium-ui .primary-btn {
-  background: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #38bdf8 100%);
-  color: #fff;
-  border: 0;
-  border-radius: 14px;
-  min-height: 46px;
+body.premium-ui .primary-btn:not(.search-submit) {
+  background: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #38bdf8 100%) !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  min-height: 48px;
+  padding: 0 18px;
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+
+body.premium-ui .primary-btn:disabled,
+body.premium-ui .primary-btn[aria-disabled="true"] {
+  background: rgba(16, 22, 48, 0.72) !important;
+  color: rgba(226, 232, 255, 0.55) !important;
+  border: 1px solid rgba(170, 196, 255, 0.2) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
 }
 
 body.premium-ui .ghost-btn,
@@ -1222,4 +1274,716 @@ body.premium-ui .msc-profile-card,
 body.premium-ui .flash-card,
 body.premium-ui .journey-form {
   border-style: solid !important;
+}
+
+/* ---------- One system: type, components, mobile + desktop ---------- */
+
+body.brand-msc.premium-ui,
+body.brand-msc.premium-ui:has(.workspace-shell:not(.hidden)) {
+  background:
+    radial-gradient(1100px 620px at 50% -10%, rgba(124, 92, 255, 0.42), transparent 60%),
+    radial-gradient(820px 520px at 100% 110%, rgba(61, 226, 255, 0.16), transparent 55%),
+    radial-gradient(720px 480px at 0% 90%, rgba(192, 38, 211, 0.2), transparent 55%),
+    linear-gradient(180deg, #070b18 0%, #101433 46%, #1c1248 100%);
+  color: var(--prem-ink);
+  font-family: Outfit, system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+body.premium-ui button,
+body.premium-ui input,
+body.premium-ui textarea,
+body.premium-ui select {
+  font-family: Outfit, system-ui, sans-serif;
+}
+
+body.premium-ui #landingCard.premium-welcome-host {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+body.premium-ui .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--prem-ink);
+  min-height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top)) 18px calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+body.premium-ui .msc-bottom-nav {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  margin: 0;
+  border-radius: 20px 20px 0 0;
+  background: rgba(8, 10, 24, 0.92);
+  border-top: 1px solid rgba(170, 196, 255, 0.16);
+}
+
+body.premium-ui[data-screen="chat"] .msc-bottom-nav,
+body.premium-ui[data-screen="welcome"] .msc-bottom-nav,
+body.premium-ui[data-screen="auth"] .msc-bottom-nav {
+  display: none !important;
+}
+
+body.premium-ui[data-screen="chat"] .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
+  padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+body.premium-ui #authCard.msc-login-shell {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(28px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(480px 340px at 50% 12%, rgba(80, 140, 255, 0.32), transparent 70%),
+    radial-gradient(420px 300px at 50% 100%, rgba(150, 40, 220, 0.32), transparent 72%),
+    linear-gradient(180deg, #070b18 0%, #14133a 48%, #2a1460 100%) !important;
+  border: 0;
+  box-shadow: none;
+}
+
+body.premium-ui #authCard .msc-login-card,
+body.premium-ui .premium-login-card {
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 32px 24px 26px !important;
+  border-radius: 28px !important;
+  text-align: center;
+  background: rgba(18, 26, 58, 0.62) !important;
+  border: 1px solid rgba(170, 196, 255, 0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 40px rgba(4, 6, 20, 0.28) !important;
+  color: #fff !important;
+}
+
+body.premium-ui .msc-login-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #fff;
+  text-decoration: none;
+}
+
+body.premium-ui .msc-login-logo .msc-logo-text,
+body.premium-ui #loginWelcomeTitle {
+  color: #fff !important;
+  font-family: Outfit, system-ui, sans-serif !important;
+}
+
+body.premium-ui #loginWelcomeTitle {
+  font-size: var(--type-title) !important;
+  font-weight: 700 !important;
+  line-height: 1.16 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body.premium-ui #loginWelcomeSupport,
+body.premium-ui #loginPrivacyLine,
+body.premium-ui #loginAgeLine,
+body.premium-ui #authStatus {
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  color: rgba(226, 232, 255, 0.78) !important;
+}
+
+body.premium-ui #loginWelcomeSupport {
+  font-size: var(--type-body) !important;
+  max-width: 30ch;
+}
+
+body.premium-ui #loginPrivacyLine,
+body.premium-ui #loginAgeLine,
+body.premium-ui .msc-login-legal,
+body.premium-ui .msc-login-legal a,
+body.premium-ui .msc-login-legal button {
+  font-size: var(--type-meta) !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+}
+
+body.premium-ui .msc-login-legal a,
+body.premium-ui .msc-login-legal button,
+body.premium-ui #loginBackToLandingBtn,
+body.premium-ui .msc-login-about {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-family: Outfit, system-ui, sans-serif !important;
+  background: none !important;
+  border: 0 !important;
+  min-height: 0 !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+body.premium-ui #googleLoginBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 16px !important;
+  font-size: 1.02rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+body.premium-ui .msc-hub-title,
+body.premium-ui .coach-welcome,
+body.premium-ui .journey-panel h2,
+body.premium-ui .coach-lab h2,
+body.premium-ui .search-title,
+body.premium-ui .premium-home-title,
+body.premium-ui .premium-welcome-title {
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-size: var(--type-title) !important;
+  font-weight: 700 !important;
+  line-height: 1.16 !important;
+  letter-spacing: -0.03em !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+body.premium-ui .premium-welcome-title {
+  font-size: var(--type-display) !important;
+  line-height: 1.12 !important;
+}
+
+body.premium-ui .msc-hub-lead,
+body.premium-ui .coach-sub,
+body.premium-ui .journey-page .muted,
+body.premium-ui .coach-lab .muted {
+  font-size: var(--type-body) !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  color: rgba(226, 232, 255, 0.78) !important;
+}
+
+body.premium-ui .msc-hub-group-title,
+body.premium-ui .coach-kicker,
+body.premium-ui .flash-card-kicker,
+body.premium-ui .msc-profile-section-title {
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-size: var(--type-kicker) !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  color: #9ae7ff !important;
+}
+
+body.premium-ui .journey-page,
+body.premium-ui .msc-hub-page,
+body.premium-ui .coach-lab {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: transparent;
+}
+
+body.premium-ui .msc-hub-hero,
+body.premium-ui .coach-lab-hero {
+  margin: 0;
+  padding: 2px 2px 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.premium-ui :is(
+  .msc-hub-tile,
+  .coach-tool-card,
+  .journey-block,
+  .journey-stat,
+  .journey-plan-item,
+  .journey-week-day,
+  .journey-quiz-card,
+  .journey-quiz-result,
+  .journey-form,
+  .journey-more-today,
+  .progress-next-banner,
+  .flash-card,
+  .msc-profile-card,
+  .notebook-dropzone,
+  .gaps-output,
+  .voice-tutor-transcript,
+  .math-thread,
+  .india-locale-banner,
+  .beta-banner,
+  .pwa-install-bar,
+  .settings-card,
+  .toast,
+  .snapshot-card,
+  .companion-primary,
+  .companion-tile,
+  .empty-state
+) {
+  background: rgba(18, 26, 58, 0.55) !important;
+  border: 1px solid rgba(170, 196, 255, 0.18) !important;
+  color: #f4f7ff !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body.premium-ui .msc-hub-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+body.premium-ui .msc-hub-tile,
+body.premium-ui .coach-tool-card {
+  min-height: 92px;
+  padding: 16px;
+  text-align: left;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+body.premium-ui .msc-hub-tile strong,
+body.premium-ui .journey-plan-item strong,
+body.premium-ui .flash-card-text {
+  color: #fff !important;
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-size: 1.02rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+body.premium-ui .msc-hub-tile span,
+body.premium-ui .journey-stat-label,
+body.premium-ui .notebook-dropzone-sub {
+  color: rgba(214, 224, 255, 0.72) !important;
+  font-size: 0.84rem !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+}
+
+body.premium-ui .notebook-dropzone-title {
+  font-size: var(--type-card) !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: #fff !important;
+}
+
+body.premium-ui .journey-stat-row,
+body.premium-ui .journey-week-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+body.premium-ui .journey-stat {
+  min-width: 0;
+  padding: 14px;
+}
+
+body.premium-ui .journey-stat-value {
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #7cf0ff;
+}
+
+body.premium-ui .journey-plan-item {
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  list-style: none;
+}
+
+body.premium-ui .coach-hero-actions,
+body.premium-ui .msc-profile-actions,
+body.premium-ui .flash-build-row,
+body.premium-ui .honor-code-actions,
+body.premium-ui .settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+body.premium-ui .coach-hero-actions .primary-btn,
+body.premium-ui .coach-hero-actions .ghost-btn,
+body.premium-ui .msc-profile-actions .primary-btn,
+body.premium-ui .msc-profile-actions .ghost-btn {
+  flex: 1 1 160px;
+}
+
+body.premium-ui .ghost-btn:not(.tiny-btn),
+body.premium-ui .study-mode-btn,
+body.premium-ui .starter-chip {
+  font-family: Outfit, system-ui, sans-serif;
+  font-size: var(--type-ui);
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: 44px;
+  border-radius: 14px;
+  color: #fff;
+  background: rgba(16, 22, 48, 0.55);
+  border: 1px solid rgba(180, 200, 255, 0.22);
+}
+
+body.premium-ui .workspace-shell textarea,
+body.premium-ui .workspace-shell input[type="text"],
+body.premium-ui .workspace-shell input[type="date"],
+body.premium-ui .workspace-shell input[type="email"],
+body.premium-ui .workspace-shell input[type="search"],
+body.premium-ui .workspace-shell select,
+body.premium-ui .settings-card textarea,
+body.premium-ui .settings-card input,
+body.premium-ui .settings-card select,
+body.premium-ui .flash-topic-input,
+body.premium-ui .math-problem-input {
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 12px 14px;
+  border-radius: 16px !important;
+  background: rgba(12, 16, 36, 0.72) !important;
+  color: #fff !important;
+  border: 1px solid rgba(170, 196, 255, 0.22) !important;
+}
+
+body.premium-ui select option {
+  background: #141833;
+  color: #fff;
+}
+
+body.premium-ui .search-bar textarea,
+body.premium-ui .search-bar input {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 8px 4px !important;
+  min-height: 28px !important;
+}
+
+body.premium-ui .workspace-shell label,
+body.premium-ui .settings-card label,
+body.premium-ui .msc-profile-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(226, 232, 255, 0.86);
+}
+
+body.premium-ui .voice-tutor-mic {
+  background: linear-gradient(90deg, #c026d3 0%, #7c3aed 42%, #38bdf8 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 18px;
+  min-height: 64px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+body.premium-ui .voice-tutor-mic.is-listening {
+  background: linear-gradient(90deg, #7c3aed, #38bdf8);
+  color: #fff;
+}
+
+body.premium-ui .voice-line,
+body.premium-ui .voice-line--coach,
+body.premium-ui .gaps-output,
+body.premium-ui .math-thread {
+  color: #f4f7ff !important;
+  font-size: var(--type-ui);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+body.premium-ui .focus-timer {
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-size: clamp(2.8rem, 8vw, 4.2rem) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  color: #7cf0ff !important;
+  -webkit-text-fill-color: #7cf0ff;
+}
+
+body.premium-ui .settings-card {
+  width: min(480px, calc(100vw - 32px));
+}
+
+body.premium-ui .settings-card h3,
+body.premium-ui .honor-code-lead {
+  font-family: Outfit, system-ui, sans-serif !important;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+body.premium-ui .beta-banner,
+body.premium-ui .pwa-install-bar,
+body.premium-ui .pwa-install-bar-title {
+  color: #f4f7ff;
+}
+
+body.premium-ui a {
+  color: #9ae7ff;
+}
+
+body.premium-ui .account-menu-panel:not(.hidden) {
+  top: 64px;
+  right: 16px;
+}
+
+@media (min-width: 960px) {
+  body.premium-ui .premium-welcome {
+    width: min(1040px, calc(100% - 64px));
+    margin: 32px auto;
+    min-height: min(740px, calc(100dvh - 64px));
+    border-radius: 36px;
+    display: grid;
+    grid-template-columns: 1.08fr 0.92fr;
+    align-items: center;
+    gap: 8px 20px;
+    padding: 36px 48px 40px;
+    border: 1px solid rgba(170, 196, 255, 0.16);
+    box-shadow: 0 30px 80px rgba(4, 6, 20, 0.45);
+  }
+
+  body.premium-ui .premium-welcome-stage {
+    min-height: 460px;
+  }
+
+  body.premium-ui .premium-welcome-copy,
+  body.premium-ui .premium-welcome-sub {
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  body.premium-ui .premium-dots {
+    justify-content: flex-start;
+  }
+
+  body.premium-ui .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
+    display: grid;
+    grid-template-columns: 212px minmax(0, 1fr);
+    column-gap: 22px;
+    align-items: start;
+    width: min(1120px, calc(100% - 48px));
+    margin: 24px auto;
+    min-height: calc(100dvh - 48px);
+    padding: 22px !important;
+    border-radius: 32px;
+    border: 1px solid rgba(170, 196, 255, 0.16);
+    background:
+      radial-gradient(520px 240px at 70% 0%, rgba(88, 120, 255, 0.22), transparent 62%),
+      linear-gradient(180deg, rgba(16, 23, 53, 0.94), rgba(28, 18, 72, 0.94)) !important;
+    box-shadow: 0 24px 70px rgba(4, 6, 20, 0.45);
+  }
+
+  body.premium-ui .msc-bottom-nav {
+    position: sticky;
+    top: 4px;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    margin: 0;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 22px;
+    border: 1px solid rgba(170, 196, 255, 0.16);
+    background: rgba(10, 12, 28, 0.55);
+  }
+
+  body.premium-ui .workspace-shell > .panel {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  body.premium-ui .msc-bottom-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 12px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    min-height: 48px;
+  }
+
+  body.premium-ui .msc-bottom-item.is-active {
+    background: rgba(61, 226, 255, 0.12);
+    color: #7cf0ff;
+  }
+
+  body.premium-ui .premium-home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 18px;
+    align-items: start;
+  }
+
+  body.premium-ui .premium-home-top,
+  body.premium-ui .premium-home-title {
+    grid-column: 1 / -1;
+  }
+
+  body.premium-ui .premium-lessons {
+    grid-column: 2;
+    grid-row: 3 / span 3;
+    margin-top: 0;
+  }
+
+  body.premium-ui .msc-hub-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.premium-ui .journey-stat-row--wide,
+  body.premium-ui .journey-week-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.premium-ui .coach-hero-actions .primary-btn,
+  body.premium-ui .coach-hero-actions .ghost-btn,
+  body.premium-ui .msc-profile-actions .primary-btn,
+  body.premium-ui .msc-profile-actions .ghost-btn {
+    flex: 0 1 auto;
+  }
+
+  body.premium-ui[data-screen="chat"] .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+    min-height: 0;
+    overflow: hidden;
+    padding: 18px 22px 16px !important;
+  }
+
+  body.premium-ui[data-screen="chat"] #panelChat {
+    width: min(760px, 100%);
+    margin-inline: auto;
+  }
+
+  body.premium-ui .msg.user .bubble,
+  body.premium-ui .msg.assistant .bubble {
+    max-width: min(78%, 520px);
+  }
+
+  body.premium-ui .account-menu-panel:not(.hidden) {
+    right: max(28px, calc(50vw - 540px));
+  }
+}
+
+@media (max-width: 959px) {
+  body.premium-ui .container:has(.workspace-shell:not(.hidden)) .workspace-shell.card {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.premium-ui .workspace-shell > .panel:not(.hidden) {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  body.premium-ui .premium-home-title {
+    margin: 10px 0 10px;
+  }
+
+  body.premium-ui .premium-action {
+    min-height: 84px;
+    padding: 12px;
+  }
+
+  body.premium-ui .premium-lesson {
+    margin-bottom: 8px;
+    padding: 10px 12px;
+  }
+
+  body.premium-ui .premium-streak {
+    margin-top: 10px;
+    padding: 12px;
+  }
+}
+
+body.premium-ui::before {
+  display: none;
+}
+
+body.premium-ui #loginBackToLandingBtn {
+  box-shadow: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 10px 4px 0 !important;
+  min-height: 0 !important;
+}
+
+body.premium-ui[data-screen="chat"] #panelChat,
+body.premium-ui[data-screen="chat"] #chatAnswerShell,
+body.premium-ui[data-screen="chat"] #chatAnswerShell.answer-shell {
+  display: flex !important;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+body.premium-ui #chatThread.chat-thread {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+body.premium-ui #panelChat .followup-bar {
+  flex: 0 0 auto;
+  position: relative !important;
+  z-index: 3;
+  margin-top: 0;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(12, 14, 36, 0) 0%, rgba(12, 14, 36, 0.96) 24%) !important;
+}
+
+body.premium-ui .assistant-feedback-btn,
+body.premium-ui .assistant-practice-btn,
+body.premium-ui .bubble-action {
+  min-height: 28px !important;
+  padding: 2px 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
 }
