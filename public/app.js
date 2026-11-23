@@ -2031,7 +2031,7 @@ function renderSmartFollowupChips(container, history, scope) {
 }
 
 function refreshAllSmartFollowupChips() {
-  renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  clearAskFollowupChips();
   renderSmartFollowupChips(codeFollowupChips, codeHistory, "code");
   renderSmartFollowupChips(notebookFollowupChips, notebookHistory, "notebook");
 }
@@ -2693,31 +2693,9 @@ function coachContextTopic() {
 function renderCoachKeepGoing() {
   const mount = document.getElementById("coachKeepGoing");
   if (!mount) return;
-  // Keep the first reply to the explanation. Extra coach cards wait until the student continues.
-  if (!chatSessionOpen || !Array.isArray(chatHistory) || chatHistory.length < 4) {
-    mount.classList.add("hidden");
-    mount.hidden = true;
-    mount.replaceChildren();
-    return;
-  }
-  const topic = coachContextTopic();
-  const next = window.StudentJourney?.pickNextStep?.();
-  const title = topic ? `Keep going on ${topic}` : "Keep the conversation going";
-  const reason = next?.reason
-    ? next.reason
-    : "Explain → practice → check Progress. Your coach remembers what you just covered.";
-  mount.hidden = false;
-  mount.classList.remove("hidden");
-  mount.innerHTML = `
-    <strong>${escapeHtmlApp(title)}</strong>
-    <p>${escapeHtmlApp(reason)}</p>
-    <div class="coach-keep-going-actions">
-      <button type="button" class="ghost-btn" data-keep-going="practice">Practice this</button>
-      <button type="button" class="ghost-btn" data-keep-going="voice">Talk it through</button>
-      <button type="button" class="ghost-btn" data-keep-going="progress">See Progress</button>
-      ${next?.tab && next.tab !== "progress" ? `<button type="button" class="primary-btn" data-keep-going="next">${escapeHtmlApp(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>` : ""}
-    </div>
-  `;
+  mount.classList.add("hidden");
+  mount.hidden = true;
+  mount.replaceChildren();
 }
 
 function wireCoachKeepGoing() {
@@ -3944,11 +3922,11 @@ function renderAskLaunch() {
   });
 }
 
-function syncAskToolActions(showThread) {
-  const tools = document.getElementById("askToolActions");
-  if (!tools) return;
-  tools.classList.toggle("hidden", !showThread);
-  tools.hidden = !showThread;
+function clearAskFollowupChips() {
+  if (!chatFollowupChips) return;
+  chatFollowupChips.replaceChildren();
+  chatFollowupChips.classList.add("hidden");
+  chatFollowupChips.hidden = true;
 }
 
 function syncLearnLayout() {
@@ -3956,8 +3934,7 @@ function syncLearnLayout() {
   chatSearchShell.classList.toggle("hidden", showThread);
   chatAnswerShell.classList.toggle("hidden", !showThread);
   chatCopyThreadBtn?.classList.toggle("hidden", chatHistory.length === 0);
-  syncAskToolActions(showThread);
-  if (showThread) renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  clearAskFollowupChips();
   const prompts = document.getElementById("chatEmptyPrompts");
   if (prompts) {
     prompts.classList.add("hidden");
@@ -4145,10 +4122,8 @@ function mountAssistantResponseControls(bubble, markdownRaw) {
   actions.className = "bubble-actions";
   const controls = [
     { id: "simple", label: t("ctrl_explain_simply") || "Explain simply", prompt: "Explain that more simply for my level. Keep answer-first.\n\n" },
-    { id: "steps", label: t("ctrl_step_by_step") || "Step by step", prompt: "Explain that again as clear numbered steps (1. 2. 3.). Keep each step short.\n\n" },
     { id: "example", label: t("ctrl_example") || "Give an example", prompt: "Give one clear worked example for your last answer.\n\n" },
     { id: "quiz", label: t("ctrl_quiz_me") || "Quiz me", prompt: "Quiz me on what you just explained. One question at a time; wait for my answer.\n\n" },
-    { id: "regen", label: t("ctrl_regenerate") || "Regenerate", prompt: null },
   ];
   controls.forEach((c) => {
     const btn = document.createElement("button");
@@ -4908,7 +4883,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
       else if (mode === "notebook") syncNotebookLayout();
         setStatus(statusEl, "status_ready");
       if (mode === "learn") {
-        renderSmartFollowupChips(chatFollowupChips, history, "learn");
+        clearAskFollowupChips();
         renderCoachKeepGoing();
       }
       if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
@@ -4960,7 +4935,7 @@ async function sendChatMessage(mode, message, history, threadEl, statusEl, sendB
     else if (mode === "notebook") syncNotebookLayout();
     setStatus(statusEl, "status_ready");
     if (mode === "learn") {
-      renderSmartFollowupChips(chatFollowupChips, history, "learn");
+      clearAskFollowupChips();
       renderCoachKeepGoing();
     }
     if (mode === "notebook") renderSmartFollowupChips(notebookFollowupChips, history, "notebook");
@@ -6037,29 +6012,6 @@ function wireAskLaunch() {
     document.getElementById("learnChatImageInput")?.click();
   });
   document.getElementById("askProgressChip")?.addEventListener("click", () => setMainTab("progress"));
-  document.getElementById("askToolActions")?.addEventListener("click", (e) => {
-    const btn = e.target.closest?.("[data-ask-action]");
-    if (!btn || !document.getElementById("askToolActions")?.contains(btn)) return;
-    const action = btn.getAttribute("data-ask-action");
-    if (action === "quiz") {
-      setLearnStudyMode("quiz");
-      chatSearchFlow.sendFromFollowup("Quiz me on what we just covered. Ask one question, then wait for my answer.");
-      return;
-    }
-    if (action === "notes") {
-      setMainTab("notebook");
-      return;
-    }
-    const tabs = {
-      flashcards: "flashcards",
-      exam: "exam",
-      focus: "focus",
-      planner: "planner",
-      code: "code",
-      voice: "voice",
-    };
-    if (tabs[action]) setMainTab(tabs[action]);
-  });
   renderAskLaunch();
 }
 
@@ -6076,7 +6028,7 @@ wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatF
     startPracticeSession({ source: "ask", topic });
   },
 });
-renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+clearAskFollowupChips();
 
 function wireEmptyStatePrompts() {
   document.querySelectorAll(".empty-prompt-chip[data-empty-scope]").forEach((chip) => {
@@ -6322,7 +6274,9 @@ docAnalyzeBtn?.addEventListener("click", async () => {
 function mountAssistantPractice(bubble, rawText) {
   bubble.querySelectorAll(".assistant-practice").forEach((el) => el.remove());
   const mode = bubble.dataset.mode || "learn";
-  if (mode !== "learn" && mode !== "notebook" && mode !== "code") return;
+  // Ask replies keep only Explain simply, Give an example, and Quiz me.
+  if (mode === "learn") return;
+  if (mode !== "notebook" && mode !== "code") return;
   const wrap = document.createElement("div");
   wrap.className = "assistant-practice";
   const btn = document.createElement("button");

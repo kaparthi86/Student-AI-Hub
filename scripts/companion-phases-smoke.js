@@ -29,7 +29,7 @@ assert(/id="celebrateToast"/.test(indexHtml), "celebrate toast mount");
 assert(/id="coachKeepGoing"/.test(indexHtml), "keep-going mount");
 assert(/id="practiceJourneyCta"/.test(indexHtml), "practice journey CTA mount");
 assert(/data-bottom="voice"/.test(indexHtml), "Talk bottom nav");
-assert(/data-ask-action="voice"/.test(indexHtml), "voice is a chat action");
+assert(/data-tab="voice"/.test(indexHtml), "voice stays reachable outside the reply chips");
 assert(/Talk with Coach/.test(appJs), "voice path remains in the coach");
 assert(/renderConceptMasteryList/.test(journeyJs), "concept mastery viz");
 assert(/progress-next-banner/.test(journeyJs), "progress → next step banner");
