@@ -207,9 +207,8 @@ const UI_LANG_LABELS = {
 
 const I18N = {
   en: {
-    signin_title: "Your AI coach that knows what to learn next.",
-    signin_tagline:
-      "Understand where you are, practice what matters, and prove you’re improving — with evidence, not guessed scores.",
+    signin_title: "Study with your AI tutor.",
+    signin_tagline: "Ask a question, scan a page, or pick a subject.",
     free_for_students: "Free for students",
     brand_kicker: "Your personal AI learning companion",
     live_web_label: "Live web",
@@ -253,13 +252,13 @@ const I18N = {
     login_support: "Your personal AI learning companion is ready.",
     login_privacy: "Your learning journey. Your data. Your privacy.",
     login_about: "About My Student Coach",
-    landing_get_started: "Get Started Free",
+    landing_get_started: "Get Started",
     settings: "Settings",
     logout: "Logout",
     welcome: "Welcome",
     app_tagline: "Ask a question, get an answer, keep the conversation going.",
     tab_home: "Home",
-    tab_ask: "AI Coach",
+    tab_ask: "Ask",
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
@@ -1288,7 +1287,7 @@ const I18N = {
     welcome: "Welcome",
     app_tagline: "Ask a question, get an answer, keep the conversation going.",
     tab_home: "Home",
-    tab_ask: "AI Coach",
+    tab_ask: "Ask",
     send: "Send",
     tab_code: "Code",
     tab_notebook: "Notebook",
@@ -2694,7 +2693,8 @@ function coachContextTopic() {
 function renderCoachKeepGoing() {
   const mount = document.getElementById("coachKeepGoing");
   if (!mount) return;
-  if (!chatSessionOpen && (!Array.isArray(chatHistory) || chatHistory.length < 2)) {
+  // Keep the first reply to the explanation. Extra coach cards wait until the student continues.
+  if (!chatSessionOpen || !Array.isArray(chatHistory) || chatHistory.length < 4) {
     mount.classList.add("hidden");
     mount.hidden = true;
     mount.replaceChildren();
@@ -3504,6 +3504,15 @@ function setMainTab(next) {
   if (practiceDock && !practiceDock.classList.contains("hidden")) {
     placePracticeDock();
   }
+  if (mainTab === "chat") {
+    renderAskLaunch();
+    if (!chatHistory.length && appCard && !appCard.classList.contains("hidden")) {
+      requestAnimationFrame(() => {
+        if (mainTab !== "chat" || chatHistory.length) return;
+        document.getElementById("chatSearchInput")?.focus({ preventScroll: true });
+      });
+    }
+  }
 }
 
 function coachDisplayName() {
@@ -3884,13 +3893,78 @@ function wireCoachHome() {
   });
 }
 
+function askSubjectChoices() {
+  const profile = typeof getLearnerProfile === "function" ? getLearnerProfile() : null;
+  const raw = String(profile?.subjects || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  if (raw.length) return raw;
+  return ["Algebra", "Biology", "Chemistry", "Physics", "History", "English"];
+}
+
+function renderAskLaunch() {
+  const chip = document.getElementById("askProgressChip");
+  const status =
+    typeof window.StudentJourney?.askLaunchChip === "function"
+      ? window.StudentJourney.askLaunchChip()
+      : { streak: 0, lastLesson: "" };
+  if (chip) {
+    const days = Number(status?.streak) || 0;
+    const lesson = status?.lastLesson ? `Last lesson: ${status.lastLesson}` : "No lesson yet";
+    chip.textContent = `Today · ${days}-day streak · ${lesson}`;
+  }
+  const row = document.getElementById("askSubjectRow");
+  if (!row) return;
+  const subjects = askSubjectChoices();
+  const key = subjects.join("|");
+  if (row.dataset.subjects === key) return;
+  row.dataset.subjects = key;
+  row.replaceChildren();
+  subjects.forEach((name) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ask-subject-chip";
+    btn.textContent = name;
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      row.querySelectorAll(".ask-subject-chip").forEach((el) => {
+        const on = el === btn;
+        el.classList.toggle("is-selected", on);
+        el.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      const input = document.getElementById("chatSearchInput");
+      if (input) {
+        input.value = `Help me learn ${name}.`;
+        input.focus();
+      }
+    });
+    row.appendChild(btn);
+  });
+}
+
+function syncAskToolActions(showThread) {
+  const tools = document.getElementById("askToolActions");
+  if (!tools) return;
+  tools.classList.toggle("hidden", !showThread);
+  tools.hidden = !showThread;
+}
+
 function syncLearnLayout() {
   const showThread = chatSessionOpen || chatHistory.length > 0;
   chatSearchShell.classList.toggle("hidden", showThread);
   chatAnswerShell.classList.toggle("hidden", !showThread);
   chatCopyThreadBtn?.classList.toggle("hidden", chatHistory.length === 0);
+  syncAskToolActions(showThread);
   if (showThread) renderSmartFollowupChips(chatFollowupChips, chatHistory, "learn");
+  const prompts = document.getElementById("chatEmptyPrompts");
+  if (prompts) {
+    prompts.classList.add("hidden");
+    prompts.hidden = true;
+  }
   syncFirstSession();
+  renderAskLaunch();
 }
 
 function syncCodeLayout() {
@@ -4434,7 +4508,9 @@ function setLearnStudyMode(next) {
 function syncFirstSession() {
   const el = document.getElementById("firstSession");
   if (!el) return;
-  el.classList.toggle("hidden", chatHistory.length > 0 || codeHistory.length > 0);
+  // Quiz and notes stay behind an explicit tap inside the chat.
+  el.classList.add("hidden");
+  el.hidden = true;
 }
 
 function isLiveWebEnabled() {
@@ -5317,6 +5393,7 @@ function showHubHome() {
 
 function showStudentWorkspace() {
   closeAccountMenu();
+  const entering = activeSurface !== "student";
   landingCard?.classList.add("hidden");
   authCard?.classList.add("hidden");
   authCard?.setAttribute("hidden", "");
@@ -5330,8 +5407,8 @@ function showStudentWorkspace() {
     /* ignore */
   }
   document.title = "My Student Coach";
-  if (mainTab === "home" || !COACH_TABS.has(mainTab)) setMainTab("home");
-  else renderCoachHome();
+  // First open and return visits land on Ask. Later tab changes stay put.
+  if (entering || !COACH_TABS.has(mainTab)) setMainTab("chat");
   // Install suggestion only after the student has used a tool (see maybeOfferPwaInstallBar).
   window.setTimeout(() => {
     maybeOfferPwaInstallBar(false);
@@ -5646,18 +5723,27 @@ async function initAuth() {
 
   try {
     const { data, error } = await supabaseClient.auth.getSession();
-    if (error) showLoginGateway(`Auth error: ${describeAuthFailure(error)}`);
-    else if (data.session) showApp(data.session);
-    else if (wantsLoginHash()) showLoginGateway();
+    if (data?.session) showApp(data.session);
+    else if (wantsLoginHash()) showLoginGateway(error ? `Auth error: ${describeAuthFailure(error)}` : "");
     else showLanding();
   } catch (err) {
-    showLoginGateway(describeAuthFailure(err));
+    if (wantsLoginHash()) showLoginGateway(describeAuthFailure(err));
+    else showLanding();
   }
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     authSession = session || null;
-    if (session) showApp(session);
-    else showLoginGateway();
+    if (session) {
+      showApp(session);
+      return;
+    }
+    // Logged-out entry is the Get Started screen. Sign-in opens only from that button or #login.
+    if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
+      if (wantsLoginHash()) showLoginGateway();
+      else showLanding();
+      return;
+    }
+    if (activeSurface === "student") showLoginGateway();
   });
 }
 
@@ -5935,6 +6021,50 @@ const chatSearchFlow = wireSearchFlow({
   getStudyMode: () => learnStudyMode,
 });
 
+function wireAskLaunch() {
+  const scanBtn = document.getElementById("askScanBtn");
+  const panel = document.getElementById("askScanPanel");
+  const pick = document.getElementById("askScanPickBtn");
+  scanBtn?.addEventListener("click", () => {
+    const willOpen = Boolean(panel?.hidden || panel?.classList.contains("hidden"));
+    if (panel) {
+      panel.hidden = !willOpen;
+      panel.classList.toggle("hidden", !willOpen);
+    }
+    scanBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+  });
+  pick?.addEventListener("click", () => {
+    document.getElementById("learnChatImageInput")?.click();
+  });
+  document.getElementById("askProgressChip")?.addEventListener("click", () => setMainTab("progress"));
+  document.getElementById("askToolActions")?.addEventListener("click", (e) => {
+    const btn = e.target.closest?.("[data-ask-action]");
+    if (!btn || !document.getElementById("askToolActions")?.contains(btn)) return;
+    const action = btn.getAttribute("data-ask-action");
+    if (action === "quiz") {
+      setLearnStudyMode("quiz");
+      chatSearchFlow.sendFromFollowup("Quiz me on what we just covered. Ask one question, then wait for my answer.");
+      return;
+    }
+    if (action === "notes") {
+      setMainTab("notebook");
+      return;
+    }
+    const tabs = {
+      flashcards: "flashcards",
+      exam: "exam",
+      focus: "focus",
+      planner: "planner",
+      code: "code",
+      voice: "voice",
+    };
+    if (tabs[action]) setMainTab(tabs[action]);
+  });
+  renderAskLaunch();
+}
+
+wireAskLaunch();
+
 wireStarterChipsAsSend(chatFollowupChips, chatSearchFlow.sendFromFollowup, chatFollowupSubmit, {
   readAloud: () => readLastAssistantAloud(chatHistory),
   practice: () => {
@@ -6017,7 +6147,8 @@ function wireLearnChatImageAttach() {
       learnChatVisionAttachment = await prepareImageForLearnChat(f);
       updateLearnChatAttachPreview();
       showToast(t("toast_image_attached"));
-      chatFollowupInput?.focus();
+      if (chatSessionOpen || chatHistory.length) chatFollowupInput?.focus();
+      else chatSearchInput?.focus();
     } catch (err) {
       showToast(err.message || t("toast_image_read_fail"));
     }
@@ -7002,6 +7133,7 @@ window.StudentCoach = {
   },
   sendChatMessage: (...args) => sendChatMessage(...args),
   getLearnStudyMode: () => learnStudyMode,
+  renderAskLaunch: () => renderAskLaunch(),
 };
 
 const prefsAtBoot = loadPrefs();
@@ -7179,7 +7311,7 @@ async function pullWorkspace() {
 initMarkdown();
 initPwaInstallSupport();
 wireCoachHome();
-setMainTab("home");
+setMainTab("chat");
 wireSettingsUi();
 wireAccountPrivacyControls();
 wireSupportUi();

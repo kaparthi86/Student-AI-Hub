@@ -1313,6 +1313,16 @@ function voiceModeInstruction(enabled, voiceLocale) {
   return bits.join(" ");
 }
 
+function firstTutorReplyInstruction() {
+  return [
+    "First reply only. This overrides any instruction to add steps, bullets, examples, quizzes, or notes.",
+    "Write one short explanation: two or three sentences, one idea.",
+    "Then ask exactly one question so the student can continue.",
+    "Do not include a quiz, notes, outline, study plan, or extra sections.",
+    "No asterisks for bold or italic.",
+  ].join(" ");
+}
+
 function modeStyleInstruction(studyMode) {
   const mode = String(studyMode || "explain").trim().toLowerCase();
   if (mode === "quiz") {
@@ -1897,13 +1907,25 @@ app.post("/api/chat", requireSession, async (req, res) => {
     const memoryInstruction = coachMemoryInstruction(coachMemory);
     const voiceMode = isTruthyFlag(req.body?.voiceMode);
     const voiceInstruction = voiceModeInstruction(voiceMode, req.body?.voiceLocale);
-    let system =
-      mode === "notebook"
+    const firstTutorReply =
+      mode === "learn" && studyMode === "explain" && !voiceMode && historyApi.length === 0;
+    let system = firstTutorReply
+      ? [
+          "You are a calm study coach for students in My Student Coach.",
+          'If asked which product produced this response, answer: "This answer is from My Student Coach."',
+          firstTutorReplyInstruction(),
+          uiLanguageInstruction(uiLanguage),
+          profileInstruction,
+          memoryInstruction,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : mode === "notebook"
         ? `${NOTEBOOK_FOLLOWUP_SYSTEM}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(
             uiLanguage
           )}${profileInstruction ? `\n${profileInstruction}` : ""}${memoryInstruction ? `\n${memoryInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}\n\n--- SOURCE MATERIALS ---\n${documentContext}\n--- END SOURCE MATERIALS ---`
         : `${chatSystemBase(mode)}\n${modeStyleInstruction(studyMode)}\n${uiLanguageInstruction(uiLanguage)}${profileInstruction ? `\n${profileInstruction}` : ""}${memoryInstruction ? `\n${memoryInstruction}` : ""}${voiceInstruction ? `\n${voiceInstruction}` : ""}`;
-    if (liveWebRequested) {
+    if (liveWebRequested && !firstTutorReply) {
       system = `${system}\n\n${buildLiveWebSystemAppendix(webSources)}`;
     }
     const coreMessages = [...historyApi, { role: "user", content: lastUserContent }];
@@ -1919,7 +1941,17 @@ app.post("/api/chat", requireSession, async (req, res) => {
         : `${cacheUserKey}:${mode}:${studyMode}${webHash ? `:web:${webHash}` : ""}`;
     const streamCacheHash = buildCompletionCacheHash(cacheUserKey, messages, "sse", modelForRequest);
     const visionTurn = messagesIncludeImages(coreMessages);
-    const maxOutTokens = visionTurn ? 1100 : voiceMode ? 280 : mode === "notebook" ? 900 : liveWebRequested ? 900 : 720;
+    const maxOutTokens = firstTutorReply
+      ? 180
+      : visionTurn
+        ? 1100
+        : voiceMode
+          ? 280
+          : mode === "notebook"
+            ? 900
+            : liveWebRequested
+              ? 900
+              : 720;
     const skipResponseCache = liveWebRequested;
 
     const wantsStream = req.body?.stream === true;
@@ -1937,8 +1969,10 @@ app.post("/api/chat", requireSession, async (req, res) => {
       }
 
       const demoLine = () => {
-        const demo =
-          "Demo mode: add HF_API_TOKEN in .env next to server.js, then restart the server.";
+        const topic = lastMessage.replace(/\s+/g, " ").trim().slice(0, 80);
+        const demo = firstTutorReply
+          ? `Here is one idea about ${topic}: name what it is for, then the single step that makes it work.\n\nWhat part should we look at next?`
+          : "Demo mode: add HF_API_TOKEN in .env next to server.js, then restart the server.";
         writeSseHeaders(res);
         if (liveWebRequested) {
           writeSseData(res, { studentAiMeta: { sources: webSources, liveWeb: true } });

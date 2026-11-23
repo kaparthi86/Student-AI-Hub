@@ -76,10 +76,10 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-            <!-- Marketing landing (student experience first; same brand as app shell) -->
-      <section class="auth auth-shell landing msc-landing" id="landingCard" aria-label="My Student Coach">
-        <header class="msc-topnav">
-          <a class="msc-logo" href="#landingCard" aria-label="My Student Coach home">
+            <!-- Welcome: one Get Started screen, then Ask -->
+      <section class="auth auth-shell landing msc-landing msc-welcome" id="landingCard" aria-label="My Student Coach">
+        <div class="msc-welcome-screen">
+          <div class="msc-welcome-glass">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
@@ -96,229 +96,30 @@
                 </defs>
               </svg>
             </span>
-            <span class="msc-logo-text" id="authBrandTitle">My Student Coach</span>
-          </a>
-          <nav class="msc-topnav-links" id="landingDesktopNav" aria-label="Landing">
-            <a href="#mscHow">How it works</a>
-            <a href="#mscFeatures">Features</a>
-            <a href="#mscFaq">FAQ</a>
-            <a href="#login" id="landingNavSignIn" data-open-login>Sign in</a>
-          </nav>
-          <button
-            type="button"
-            class="msc-nav-toggle ghost-btn"
-            id="landingNavToggle"
-            aria-expanded="false"
-            aria-controls="landingMobileNav"
-            aria-label="Open menu"
-          >
-            Menu
-          </button>
-        </header>
-        <nav class="msc-mobile-nav hidden" id="landingMobileNav" aria-label="Landing mobile" hidden>
-          <a href="#mscHow">How it works</a>
-          <a href="#mscFeatures">Features</a>
-          <a href="#mscFaq">FAQ</a>
-          <a href="#mscAbout">Why us</a>
-          <button type="button" class="primary-btn" data-open-login>Get Started Free</button>
-          <button type="button" class="ghost-btn" id="landingMobileSignIn" data-open-login>Sign in</button>
-        </nav>
-
-        <div class="landing-hero msc-hero" id="mscStart">
-          <div class="landing-hero-content msc-hero-content">
             <p class="msc-brand-line" id="authBrandTitleHero">My Student Coach</p>
-            <p class="msc-eyebrow" id="authBrandKicker">Understand. Practice. Improve.</p>
-            <h1 class="landing-headline msc-headline" id="authSigninTitle">
-              Your AI coach that knows what to learn next.
-            </h1>
+            <h1 class="landing-headline msc-headline" id="authSigninTitle">Study with your AI tutor.</h1>
             <p class="landing-support msc-support" id="authSigninTagline">
-              Understand where you are, practice what matters, and prove you’re improving — with evidence, not guessed scores.
+              Ask a question, scan a page, or pick a subject.
             </p>
             <div class="landing-cta msc-cta">
-              <div class="msc-cta-row">
-                <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
-                  Get Started Free
-                </button>
-                <a class="ghost-btn msc-secondary-cta" href="#mscHow" id="landingExploreBtn">Explore how it works</a>
-              </div>
-              <p class="msc-cta-note muted">Free to start · Ages 13+ · Your data, your privacy</p>
+              <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
+                Get Started
+              </button>
+              <button type="button" class="ghost-btn msc-welcome-signin" id="landingNavSignIn" data-open-login>
+                Sign in
+              </button>
             </div>
           </div>
-
-          <aside class="landing-preview" aria-label="Product preview of Learning Snapshot and next practice">
-            <div class="landing-preview-frame">
-              <div class="landing-preview-bar">
-                <span class="landing-preview-app">Learning Snapshot</span>
-                <span class="landing-preview-status">Evidence-based</span>
-              </div>
-              <div class="landing-preview-thread landing-preview-thread--snapshot">
-                <div class="landing-msg landing-msg-coach">
-                  <p class="landing-msg-lead">Overall understanding · 62%</p>
-                  <p class="landing-snapshot-gap"><strong>Areas to improve:</strong> Photosynthesis · Cell respiration</p>
-                  <p class="landing-msg-next"><strong>Recommended next:</strong> Practice photosynthesis · 8 min</p>
-                </div>
-                <div class="landing-msg landing-msg-user landing-msg-cta-preview">
-                  Continue Learning → Practice
-                </div>
-              </div>
-              <div class="landing-preview-composer" aria-hidden="true">
-                <span>Coach · Snapshot · Practice · Progress</span>
-              </div>
-            </div>
-          </aside>
-        </div>
-
-        <section class="msc-journey-strip" aria-label="Learning journey">
-          <div class="msc-journey-item">
-            <strong>Understand</strong>
-            <span>See what you know with a Learning Snapshot</span>
-          </div>
-          <div class="msc-journey-item">
-            <strong>Practice</strong>
-            <span>Personalized questions on your gaps</span>
-          </div>
-          <div class="msc-journey-item">
-            <strong>Improve</strong>
-            <span>Evidence-based next steps and Progress</span>
-          </div>
-        </section>
-
-        <section class="msc-section" id="mscHow" aria-label="How it works">
-          <div class="landing-below-inner">
-            <p class="msc-section-kicker">One companion. Three moves.</p>
-            <h2 class="landing-section-title">Everything connects to how you learn.</h2>
-            <p class="landing-section-lead">
-              My Student Coach answers five questions: what you understand, where you’re stuck, why, what to do next, and whether you’re improving.
-            </p>
-            <ol class="msc-steps">
-              <li>
-                <span class="msc-step-num">01</span>
-                <strong>Snapshot</strong>
-                <span>Create a Learning Snapshot to map strengths and growth areas — no invented scores.</span>
-              </li>
-              <li>
-                <span class="msc-step-num">02</span>
-                <strong>Coach &amp; Practice</strong>
-                <span>Get explanations, then practice the exact topics your Snapshot recommends.</span>
-              </li>
-              <li>
-                <span class="msc-step-num">03</span>
-                <strong>Progress</strong>
-                <span>See mastery signals update and pick up the next recommended step.</span>
-              </li>
-            </ol>
-          </div>
-        </section>
-
-        <section class="landing-below msc-section" id="mscFeatures" aria-label="Features">
-          <div class="landing-below-inner">
-            <p class="msc-section-kicker">One companion. Four nouns.</p>
-            <h2 class="landing-section-title">Coach · Snapshot · Practice · Progress</h2>
-            <p class="landing-section-lead">
-              Nested tools like Notebook, Code, and Voice live inside this journey — not as a separate product shelf.
-            </p>
-            <ul class="landing-tools msc-feature-cards">
-              <li>
-                <strong>Coach</strong>
-                <span>Text and voice conversations that explain, guide, and remember what you just covered.</span>
-              </li>
-              <li>
-                <strong>Learning Snapshot</strong>
-                <span>A personalized picture of understanding, gaps, and what to practice next.</span>
-              </li>
-              <li>
-                <strong>Practice</strong>
-                <span>Personalized questions and exercises tied to your Snapshot and study materials.</span>
-              </li>
-              <li>
-                <strong>Progress</strong>
-                <span>Evidence-based mastery, daily plans, and a clear recommended next step — live after sign-in.</span>
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="landing-integrity msc-section" id="mscAbout" aria-label="About">
-          <div class="landing-below-inner">
-            <p class="msc-section-kicker">Why My Student Coach</p>
-            <h2 class="landing-section-title" id="landingMissionTitle">Knows what to learn next</h2>
-            <p class="landing-section-lead" id="landingMissionLead">
-              A personal AI learning companion built around Learning Intelligence — with study integrity and privacy as trust cues, not the whole story.
-            </p>
-            <p class="landing-mission-sub" id="landingMissionSub">
-              Built for learning and practice — not for handing in AI work as your own.
-              <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a> ·
+          <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo">
+            <nav class="landing-legal" aria-label="Legal">
+              <a href="./privacy.html">Privacy</a>
+              <a href="./terms.html">Terms</a>
               <a href="./customer-agreement.html">Customer Agreement</a>
-            </p>
-          </div>
-        </section>
-
-        <section class="msc-section" id="mscFaq" aria-label="Frequently asked questions">
-          <div class="landing-below-inner">
-            <p class="msc-section-kicker">FAQ</p>
-            <h2 class="landing-section-title">Good questions. Clear answers.</h2>
-            <div class="msc-faq">
-              <details class="msc-faq-item" open>
-                <summary>What is My Student Coach?</summary>
-                <p>
-                  A personal AI learning companion that knows what you understand, what you’re stuck on, and what to
-                  practice next — through Coach, Learning Snapshot, Practice, and Progress. Operated by SKM IT SOLUTIONS INC.
-                </p>
-              </details>
-              <details class="msc-faq-item">
-                <summary>Who can use it?</summary>
-                <p>
-                  Learners <strong>13 years of age or older</strong>. Review the
-                  <a href="./privacy.html">Privacy Policy</a> and <a href="./terms.html">Terms</a> before creating an
-                  account.
-                </p>
-              </details>
-              <details class="msc-faq-item">
-                <summary>Can I upload my own study materials?</summary>
-                <p>
-                  Smart Notebook accepts supported document formats so you can work with your own notes. File limits and
-                  formats apply in the product.
-                </p>
-              </details>
-              <details class="msc-faq-item">
-                <summary>Can I learn with voice?</summary>
-                <p>
-                  Voice Tutor lets you talk through concepts in the browser. Spoken turns sent for a coach reply follow
-                  the same path as Ask; see Privacy for transcript handling.
-                </p>
-              </details>
-              <details class="msc-faq-item">
-                <summary>How do I get help or delete my data?</summary>
-                <p>
-                  Use <strong>Support</strong> below (ticket ID for signed-in users). Signed-in students can delete
-                  account &amp; data in settings. Guests can use the public support form linked from Privacy.
-                </p>
-              </details>
-            </div>
-          </div>
-        </section>
-
-        <section class="msc-section msc-final-cta" aria-label="Get started">
-          <div class="landing-below-inner">
-            <h2 class="landing-section-title">Your next learning step starts here.</h2>
-            <p class="landing-section-lead">Create a Learning Snapshot. Practice what matters. Improve with evidence.</p>
-            <button type="button" class="primary-btn msc-scroll-start" id="landingStartAgainBtn" data-open-login>
-              Get Started Free
-            </button>
-          </div>
-        </section>
-
-        <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo">
-          <nav class="landing-legal" aria-label="Legal">
-            <a href="./privacy.html">Privacy</a>
-            <a href="./terms.html">Terms</a>
-            <a href="./customer-agreement.html">Customer Agreement</a>
-            <button type="button" class="linkish open-support-btn" id="landingSupportBtn">Support</button>
-          </nav>
-          <p class="fine-print-line landing-operator-line">
-            My Student Coach is operated by SKM IT SOLUTIONS INC. · Understand. Practice. Improve.
-          </p>
-        </footer>
+              <button type="button" class="linkish open-support-btn" id="landingSupportBtn">Support</button>
+            </nav>
+            <p class="fine-print-line landing-operator-line">Operated by SKM IT SOLUTIONS INC.</p>
+          </footer>
+        </div>
       </section>
 
       <!-- Login gateway (one screen — Google only; email/password not implemented) -->
@@ -562,8 +363,8 @@
         </header>
 
         <nav class="tabs coach-nav msc-main-nav" role="tablist" aria-label="My Student Coach">
-          <button class="tab active" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="true">Home</button>
-          <button class="tab" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="false">Coach</button>
+          <button class="tab" data-tab="home" type="button" id="tabHome" role="tab" aria-selected="false">Home</button>
+          <button class="tab active" data-tab="chat" type="button" id="tabChat" role="tab" aria-selected="true">Ask</button>
           <details class="msc-nav-menu" id="learnMenu">
             <summary class="tab msc-nav-summary">Learn</summary>
             <div class="msc-nav-panel msc-nav-panel--grouped" role="menu">
@@ -594,7 +395,7 @@
         </nav>
 
 
-        <section id="panelHome" class="panel coach-home-panel">
+        <section id="panelHome" class="panel coach-home-panel hidden" hidden>
           <div class="coach-home msc-home msc-home--companion">
             <!-- Companion home: journey mount owns greeting + primary next step. -->
             <div class="msc-home-toolbar">
@@ -635,28 +436,14 @@
               <div class="locale-recs-grid" id="localeRecsGrid"></div>
             </section>
 
-            <details class="msc-more-tools">
-              <summary id="coachToolsTitle">More tools</summary>
-              <p class="muted coach-section-lead" id="coachToolsLead">Notebook, coding, and other workspaces — also under Learn.</p>
-              <div class="coach-tool-grid msc-home-actions" id="coachToolGrid">
-                <button type="button" class="coach-tool-card" data-coach-tab="notebook">
-                  <span class="coach-tool-label" id="coachToolNotebookTitle">Study my notes</span>
-                  <span class="coach-tool-sub muted" id="coachToolNotebookSub">Upload your documents</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="code">
-                  <span class="coach-tool-label" id="coachToolCodeTitle">Learn coding</span>
-                  <span class="coach-tool-sub muted" id="coachToolCodeSub">Debug and understand</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="voice">
-                  <span class="coach-tool-label" id="coachToolAskTitle">Voice Tutor</span>
-                  <span class="coach-tool-sub muted" id="coachToolAskSub">Talk through a concept</span>
-                </button>
-                <button type="button" class="coach-tool-card" data-coach-tab="flashcards">
-                  <span class="coach-tool-label">Flashcards</span>
-                  <span class="coach-tool-sub muted">Spaced review</span>
-                </button>
-              </div>
-            </details>
+            <div class="sr-only" id="coachToolsTitle">Tools live in Ask</div>
+            <p class="sr-only" id="coachToolsLead">Open Ask to reach notes, coding, and practice.</p>
+            <span class="sr-only" id="coachToolNotebookTitle">Study my notes</span>
+            <span class="sr-only" id="coachToolNotebookSub">Upload your documents</span>
+            <span class="sr-only" id="coachToolCodeTitle">Learn coding</span>
+            <span class="sr-only" id="coachToolCodeSub">Debug and understand</span>
+            <span class="sr-only" id="coachToolAskTitle">Voice Tutor</span>
+            <span class="sr-only" id="coachToolAskSub">Talk through a concept</span>
 
             <ul class="coach-priority-list msc-priority-list" id="coachPriorityList" hidden></ul>
             <p class="muted msc-trust-line">
@@ -1015,7 +802,7 @@
         <!-- Knowledge Gaps lives under Progress (Improve). Legacy panel kept hidden for deep-link redirect. -->
         <section id="panelGaps" class="panel coach-lab-panel hidden" data-coach-lab-panel="gaps" hidden aria-hidden="true"></section>
 
-        <section id="panelChat" class="panel perplexity-panel hidden">
+        <section id="panelChat" class="panel perplexity-panel">
           <div class="coach-voice-elevate" id="coachVoiceElevate">
             <p>Prefer talking? Start a continuous Voice Tutor session — interrupt anytime, transcript included.</p>
             <button type="button" class="ghost-btn" data-coach-tab="voice" id="coachOpenVoiceBtn">Open Voice Tutor</button>
@@ -1055,7 +842,7 @@
               <span class="muted live-web-hint" id="liveWebHint">Use current web sources when relevant</span>
             </div>
           </details>
-          <div id="chatSearchShell" class="search-hero">
+          <div id="chatSearchShell" class="search-hero ask-launch">
             <input
               type="file"
               id="learnChatImageInput"
@@ -1064,7 +851,11 @@
               aria-hidden="true"
               tabindex="-1"
             />
+            <button type="button" class="ask-progress-chip" id="askProgressChip">
+              Today · streak · last lesson
+            </button>
             <p class="search-title" id="chatSearchTitle">What do you want to learn today?</p>
+            <p class="ask-way-label" id="askTypeLabel">Type a message</p>
             <div id="chatHeroAttachPreview" class="learn-chat-attach-preview learn-vision-ui hidden" aria-live="polite"></div>
             <div class="search-bar search-bar--branded search-bar--learn-hero search-bar--learn">
               <span class="search-icon search-icon--logo" aria-hidden="true" title="My Student Coach">
@@ -1123,6 +914,20 @@
               <button id="chatSearchSubmit" class="search-submit primary-btn" type="button">Ask</button>
             </div>
             <p class="search-hint muted" id="chatSearchHint" hidden>Press Enter to search. Shift+Enter for a new line.</p>
+            <div class="ask-ways" id="askWays">
+              <button type="button" class="ask-scan-btn" id="askScanBtn" aria-expanded="false" aria-controls="askScanPanel">
+                Scan a page
+              </button>
+              <div id="askScanPanel" class="ask-scan-panel hidden" hidden>
+                <p>Photograph a worksheet or choose a picture of the page.</p>
+                <button type="button" class="primary-btn" id="askScanPickBtn">Choose a page</button>
+              </div>
+              <div class="ask-subject-block">
+                <p class="ask-way-label" id="askSubjectLabel">Pick a subject</p>
+                <div id="askSubjectRow" class="ask-subjects" role="group" aria-label="Pick a subject"></div>
+              </div>
+            </div>
+
             <div id="firstSession" class="first-session hidden" role="group" aria-label="Start here" hidden>
               <p class="empty-prompts-label">Start here</p>
               <div class="first-session-actions">
@@ -1131,7 +936,7 @@
                 <button type="button" class="starter-chip" data-first="code">Debug an error</button>
               </div>
             </div>
-            <div id="chatEmptyPrompts" class="empty-prompts" role="group" aria-labelledby="chatEmptyPromptsLabel">
+            <div id="chatEmptyPrompts" class="empty-prompts hidden" role="group" aria-labelledby="chatEmptyPromptsLabel" hidden>
               <p class="empty-prompts-label muted" id="chatEmptyPromptsLabel">Try asking:</p>
               <div class="empty-prompts-chips starter-chips">
                 <button type="button" class="starter-chip empty-prompt-chip" data-empty-scope="chat" data-empty-idx="0"></button>
@@ -1183,6 +988,18 @@
               </div>
               <p id="practiceEmptyStatus" class="muted status-line practice-dock-status hidden" data-i18n-status="status_ready"></p>
             </section>
+            <div id="askToolActions" class="ask-tool-actions hidden" hidden>
+              <div class="ask-tool-row" role="group" aria-label="Quiz, notes, and study tools">
+                <button type="button" data-ask-action="quiz">Quiz</button>
+                <button type="button" data-ask-action="notes">Notes</button>
+                <button type="button" data-ask-action="flashcards">Flashcards</button>
+                <button type="button" data-ask-action="exam">Exam</button>
+                <button type="button" data-ask-action="focus">Focus</button>
+                <button type="button" data-ask-action="planner">Planner</button>
+                <button type="button" data-ask-action="code">Coding coach</button>
+                <button type="button" data-ask-action="voice">Talk</button>
+              </div>
+            </div>
             <div class="followup-bar">
               <aside id="coachKeepGoing" class="coach-keep-going hidden" aria-label="Keep going with your coach" hidden></aside>
               <div
@@ -1415,13 +1232,13 @@
         </section>
 
         <nav class="msc-bottom-nav" id="mscBottomNav" aria-label="Primary">
-          <button type="button" class="msc-bottom-item is-active" data-bottom="home" id="bottomHome">
+          <button type="button" class="msc-bottom-item" data-bottom="home" id="bottomHome">
             <span class="msc-bottom-ico msc-ico-home" aria-hidden="true"></span>
             <span>Home</span>
           </button>
-          <button type="button" class="msc-bottom-item" data-bottom="chat" id="bottomTutor">
+          <button type="button" class="msc-bottom-item is-active" data-bottom="chat" id="bottomTutor">
             <span class="msc-bottom-ico msc-ico-tutor" aria-hidden="true"></span>
-            <span>Coach</span>
+            <span>Ask</span>
           </button>
           <button type="button" class="msc-bottom-item" data-bottom="voice" id="bottomVoice">
             <span class="msc-bottom-ico msc-ico-talk" aria-hidden="true"></span>

@@ -28,6 +28,7 @@ assert(/renderSnapshotHistory/.test(journeyJs), "snapshot history renderer");
 assert(/\.snapshot-intro/.test(journeyCss), "snapshot styles");
 assert(!/>Diagnostic</.test(indexHtml), "Diagnostic label removed from visible nav/hub");
 assert(/snapshot-gap-actions|Practice/.test(journeyJs), "snapshot gaps are actionable");
-assert(/companion-home/.test(journeyJs), "companion home uses Learning Snapshot destinations");
+assert(/askLaunchChip/.test(journeyJs), "lesson data still feeds the Ask chip");
+assert(/renderDiagnosticPanel/.test(journeyJs), "Learning Snapshot screen remains");
 
 console.log("learning-snapshot-smoke OK");

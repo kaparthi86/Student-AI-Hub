@@ -576,114 +576,35 @@
 
   /* ---------- Rendering ---------- */
 
+  function askLaunchChip() {
+    const byDay = journey.studyMinutes?.byDay || {};
+    const active = new Set(Object.keys(byDay).filter((key) => Number(byDay[key]) > 0));
+    let streak = 0;
+    const cursor = new Date();
+    for (let i = 0; i < 60; i += 1) {
+      const key = cursor.toISOString().slice(0, 10);
+      if (active.has(key)) streak += 1;
+      else if (i > 0) break;
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+    const recent = journey.memory?.recentTopics?.[0]?.topic || "";
+    return { streak, lastLesson: String(recent || "").trim() };
+  }
+
   function renderHomeJourney() {
     const mount = $("journeyHomeMount");
     if (!mount) return;
-    ensureWeek();
-    const plan = buildDailyPlan();
-    const next = pickNextStep();
-    const weekly = journey.weeklyGoals;
-    const name = typeof api().coachDisplayName === "function" ? api().coachDisplayName() : "there";
-    const insufficient = hasInsufficientLearningSignal();
-    const moreItems = (plan.items || []).filter((_, idx) => idx !== next.planIndex);
-    const weekPct = weekly.target ? Math.min(100, Math.round((weekly.completed / weekly.target) * 100)) : 0;
-    const recommendLead =
-      next.source === "cold-start"
-        ? "Your AI Coach recommends"
-        : next.source === "wrap-up"
-          ? "Nice work today"
-          : "Your AI Coach recommends";
-
+    const chip = askLaunchChip();
+    const lesson = chip.lastLesson ? escapeHtml(chip.lastLesson) : "No lesson yet";
     mount.hidden = false;
     mount.innerHTML = `
-      <section class="companion-home" aria-labelledby="journeyDashTitle">
-        <header class="companion-home-hero">
-          <p class="companion-kicker">My Student Coach</p>
-          <h2 class="companion-greeting" id="journeyDashTitle">Good ${greetingHour()}${name ? `, ${escapeHtml(name)}` : ""}!</h2>
-          <p class="muted companion-lead">Ready to make progress today?</p>
-        </header>
-
-        <article class="journey-next-step companion-primary" aria-labelledby="journeyNextTitle">
-          <p class="journey-next-kicker">${escapeHtml(recommendLead)}</p>
-          <h3 class="journey-next-title" id="journeyNextTitle">${escapeHtml(next.title)}</h3>
-          <p class="muted journey-next-reason">${escapeHtml(next.reason)}</p>
-          <div class="journey-next-meta">
-            <span>${escapeHtml(next.phase)}</span>
-            ${next.minutes ? `<span>${next.minutes} min</span>` : ""}
-            ${next.source === "progress" ? '<span class="journey-badge">From progress</span>' : ""}
-            ${next.source === "cold-start" ? '<span class="journey-badge">Learning Snapshot</span>' : ""}
-            ${insufficient ? '<span class="journey-badge">Evidence-based</span>' : ""}
-          </div>
-          <div class="journey-next-actions">
-            <button type="button" class="primary-btn" data-journey-next-step>${escapeHtml(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>
-          </div>
-        </article>
-
-        <section class="companion-secondary" aria-labelledby="companionPathsTitle">
-          <h3 class="ds-section-label" id="companionPathsTitle">Continue with</h3>
-          <button type="button" class="companion-tile" data-coach-tab="diagnostic">
-            <strong>Learning Snapshot</strong>
-            <span>Explore strengths and growth areas</span>
-          </button>
-          <button type="button" class="companion-tile" data-coach-tab="chat">
-            <strong>Ask Your Coach</strong>
-            <span>Ask, explore, and understand anything</span>
-          </button>
-          <button type="button" class="companion-tile" data-coach-tab="voice">
-            <strong>Talk with Coach</strong>
-            <span>Voice-first conversation when you’re stuck</span>
-          </button>
-          <button type="button" class="companion-tile" data-coach-tab="chat" data-coach-mode="quiz">
-            <strong>Practice</strong>
-            <span>Personalized questions and exercises</span>
-          </button>
-          <button type="button" class="companion-tile" data-coach-tab="planner">
-            <strong>My Study Plan</strong>
-            <span>Your daily learning goals</span>
-          </button>
-        </section>
-
-        <section class="companion-momentum" aria-label="Your learning momentum">
-          <div class="companion-momentum-copy">
-            <p class="companion-momentum-label">Your learning momentum</p>
-            <p class="companion-momentum-title">Weekly learning goal</p>
-            <p class="muted">${weekly.completed} of ${weekly.target} sessions</p>
-          </div>
-          <div class="companion-ring" style="--ring:${weekPct}" aria-hidden="true">
-            <span>${weekPct}%</span>
-          </div>
-          <button type="button" class="ghost-btn" data-coach-tab="progress">View Progress</button>
-        </section>
-
-        ${
-          moreItems.length
-            ? `<details class="journey-more-today">
-          <summary>More for today (${moreItems.length})</summary>
-          <ol class="journey-plan-list">
-            ${moreItems
-              .map((item) => {
-                const idx = (plan.items || []).indexOf(item);
-                return `
-              <li class="journey-plan-item${item.done ? " is-done" : ""}">
-                <div class="journey-plan-main">
-                  <strong>${escapeHtml(item.topic)}</strong>
-                  <span class="muted">${item.minutes} minutes · ${escapeHtml(item.action)}</span>
-                </div>
-                <div class="journey-plan-actions">
-                  ${item.done ? '<span class="journey-badge journey-badge--done">Done</span>' : ""}
-                  <button type="button" class="ghost-btn journey-start-btn" data-journey-start="${idx}">Start</button>
-                  ${!item.done ? `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>` : ""}
-                </div>
-              </li>`;
-              })
-              .join("")}
-          </ol>
-          <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
-        </details>`
-            : `<button type="button" class="ghost-btn journey-refresh-plan companion-refresh" data-journey-action="refresh-plan">Refresh plan</button>`
-        }
+      <section class="companion-home ask-home-quiet" aria-labelledby="journeyDashTitle">
+        <h2 class="companion-greeting" id="journeyDashTitle">Your tutor is in Ask</h2>
+        <p class="muted">Today · ${chip.streak}-day streak · Last lesson: ${lesson}</p>
+        <button type="button" class="primary-btn" data-coach-tab="chat">Open Ask</button>
       </section>
     `;
+    if (typeof api().renderAskLaunch === "function") api().renderAskLaunch();
   }
 
   function greetingHour() {
@@ -1810,14 +1731,14 @@
     overallMastery,
     pickNextStep,
     startNextStep,
+    askLaunchChip,
   };
 
   function boot() {
     wireJourneyUi();
     buildDailyPlan();
     renderHomeJourney();
-    // Delay onboarding so auth/workspace can settle
-    setTimeout(() => maybeShowOnboarding(), 1200);
+    // Ask is the screen after Get Started. Profile still holds level and subjects.
     setTimeout(async () => {
       if (window.StudentAnalytics?.fetchInsights) {
         const insights = await window.StudentAnalytics.fetchInsights(true);
