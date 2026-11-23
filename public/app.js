@@ -180,6 +180,8 @@ let activeSurface = null;
 
 let deferredInstallPrompt = null;
 let chatSessionOpen = false;
+let localStudy = false;
+let lessonStash = null;
 let codeSessionOpen = false;
 let notebookSessionOpen = false;
 let learnStudyMode = "explain";
@@ -330,7 +332,7 @@ const I18N = {
     chat_title: "What do you want to learn today?",
     chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
     chat_hint: "Press Enter to search. Shift+Enter for a new line.",
-    chat_followup: "Ask a follow-up...",
+    chat_followup: "Type a message...",
     code_title: "Debug or learn code",
     code_placeholder: "Paste code or describe the bug...",
     code_hint: "Tip: include error messages and what you expected.",
@@ -1359,7 +1361,7 @@ const I18N = {
     chat_title: "What do you want to learn today?",
     chat_placeholder: "Ask anything... (e.g. Explain gradient descent like I am 15)",
     chat_hint: "Press Enter to search. Shift+Enter for a new line.",
-    chat_followup: "Ask a follow-up...",
+    chat_followup: "Type a message...",
     code_title: "Debug or learn code",
     code_placeholder: "Paste code or describe the bug...",
     code_hint: "Tip: include error messages and what you expected.",
@@ -3504,6 +3506,8 @@ function setMainTab(next) {
   if (practiceDock && !practiceDock.classList.contains("hidden")) {
     placePracticeDock();
   }
+  syncPremiumScreen();
+  window.scrollTo(0, 0);
 }
 
 function coachDisplayName() {
@@ -3797,9 +3801,13 @@ function wireCoachHome() {
     el.addEventListener("click", () => setLandingMobileOpen(false));
   });
 
+  document.getElementById("welcomeGetStarted")?.addEventListener("click", () => {
+    enterLocalStudy();
+  });
   document.querySelectorAll("[data-open-login]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
+      localStudy = false;
       showLoginGateway();
     });
   });
@@ -3873,6 +3881,7 @@ function wireCoachHome() {
   panelHome?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !panelHome.contains(target)) return;
+    if (target.hasAttribute("data-clear-lesson")) clearSubjectLesson();
     go(target.getAttribute("data-coach-tab"), target.getAttribute("data-coach-mode"));
   });
   document.addEventListener("pointerdown", (e) => {
@@ -5317,6 +5326,7 @@ function showHubHome() {
 
 function showStudentWorkspace() {
   closeAccountMenu();
+  syncPremiumScreen(mainTab === "chat" ? "chat" : "home");
   landingCard?.classList.add("hidden");
   authCard?.classList.add("hidden");
   authCard?.setAttribute("hidden", "");
@@ -5545,6 +5555,7 @@ function wantsLoginHash() {
 }
 
 function showLanding() {
+  localStudy = false;
   hidePwaChrome();
   closeAccountMenu();
   hideHonorCodeModal();
@@ -5563,9 +5574,11 @@ function showLanding() {
     /* ignore */
   }
   document.title = "My Student Coach";
+  syncPremiumScreen("welcome");
 }
 
 function showLoginGateway(message = "") {
+  if (localStudy) return;
   hidePwaChrome();
   closeAccountMenu();
   hideHonorCodeModal();
@@ -5584,6 +5597,7 @@ function showLoginGateway(message = "") {
     /* ignore */
   }
   document.title = "Sign in · My Student Coach";
+  syncPremiumScreen("auth");
   window.setTimeout(() => {
     googleLoginBtn?.focus();
   }, 40);
@@ -5617,16 +5631,22 @@ function describeAuthFailure(err) {
 async function initAuth() {
   const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
   if (!window.supabase || !supabaseUrl || !supabaseAnonKey) {
-    showAuth("Set Supabase URL and anon key in public/config.js to enable Google login.");
+    if (authStatus) {
+      authStatus.textContent = "Set Supabase URL and anon key in public/config.js to enable Google login.";
+    }
     if (googleLoginBtn) googleLoginBtn.disabled = true;
+    showLanding();
     return;
   }
 
   try {
     new URL(String(supabaseUrl).trim());
   } catch {
-    showAuth("Invalid supabaseUrl in public/config.js (must look like https://xxxx.supabase.co).");
+    if (authStatus) {
+      authStatus.textContent = "Invalid supabaseUrl in public/config.js (must look like https://xxxx.supabase.co).";
+    }
     if (googleLoginBtn) googleLoginBtn.disabled = true;
+    showLanding();
     return;
   }
 
@@ -5648,16 +5668,22 @@ async function initAuth() {
     const { data, error } = await supabaseClient.auth.getSession();
     if (error) showLoginGateway(`Auth error: ${describeAuthFailure(error)}`);
     else if (data.session) showApp(data.session);
+    else if (localStudy) enterLocalStudy();
     else if (wantsLoginHash()) showLoginGateway();
     else showLanding();
   } catch (err) {
     showLoginGateway(describeAuthFailure(err));
   }
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     authSession = session || null;
-    if (session) showApp(session);
-    else showLoginGateway();
+    if (session) {
+      localStudy = false;
+      showApp(session);
+      return;
+    }
+    if (localStudy) return;
+    if (event === "SIGNED_OUT") showLanding();
   });
 }
 
@@ -6955,6 +6981,181 @@ function applyCloudLearnerProfile(partial = {}) {
 }
 
 /** Shared helpers for coach-labs.js / journey.js feature panels. */
+function syncPremiumScreen(screen) {
+  if (screen) {
+    document.body.dataset.screen = screen;
+    return;
+  }
+  if (appCard && !appCard.classList.contains("hidden")) {
+    document.body.dataset.screen = mainTab === "chat" ? "chat" : mainTab === "home" ? "home" : "app";
+    return;
+  }
+  if (landingCard && !landingCard.classList.contains("hidden")) {
+    document.body.dataset.screen = "welcome";
+    return;
+  }
+  document.body.dataset.screen = "auth";
+}
+
+function tickPremiumClock() {
+  const label = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  document.querySelectorAll("[data-premium-clock]").forEach((el) => {
+    el.textContent = label;
+  });
+}
+
+function enterLocalStudy() {
+  localStudy = true;
+  try {
+    localStorage.setItem("student_ai_onboard_v1", "1");
+  } catch {
+    /* ignore */
+  }
+  if (!authSession && userName) {
+    const current = String(userName.textContent || "").trim();
+    if (!current || current === "Student") userName.textContent = "Melani";
+  }
+  showStudentWorkspace();
+  setMainTab("home");
+}
+
+const SUBJECT_LESSONS = {
+  chemistry: {
+    subject: "Chemistry",
+    topic: "Atomic Structure",
+    user: "Explain Photosynthesis",
+    answer:
+      "Sure! Photosynthesis is the process where plants make their food and produce oxygen. Here's a simple breakdown:",
+  },
+  physics: {
+    subject: "Physics",
+    topic: "Quantum Mechanics",
+    user: "Explain quantum mechanics simply",
+    answer:
+      "Sure! Quantum mechanics describes nature at tiny scales, where energy comes in packets and particles can act like waves. Here's a simple breakdown:",
+  },
+  mathematics: {
+    subject: "Mathematics",
+    topic: "Calculus",
+    user: "Help me start calculus",
+    answer:
+      "Sure! Calculus studies change. Derivatives measure how fast something changes, and integrals add those changes back up. Here's a simple breakdown:",
+  },
+};
+
+function activeLessonMeta() {
+  return {
+    subject: document.getElementById("premiumChatSubject")?.textContent || "AI Tutor",
+    topic: document.getElementById("premiumChatTopic")?.textContent || "this topic",
+  };
+}
+
+function setLessonHeader(subject, topic) {
+  const subjectEl = document.getElementById("premiumChatSubject");
+  const topicEl = document.getElementById("premiumChatTopic");
+  if (subjectEl) subjectEl.textContent = subject;
+  if (topicEl) topicEl.textContent = topic;
+}
+
+function paintLessonThread(history) {
+  chatHistory.splice(0, chatHistory.length, ...history);
+  chatSessionOpen = true;
+  renderThreadFromHistory(chatThread, chatHistory, "learn", learnStudyMode);
+  const cue = document.createElement("div");
+  cue.className = "msg assistant premium-typing-row";
+  cue.innerHTML = `<div class="bubble premium-typing" aria-label="Tutor is typing"><span></span><span></span><span></span></div>`;
+  chatThread?.appendChild(cue);
+  syncLearnLayout();
+  chatThread?.lastElementChild?.scrollIntoView?.({ block: "end" });
+}
+
+function openSubjectLesson(id) {
+  const lesson = SUBJECT_LESSONS[id];
+  if (!lesson) return;
+  if (!lessonStash) {
+    lessonStash = {
+      history: chatHistory.map((m) => ({ ...m })),
+      open: chatSessionOpen,
+      subject: document.getElementById("premiumChatSubject")?.textContent || "AI Tutor",
+      topic: document.getElementById("premiumChatTopic")?.textContent || "Ask anything",
+    };
+  }
+  const name = coachDisplayName();
+  setLessonHeader(lesson.subject, lesson.topic);
+  paintLessonThread([
+    { role: "assistant", content: `Hello! ${name}\nHow can I help you today?` },
+    { role: "user", content: lesson.user },
+    { role: "assistant", content: lesson.answer },
+  ]);
+  setMainTab("chat");
+}
+
+function clearSubjectLesson() {
+  if (lessonStash) {
+    const stash = lessonStash;
+    lessonStash = null;
+    setLessonHeader(stash.subject || "AI Tutor", stash.topic || "Ask anything");
+    chatHistory.splice(0, chatHistory.length, ...stash.history);
+    chatSessionOpen = Boolean(stash.open) || chatHistory.length > 0;
+    renderThreadFromHistory(chatThread, chatHistory, "learn", learnStudyMode);
+    syncLearnLayout();
+    return;
+  }
+  setLessonHeader("AI Tutor", "Ask anything");
+}
+
+function appendLocalCoachTurn(userText, assistantText) {
+  if (!chatSessionOpen && chatHistory.length === 0) {
+    const name = coachDisplayName();
+    chatHistory.push({ role: "assistant", content: `Hello! ${name}\nHow can I help you today?` });
+  }
+  chatHistory.push({ role: "user", content: userText });
+  chatHistory.push({ role: "assistant", content: assistantText });
+  chatSessionOpen = true;
+  renderThreadFromHistory(chatThread, chatHistory, "learn", learnStudyMode);
+  syncLearnLayout();
+  saveSessionState();
+  chatThread?.lastElementChild?.scrollIntoView?.({ block: "end" });
+}
+
+function wirePremiumChrome() {
+  tickPremiumClock();
+  window.setInterval(tickPremiumClock, 30000);
+  document.addEventListener("click", (e) => {
+    if (e.target.closest?.("#premiumBell")) {
+      e.preventDefault();
+      showToast("You're all caught up.");
+    }
+    if (e.target.closest?.("#premiumHomeAvatar")) {
+      e.preventDefault();
+      document.getElementById("accountMenuBtn")?.click();
+    }
+  });
+  document.getElementById("premiumChatBack")?.addEventListener("click", () => setMainTab("home"));
+  document.getElementById("premiumChatMenu")?.addEventListener("click", () => {
+    document.getElementById("accountMenuBtn")?.click();
+  });
+  document.getElementById("premiumQuickNotes")?.addEventListener("click", () => {
+    const { topic } = activeLessonMeta();
+    appendLocalCoachTurn(
+      "Quick notes, please",
+      `Quick notes on ${topic}:\n• One idea in your own words\n• One example you can remember\n• One question to ask next`,
+    );
+  });
+  document.getElementById("premiumGenerateQuiz")?.addEventListener("click", () => {
+    const { topic } = activeLessonMeta();
+    if (typeof setLearnStudyMode === "function") setLearnStudyMode("quiz");
+    appendLocalCoachTurn(
+      "Generate a quiz",
+      `Short quiz on ${topic}:\n1. Define the main idea in one sentence.\n2. Give one real-world example.\n3. What is one common mix-up to avoid?\nAnswer one at a time and I will check it.`,
+    );
+  });
+  document.getElementById("premiumComposeFocus")?.addEventListener("click", () => {
+    const input = document.getElementById("chatFollowupInput");
+    input?.focus();
+  });
+}
+
 window.StudentCoach = {
   t: (...args) => t(...args),
   showToast: (...args) => showToast(...args),
@@ -7002,7 +7203,10 @@ window.StudentCoach = {
   },
   sendChatMessage: (...args) => sendChatMessage(...args),
   getLearnStudyMode: () => learnStudyMode,
+  openSubjectLesson: (id) => openSubjectLesson(id),
 };
+
+wirePremiumChrome();
 
 const prefsAtBoot = loadPrefs();
 applySafariPerfClass();
