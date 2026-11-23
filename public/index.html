@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
     />
-    <meta name="theme-color" content="#070b18" />
+    <meta name="theme-color" content="#142D4C" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="My Student Coach" />
@@ -36,9 +36,8 @@
     <link rel="stylesheet" href="./simplify-coach.css?v=premium-home-1" />
     <link rel="stylesheet" href="./companion-experience.css?v=premium-home-1" />
     <link rel="stylesheet" href="./android-shell.css?v=premium-home-1" />
-    <link rel="stylesheet" href="./premium-shell.css?v=premium-shell-1" />
   </head>
-  <body class="brand-msc premium-ui" data-screen="welcome">
+  <body class="brand-msc">
     <div class="bg-glow one" aria-hidden="true"></div>
     <div class="bg-glow two" aria-hidden="true"></div>
 
@@ -78,79 +77,7 @@
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
             <!-- Marketing landing (student experience first; same brand as app shell) -->
-      <section class="auth auth-shell landing msc-landing premium-welcome-host" id="landingCard" aria-label="My Student Coach">
-        <div class="premium-welcome" id="premiumWelcome">
-          <div class="premium-statusbar" aria-hidden="true">
-            <span data-premium-clock>11:30</span>
-            <span class="premium-statusbar-icons"></span>
-          </div>
-          <div class="premium-welcome-stage" aria-hidden="true">
-            <div class="premium-float premium-float--bulb">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11c.4.4.6.9.7 1.4h4.6c.1-.5.3-1 .7-1.4A6 6 0 0 0 12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="premium-float premium-float--target">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            </div>
-            <div class="premium-float premium-float--chart">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M4 16l5-5 3 3 8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 6h6v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="premium-float premium-float--globe">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M4 12h16M12 4c2.4 2.6 3.6 5.2 3.6 8s-1.2 5.4-3.6 8c-2.4-2.6-3.6-5.2-3.6-8s1.2-5.4 3.6-8Z" stroke="currentColor" stroke-width="1.6"/></svg>
-            </div>
-            <svg class="premium-brain" viewBox="0 0 320 280" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="brainGlow" cx="50%" cy="48%" r="52%">
-                  <stop offset="0%" stop-color="#7ef0ff" stop-opacity="0.95"/>
-                  <stop offset="42%" stop-color="#3d7bff" stop-opacity="0.55"/>
-                  <stop offset="100%" stop-color="#7a2bff" stop-opacity="0"/>
-                </radialGradient>
-                <linearGradient id="brainStroke" x1="70" y1="30" x2="250" y2="240" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#d8fbff"/>
-                  <stop offset="0.45" stop-color="#4de4ff"/>
-                  <stop offset="1" stop-color="#b14dff"/>
-                </linearGradient>
-                <filter id="brainBlur" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="6"/>
-                </filter>
-              </defs>
-              <ellipse cx="160" cy="132" rx="108" ry="96" fill="url(#brainGlow)" filter="url(#brainBlur)"/>
-              <g stroke="url(#brainStroke)" stroke-width="1.4" stroke-linecap="round">
-                <path d="M160 46c-18 0-34 8-46 20-8-6-20-8-30-4-16 6-24 24-20 42-8 8-12 20-10 32 4 22 24 36 46 36 6 14 20 26 38 30"/>
-                <path d="M160 46c18 0 34 8 46 20 8-6 20-8 30-4 16 6 24 24 20 42 8 8 12 20 10 32-4 22-24 36-46 36-6 14-20 26-38 30"/>
-                <path d="M160 58v168"/>
-                <path d="M118 78c10 8 22 12 42 12M202 78c-10 8-22 12-42 12"/>
-                <path d="M108 112c16 6 32 8 52 6M212 112c-16 6-32 8-52 6"/>
-                <path d="M104 148c18 8 36 10 56 6M216 148c-18 8-36 10-56 6"/>
-                <path d="M112 182c16 10 30 12 48 8M208 182c-16 10-30 12-48 8"/>
-                <path d="M92 96c-8 10-10 22-6 34M228 96c8 10 10 22 6 34"/>
-                <path d="M86 140c-4 12 0 24 10 34M234 140c4 12 0 24-10 34"/>
-                <circle cx="128" cy="104" r="2.2" fill="#e8fdff" stroke="none"/>
-                <circle cx="196" cy="118" r="2.2" fill="#e8fdff" stroke="none"/>
-                <circle cx="150" cy="150" r="2.4" fill="#fff" stroke="none"/>
-                <circle cx="178" cy="168" r="1.8" fill="#f0c6ff" stroke="none"/>
-              </g>
-            </svg>
-            <svg class="premium-hands" viewBox="0 0 360 160" fill="none" aria-hidden="true">
-              <path d="M18 150c18-28 28-62 34-86 4-16 14-28 30-30 10-1 18 6 20 16 2 8-2 18-8 28" stroke="#7ad7ff" stroke-width="1.4" opacity="0.85"/>
-              <path d="M40 148c10-36 22-58 40-70 8-6 18-4 22 6 3 8-2 16-10 22" stroke="#9b6bff" stroke-width="1.3" opacity="0.8"/>
-              <path d="M70 152c6-24 18-40 34-46" stroke="#67e7ff" stroke-width="1.2" opacity="0.7"/>
-              <path d="M342 150c-18-28-28-62-34-86-4-16-14-28-30-30-10-1-18 6-20 16-2 8 2 18 8 28" stroke="#7ad7ff" stroke-width="1.4" opacity="0.85"/>
-              <path d="M320 148c-10-36-22-58-40-70-8-6-18-4-22 6-3 8 2 16 10 22" stroke="#c084fc" stroke-width="1.3" opacity="0.8"/>
-              <path d="M290 152c-6-24-18-40-34-46" stroke="#67e7ff" stroke-width="1.2" opacity="0.7"/>
-            </svg>
-            <span class="premium-spark premium-spark--a"></span>
-            <span class="premium-spark premium-spark--b"></span>
-          </div>
-          <div class="premium-welcome-copy">
-            <h1 class="premium-welcome-title">Study Smarter.<br />With AI Tutor</h1>
-            <p class="premium-welcome-sub">Meet your AI study buddy today to learn faster and easier</p>
-            <div class="premium-dots" aria-hidden="true">
-              <span></span><span></span><span class="is-on"></span><span></span>
-            </div>
-            <button type="button" class="premium-cta" id="welcomeGetStarted">Get Started</button>
-            <button type="button" class="premium-signin" data-open-login>Sign in</button>
-          </div>
-        </div>
+      <section class="auth auth-shell landing msc-landing" id="landingCard" aria-label="My Student Coach">
         <header class="msc-topnav">
           <a class="msc-logo" href="#landingCard" aria-label="My Student Coach home">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
@@ -396,11 +323,7 @@
 
       <!-- Login gateway (one screen — Google only; email/password not implemented) -->
       <section class="auth msc-login-shell hidden" id="authCard" aria-label="Sign in to My Student Coach" hidden>
-        <div class="premium-statusbar" aria-hidden="true">
-          <span data-premium-clock>11:30</span>
-          <span class="premium-statusbar-icons"></span>
-        </div>
-        <div class="msc-login-card premium-login-card">
+        <div class="msc-login-card">
           <a class="msc-logo msc-login-logo" href="#landingCard" id="loginBrandLink" aria-label="My Student Coach home">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -570,10 +493,6 @@
       </section>
 
       <section class="app app-shell workspace-shell card hidden" id="appCard">
-        <div class="premium-statusbar premium-statusbar--app" aria-hidden="true">
-          <span data-premium-clock>11:30</span>
-          <span class="premium-statusbar-icons"></span>
-        </div>
         <header class="app-head">
           <div class="app-head-top">
             <div class="app-brand app-brand--workspace" aria-label="My Student Coach">
@@ -1096,19 +1015,7 @@
         <!-- Knowledge Gaps lives under Progress (Improve). Legacy panel kept hidden for deep-link redirect. -->
         <section id="panelGaps" class="panel coach-lab-panel hidden" data-coach-lab-panel="gaps" hidden aria-hidden="true"></section>
 
-        <section id="panelChat" class="panel perplexity-panel premium-chat hidden">
-          <header class="premium-chat-head">
-            <button type="button" class="premium-icon-btn" id="premiumChatBack" aria-label="Back to home">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div class="premium-chat-titles">
-              <strong id="premiumChatSubject">AI Tutor</strong>
-              <span id="premiumChatTopic">Ask anything</span>
-            </div>
-            <button type="button" class="premium-icon-btn" id="premiumChatMenu" aria-label="Chat options">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="18" r="1.4" fill="currentColor"/></svg>
-            </button>
-          </header>
+        <section id="panelChat" class="panel perplexity-panel hidden">
           <div class="coach-voice-elevate" id="coachVoiceElevate">
             <p>Prefer talking? Start a continuous Voice Tutor session — interrupt anytime, transcript included.</p>
             <button type="button" class="ghost-btn" data-coach-tab="voice" id="coachOpenVoiceBtn">Open Voice Tutor</button>
@@ -1277,19 +1184,6 @@
               <p id="practiceEmptyStatus" class="muted status-line practice-dock-status hidden" data-i18n-status="status_ready"></p>
             </section>
             <div class="followup-bar">
-              <div class="premium-chat-chips" role="group" aria-label="Study actions">
-                <button type="button" class="premium-chip" id="premiumQuickNotes">
-                  <span class="premium-chip-ico" aria-hidden="true">+</span>
-                  Quick Notes
-                </button>
-                <button type="button" class="premium-chip" id="premiumGenerateQuiz">
-                  <span class="premium-chip-ico premium-chip-ico--quiz" aria-hidden="true"></span>
-                  Generate Quiz
-                </button>
-                <button type="button" class="premium-chip premium-chip--icon" id="premiumComposeFocus" aria-label="Write a message">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20l4.2-.8L18.5 8.9a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-                </button>
-              </div>
               <aside id="coachKeepGoing" class="coach-keep-going hidden" aria-label="Keep going with your coach" hidden></aside>
               <div
                 id="chatFollowupChips"
@@ -1341,7 +1235,7 @@
                     />
                   </svg>
                 </button>
-                <textarea id="chatFollowupInput" rows="1" placeholder="Type a message..."></textarea>
+                <textarea id="chatFollowupInput" rows="1" placeholder="Ask a follow-up..."></textarea>
                 <button
                   type="button"
                   class="learn-hero-mic-btn"
