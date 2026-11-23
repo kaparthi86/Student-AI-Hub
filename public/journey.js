@@ -580,11 +580,12 @@
     const mount = $("journeyHomeMount");
     if (!mount) return;
     ensureWeek();
-    buildDailyPlan();
+    const plan = buildDailyPlan();
     const next = pickNextStep();
     const weekly = journey.weeklyGoals;
     const name = typeof api().coachDisplayName === "function" ? api().coachDisplayName() : "there";
     const insufficient = hasInsufficientLearningSignal();
+    const moreItems = (plan.items || []).filter((_, idx) => idx !== next.planIndex);
     const weekPct = weekly.target ? Math.min(100, Math.round((weekly.completed / weekly.target) * 100)) : 0;
     const recommendLead =
       next.source === "cold-start"
@@ -593,102 +594,94 @@
           ? "Nice work today"
           : "Your AI Coach recommends";
 
-    const sampleStreak = weekly.completed === 0;
-    const streakPct = sampleStreak ? 80 : weekPct;
-    const streakXp = sampleStreak ? 125 : Math.max(25, weekly.completed * 25);
-    const initial = escapeHtml((name || "M").slice(0, 1).toUpperCase());
-    const lessons = [
-      {
-        id: "chemistry",
-        subject: "Chemistry",
-        topic: "Atomic Structure",
-        xp: 125,
-        icon: `<svg viewBox="0 0 24 24" fill="none"><path d="M8 4c2 3 2 5 0 8M16 4c-2 3-2 5 0 8M7 14c2 2 8 2 10 0" stroke="#7cf0ff" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="16" r="2" fill="#c4b5fd"/></svg>`,
-      },
-      {
-        id: "physics",
-        subject: "Physics",
-        topic: "Quantum Mechanics",
-        xp: 90,
-        icon: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="2.2" fill="#f9a8d4"/><ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#7cf0ff" stroke-width="1.4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#c4b5fd" stroke-width="1.4" transform="rotate(-60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.5" stroke="#93c5fd" stroke-width="1.4"/></svg>`,
-      },
-      {
-        id: "mathematics",
-        subject: "Mathematics",
-        topic: "Calculus",
-        xp: 110,
-        icon: `<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#f9a8d4" stroke-width="1.4"/><path d="M8 15l2.5-6L13 15M8.6 13h3.6M16 8v8" stroke="#7cf0ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
-      },
-    ];
-
     mount.hidden = false;
     mount.innerHTML = `
-      <section class="companion-home premium-home" aria-labelledby="journeyDashTitle">
-        <header class="premium-home-top">
-          <button type="button" class="premium-avatar" id="premiumHomeAvatar" aria-label="Account menu">${initial}</button>
-          <div class="premium-hello">
-            <strong>${escapeHtml(name || "Melani")}</strong>
-            <span>Good ${greetingHour()}</span>
-          </div>
-          <button type="button" class="premium-icon-btn" id="premiumBell" aria-label="Notifications">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2H4.5L6 16Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
+      <section class="companion-home" aria-labelledby="journeyDashTitle">
+        <header class="companion-home-hero">
+          <p class="companion-kicker">My Student Coach</p>
+          <h2 class="companion-greeting" id="journeyDashTitle">Good ${greetingHour()}${name ? `, ${escapeHtml(name)}` : ""}!</h2>
+          <p class="muted companion-lead">Ready to make progress today?</p>
         </header>
-        <h2 class="premium-home-title" id="journeyDashTitle">Ready to<br />start learning?</h2>
-        <div class="premium-action-row">
-          <button type="button" class="premium-action" data-coach-tab="notebook">
-            <svg class="premium-action-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h6l2-2h8v12H4V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 8l2.5 9h11" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            <strong>Scan</strong>
-          </button>
-          <button type="button" class="premium-action" data-coach-tab="chat" data-clear-lesson="1">
-            <svg class="premium-action-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l1.2 4.2L17.5 8.5 13.2 9.8 12 14l-1.2-4.2L6.5 8.5l4.3-1.3L12 3Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M18 14l.6 2 2 .6-2 .6-.6 2-.6-2-2-.6 2-.6.6-2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-            <strong>Ask AI</strong>
-          </button>
-        </div>
-        <article class="journey-next-step premium-streak" aria-labelledby="journeyNextTitle">
-          <div class="premium-streak-top">
-            <span class="premium-streak-label">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3s1 4 1 6a3 3 0 0 1-6 0c0-1 .5-2 1-3-2 2-3 4-3 7a7 7 0 0 0 14 0c0-4-3-7-7-10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-              Daily Streak
-            </span>
-            <span class="premium-xp">+ ${streakXp} xp</span>
+
+        <article class="journey-next-step companion-primary" aria-labelledby="journeyNextTitle">
+          <p class="journey-next-kicker">${escapeHtml(recommendLead)}</p>
+          <h3 class="journey-next-title" id="journeyNextTitle">${escapeHtml(next.title)}</h3>
+          <p class="muted journey-next-reason">${escapeHtml(next.reason)}</p>
+          <div class="journey-next-meta">
+            <span>${escapeHtml(next.phase)}</span>
+            ${next.minutes ? `<span>${next.minutes} min</span>` : ""}
+            ${next.source === "progress" ? '<span class="journey-badge">From progress</span>' : ""}
+            ${next.source === "cold-start" ? '<span class="journey-badge">Learning Snapshot</span>' : ""}
+            ${insufficient ? '<span class="journey-badge">Evidence-based</span>' : ""}
           </div>
-          <div class="premium-progress" role="progressbar" aria-valuenow="${streakPct}" aria-valuemin="0" aria-valuemax="100" aria-label="Daily streak">
-            <span style="width:${streakPct}%"></span>
-            <em>${streakPct}% Completed</em>
+          <div class="journey-next-actions">
+            <button type="button" class="primary-btn" data-journey-next-step>${escapeHtml(next.cta === "Start this step" ? "Continue Learning" : next.cta)}</button>
           </div>
-          <h3 class="sr-only" id="journeyNextTitle">${escapeHtml(next.title)}</h3>
-          <p class="sr-only">${escapeHtml(recommendLead)}. ${escapeHtml(next.reason)}</p>
-          <button type="button" class="premium-streak-btn" data-journey-next-step>Continue your streak</button>
         </article>
-        <section class="premium-lessons" aria-labelledby="premiumLessonsTitle">
-          <div class="premium-lessons-head">
-            <span id="premiumLessonsTitle">Learning lesson</span>
-            <button type="button" class="premium-linkish" data-coach-tab="learning">See all</button>
-          </div>
-          ${lessons
-            .map(
-              (lesson) => `
-            <button type="button" class="premium-lesson" data-open-lesson="${lesson.id}">
-              <span class="premium-lesson-row">
-                <span class="premium-lesson-main">
-                  <span class="premium-lesson-ico">${lesson.icon}</span>
-                  <span class="premium-lesson-copy">
-                    <strong>${lesson.subject}</strong>
-                    <span>${lesson.topic}</span>
-                  </span>
-                </span>
-                <span class="premium-lesson-meta">
-                  <svg class="premium-bolt" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6Z"/></svg>
-                  + ${lesson.xp} xp
-                </span>
-              </span>
-            </button>`,
-            )
-            .join("")}
+
+        <section class="companion-secondary" aria-labelledby="companionPathsTitle">
+          <h3 class="ds-section-label" id="companionPathsTitle">Continue with</h3>
+          <button type="button" class="companion-tile" data-coach-tab="diagnostic">
+            <strong>Learning Snapshot</strong>
+            <span>Explore strengths and growth areas</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="chat">
+            <strong>Ask Your Coach</strong>
+            <span>Ask, explore, and understand anything</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="voice">
+            <strong>Talk with Coach</strong>
+            <span>Voice-first conversation when you’re stuck</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="chat" data-coach-mode="quiz">
+            <strong>Practice</strong>
+            <span>Personalized questions and exercises</span>
+          </button>
+          <button type="button" class="companion-tile" data-coach-tab="planner">
+            <strong>My Study Plan</strong>
+            <span>Your daily learning goals</span>
+          </button>
         </section>
-        <button type="button" class="sr-only" data-coach-tab="voice">Talk with Coach</button>
-        <p class="sr-only">Learning Snapshot remains available from Learn. ${insufficient ? "Evidence-based next step." : ""} Weekly goal ${weekly.completed} of ${weekly.target}.</p>
+
+        <section class="companion-momentum" aria-label="Your learning momentum">
+          <div class="companion-momentum-copy">
+            <p class="companion-momentum-label">Your learning momentum</p>
+            <p class="companion-momentum-title">Weekly learning goal</p>
+            <p class="muted">${weekly.completed} of ${weekly.target} sessions</p>
+          </div>
+          <div class="companion-ring" style="--ring:${weekPct}" aria-hidden="true">
+            <span>${weekPct}%</span>
+          </div>
+          <button type="button" class="ghost-btn" data-coach-tab="progress">View Progress</button>
+        </section>
+
+        ${
+          moreItems.length
+            ? `<details class="journey-more-today">
+          <summary>More for today (${moreItems.length})</summary>
+          <ol class="journey-plan-list">
+            ${moreItems
+              .map((item) => {
+                const idx = (plan.items || []).indexOf(item);
+                return `
+              <li class="journey-plan-item${item.done ? " is-done" : ""}">
+                <div class="journey-plan-main">
+                  <strong>${escapeHtml(item.topic)}</strong>
+                  <span class="muted">${item.minutes} minutes · ${escapeHtml(item.action)}</span>
+                </div>
+                <div class="journey-plan-actions">
+                  ${item.done ? '<span class="journey-badge journey-badge--done">Done</span>' : ""}
+                  <button type="button" class="ghost-btn journey-start-btn" data-journey-start="${idx}">Start</button>
+                  ${!item.done ? `<button type="button" class="ghost-btn" data-journey-done="${escapeAttr(item.id)}">Mark done</button>` : ""}
+                </div>
+              </li>`;
+              })
+              .join("")}
+          </ol>
+          <button type="button" class="ghost-btn journey-refresh-plan" data-journey-action="refresh-plan">Refresh plan</button>
+        </details>`
+            : `<button type="button" class="ghost-btn journey-refresh-plan companion-refresh" data-journey-action="refresh-plan">Refresh plan</button>`
+        }
       </section>
     `;
   }
@@ -1567,10 +1560,6 @@
   /* ---------- Onboarding ---------- */
 
   function maybeShowOnboarding() {
-    const screen = document.body?.dataset?.screen;
-    const landing = document.getElementById("landingCard");
-    const welcomeVisible = landing && !landing.classList.contains("hidden") && !landing.hidden;
-    if (welcomeVisible || screen === "welcome" || screen === "auth") return;
     try {
       if (localStorage.getItem(ONBOARD_KEY) === "1" || journey.onboardingDone) return;
     } catch {
@@ -1719,12 +1708,6 @@
 
   function wireJourneyUi() {
     document.addEventListener("click", (e) => {
-      const lessonBtn = e.target.closest?.("[data-open-lesson]");
-      if (lessonBtn) {
-        e.preventDefault();
-        api().openSubjectLesson?.(lessonBtn.getAttribute("data-open-lesson"));
-        return;
-      }
       const nextBtn = e.target.closest?.("[data-journey-next-step]");
       if (nextBtn) {
         e.preventDefault();
