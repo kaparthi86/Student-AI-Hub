@@ -232,7 +232,7 @@ const I18N = {
     disclaimer_privacy:
       "My Student Coach does not sell your personal data or show advertising based on your chats.",
     nav_hub: "Overview",
-    nav_back_hub: "Overview",
+    nav_back_hub: "Ask",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach can make mistakes. Check important facts.",
     disclaimer_hub: "For learning and study help - not a substitute for professional advice.",
@@ -245,7 +245,7 @@ const I18N = {
     honor_lead: "My Student Coach is for learning and practice - not for handing in AI work as your own.",
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
     honor_ack: "I understand",
-    honor_back: "Back to Home",
+    honor_back: "Back to Ask",
     continue_google: "Continue with Google",
     sign_in: "Sign in",
     login_welcome: "Welcome back!",
@@ -593,7 +593,7 @@ const I18N = {
     disclaimer_privacy:
       "My Student Coach no vende tus datos personales ni muestra publicidad basada en tus chats.",
     nav_hub: "Overview",
-    nav_back_hub: "Volver al inicio",
+    nav_back_hub: "Ask",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach puede equivocarse. Verifica datos importantes.",
     disclaimer_hub: "Ayuda para aprendizaje y estudio - no sustituye consejo profesional. Verifica datos importantes.",
@@ -815,7 +815,7 @@ const I18N = {
     disclaimer_privacy:
       "My Student Coach personal data nahi bechta aur chats par ads nahi dikhata.",
     nav_hub: "Overview",
-    nav_back_hub: "Home par wapas",
+    nav_back_hub: "Ask",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach galti kar sakta hai. Important facts check karein.",
     disclaimer_hub: "Learning aur study help ke liye - ye professional advice nahi hai. Important facts check karein.",
@@ -1038,7 +1038,7 @@ const I18N = {
     disclaimer_privacy:
       "My Student Coach personal data ammukodu, chats meeda ads chupinchadu.",
     nav_hub: "Overview",
-    nav_back_hub: "Home ki back",
+    nav_back_hub: "Ask",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach tappu cheyagaladu. Important facts verify cheyyandi.",
     disclaimer_hub: "Learning mariyu study help kosam - idi professional advice kadu. Important facts verify cheyyandi.",
@@ -1261,7 +1261,7 @@ const I18N = {
     disclaimer_privacy: 
       "My Student Coach does not sell your personal data or show advertising based on your chats.",
     nav_hub: "Overview",
-    nav_back_hub: "முகப்புக்குத் திரும்பு",
+    nav_back_hub: "Ask",
     nav_student: "My Student Coach",
     disclaimer_base: "My Student Coach தவறு செய்யலாம். முக்கிய தகவல்களைச் சரிபார்க்கவும்.",
     disclaimer_hub: "கற்றல் உதவிக்கு மட்டும் — தொழில்முறை ஆலோசனை அல்ல.",
@@ -1274,7 +1274,7 @@ const I18N = {
     honor_lead: "My Student Coach is for learning and practice - not for handing in AI work as your own.",
     honor_body: "Follow your school's honor code. Don't submit AI output when your course forbids it. Check important facts - AI can be wrong.",
     honor_ack: "I understand",
-    honor_back: "Back to Home",
+    honor_back: "Back to Ask",
     continue_google: "Continue with Google",
     sign_in: "Sign in",
     login_welcome: "வரவேற்கிறோம்",
@@ -2733,7 +2733,7 @@ function wireCoachKeepGoing() {
     }
     if (action === "next") {
       if (window.StudentJourney?.startNextStep) window.StudentJourney.startNextStep();
-      else setMainTab("home");
+      else setMainTab("chat");
     }
   });
 }
@@ -2781,7 +2781,7 @@ function wirePracticeJourneyCta() {
     }
     if (action === "next") {
       if (window.StudentJourney?.startNextStep) window.StudentJourney.startNextStep();
-      else setMainTab("home");
+      else setMainTab("chat");
     }
   });
 }
@@ -3347,7 +3347,8 @@ function renderAssistantHtml(text) {
 
 function setMainTab(next) {
   const rawNext = String(next || "");
-  let requested = COACH_TABS.has(next) ? next : "home";
+  let requested = COACH_TABS.has(next) ? next : "chat";
+  if (requested === "home") requested = "chat";
   // Knowledge Gaps merged into Progress (Improve group).
   const openGapsSection = requested === "gaps" || rawNext === "gaps";
   if (requested === "gaps") requested = "progress";
@@ -3439,7 +3440,7 @@ function setMainTab(next) {
     )
   ) {
     bottomKey = "learning";
-  } else bottomKey = "home";
+  } else bottomKey = "chat";
   document.querySelectorAll("#mscBottomNav .msc-bottom-item").forEach((btn) => {
     btn.classList.toggle("is-active", btn.getAttribute("data-bottom") === bottomKey);
   });
@@ -3825,7 +3826,9 @@ function wireCoachHome() {
   document.getElementById("panelLearning")?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
     if (!target || !document.getElementById("panelLearning")?.contains(target)) return;
-    go(target.getAttribute("data-coach-tab"));
+    go(target.getAttribute("data-coach-tab"), target.getAttribute("data-coach-mode"));
+    const focusId = target.getAttribute("data-focus");
+    if (focusId) requestAnimationFrame(() => document.getElementById(focusId)?.focus());
   });
   document.getElementById("panelProfile")?.addEventListener("click", (e) => {
     const target = e.target.closest?.("[data-coach-tab]");
@@ -3856,7 +3859,9 @@ function wireCoachHome() {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      go(btn.getAttribute("data-tab"));
+      go(btn.getAttribute("data-tab"), btn.getAttribute("data-coach-mode"));
+      const focusId = btn.getAttribute("data-focus");
+      if (focusId) requestAnimationFrame(() => document.getElementById(focusId)?.focus());
     });
   });
   document.querySelectorAll("#profileMenu .open-settings-btn").forEach((btn) => {
@@ -5369,9 +5374,8 @@ function desiredVerticalFromUrl() {
 }
 
 function showHubHome() {
-  // Hub surface retired for consistency -- Overview returns to Coach Home.
   showStudentWorkspace();
-  setMainTab("home");
+  setMainTab("chat");
 }
 
 function showStudentWorkspace() {
@@ -5821,7 +5825,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.querySelectorAll(".workspace-hub-link").forEach((btn) => {
-  btn.addEventListener("click", () => setMainTab("home"));
+  btn.addEventListener("click", () => setMainTab("chat"));
 });
 
 document.querySelectorAll(".hub-tile").forEach((tile) => {
