@@ -24,7 +24,7 @@ assert(/id="tabFocus"/.test(indexHtml) && /data-tab="focus"/.test(indexHtml), "F
 assert(!/id="tabGaps"/.test(indexHtml), "Gaps removed from Profile/Learn nav");
 assert(/id="progressGapsSection"/.test(indexHtml), "Gaps scan lives on Progress");
 assert(/id="gapsScanBtn"/.test(indexHtml), "gapsScanBtn on Progress");
-assert(/coachMathModeBtn/.test(indexHtml), "Math mode on Coach study bar");
+assert(/data-coach-tab="math"/.test(indexHtml), "Math stays reachable from Learn, not a Learning options row");
 assert(/learnGroupUnderstand/.test(indexHtml), "My Learning hub Understand group");
 assert(/learnGroupPractice/.test(indexHtml), "My Learning hub Practice group");
 assert(/learnGroupPlan/.test(indexHtml), "My Learning hub Plan group");

@@ -23,6 +23,9 @@ assert(/data-open-login/.test(indexHtml), "Get Started uses existing login gatew
 assert(/href="\.\/privacy\.html"/.test(indexHtml), "privacy.html route preserved");
 assert(/href="\.\/terms\.html"/.test(indexHtml), "terms.html route preserved");
 assert(/id="panelChat"/.test(indexHtml), "Ask panel preserved");
+assert(!/Learning options/.test(indexHtml), "Learning options is not on Ask");
+assert(!/id="studyModeBar"/.test(indexHtml), "study mode row is not on Ask");
+assert(!/msc-advanced-options/.test(indexHtml), "no control opens Learning options");
 assert(/id="askProgressChip"/.test(indexHtml), "quiet progress chip on Ask");
 assert(!/id="askScanBtn"/.test(indexHtml), "scan a page is not on the Ask surface");
 assert(!/id="askSubjectRow"/.test(indexHtml), "subject grid is not on the Ask surface");
