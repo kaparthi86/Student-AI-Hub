@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="./coach-labs.css?v=sprint1-trust-3" />
     <link rel="stylesheet" href="./journey.css?v=premium-home-1" />
     <link rel="stylesheet" href="./analytics.css?v=analytics-1" />
-    <link rel="stylesheet" href="./simplify-coach.css?v=ask-chips-3" />
+    <link rel="stylesheet" href="./simplify-coach.css?v=ask-login-1" />
     <link rel="stylesheet" href="./companion-experience.css?v=premium-home-1" />
     <link rel="stylesheet" href="./android-shell.css?v=premium-home-1" />
   </head>
@@ -76,56 +76,10 @@
         </div>
         <div id="pwaInstallHelpSteps" class="pwa-ios-steps hidden muted" role="note"></div>
       </div>
-            <!-- Welcome: one Get Started screen, then Ask -->
-      <section class="auth auth-shell landing msc-landing msc-welcome" id="landingCard" aria-label="My Student Coach">
-        <div class="msc-welcome-screen">
-          <div class="msc-welcome-glass">
-            <span class="brand-mark landing-brand-mark" aria-hidden="true">
-              <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="40" height="40" rx="12" fill="url(#authBrandGrad)" />
-                <path
-                  d="M12 14h10a4 4 0 0 1 0 8H12V14zm0 10h11a4 4 0 0 1 0 8H12v-8z"
-                  fill="white"
-                  fill-opacity="0.92"
-                />
-                <defs>
-                  <linearGradient id="authBrandGrad" x1="8" y1="6" x2="34" y2="36" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#287A89" />
-                    <stop offset="1" stop-color="#142D4C" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>
-            <p class="msc-brand-line" id="authBrandTitleHero">My Student Coach</p>
-            <h1 class="landing-headline msc-headline" id="authSigninTitle">Study with your AI tutor.</h1>
-            <p class="landing-support msc-support" id="authSigninTagline">
-              Ask a question, scan a page, or pick a subject.
-            </p>
-            <div class="landing-cta msc-cta">
-              <button type="button" class="primary-btn msc-primary-cta" id="landingGetStartedBtn" data-open-login>
-                Get Started
-              </button>
-              <button type="button" class="ghost-btn msc-welcome-signin" id="landingNavSignIn" data-open-login>
-                Sign in
-              </button>
-            </div>
-          </div>
-          <footer class="app-fine-print auth-fine-print landing-footer" role="contentinfo">
-            <nav class="landing-legal" aria-label="Legal">
-              <a href="./privacy.html">Privacy</a>
-              <a href="./terms.html">Terms</a>
-              <a href="./customer-agreement.html">Customer Agreement</a>
-              <button type="button" class="linkish open-support-btn" id="landingSupportBtn">Support</button>
-            </nav>
-            <p class="fine-print-line landing-operator-line">Operated by SKM IT SOLUTIONS INC.</p>
-          </footer>
-        </div>
-      </section>
-
-      <!-- Login gateway (one screen — Google only; email/password not implemented) -->
-      <section class="auth msc-login-shell hidden" id="authCard" aria-label="Sign in to My Student Coach" hidden>
+      <!-- Sign-in is the only logged-out screen. After Google, Ask. -->
+      <section class="auth msc-login-shell" id="authCard" aria-label="Sign in to My Student Coach">
         <div class="msc-login-card">
-          <a class="msc-logo msc-login-logo" href="#landingCard" id="loginBrandLink" aria-label="My Student Coach home">
+          <div class="msc-logo msc-login-logo" id="loginBrandLink">
             <span class="brand-mark landing-brand-mark" aria-hidden="true">
               <svg class="brand-mark-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="12" fill="url(#loginBrandGrad)" />
@@ -143,7 +97,7 @@
               </svg>
             </span>
             <span class="msc-logo-text" id="loginBrandTitle">My Student Coach</span>
-          </a>
+          </div>
           <h1 class="msc-login-title" id="loginWelcomeTitle">Welcome back!</h1>
           <p class="msc-login-support muted" id="loginWelcomeSupport">
             Your personal AI learning companion is ready.
@@ -184,9 +138,6 @@
             <span aria-hidden="true">·</span>
             <button type="button" class="linkish open-support-btn" id="loginHelpBtn">Help</button>
           </nav>
-          <button type="button" class="ghost-btn tiny-btn msc-login-about" id="loginBackToLandingBtn">
-            About My Student Coach
-          </button>
         </div>
       </section>
 
@@ -1535,7 +1486,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script defer src="./config.js"></script>
     <div id="celebrateToast" class="celebrate-toast" role="status" aria-live="polite"></div>
-    <script defer src="./app.js?v=ask-chips-3"></script>
+    <script defer src="./app.js?v=ask-login-1"></script>
     <script defer src="./coach-labs.js?v=sprint1-trust-3"></script>
     <script defer src="./journey.js?v=premium-home-1"></script>
     <script defer src="./analytics.js?v=sprint1-trust-3"></script>

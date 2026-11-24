@@ -3784,19 +3784,6 @@ function wireCoachHome() {
     el.addEventListener("click", () => setLandingMobileOpen(false));
   });
 
-  document.querySelectorAll("[data-open-login]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      showLoginGateway();
-    });
-  });
-  document.getElementById("loginBackToLandingBtn")?.addEventListener("click", () => {
-    showLanding();
-  });
-  document.getElementById("loginBrandLink")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showLanding();
-  });
   window.addEventListener("hashchange", () => {
     if (activeSurface) return;
     if (wantsLoginHash()) showLoginGateway();
@@ -5602,24 +5589,7 @@ function wantsLoginHash() {
 }
 
 function showLanding() {
-  hidePwaChrome();
-  closeAccountMenu();
-  hideHonorCodeModal();
-  landingCard?.classList.remove("hidden");
-  authCard?.classList.add("hidden");
-  authCard?.setAttribute("hidden", "");
-  hubCard?.classList.add("hidden");
-  appCard?.classList.add("hidden");
-  activeSurface = null;
-  try {
-    const hash = (window.location.hash || "").replace(/^#/, "").toLowerCase();
-    if (hash === "login" || hash === "signin" || hash === "sign-in") {
-      history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-    }
-  } catch {
-    /* ignore */
-  }
-  document.title = "My Student Coach";
+  showLoginGateway();
 }
 
 function showLoginGateway(message = "") {
@@ -5704,11 +5674,9 @@ async function initAuth() {
   try {
     const { data, error } = await supabaseClient.auth.getSession();
     if (data?.session) showApp(data.session);
-    else if (wantsLoginHash()) showLoginGateway(error ? `Auth error: ${describeAuthFailure(error)}` : "");
-    else showLanding();
+    else showLoginGateway(error ? `Auth error: ${describeAuthFailure(error)}` : "");
   } catch (err) {
-    if (wantsLoginHash()) showLoginGateway(describeAuthFailure(err));
-    else showLanding();
+    showLoginGateway(describeAuthFailure(err));
   }
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -5717,10 +5685,9 @@ async function initAuth() {
       showApp(session);
       return;
     }
-    // Logged-out entry is the Get Started screen. Sign-in opens only from that button or #login.
+    // Logged-out visitors stay on the single Google sign-in screen.
     if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
-      if (wantsLoginHash()) showLoginGateway();
-      else showLanding();
+      showLoginGateway();
       return;
     }
     if (activeSurface === "student") showLoginGateway();
